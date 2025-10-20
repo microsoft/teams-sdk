@@ -1,8 +1,8 @@
-import type * as DocsPlugin from '@docusaurus/plugin-content-docs';
 import type * as Preset from '@docusaurus/preset-classic';
 import type { Config } from '@docusaurus/types';
 import path from 'node:path';
 import { themes as prismThemes } from 'prism-react-renderer';
+import { LANGUAGES } from './src/constants/languages';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 const baseUrl = '/teams-ai/';
@@ -66,55 +66,36 @@ const config: Config = {
     ],
 
     plugins: [
-        [
-            '@docusaurus/plugin-content-docs',
-            {
-                id: 'typescript',
-                path: 'docs/typescript',
-                routeBasePath: '/typescript',
-                sidebarPath: './sidebars.ts',
-                sidebarCollapsed: true,
-                editUrl: 'https://github.com/microsoft/teams-ai/tree/main/teams.md/',
-                exclude: ["**/LLMs.md"],
-            } satisfies Partial<DocsPlugin.PluginOptions>,
-        ],
-        [
-            '@docusaurus/plugin-content-docs',
-            {
-                id: 'csharp',
-                path: 'docs/csharp',
-                routeBasePath: '/csharp',
-                sidebarPath: './sidebars.ts',
-                sidebarCollapsed: true,
-                editUrl: 'https://github.com/microsoft/teams-ai/tree/main/teams.md/',
-                exclude: ["**/LLMs.md"]
-            } satisfies Partial<DocsPlugin.PluginOptions>,
-        ],
-        [
-            '@docusaurus/plugin-content-docs',
-            {
-                id: 'python',
-                path: 'docs/python',
-                routeBasePath: '/python',
-                sidebarPath: './sidebars.ts',
-                sidebarCollapsed: true,
-                editUrl: 'https://github.com/microsoft/teams-ai/tree/main/teams.md/',
-                exclude: ["**/LLMs.md"],
-            } satisfies Partial<DocsPlugin.PluginOptions>,
-        ],
+        /** Docusaurus plugin to watch LanguageInclude related fragment & component files for hot reload */
+        function languageIncludeWatchPlugin() {
+            return {
+                name: 'language-include-watch',
+                getPathsToWatch() {
+                    return [
+                        path.join(__dirname, 'src', 'components', 'include', '**/*.incl.md'),
+                        path.join(__dirname, 'src', 'pages', 'templates', '**/*.mdx'),
+                    ];
+                },
+                loadContent() {
+                    console.info('[language-include-watch] Watching .incl.md and component files');
+                },
+            };
+        },
     ],
     themes: [
         '@docusaurus/theme-mermaid',
-        [require.resolve("@easyops-cn/docusaurus-search-local"),
-        /** @type {import("@easyops-cn/docusaurus-search-local").PluginOptions} */
-        ({
-            hashed: true,
-            language: ['en'],
-            docsRouteBasePath: ['/', '/typescript', '/csharp', '/python'],
-            indexDocs: true,
-            indexPages: true,
-            highlightSearchTermsOnTargetPage: true
-        })],
+        [
+            require.resolve('@easyops-cn/docusaurus-search-local'),
+            /** @type {import("@easyops-cn/docusaurus-search-local").PluginOptions} */
+            {
+                hashed: true,
+                language: ['en'],
+                docsRouteBasePath: ['/', '/typescript', '/csharp', '/python'],
+                indexDocs: true,
+                indexPages: true,
+                highlightSearchTermsOnTargetPage: true,
+            },
+        ],
     ],
     themeConfig: {
         colorMode: {
@@ -128,21 +109,6 @@ const config: Config = {
                 src: 'img/teams.png',
             },
             items: [
-                {
-                    to: 'typescript',
-                    position: 'left',
-                    label: 'Typescript',
-                },
-                {
-                    to: 'csharp',
-                    position: 'left',
-                    label: 'C#',
-                },
-                {
-                    to: 'python',
-                    position: 'left',
-                    label: 'Python',
-                },
                 {
                     href: 'https://github.com/microsoft/teams-ai/tree/main',
                     position: 'right',
