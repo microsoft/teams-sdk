@@ -32,6 +32,8 @@ Citations are added with a `position` property. This property value needs to als
 :::
 
 ```python
+from microsoft.teams.api import MessageActivityInput, CitationAppearance
+
 message_activity = MessageActivityInput(text=result.content).add_ai_generated()
 for i, doc in enumerate(cited_docs):
     message_activity.text += f"[{i + 1}]"
@@ -45,6 +47,8 @@ for i, doc in enumerate(cited_docs):
 Suggested actions help users with ideas of what to ask next, based on the previous response or conversation. Teams recommends including suggested actions in your messages. You can do that by using the `with_suggested_actions` method on the message. See [Suggested actions](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/prompt-suggestions) for more information on suggested actions.
 
 ```py
+from microsoft.teams.api import CardAction, CardActionType, MessageActivityInput, SuggestedActions
+
 suggested_actions = SuggestedActions(
     to=[activity.from_.id],
     actions=[CardAction(type=CardActionType.IM_BACK, title="Thanks!", value="Thank you so much!")],
