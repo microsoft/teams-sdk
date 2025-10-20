@@ -13,7 +13,7 @@ The Teams CLI contains a Microsoft 365 Agents Toolkit configuration and a templa
 
 
 ```sh
-teams new typescript my-first-tab-app --atk embed --template tab
+npx @microsoft/teams.cli@latest new typescript my-first-tab-app --atk embed --template tab
 ```
 
 

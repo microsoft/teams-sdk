@@ -30,6 +30,7 @@ Once loaded, it treats these tools like any functions that are available to the 
 from microsoft.teams.ai import ChatPrompt
 from microsoft.teams.mcpplugin import McpClientPlugin
 from microsoft.teams.openai import OpenAICompletionsAIModel
+# ...
 
 # Set up AI model
 completions_model = OpenAICompletionsAIModel(model="gpt-4")
@@ -57,7 +58,8 @@ Many MCP servers require authentication via headers (such as API keys or Bearer 
 
 ```python
 from os import getenv
-from microsoft.teams.mcpplugin import McpClientPluginParams
+from microsoft.teams.mcpplugin import McpClientPlugin, McpClientPluginParams
+# ...
 
 # This example uses a PersonalAccessToken, but you may get
 # the user's oauth token as well by getting them to sign in
@@ -88,8 +90,10 @@ Headers are passed with every request to the MCP server, enabling secure access 
 ## Using MCP Client in Message Handlers
 
 ```python
+from microsoft.teams.ai import ChatPrompt
 from microsoft.teams.api import MessageActivity, MessageActivityInput
 from microsoft.teams.apps import ActivityContext
+# ...
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):

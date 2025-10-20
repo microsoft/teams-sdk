@@ -32,7 +32,7 @@ npx @microsoft/teams.cli config add atk.basic
 
 :::tip
 The `atk.basic` configuration is a basic setup for Agents Toolkit. It includes the necessary files and configuration to get started with Teams development.<br/>
-Explore more advanced configurations as needed with teams config --help.<br />
+Explore more advanced configurations as needed with `npx @microsoft/teams.cli config --help`.<br />
 :::
 
 This [CLI](/developer-tools/cli) command adds configuration files required by Agents Toolkit, including:

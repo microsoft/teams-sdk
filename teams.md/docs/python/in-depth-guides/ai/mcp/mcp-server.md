@@ -13,6 +13,7 @@ Your plugin can be configured as follows:
 from microsoft.teams.ai import Function
 from microsoft.teams.mcpplugin import McpServerPlugin
 from pydantic import BaseModel
+# ...
 
 # Configure MCP server with custom name
 mcp_server_plugin = McpServerPlugin(
@@ -45,6 +46,7 @@ And included in the app like any other plugin:
 ```python
 from microsoft.teams.apps import App
 from microsoft.teams.devtools import DevToolsPlugin
+# ...
 
 app = App(plugins=[mcp_server_plugin, DevToolsPlugin()])
 ```
@@ -71,6 +73,10 @@ Here is an example of how to do this. Configure your plugin so that:
 
 ```python
 from typing import Dict
+from microsoft.teams.ai import Function
+from microsoft.teams.mcpplugin import McpServerPlugin
+from pydantic import BaseModel
+# ...
 
 # Storage for conversation IDs (for proactive messaging)
 conversation_storage: Dict[str, str] = {}
@@ -111,8 +117,9 @@ mcp_server_plugin.use_tool(
 **Store Conversation IDs in Message Handler:**
 
 ```python
-from microsoft.teams.api.activities.message.message import MessageActivity
-from microsoft.teams.apps.routing.activity_context import ActivityContext
+from microsoft.teams.api import MessageActivity
+from microsoft.teams.apps import ActivityContext
+# ...
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):

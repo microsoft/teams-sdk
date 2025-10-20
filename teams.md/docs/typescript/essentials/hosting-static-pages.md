@@ -16,4 +16,4 @@ This registers a route that is hosted at `http://localhost:{PORT}/tabs/myApp` or
 
 ## Additional resources
  - For more details about Tab apps, see the [Tabs](../in-depth-guides/tabs) in-depth guide. 
- - For an example of hosting a Dialog, see the [Creating Dialogs](../in-depth-guides/dialogs/creating-dialogs.mdx) in-depth guide.
+ - For an example of hosting a Dialog, see the [Creating Dialogs](../in-depth-guides/dialogs/creating-dialogs.md) in-depth guide.

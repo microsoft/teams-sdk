@@ -75,6 +75,13 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 Additionally, for complex scenarios, you can add multiple functions to the `ChatPrompt`. The LLM will then decide which function to call based on the context of the conversation. The LLM can pick one or more functions to call before returning the final response.
 
 ```python
+import random
+from microsoft.teams.ai import Agent, Function
+from microsoft.teams.api import MessageActivity, MessageActivityInput
+from microsoft.teams.apps import ActivityContext
+from pydantic import BaseModel
+# ...
+
 class GetLocationParams(BaseModel):
     """No parameters needed for location"""
     pass

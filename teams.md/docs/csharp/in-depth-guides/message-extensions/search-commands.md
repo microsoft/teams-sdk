@@ -59,15 +59,17 @@ Here we are defining the `searchQuery` search (or query) command.
 Handle query submission when the `searchQuery` search command is invoked.
 
 ```csharp
-using System.Text.Json;
-using Microsoft.Teams.Api.Cards;
-using Microsoft.Teams.Cards;
+using Microsoft.Teams.Api.Activities.Invokes.MessageExtensions;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Apps.Annotations;
+
+//...
 
 [MessageExtension.Query]
-public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionQuery(
-    [Context] Microsoft.Teams.Api.Activities.Invokes.MessageExtensions.QueryActivity activity,
+public Response OnMessageExtensionQuery(
+    [Context] QueryActivity activity,
     [Context] IContext.Client client,
-    [Context] Microsoft.Teams.Common.Logging.ILogger log)
+    [Context] ILogger log)
 {
     log.Info("[MESSAGE_EXT_QUERY] Search query received");
 
@@ -81,12 +83,12 @@ public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionQuery(
         return CreateSearchResults(query, log);
     }
 
-    return new Microsoft.Teams.Api.MessageExtensions.Response
+    return new Response
     {
-        ComposeExtension = new Microsoft.Teams.Api.MessageExtensions.Result
+        ComposeExtension = new Result
         {
-            Type = Microsoft.Teams.Api.MessageExtensions.ResultType.Result,
-            AttachmentLayout = Microsoft.Teams.Api.Attachment.Layout.List,
+            Type = ResultType.Result,
+            AttachmentLayout = Layout.List,
             Attachments = new List<Microsoft.Teams.Api.MessageExtensions.Attachment>()
         }
     };
@@ -96,14 +98,20 @@ public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionQuery(
 `CreateSearchResults()` method
 
 ```csharp
-private static Microsoft.Teams.Api.MessageExtensions.Response CreateSearchResults(string query, Microsoft.Teams.Common.Logging.ILogger log)
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Cards;
+using Microsoft.Teams.Common;
+
+//...
+
+private static Response CreateSearchResults(string query, ILogger log)
 {
     var attachments = new List<Microsoft.Teams.Api.MessageExtensions.Attachment>();
 
     // Create simple search results
     for (int i = 1; i <= 5; i++)
     {
-        var card = new Microsoft.Teams.Cards.AdaptiveCard
+        var card = new AdaptiveCard
         {
             Body = new List<CardElement>
             {
@@ -128,11 +136,11 @@ private static Microsoft.Teams.Api.MessageExtensions.Response CreateSearchResult
 
         var attachment = new Microsoft.Teams.Api.MessageExtensions.Attachment
         {
-            ContentType = Microsoft.Teams.Api.ContentType.AdaptiveCard,
+            ContentType = ContentType.AdaptiveCard,
             Content = card,
             Preview = new Microsoft.Teams.Api.MessageExtensions.Attachment
             {
-                ContentType = Microsoft.Teams.Api.ContentType.ThumbnailCard,
+                ContentType = ContentType.ThumbnailCard,
                 Content = previewCard
             }
         };
@@ -140,12 +148,12 @@ private static Microsoft.Teams.Api.MessageExtensions.Response CreateSearchResult
         attachments.Add(attachment);
     }
 
-    return new Microsoft.Teams.Api.MessageExtensions.Response
+    return new Response
     {
-        ComposeExtension = new Microsoft.Teams.Api.MessageExtensions.Result
+        ComposeExtension = new Result
         {
-            Type = Microsoft.Teams.Api.MessageExtensions.ResultType.Result,
-            AttachmentLayout = Microsoft.Teams.Api.Attachment.Layout.List,
+            Type = ResultType.Result,
+            AttachmentLayout = Layout.List,
             Attachments = attachments
         }
     };
@@ -163,11 +171,20 @@ When a user clicks on a list item the dummy adaptive card is added to the compos
 To implement custom actions when a user clicks on a search result item, you can handle the select item event:
 
 ```csharp
+using System.Text.Json;
+using Microsoft.Teams.Api;
+using Microsoft.Teams.Api.Activities.Invokes.MessageExtensions;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Apps.Annotations;
+using Microsoft.Teams.Cards;
+
+//...
+
 [MessageExtension.SelectItem]
-public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionSelectItem(
-    [Context] Microsoft.Teams.Api.Activities.Invokes.MessageExtensions.SelectItemActivity activity,
+public Response OnMessageExtensionSelectItem(
+    [Context] SelectItemActivity activity,
     [Context] IContext.Client client,
-    [Context] Microsoft.Teams.Common.Logging.ILogger log)
+    [Context] ILogger log)
 {
     log.Info("[MESSAGE_EXT_SELECT_ITEM] Item selection received");
 
@@ -178,11 +195,11 @@ public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionSelectIt
 }
 
 // Helper method to create item selection response
-private static Microsoft.Teams.Api.MessageExtensions.Response CreateItemSelectionResponse(object? selectedItem, Microsoft.Teams.Common.Logging.ILogger log)
+private static Response CreateItemSelectionResponse(object? selectedItem, ILogger log)
 {
     var itemJson = JsonSerializer.Serialize(selectedItem);
 
-    var card = new Microsoft.Teams.Cards.AdaptiveCard
+    var card = new AdaptiveCard
     {
         Schema = "http://adaptivecards.io/schemas/adaptive-card.json",
         Body = new List<CardElement>
@@ -208,16 +225,16 @@ private static Microsoft.Teams.Api.MessageExtensions.Response CreateItemSelectio
 
     var attachment = new Microsoft.Teams.Api.MessageExtensions.Attachment
     {
-        ContentType = new Microsoft.Teams.Api.ContentType("application/vnd.microsoft.card.adaptive"),
+        ContentType = new ContentType("application/vnd.microsoft.card.adaptive"),
         Content = card
     };
 
-    return new Microsoft.Teams.Api.MessageExtensions.Response
+    return new Response
     {
-        ComposeExtension = new Microsoft.Teams.Api.MessageExtensions.Result
+        ComposeExtension = new Result
         {
-            Type = Microsoft.Teams.Api.MessageExtensions.ResultType.Result,
-            AttachmentLayout = Microsoft.Teams.Api.Attachment.Layout.List,
+            Type = ResultType.Result,
+            AttachmentLayout = Layout.List,
             Attachments = new List<Microsoft.Teams.Api.MessageExtensions.Attachment> { attachment }
         }
     };

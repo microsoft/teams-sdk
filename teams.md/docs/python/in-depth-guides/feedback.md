@@ -47,10 +47,13 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 Once the user decides to like/dislike the message, you can handle the feedback in a received event. Once received, you can choose to include it in your persistent store.
 ```python
+import json
+from typing import Dict, Any
 from microsoft.teams.api import MessageSubmitActionInvokeActivity
 from microsoft.teams.apps import ActivityContext
+# ...
 
-# Handle feedback submission events 
+# Handle feedback submission events
 @app.on_message_submit_feedback
 async def handle_message_feedback(ctx: ActivityContext[MessageSubmitActionInvokeActivity]):
     """Handle feedback submission events"""

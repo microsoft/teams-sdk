@@ -11,6 +11,10 @@ The main thing to note is that you need to have the `conversation_id` of the cha
 
 
 ```python
+from microsoft.teams.api import InstalledActivity, MessageActivityInput
+from microsoft.teams.apps import ActivityContext
+# ...
+
 # This would be some persistent storage
 storage = dict[str, str]()
 
@@ -27,6 +31,9 @@ async def handle_install_add(ctx: ActivityContext[InstalledActivity]):
 Then, when you want to send a proactive message, you can retrieve the `conversation_id` from storage and use it to send the message.
 
 ```python
+from microsoft.teams.api import MessageActivityInput
+# ...
+
 async def send_proactive_notification(user_id: str):
     conversation_id = storage.get(user_id, "")
     if not conversation_id:

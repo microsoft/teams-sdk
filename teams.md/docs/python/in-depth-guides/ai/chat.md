@@ -84,6 +84,12 @@ Streaming is only currently supported for single 1:1 chats, and not for groups o
 :::
 
 ```python
+from microsoft.teams.ai import ChatPrompt
+from microsoft.teams.api import MessageActivity, MessageActivityInput
+from microsoft.teams.apps import ActivityContext
+from microsoft.teams.openai import OpenAICompletionsAIModel
+# ...
+
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     openai_model = OpenAICompletionsAIModel(model=AZURE_OPENAI_MODEL)

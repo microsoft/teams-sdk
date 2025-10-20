@@ -42,8 +42,8 @@ Here are the events that you can start building handlers for:
 We can subscribe to errors that occur in the app.
 
 ```typescript
-app.event('error', ({ err, log }) => {
-  log.error(err);
+app.event('error', ({ error }) => {
+  app.log.error(error);
   // Or Alternatively, send it to an observability platform
 });
 ```

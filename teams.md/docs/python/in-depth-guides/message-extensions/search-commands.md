@@ -59,6 +59,9 @@ Here we are defining the `searchQuery` search (or query) command.
 Handle opening adaptive card dialog when the `searchQuery` query is submitted.
 
 ```python
+from microsoft.teams.api import AdaptiveCardAttachment, MessageExtensionQueryInvokeActivity, ThumbnailCardAttachment, card_attachment, InvokeResponse, AttachmentLayout, MessagingExtensionAttachment, MessagingExtensionInvokeResponse, MessagingExtensionResult, MessagingExtensionResultType
+# ...
+
 @app.on_message_ext_query
 async def handle_message_ext_query(ctx: ActivityContext[MessageExtensionQueryInvokeActivity]):
     command_id = ctx.activity.value.command_id
@@ -91,6 +94,9 @@ async def handle_message_ext_query(ctx: ActivityContext[MessageExtensionQueryInv
 `create_dummy_cards()` method
 
 ```python
+from typing import Any, Dict, List
+from microsoft.teams.cards import AdaptiveCard
+# ...
 
 async def create_dummy_cards(search_query: str) -> List[Dict[str, Any]]:
     """Create dummy cards for search results."""
@@ -146,6 +152,10 @@ When a user clicks on a list item the dummy adaptive card is added to the compos
 To implement custom actions when a user clicks on a search result item, you can add the `tap` property to the preview card. This allows you to handle the click event with custom logic:
 
 ```python
+from microsoft.teams.api import MessageExtensionSelectItemInvokeActivity, AttachmentLayout, MessagingExtensionInvokeResponse, MessagingExtensionResult, MessagingExtensionResultType
+from microsoft.teams.apps import ActivityContext
+# ...
+
 @app.on_message_ext_select_item
 async def handle_message_ext_select_item(ctx: ActivityContext[MessageExtensionSelectItemInvokeActivity]):
     option = getattr(ctx.activity.value, "option", None)

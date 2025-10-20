@@ -10,27 +10,21 @@ Teams AI Library v2 is a suite of packages used to develop on Microsoft Teams. R
 
 ## Quickstart
 
-The Teams CLI makes it easy to bootstrap your first agent. First, install the CLI via NPM:
-
-```bash
-npm install -g @microsoft/teams.cli
-```
-
-Next, use the CLI to create your agent:
+The Teams CLI makes it easy to bootstrap your first agent. Using `npx @microsoft/teams.cli` you can get started using these commands:
 
 **TypeScript:**
 ```bash
-teams new typescript quote-agent --template echo
+npx @microsoft/teams.cli@latest new typescript quote-agent --template echo
 ```
 
 **C#:**
 ```bash
-teams new csharp quote-agent --template echo
+npx @microsoft/teams.cli@latest new csharp quote-agent --template echo
 ```
 
 **Python:**
 ```bash
-teams new python quote-agent --template echo
+npx @microsoft/teams.cli@latest new python quote-agent --template echo
 ```
 
 ## Overview

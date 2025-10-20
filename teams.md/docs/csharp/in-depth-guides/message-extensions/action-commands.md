@@ -112,14 +112,17 @@ Handle submission when the `createCard` or `getMessageDetails` actions commands 
 
 ```csharp
 using System.Text.Json;
-using Microsoft.Teams.Api.Cards;
-using Microsoft.Teams.Cards;
+using Microsoft.Teams.Api.Activities.Invokes.MessageExtensions;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Apps.Annotations;
+
+//...
 
 [MessageExtension.SubmitAction]
-public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionSubmit(
-    [Context] Microsoft.Teams.Api.Activities.Invokes.MessageExtensions.SubmitActionActivity activity,
+public Response OnMessageExtensionSubmit(
+    [Context] SubmitActionActivity activity,
     [Context] IContext.Client client,
-    [Context] Microsoft.Teams.Common.Logging.ILogger log)
+    [Context] ILogger log)
 {
     log.Info("[MESSAGE_EXT_SUBMIT] Action submit received");
 
@@ -147,14 +150,21 @@ public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionSubmit(
 `HandleCreateCard()` method
 
 ```csharp
-private static Microsoft.Teams.Api.MessageExtensions.Response HandleCreateCard(JsonElement? data, Microsoft.Teams.Common.Logging.ILogger log)
+using System.Text.Json;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Cards;
+using Microsoft.Teams.Common;
+
+//...
+
+private static Response HandleCreateCard(JsonElement? data, ILogger log)
 {
     var title = GetJsonValue(data, "title") ?? "Default Title";
     var description = GetJsonValue(data, "description") ?? "Default Description";
 
     log.Info($"[CREATE_CARD] Title: {title}, Description: {description}");
 
-    var card = new Microsoft.Teams.Cards.AdaptiveCard
+    var card = new AdaptiveCard
     {
         Schema = "http://adaptivecards.io/schemas/adaptive-card.json",
         Body = new List<CardElement>
@@ -180,16 +190,16 @@ private static Microsoft.Teams.Api.MessageExtensions.Response HandleCreateCard(J
 
     var attachment = new Microsoft.Teams.Api.MessageExtensions.Attachment
     {
-        ContentType = Microsoft.Teams.Api.ContentType.AdaptiveCard,
+        ContentType = ContentType.AdaptiveCard,
         Content = card
     };
 
-    return new Microsoft.Teams.Api.MessageExtensions.Response
+    return new Response
     {
-        ComposeExtension = new Microsoft.Teams.Api.MessageExtensions.Result
+        ComposeExtension = new Result
         {
-            Type = Microsoft.Teams.Api.MessageExtensions.ResultType.Result,
-            AttachmentLayout = Microsoft.Teams.Api.Attachment.Layout.List,
+            Type = ResultType.Result,
+            AttachmentLayout = Layout.List,
             Attachments = new List<Microsoft.Teams.Api.MessageExtensions.Attachment> { attachment }
         }
     };
@@ -199,14 +209,21 @@ private static Microsoft.Teams.Api.MessageExtensions.Response HandleCreateCard(J
 `HandleGetMessageDetails()` method
 
 ```csharp
-private static Microsoft.Teams.Api.MessageExtensions.Response HandleGetMessageDetails(Microsoft.Teams.Api.Activities.Invokes.MessageExtensions.SubmitActionActivity activity, Microsoft.Teams.Common.Logging.ILogger log)
+using Microsoft.Teams.Api;
+using Microsoft.Teams.Api.Activities.Invokes.MessageExtensions;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Cards;
+
+//...
+
+private static Response HandleGetMessageDetails(SubmitActionActivity activity, ILogger log)
 {
     var messageText = activity.Value?.MessagePayload?.Body?.Content ?? "No message content";
     var messageId = activity.Value?.MessagePayload?.Id ?? "Unknown";
 
     log.Info($"[GET_MESSAGE_DETAILS] Message ID: {messageId}");
 
-    var card = new Microsoft.Teams.Cards.AdaptiveCard
+    var card = new AdaptiveCard
     {
         Schema = "http://adaptivecards.io/schemas/adaptive-card.json",
         Body = new List<CardElement>
@@ -230,16 +247,16 @@ private static Microsoft.Teams.Api.MessageExtensions.Response HandleGetMessageDe
 
     var attachment = new Microsoft.Teams.Api.MessageExtensions.Attachment
     {
-        ContentType = new Microsoft.Teams.Api.ContentType("application/vnd.microsoft.card.adaptive"),
+        ContentType = new ContentType("application/vnd.microsoft.card.adaptive"),
         Content = card
     };
 
-    return new Microsoft.Teams.Api.MessageExtensions.Response
+    return new Response
     {
-        ComposeExtension = new Microsoft.Teams.Api.MessageExtensions.Result
+        ComposeExtension = new Result
         {
-            Type = Microsoft.Teams.Api.MessageExtensions.ResultType.Result,
-            AttachmentLayout = Microsoft.Teams.Api.Attachment.Layout.List,
+            Type = ResultType.Result,
+            AttachmentLayout = Layout.List,
             Attachments = new List<Microsoft.Teams.Api.MessageExtensions.Attachment> { attachment }
         }
     };
@@ -252,10 +269,16 @@ private static Microsoft.Teams.Api.MessageExtensions.Response HandleGetMessageDe
 Handle opening adaptive card dialog when the `fetchConversationMembers` command is invoked.
 
 ```csharp
+using Microsoft.Teams.Api.Activities.Invokes.MessageExtensions;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Apps.Annotations;
+
+//...
+
 [MessageExtension.FetchTask]
-public async Task<Microsoft.Teams.Api.MessageExtensions.ActionResponse> OnMessageExtensionFetchTask(
-    [Context] Microsoft.Teams.Api.Activities.Invokes.MessageExtensions.FetchTaskActivity activity,
-    [Context] Microsoft.Teams.Common.Logging.ILogger log)
+public async Task<ActionResponse> OnMessageExtensionFetchTask(
+    [Context] FetchTaskActivity activity,
+    [Context] ILogger log)
 {
     log.Info("[MESSAGE_EXT_FETCH_TASK] Fetch task received");
 
@@ -269,12 +292,20 @@ public async Task<Microsoft.Teams.Api.MessageExtensions.ActionResponse> OnMessag
 `CreateFetchTaskResponse()` method
 
 ```csharp
-private static Microsoft.Teams.Api.MessageExtensions.ActionResponse CreateFetchTaskResponse(string? commandId, Microsoft.Teams.Common.Logging.ILogger log)
+using Microsoft.Teams.Api;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Api.TaskModules;
+using Microsoft.Teams.Cards;
+using Microsoft.Teams.Common;
+
+//...
+
+private static ActionResponse CreateFetchTaskResponse(string? commandId, ILogger log)
 {
     log.Info($"[CREATE_FETCH_TASK] Creating task for command: {commandId}");
 
     // Create an adaptive card for the task module
-    var card = new Microsoft.Teams.Cards.AdaptiveCard
+    var card = new AdaptiveCard
     {
         Body = new List<CardElement>
         {
@@ -286,13 +317,13 @@ private static Microsoft.Teams.Api.MessageExtensions.ActionResponse CreateFetchT
         }
     };
 
-    return new Microsoft.Teams.Api.MessageExtensions.ActionResponse
+    return new ActionResponse
     {
-        Task = new Microsoft.Teams.Api.TaskModules.ContinueTask(new Microsoft.Teams.Api.TaskModules.TaskInfo
+        Task = new ContinueTask(new TaskInfo
         {
             Title = "Fetch Task Dialog",
-            Height = new Microsoft.Teams.Common.Union<int, Microsoft.Teams.Api.TaskModules.Size>(Microsoft.Teams.Api.TaskModules.Size.Small),
-            Width = new Microsoft.Teams.Common.Union<int, Microsoft.Teams.Api.TaskModules.Size>(Microsoft.Teams.Api.TaskModules.Size.Small),
+            Height = new Union<int, Size>(Size.Small),
+            Width = new Union<int, Size>(Size.Small),
             Card = new Microsoft.Teams.Api.Attachment(card)
         })
     };
@@ -309,13 +340,13 @@ private static string? GetJsonValue(JsonElement? data, string key)
 }
 
 // Helper method to create error responses
-private static Microsoft.Teams.Api.MessageExtensions.Response CreateErrorActionResponse(string message)
+private static Response CreateErrorActionResponse(string message)
 {
-    return new Microsoft.Teams.Api.MessageExtensions.Response
+    return new Response
     {
-        ComposeExtension = new Microsoft.Teams.Api.MessageExtensions.Result
+        ComposeExtension = new Result
         {
-            Type = Microsoft.Teams.Api.MessageExtensions.ResultType.Message,
+            Type = ResultType.Message,
             Text = message
         }
     };

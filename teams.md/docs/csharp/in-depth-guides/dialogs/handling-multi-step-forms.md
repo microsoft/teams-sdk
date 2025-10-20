@@ -7,10 +7,19 @@ summary: Tutorial on implementing multi-step dialogs in Teams, demonstrating how
 
 Dialogs can become complex yet powerful with multi-step forms. These forms can alter the flow of the survey depending on the user's input or customize subsequent steps based on previous answers.
 
+## Creating the Initial Dialog
+
 Start off by sending an initial card in the `TaskFetch` event.
 
 ```csharp
-private static Microsoft.Teams.Api.TaskModules.Response CreateMultiStepFormDialog()
+using System.Text.Json;
+using Microsoft.Teams.Api;
+using Microsoft.Teams.Api.TaskModules;
+using Microsoft.Teams.Cards;
+
+//...
+
+private static Response CreateMultiStepFormDialog()
 {
     var cardJson = """
     {
@@ -18,9 +27,9 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateMultiStepFormDialo
         "version": "1.4",
         "body": [
             {
-                "type": "TextBlock", 
-                "text": "This is a multi-step form", 
-                "size": "Large", 
+                "type": "TextBlock",
+                "text": "This is a multi-step form",
+                "size": "Large",
                 "weight": "Bolder"
             },
             {
@@ -33,8 +42,8 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateMultiStepFormDialo
         ],
         "actions": [
             {
-                "type": "Action.Submit", 
-                "title": "Submit", 
+                "type": "Action.Submit",
+                "title": "Submit",
                 "data": {"submissiondialogtype": "webpage_dialog_step_1"}
             }
         ]
@@ -61,6 +70,13 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateMultiStepFormDialo
 Then in the submission handler, you can choose to `continue` the dialog with a different card.
 
 ```csharp
+using System.Text.Json;
+using Microsoft.Teams.Api;
+using Microsoft.Teams.Api.TaskModules;
+using Microsoft.Teams.Cards;
+
+//...
+
 // Add these cases to your OnTaskSubmit method
 case "webpage_dialog_step_1":
     var nameStep1 = GetFormValue("name") ?? "Unknown";
@@ -70,9 +86,9 @@ case "webpage_dialog_step_1":
         "version": "1.4",
         "body": [
             {
-                "type": "TextBlock", 
-                "text": "Email", 
-                "size": "Large", 
+                "type": "TextBlock",
+                "text": "Email",
+                "size": "Large",
                 "weight": "Bolder"
             },
             {
@@ -85,8 +101,8 @@ case "webpage_dialog_step_1":
         ],
         "actions": [
             {
-                "type": "Action.Submit", 
-                "title": "Submit", 
+                "type": "Action.Submit",
+                "title": "Submit",
                 "data": {"submissiondialogtype": "webpage_dialog_step_2", "name": "{{nameStep1}}"}
             }
         ]
@@ -120,8 +136,19 @@ case "webpage_dialog_step_2":
 Here's the complete example showing how to handle a multi-step form:
 
 ```csharp
+using System.Text.Json;
+using Microsoft.Teams.Api;
+using Microsoft.Teams.Api.TaskModules;
+using Microsoft.Teams.Apps;
+using Microsoft.Teams.Apps.Activities.Invokes;
+using Microsoft.Teams.Apps.Annotations;
+using Microsoft.Teams.Cards;
+using Microsoft.Teams.Common.Logging;
+
+//...
+
 [TaskSubmit]
-public async Task<Microsoft.Teams.Api.TaskModules.Response> OnTaskSubmit([Context] Tasks.SubmitActivity activity, [Context] IContext.Client client, [Context] ILogger log)
+public async Task<Response> OnTaskSubmit([Context] Tasks.SubmitActivity activity, [Context] IContext.Client client, [Context] ILogger log)
 {
     log.Info("[TASK_SUBMIT] Task submit request received");
 
@@ -159,9 +186,9 @@ public async Task<Microsoft.Teams.Api.TaskModules.Response> OnTaskSubmit([Contex
                 "version": "1.4",
                 "body": [
                     {
-                        "type": "TextBlock", 
-                        "text": "Email", 
-                        "size": "Large", 
+                        "type": "TextBlock",
+                        "text": "Email",
+                        "size": "Large",
                         "weight": "Bolder"
                     },
                     {
@@ -174,8 +201,8 @@ public async Task<Microsoft.Teams.Api.TaskModules.Response> OnTaskSubmit([Contex
                 ],
                 "actions": [
                     {
-                        "type": "Action.Submit", 
-                        "title": "Submit", 
+                        "type": "Action.Submit",
+                        "title": "Submit",
                         "data": {"submissiondialogtype": "webpage_dialog_step_2", "name": "{{nameStep1}}"}
                     }
                 ]

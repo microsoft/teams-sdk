@@ -41,8 +41,10 @@ flowchart LR
 
 Chat generation is the the most basic way of interacting with an LLM model. It involves setting up your ChatPrompt, the Model, and sending it the message.
 
- Import the relevant namespaces:
- ```csharp
+### Imperative Approach
+
+Import the relevant namespaces:
+```csharp
 // AI
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.AI.Prompts;
@@ -56,34 +58,89 @@ using Microsoft.Teams.Apps.Annotations;
 Create a ChatModel, ChatPrompt, and handle user - LLM interactions:
 
 ```csharp
-[TeamsController("main")]
-public class MainController
+using Microsoft.Teams.AI.Models.OpenAI;
+using Microsoft.Teams.AI.Prompts;
+using Microsoft.Teams.AI.Templates;
+using Microsoft.Teams.Api.Activities;
+using Microsoft.Teams.Apps.Activities;
+using Azure.AI.OpenAI;
+using System.ClientModel;
+
+// Configuration
+var azureOpenAIModel = configuration["AzureOpenAIModel"]!;
+var azureOpenAIEndpoint = configuration["AzureOpenAIEndpoint"]!;
+var azureOpenAIKey = configuration["AzureOpenAIKey"]!;
+
+var azureOpenAI = new AzureOpenAIClient(
+    new Uri(azureOpenAIEndpoint),
+    new ApiKeyCredential(azureOpenAIKey)
+);
+
+// AI Model
+var aiModel = new OpenAIChatModel(azureOpenAIModel, azureOpenAI);
+
+// Simple chat handler
+teamsApp.OnMessage(async (context) =>
 {
-    [Message]
-    public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
+    var prompt = new OpenAIChatPrompt(aiModel, new ChatPromptOptions
     {
-        // Create the OpenAI chat model
-        var model = new OpenAIChatModel(
-            model: "gpt-4o",
-            apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!
-        );
+        Instructions = new StringTemplate("You are a friendly assistant who talks like a pirate")
+    });
 
-        // Create a chat prompt
-        var prompt = new OpenAIChatPrompt(
-            model, 
-            new ChatPromptOptions().WithInstructions("You are a friendly assistant who talks like a pirate.")
-        );
-
-        // Send the user's message to the prompt and get a response
-        var response = await prompt.Send(activity.Text);
-        if (!string.IsNullOrEmpty(response.Content))
+    var result = await prompt.Send(context.Activity.Text);
+    if (result.Content != null)
+    {
+        var messageActivity = new MessageActivity
         {
-            var responseActivity = new MessageActivity { Text = response.Content }.AddAIGenerated();
-            await client.Send(responseActivity);
-            // Ahoy, matey! 🏴‍☠️ How be ye doin' this fine day on th' high seas? What can this ol’ salty sea dog help ye with? 🚢☠️
-        }
+            Text = result.Content,
+        }.AddAIGenerated();
+        await context.Send(messageActivity);
+        // Ahoy, matey! 🏴‍☠️ How be ye doin' this fine day on th' high seas? What can this ol' salty sea dog help ye with? 🚢☠️
     }
+});
+```
+
+### Declarative Approach
+
+This approach uses attributes to declare prompts, providing clean separation of concerns.
+
+**Create a Prompt Class:**
+
+```csharp
+using Microsoft.Teams.AI.Annotations;
+
+namespace Samples.AI.Prompts;
+
+[Prompt]
+[Prompt.Description("A friendly pirate assistant")]
+[Prompt.Instructions("You are a friendly assistant who talks like a pirate")]
+public class PiratePrompt
+{
 }
+```
+
+**Usage in Program.cs:**
+
+```csharp
+using Microsoft.Teams.AI.Models.OpenAI;
+using Microsoft.Teams.Api.Activities;
+
+// Create the AI model
+var aiModel = new OpenAIChatModel(azureOpenAIModel, azureOpenAI);
+
+// Use the prompt with OpenAIChatPrompt.From()
+teamsApp.OnMessage(async (context) =>
+{
+    var prompt = OpenAIChatPrompt.From(aiModel, new Samples.AI.Prompts.PiratePrompt());
+
+    var result = await prompt.Send(context.Activity.Text);
+
+    if (!string.IsNullOrEmpty(result.Content))
+    {
+        await context.Send(new MessageActivity { Text = result.Content }.AddAIGenerated());
+        // Ahoy, matey! 🏴‍☠️ How be ye doin' this fine day on th' high seas?
+    }
+});
 ```
 
 :::note
@@ -99,10 +156,25 @@ Streaming is only currently supported for single 1:1 chats, and not for groups o
 :::
 
 ```csharp
-        // Send the user's message to the prompt and stream the response back
-        var response = await prompt.Send(activity.Text, null, 
-            (chunk) => Task.Run(() => context.Stream.Emit(chunk)), 
-            context.CancellationToken);
+// Streaming handler
+teamsApp.OnMessage(async (context) =>
+{
+    var match = Regex.Match(context.Activity.Text ?? "", @"^stream\s+(.+)", RegexOptions.IgnoreCase);
+    if (match.Success)
+    {
+        var query = match.Groups[1].Value.Trim();
+        var prompt = new OpenAIChatPrompt(aiModel, new ChatPromptOptions
+        {
+            Instructions = new StringTemplate("You are a friendly assistant who responds in extremely verbose language")
+        });
+
+        var result = await prompt.Send(query, (chunk) =>
+        {
+            context.Stream.Emit(chunk);
+            return Task.CompletedTask;
+        });
+    }
+});
 ```
 ### User experience
 ![Animated image showing agent response text incrementally appearing in the chat window.](/screenshots/streaming-chat.gif)

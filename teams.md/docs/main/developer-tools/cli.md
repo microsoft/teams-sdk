@@ -14,26 +14,13 @@ The Teams CLI was created with the intent of supporting developers by making com
 | `environment` | Manage multiple environments (e.g. dev, prod) and their keys for your agent. |
 
 :::tip
-With the CLI installed, you can enter `teams <token-arguments> --help` at any command level to access information about the command, tokens, or required arguments.
-:::
-
-## Installation
-
-Install the Teams CLI globally using npm:
-
-```sh
-npm install -g @microsoft/teams.cli
-```
-
-:::tip
-If you prefer not to install globally, all commands below can replace `teams` with npx:
-`npx @microsoft/teams.cli <arguments>`
+With the CLI, you can enter `npx @microsoft/teams.cli <token-arguments> --help` at any command level to access information about the command, tokens, or required arguments.
 :::
 
 ## Create an agent with one command line
 
 ```sh
-teams new <typscript | csharp | python> <app-name> <optional>
+npx @microsoft/teams.cli@latest new <typscript | csharp | python> <app-name> <optional>
 ```
 
 The `new` token will create a brand new agent with `app-name` applied as the directory name and project name.
@@ -54,7 +41,7 @@ $env:ENABLE_EXPERIMENTAL_PYTHON_OPTIONS = 1
 ### Optional parameters
 
 :::tip
-Use command line `teams new --help` to see the latest options for all optional params.
+Use command line `npx @microsoft/teams.cli --help` to see the latest options for all optional params.
 :::
 
 | Parameter | Description |
@@ -70,7 +57,7 @@ Use command line `teams new --help` to see the latest options for all optional p
 An existing project may also have the appropriate Microsoft 365 Agents Toolkit configuration files added by configuration name.
 
 ```bash
-teams config add <config-name>
+npx @microsoft/teams.cli config add <config-name>
 ```
 
 | Configuration | Description |
@@ -87,5 +74,5 @@ Using this command will include
 ## Remove Agents Toolkit configuration files
 
 ```bash
-teams config remove <config-name>
+npx @microsoft/teams.cli config remove <config-name>
 ```

@@ -15,6 +15,14 @@ If you're not familiar with how to build Adaptive Cards, check out [the cards gu
 To open a dialog, you need to supply a special type of action to the Adaptive Card. The `TaskFetchAction` is specifically designed for this purpose - it automatically sets up the proper Teams data structure to trigger a dialog. Once this button is clicked, the dialog will open and ask the application what to show.
 
 ```csharp
+using Microsoft.Teams.Api.Activities;
+using Microsoft.Teams.Apps;
+using Microsoft.Teams.Apps.Annotations;
+using Microsoft.Teams.Cards;
+using Microsoft.Teams.Common.Logging;
+
+//...
+
 [Message]
 public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client, [Context] ILogger log)
 {
@@ -61,6 +69,15 @@ private static AdaptiveCard CreateDialogLauncherCard()
 Once an action is executed to open a dialog, the Teams client will send an event to the agent to request what the content of the dialog should be. When using `TaskFetchAction`, the data is nested inside an `MsTeams` property structure.
 
 ```csharp
+using System.Text.Json;
+using Microsoft.Teams.Api.TaskModules;
+using Microsoft.Teams.Apps;
+using Microsoft.Teams.Apps.Activities.Invokes;
+using Microsoft.Teams.Apps.Annotations;
+using Microsoft.Teams.Common.Logging;
+
+//...
+
 [TaskFetch]
 public Microsoft.Teams.Api.TaskModules.Response OnTaskFetch([Context] Tasks.FetchActivity activity, [Context] IContext.Client client, [Context] ILogger log)
 {
@@ -68,7 +85,8 @@ public Microsoft.Teams.Api.TaskModules.Response OnTaskFetch([Context] Tasks.Fetc
     if (data == null)
     {
         log.Info("[TASK_FETCH] No data found in the activity value");
-        return new Microsoft.Teams.Api.TaskModules.Response(new Microsoft.Teams.Api.TaskModules.MessageTask("No data found in the activity value"));
+        return new Microsoft.Teams.Api.TaskModules.Response(
+            new Microsoft.Teams.Api.TaskModules.MessageTask("No data found in the activity value"));
     }
 
     var dialogType = data.Value.TryGetProperty("opendialogtype", out var dialogTypeElement) && dialogTypeElement.ValueKind == JsonValueKind.String
@@ -83,7 +101,8 @@ public Microsoft.Teams.Api.TaskModules.Response OnTaskFetch([Context] Tasks.Fetc
         "webpage_dialog" => CreateWebpageDialog(_configuration, log),
         "multi_step_form" => CreateMultiStepFormDialog(),
         "mixed_example" => CreateMixedExampleDialog(),
-        _ => new Microsoft.Teams.Api.TaskModules.Response(new Microsoft.Teams.Api.TaskModules.MessageTask("Unknown dialog type"))
+        _ => new Microsoft.Teams.Api.TaskModules.Response(
+            new Microsoft.Teams.Api.TaskModules.MessageTask("Unknown dialog type"))
     };
 }
 ```
@@ -93,35 +112,55 @@ public Microsoft.Teams.Api.TaskModules.Response OnTaskFetch([Context] Tasks.Fetc
 You can render an Adaptive Card in a dialog by returning a card response.
 
 ```csharp
+using System.Text.Json;
+using Microsoft.Teams.Api;
+using Microsoft.Teams.Api.TaskModules;
+using Microsoft.Teams.Cards;
+
+//...
+
 private static Microsoft.Teams.Api.TaskModules.Response CreateSimpleFormDialog()
 {
-    var cardJson = """
+    var choices = new List<Choice>
     {
-        "type": "AdaptiveCard",
-        "version": "1.4",
-        "body": [
-            {
-                "type": "TextBlock", 
-                "text": "This is a simple form", 
-                "size": "Large", 
-                "weight": "Bolder"
-            },
-            {
-                "type": "Input.Text",
-                "id": "name",
-                "label": "Name",
-                "placeholder": "Enter your name",
-                "isRequired": true
-            }
-        ],
-        "actions": [
-            {"type": "Action.Submit", "title": "Submit", "data": {"submissiondialogtype": "simple_form"}}
-        ]
-    }
-    """;
+        new Choice { Title = "Option 1", Value = "opt1" },
+        new Choice { Title = "Option 2", Value = "opt2" },
+        new Choice { Title = "Option 3", Value = "opt3" }
+    };
 
-    var dialogCard = JsonSerializer.Deserialize<AdaptiveCard>(cardJson)
-        ?? throw new InvalidOperationException("Failed to deserialize simple form card");
+    var dialogCard = new AdaptiveCard
+    {
+        Body = new List<CardElement>
+        {
+            new TextBlock("This is a simple form")
+            {
+                Size = TextSize.Large,
+                Weight = TextWeight.Bolder
+            },
+            new TextInput
+            {
+                Id = "name",
+                Label = "Name",
+                Placeholder = "Enter your name",
+                IsRequired = true
+            },
+            new ChoiceSetInput
+            {
+                Id = "preference",
+                Label = "Select your preference",
+                Choices = choices,
+                Style = StyleEnum.Compact
+            }
+        },
+        Actions = new List<Action>
+        {
+            new SubmitAction
+            {
+                Title = "Submit",
+                Data = new { submissiondialogtype = "simple_form" }
+            }
+        }
+    };
 
     var taskInfo = new TaskInfo
     {
@@ -133,7 +172,8 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateSimpleFormDialog()
         }
     };
 
-    return new Response(new ContinueTask(taskInfo));
+    return new Microsoft.Teams.Api.TaskModules.Response(
+        new Microsoft.Teams.Api.TaskModules.ContinueTask(taskInfo));
 }
 ```
 
@@ -149,6 +189,11 @@ You can render a webpage in a dialog as well. There are some security requiremen
 2. The webpage must also host the [teams-js client library](https://www.npmjs.com/package/@microsoft/teams-js). The reason for this is that for security purposes, the Teams client will not render arbitrary webpages. As such, the webpage must explicitly opt-in to being rendered in the Teams client. Setting up the teams-js client library handles this for you.
 
 ```csharp
+using Microsoft.Teams.Api.TaskModules;
+using Microsoft.Teams.Common;
+
+//...
+
 private static Microsoft.Teams.Api.TaskModules.Response CreateWebpageDialog(IConfiguration configuration, ILogger log)
 {
     var botEndpoint = configuration["BotEndpoint"];
@@ -174,7 +219,8 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateWebpageDialog(ICon
         Url = $"{botEndpoint}/tabs/dialog-form"
     };
 
-    return new Response(new ContinueTask(taskInfo));
+    return new Microsoft.Teams.Api.TaskModules.Response(
+        new Microsoft.Teams.Api.TaskModules.ContinueTask(taskInfo));
 }
 ```
 

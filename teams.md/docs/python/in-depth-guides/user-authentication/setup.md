@@ -33,7 +33,7 @@ You can follow the [Enable SSO for bot and message extension app using Entra ID]
 Open your terminal and navigate to the root folder of your app and run the following command:
 
 ```sh
-teams config add atk.oauth
+npx @microsoft/teams.cli config add atk.oauth
 ```
 
 The `atk.oauth` configuration is a basic setup for Agents Toolkit along with configurations to authenticate the user with Microsoft Entra ID to access Microsoft Graph APIs.

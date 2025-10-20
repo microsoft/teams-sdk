@@ -15,6 +15,11 @@ If you're not familiar with how to build Adaptive Cards, check out [the cards gu
 To open a dialog, you need to supply a special type of action as to the Adaptive Card. Once this button is clicked, the dialog will open and ask the application what to show.
 
 ```python
+from microsoft.teams.api import MessageActivity, MessageActivityInput, TypingActivityInput
+from microsoft.teams.apps import ActivityContext
+from microsoft.teams.cards import AdaptiveCard, TextBlock, TaskFetchAction
+# ...
+
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     await ctx.reply(TypingActivityInput())
@@ -35,7 +40,6 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         TaskFetchAction(value={"OpenDialogType": "multi_step_form"}).with_title("Multi-step Form"),
         TaskFetchAction(value={"OpenDialogType": "mixed_example"}).with_title("Mixed Example")
     ])
-
     # Send the card as an attachment
     message = MessageActivityInput(text="Enter this form").add_card(card)
     await ctx.send(message)
@@ -69,10 +73,16 @@ async def handle_dialog_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
 You can render an Adaptive Card in a dialog by returning a card response.
 
 ```python
+from microsoft.teams.api import AdaptiveCardAttachment, TaskFetchInvokeActivity, InvokeResponse, card_attachment
+from microsoft.teams.api import CardTaskModuleTaskInfo, TaskModuleContinueResponse, TaskModuleResponse
+from microsoft.teams.apps import ActivityContext
+from microsoft.teams.cards import AdaptiveCard, TextBlock, TextInput, SubmitAction, SubmitActionData
+# ...
 
 @app.on_dialog_open
 async def handle_dialog_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
     """Handle dialog open events for all dialog types."""
+    # Return an object with the task value that renders a card
     dialog_card = AdaptiveCard(
         schema="http://adaptivecards.io/schemas/adaptive-card.json",
         body=[
@@ -84,6 +94,7 @@ async def handle_dialog_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
         ]
     )
     
+
     # Return an object with the task value that renders a card
     return InvokeResponse(
                 body=TaskModuleResponse(
@@ -109,6 +120,10 @@ You can render a webpage in a dialog as well. There are some security requiremen
 2. The webpage must also host the [teams-js client library](https://www.npmjs.com/package/@microsoft/teams-js). The reason for this is that for security purposes, the Teams client will not render arbitrary webpages. As such, the webpage must explicitly opt-in to being rendered in the Teams client. Setting up the teams-js client library handles this for you.
 
 ```python
+import os
+from microsoft.teams.api import InvokeResponse, TaskModuleContinueResponse, TaskModuleResponse, UrlTaskModuleTaskInfo
+# ...
+
 return InvokeResponse(
                 body=TaskModuleResponse(
                     task=TaskModuleContinueResponse(

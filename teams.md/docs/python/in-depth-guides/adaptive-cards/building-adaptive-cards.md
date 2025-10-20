@@ -135,6 +135,12 @@ You can use a combination of raw JSON and builder helpers depending on whatever 
 Below is a complete example showing a task management form. Notice how the builder pattern keeps the file readable and maintainable:
 
 ```python
+from datetime import datetime
+from microsoft.teams.api import MessageActivity, TypingActivityInput
+from microsoft.teams.apps import ActivityContext
+from microsoft.teams.cards import AdaptiveCard, TextBlock, ActionSet, ExecuteAction, Choice, ChoiceSetInput, DateInput, TextInput
+# ...
+
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     await ctx.reply(TypingActivityInput())

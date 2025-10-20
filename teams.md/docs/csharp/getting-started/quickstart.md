@@ -15,19 +15,19 @@ Get started with Teams AI Library (v2) quickly using the Teams CLI.
 
 ## Instructions
 
-### Install the Teams CLI
+### Use the Teams CLI
 
-Use your terminal to install the Teams CLI globally using npm:
+Use your terminal to run the Teams CLI using npx:
 
 
 ```sh
-npm install -g @microsoft/teams.cli
+npx @microsoft/teams.cli --version
 ```
 
 
 :::info
 _The [Teams CLI](/developer-tools/cli) is a command-line tool that helps you create and manage Teams applications. It provides a set of commands to simplify the development process._<br /><br />
-After installation, you can run `teams --version` to verify the installation.
+Using `npx` allows you to run the Teams CLI without installing it globally. You can verify it works by running the version command above.
 :::
 
 ## Creating Your First Agent
@@ -36,7 +36,7 @@ Let's begin by creating a simple echo agent that responds to messages. Run:
 
 
 ```sh
-teams new csharp quote-agent --template echo
+npx @microsoft/teams.cli@latest new csharp quote-agent --template echo
 ```
 
 
@@ -80,7 +80,7 @@ dotnet run
 ```sh
 [INFO] Microsoft.Hosting.Lifetime Now listening on: http://localhost:3978
 [WARN] Echo.Microsoft.Teams.Plugins.AspNetCore.DevTools ⚠️  Devtools are not secure and should not be used production environments ⚠️
-[INFO] Echo.Microsoft.Teams.Plugins.AspNetCore.DevTools Available at http://localhost:3978/devtools
+[INFO] Echo.Microsoft.Teams.Plugins.AspNetCore.DevTools Available at http://localhost:3979/devtools
 [INFO] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
 [INFO] Microsoft.Hosting.Lifetime Hosting environment: Development
 ```
@@ -91,7 +91,7 @@ When the application starts, you'll see:
 1. An HTTP server starting up (on port 3978). This is the main server which handles incoming requests and serves the agent application.
 2. A devtools server starting up. This is a developer server that provides a web interface for debugging and testing your agent quickly, without having to deploy it to Teams.
 
-Now, navigate to the devtools server by opening your browser and navigating to [http://localhost:3978/devtools](http://localhost:3978/devtools). You should see a simple interface where you can interact with your agent. Try sending it a message!
+Now, navigate to the devtools server by opening your browser and navigating to [http://localhost:3979/devtools](http://localhost:3979/devtools). You should see a simple interface where you can interact with your agent. Try sending it a message!
 
 ![Screenshot of DevTools showing user prompt 'hello!' and agent response 'you said hello!'.](/screenshots/devtools-echo-chat.png)
 

@@ -10,15 +10,11 @@
     "lint:fix": "npx turbo lint:fix",
     "test": "npx turbo test --concurrency=100%",
     "fmt": "npx prettier --write \"**/*.{js,ts,tsx,md,json}\"",
-    "docs:build": "npm -w teams-md build",
-    "docs:dev": "npm -w teams-md start",
-    "docs:serve": "npm -w teams-md run serve",
-    "gen:snips": "node ./scripts/generate-snippets.js",
-    "check:links": "node ./scripts/check-links.js",
-    "submodules:sync": "git submodule update --init --recursive --remote"
+    "docs:build": "npm -w teams-md run build",
+    "docs:dev": "npm -w teams-md run start",
+    "docs:serve": "npm -w teams-md run serve"
   },
   "devDependencies": {
-    "bluehawk": "^1.6.0",
     "prettier": "^3.5.3",
     "turbo": "^2.5.0",
     "typescript": "5.8.2"

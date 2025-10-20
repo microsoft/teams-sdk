@@ -1,10 +1,16 @@
 # Welcome to the Teams AI Library v2 ([Docs](https://microsoft.github.io/teams-ai/))
 
-## Overview
-
 Teams AI Library v2 represents a fundamental reimagining of how Teams apps and AI agents are built, while maintaining compatibility with existing botframework-based agents. This new version focuses on developer experience, simplified architecture, and enhanced AI capabilities.
 
 For a detailed explanation of the motivations and architectural decisions behind v2, please see our [WHY.md](https://microsoft.github.io/teams-ai/why) document.
+
+## Code repos for languages
+
+The SDK code for each language are in their own individual repos:
+
+* [Typescript](https://github.com/microsoft/teams.ts)
+* [C#](https://github.com/microsoft/teams.net)
+* [Python](https://github.com/microsoft/teams.py)
 
 ### Quick start
 
@@ -17,7 +23,7 @@ npm install -g @microsoft/teams.cli
 Next, use the CLI to create your agent:
 
 ```sh
-teams new <typescript | csharp | python> quote-agent --template echo
+npx @microsoft/teams.cli new <typescript | csharp | python> quote-agent --template echo
 ```
 
 For more information, follow our quickstart guide: [C#](http://microsoft.github.io/teams-ai/csharp/getting-started/quickstart), [Typescript](http://microsoft.github.io/teams-ai/typescript/getting-started/quickstart), [Python](http://microsoft.github.io/teams-ai/python/getting-started/quickstart)

@@ -34,6 +34,7 @@ The SDK provides builder helpers that abstract the underlying JSON. For example:
 
 ```python
 from microsoft.teams.cards.core import ExecuteAction
+# ...
 
 action = ExecuteAction(title="Submit Feedback")
                     .with_data({"action": "submit_feedback"})
@@ -45,6 +46,7 @@ Group actions together using `ActionSet`:
 
 ```python
 from microsoft.teams.cards.core import ActionSet, ExecuteAction, OpenUrlAction
+# ...
 
 action_set = ActionSet(
                 actions=[
@@ -76,6 +78,10 @@ json = {
 Sometimes you want to send a card and have it be associated with some data. Set the `data` value to be sent back to the client so you can associate it with a particular entity.
 
 ```python
+from microsoft.teams.cards import AdaptiveCard, ActionSet, ExecuteAction, OpenUrlAction
+from microsoft.teams.cards.core import TextInput, ToggleInput
+# ...
+
 profile_card = AdaptiveCard(
         schema="http://adaptivecards.io/schemas/adaptive-card.json",
         body=[
@@ -100,6 +106,9 @@ profile_card = AdaptiveCard(
 Input Controls provide ways for you to validate. More details can be found on the Adaptive Cards [documentation](https://adaptivecards.microsoft.com/?topic=input-validation).
 
 ```python
+from microsoft.teams.cards import AdaptiveCard, ActionSet, ExecuteAction, NumberInput, TextInput
+# ...
+
 def create_profile_card_input_validation():
     age_input = NumberInput(id="age").with_label("age").with_is_required(True).with_min(0).with_max(120)
     # Can configure custom error messages
@@ -132,6 +141,10 @@ def create_profile_card_input_validation():
 Card actions arrive as `card_action` activities in your app. These give you access to the validated input values plus any `data` values you had configured to be sent back to you.
 
 ```python
+from microsoft.teams.api import AdaptiveCardInvokeActivity, AdaptiveCardActionErrorResponse, AdaptiveCardActionMessageResponse, HttpError, InnerHttpError, AdaptiveCardInvokeResponse
+from microsoft.teams.apps import ActivityContext
+# ...
+
 @app.on_card_action
 async def handle_card_action(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -> AdaptiveCardInvokeResponse:
     data = ctx.activity.value.action.data

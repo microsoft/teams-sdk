@@ -27,8 +27,7 @@ The `ChatPrompt` class will modify the messages object that's passed into it. So
 Here's how to initialize and manage conversation state for multiple conversations:
 
 ```python
-from microsoft.teams.ai import ChatPrompt, ListMemory
-from microsoft.teams.ai.ai_model import AIModel
+from microsoft.teams.ai import ChatPrompt, ListMemory, AIModel
 from microsoft.teams.openai import OpenAICompletionsAIModel
 
 # Simple in-memory store for conversation histories
@@ -56,8 +55,10 @@ async def clear_conversation_memory(conversation_id: str) -> None:
 ## Stateful Chat Example
 
 ```python
+from microsoft.teams.ai import ChatPrompt, ListMemory, AIModel
 from microsoft.teams.api import MessageActivity, MessageActivityInput
 from microsoft.teams.apps import ActivityContext
+# ...
 
 async def handle_stateful_conversation(model: AIModel, ctx: ActivityContext[MessageActivity]) -> None:
     """Example of stateful conversation handler that maintains conversation history"""

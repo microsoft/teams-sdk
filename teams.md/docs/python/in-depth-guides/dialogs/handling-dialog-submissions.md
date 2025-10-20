@@ -10,6 +10,11 @@ Dialogs have a specific `dialog_submit` event to handle submissions. When a user
 In this example, we show how to handle dialog submissions from an Adaptive Card form:
 
 ```python
+from typing import Optional, Any
+from microsoft.teams.api import TaskSubmitInvokeActivity, TaskModuleResponse, TaskModuleMessageResponse
+from microsoft.teams.apps import ActivityContext
+# ...
+
 @app.on_dialog_submit
 async def handle_dialog_submit(ctx: ActivityContext[TaskSubmitInvokeActivity]):
     """Handle dialog submit events for all dialog types."""
@@ -25,6 +30,11 @@ async def handle_dialog_submit(ctx: ActivityContext[TaskSubmitInvokeActivity]):
 Similarly, handling dialog submissions from rendered webpages is also possible:
 
 ```python
+from typing import Optional, Any
+from microsoft.teams.api import TaskSubmitInvokeActivity, InvokeResponse, TaskModuleResponse, TaskModuleMessageResponse
+from microsoft.teams.apps import ActivityContext
+# ...
+
 @app.on_dialog_submit
 async def handle_dialog_submit(ctx: ActivityContext[TaskSubmitInvokeActivity]):
     """Handle dialog submit events for all dialog types."""

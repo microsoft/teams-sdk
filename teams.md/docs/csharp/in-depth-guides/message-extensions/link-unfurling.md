@@ -60,14 +60,17 @@ flowchart TD
 Handle link unfurling when a URL from your registered domain is submited into the Teams compose box.
 
 ```csharp
-using Microsoft.Teams.Api.Cards;
-using Microsoft.Teams.Cards;
+using Microsoft.Teams.Api.Activities.Invokes.MessageExtensions;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Apps.Annotations;
+
+//...
 
 [MessageExtension.QueryLink]
-public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionQueryLink(
-    [Context] Microsoft.Teams.Api.Activities.Invokes.MessageExtensions.QueryLinkActivity activity,
+public Response OnMessageExtensionQueryLink(
+    [Context] QueryLinkActivity activity,
     [Context] IContext.Client client,
-    [Context] Microsoft.Teams.Common.Logging.ILogger log)
+    [Context] ILogger log)
 {
     log.Info("[MESSAGE_EXT_QUERY_LINK] Link unfurling received");
 
@@ -86,9 +89,15 @@ public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionQueryLin
 `CreateLinkUnfurlResponse()` method
 
 ```csharp
-private static Microsoft.Teams.Api.MessageExtensions.Response CreateLinkUnfurlResponse(string url, Microsoft.Teams.Common.Logging.ILogger log)
+using Microsoft.Teams.Api;
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Cards;
+
+//...
+
+private static Response CreateLinkUnfurlResponse(string url, ILogger log)
 {
-    var card = new Microsoft.Teams.Cards.AdaptiveCard
+    var card = new AdaptiveCard
     {
         Schema = "http://adaptivecards.io/schemas/adaptive-card.json",
         Body = new List<CardElement>
@@ -113,29 +122,29 @@ private static Microsoft.Teams.Api.MessageExtensions.Response CreateLinkUnfurlRe
 
     var attachment = new Microsoft.Teams.Api.MessageExtensions.Attachment
     {
-        ContentType = new Microsoft.Teams.Api.ContentType("application/vnd.microsoft.card.adaptive"),
+        ContentType = new ContentType("application/vnd.microsoft.card.adaptive"),
         Content = card
     };
 
-    return new Microsoft.Teams.Api.MessageExtensions.Response
+    return new Response
     {
-        ComposeExtension = new Microsoft.Teams.Api.MessageExtensions.Result
+        ComposeExtension = new Result
         {
-            Type = Microsoft.Teams.Api.MessageExtensions.ResultType.Result,
-            AttachmentLayout = Microsoft.Teams.Api.Attachment.Layout.List,
+            Type = ResultType.Result,
+            AttachmentLayout = Layout.List,
             Attachments = new List<Microsoft.Teams.Api.MessageExtensions.Attachment> { attachment }
         }
     };
 }
 
 // Helper method to create error responses
-private static Microsoft.Teams.Api.MessageExtensions.Response CreateErrorResponse(string message)
+private static Response CreateErrorResponse(string message)
 {
-    return new Microsoft.Teams.Api.MessageExtensions.Response
+    return new Response
     {
-        ComposeExtension = new Microsoft.Teams.Api.MessageExtensions.Result
+        ComposeExtension = new Result
         {
-            Type = Microsoft.Teams.Api.MessageExtensions.ResultType.Message,
+            Type = ResultType.Message,
             Text = message
         }
     };
