@@ -4,13 +4,15 @@ Teams AI Library v2 represents a fundamental reimagining of how Teams apps and A
 
 For a detailed explanation of the motivations and architectural decisions behind v2, please see our [WHY.md](https://microsoft.github.io/teams-ai/why) document.
 
-## Code repos for languages
+## Code repositories per SDK language
 
-The SDK code for each language are in their own individual repos:
+The SDK code for each language are in individual repos:
 
-* [Typescript](https://github.com/microsoft/teams.ts)
-* [C#](https://github.com/microsoft/teams.net)
-* [Python](https://github.com/microsoft/teams.py)
+- [Typescript](https://github.com/microsoft/teams.ts)
+- [C#](https://github.com/microsoft/teams.net)
+- [Python](https://github.com/microsoft/teams.py)
+
+For language-specific bugs or issues, please use the Issues tab in the respective language repository.
 
 ### Quick start
 
@@ -49,7 +51,7 @@ app.on('message', async ({ userGraph, isSignedIn, send, signin }) => {
     await signin(); // initiates Entra login flow
     return;
   }
-  const me = await userGraph.call(endpoints.me.get); 
+  const me = await userGraph.call(endpoints.me.get);
   await send(`Hello, ${me.displayName} from Earth!`);
 });
 
@@ -59,14 +61,6 @@ app.on('message', async ({ userGraph, isSignedIn, send, signin }) => {
 })();
 ```
 
-## SDK Language Support
-
-This repository contains submodules that point to dedicated repositories for different language implementations of the SDK:
-
-- [TypeScript/JavaScript](https://github.com/microsoft/teams.ts)
-- [.NET](https://github.com/microsoft/teams.net)
-- [Python](https://github.com/microsoft/teams.py)
-
 For language-specific bugs or issues, please use the Issues tab in the respective language repository.
 
 ## Important: v1 to v2 Transition Notice
@@ -74,9 +68,7 @@ For language-specific bugs or issues, please use the Issues tab in the respectiv
 **This repository has transitioned from v1 to v2 as the main branch.**
 
 - The `main` branch now contains v2 code, which was previously developed on the `v2-preview` branch.
-- The previous `main` branch (v1) has been moved to the [`release/v1`](https://github.com/microsoft/teams-ai/tree/release/v1) branch.  We will continue to provide critical bug fixes and security patches for v1 on this branch.
-
-
+- The previous `main` branch (v1) has been moved to the [`release/v1`](https://github.com/microsoft/teams-ai/tree/release/v1) branch. We will continue to provide critical bug fixes and security patches for v1 on this branch.
 
 ## Documentation
 
