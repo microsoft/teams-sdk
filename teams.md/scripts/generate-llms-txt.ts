@@ -5,14 +5,7 @@ import * as path from 'path';
 import { collectFiles, getHierarchicalFiles } from './lib/file-collector';
 import { processContent } from './lib/content-processor';
 import { FrontmatterParser } from './lib/frontmatter-parser';
-
-type Language = 'typescript' | 'python' | 'csharp';
-
-const LANG_NAME_BY_LANGUAGE: Record<Language, string> = {
-    typescript: 'Typescript',
-    python: 'Python',
-    csharp: 'Dotnet (C#)'
-};
+import { LANGUAGES, Language, LANGUAGE_NAMES } from '../src/constants/languages';
 
 const LANGUAGE_SPECIFIC_TIPS: Record<Language, string[]> = {
     typescript: [
@@ -29,7 +22,7 @@ const LANGUAGE_SPECIFIC_TIPS: Record<Language, string[]> = {
 };
 
 const COMMON_OVERALL_SUMMARY = (language: Language) => {
-    const langName = LANG_NAME_BY_LANGUAGE[language];
+    const langName = LANGUAGE_NAMES[language];
     const tips = LANGUAGE_SPECIFIC_TIPS[language];
     const formattedTips = tips.map(tip => `- ${tip}`).join('\n');
 
@@ -40,7 +33,7 @@ IMPORTANT THINGS TO REMEMBER:
 - When scaffolding new applications, using the CLI is a lot simpler and preferred than doing it all by yourself. See the Quickstart guide for that.
 ${formattedTips}
 
-YOU MUST FOLLOW THE AGOVE GUIDANCE.`;
+YOU MUST FOLLOW THE ABOVE GUIDANCE.`;
 };
 
 interface DocusaurusConfig {
@@ -121,17 +114,12 @@ async function generateLlmsTxt(): Promise<void> {
     }
 
     try {
-        // Generate TypeScript version (main + typescript)
-        console.log('📝 Generating TypeScript llms.txt files...');
-        await generateLanguageFiles('typescript', baseDir, outputDir, config);
-
-        // Generate C# version (main + csharp)
-        console.log('📝 Generating C# llms.txt files...');
-        await generateLanguageFiles('csharp', baseDir, outputDir, config);
-
-        // Generate Python version (main + csharp)
-        console.log('📝 Generating Python llms.txt files...');
-        await generateLanguageFiles('python', baseDir, outputDir, config);
+        // Generate llms.txt files for all languages
+        for (const language of LANGUAGES) {
+            const langName = LANGUAGE_NAMES[language];
+            console.log(`📝 Generating ${langName} llms.txt files...`);
+            await generateLanguageFiles(language, baseDir, outputDir, config);
+        }
 
         console.log('✅ Successfully generated all llms.txt files!');
     } catch (error) {
@@ -308,7 +296,7 @@ async function generateIndividualTxtFiles(
  * @returns Generated navigation content
  */
 async function generateSmallVersionHierarchical(language: Language, baseDir: string, config: DocusaurusConfig, fileMapping: Map<string, string>): Promise<string> {
-    const langName = LANG_NAME_BY_LANGUAGE[language];
+    const langName = LANGUAGE_NAMES[language];
     // Remove trailing slash from URL and ensure baseUrl starts with slash
     const cleanUrl = config.url.replace(/\/$/, '');
     const cleanBaseUrl = config.baseUrl.startsWith('/') ? config.baseUrl : '/' + config.baseUrl;
@@ -506,7 +494,7 @@ function extractSummaryFromFile(filePath: string): string {
  * @returns Generated content
  */
 async function generateFullVersion(language: Language, processedFiles: ProcessedFile[], baseDir: string): Promise<string> {
-    const langName = LANG_NAME_BY_LANGUAGE[language]
+    const langName = LANGUAGE_NAMES[language]
     let content = `# Teams AI Library - ${langName} Documentation (Complete)\n\n`;
     content += COMMON_OVERALL_SUMMARY(language) + '\n\n';
 
