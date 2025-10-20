@@ -43,3 +43,16 @@ for i, doc in enumerate(cited_docs):
 ## Suggested actions
 
 Suggested actions help users with ideas of what to ask next, based on the previous response or conversation. Teams recommends including suggested actions in your messages. You can do that by using the `with_suggested_actions` method on the message. See [Suggested actions](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/prompt-suggestions) for more information on suggested actions.
+
+```py
+suggested_actions = SuggestedActions(
+    to=[activity.from_.id],
+    actions=[CardAction(type=CardActionType.IM_BACK, title="Thanks!", value="Thank you so much!")],
+)
+message = (
+    MessageActivityInput(text=chat_result.response.content)
+    .add_ai_generated()
+    .with_suggested_actions(suggested_actions)
+)
+await ctx.send(message)
+```
