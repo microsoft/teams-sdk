@@ -128,7 +128,7 @@ npm run generate:docs:watch  # Watch for changes (runs with npm start)
 - Reads all `*.mdx` templates from `src/pages/templates/` (including nested directories)
 - Validates each template contains `<LanguageInclude />` tags (warns if missing)
 - Copies to `docs/main/typescript/`, `docs/main/csharp/`, `docs/main/python/`
-- **Copies category files**: Automatically finds `_category.json` files in template directories and copies them to all language directories
+- **Copies category files**: Automatically finds `_category_.json` files in template directories and copies them to all language directories
 - Adds warning header about auto-generation
 - Preserves frontmatter and directory structure
 
@@ -301,7 +301,7 @@ This file is imported by the generation script, plugin, and components to ensure
 
    If you need to customize the sidebar position or label, create a category file alongside your template:
 
-   `src/pages/templates/my-guide/_category.json`:
+   `src/pages/templates/my-guide/_category_.json`:
 
    ```json
    {
@@ -412,11 +412,11 @@ teams.md/
 │   │       │   ├── running-in-teams/
 │   │       │   │   ├── deployment-guide.mdx
 │   │       │   │   ├── running-in-teams.mdx
-│   │       │   │   └── _category.json    # Category file alongside templates
-│   │       │   └── _category.json        # Category file for getting-started
+│   │       │   │   └── _category_.json    # Category file alongside templates
+│   │       │   └── _category_.json        # Category file for getting-started
 │   │       └── essentials/
 │   │           ├── api.mdx
-│   │           └── _category.json        # Category file for essentials
+│   │           └── _category_.json        # Category file for essentials
 │   ├── components/
 │   │   ├── Language.tsx            # Runtime component
 │   │   └── include/                # Language-specific fragments (organized by page)
@@ -471,5 +471,5 @@ teams.md/
 7. **Use block-level tags for complex content** - Code blocks, lists, admonitions require block-level placement
 8. **Use inline tags for simple text** - Package names, short commands, version numbers work well inline
 9. **Prefix utility pages with underscore** - Use `_filename.mdx` for pages that shouldn't appear in sidebar
-10. **Place category files with templates** - Keep `_category.json` files in the same directory as their corresponding templates for easier maintenance
+10. **Place category files with templates** - Keep `_category_.json` files in the same directory as their corresponding templates for easier maintenance
 11. **Avoid file extensions in links** - Use `./my-page` instead of `./my-page.mdx` for Docusaurus compatibility
