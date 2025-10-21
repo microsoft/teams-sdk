@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 0
 summary: Welcome guide to Teams AI Library v2, covering the quickstart process and how to build agents and applications for Microsoft Teams.
 llms: ignore
 ---
@@ -13,16 +13,19 @@ Teams AI Library v2 is a suite of packages used to develop on Microsoft Teams. R
 The Teams CLI makes it easy to bootstrap your first agent. Using `npx @microsoft/teams.cli` you can get started using these commands:
 
 **TypeScript:**
+
 ```bash
 npx @microsoft/teams.cli@latest new typescript quote-agent --template echo
 ```
 
 **C#:**
+
 ```bash
 npx @microsoft/teams.cli@latest new csharp quote-agent --template echo
 ```
 
 **Python:**
+
 ```bash
 npx @microsoft/teams.cli@latest new python quote-agent --template echo
 ```
