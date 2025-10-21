@@ -120,6 +120,9 @@ N/A
 ```bash
 npm run generate:docs        # Generate all docs once
 npm run generate:docs:watch  # Watch for changes (runs with npm start)
+npm start                    # Full development with auto-regeneration
+npm run start:simple         # Start Docusaurus without auto-generation
+npm run build                # Build with automatic doc generation
 ````
 
 #### What it does:
@@ -127,6 +130,7 @@ npm run generate:docs:watch  # Watch for changes (runs with npm start)
 - **Cleans up stale files**: Deletes all existing `.mdx` files in `docs/main/{lang}/` to prevent orphaned files
 - Reads all `*.mdx` templates from `src/pages/templates/` (including nested directories)
 - Validates each template contains `<LanguageInclude />` tags (warns if missing)
+- **Converts README.mdx to index.mdx**: README templates become category index pages instead of sidebar items
 - Copies to `docs/main/typescript/`, `docs/main/csharp/`, `docs/main/python/`
 - **Copies category files**: Automatically finds `_category_.json` files in template directories and copies them to all language directories
 - Adds warning header about auto-generation
@@ -144,6 +148,8 @@ A Remark plugin that processes generated MDX files during Docusaurus build.
   - For **block-level tags**: Parses content as Markdown/MDX (supports code blocks, lists, admonitions, etc.)
   - For **inline tags**: Inserts content as plain text (no Markdown parsing)
 - Reads corresponding `.incl.md` files from `src/components/include/` and extracts the specified section using HTML comment markers
+  - **For index files (category pages)**: Looks directly in `src/components/include/{category}/{lang}.incl.md`
+  - **For regular files**: Uses `src/components/include/{category}/{filename}/{lang}.incl.md`
 - Converts admonition syntax (`:::info`) to Docusaurus-compatible JSX (Docusaurus doesn't do it automatically anymore with these changes)
 - Wraps content in `<Language language="{lang}" />` components
 - Automatically injects `import Language from '@site/src/components/Language';` when needed
@@ -357,12 +363,65 @@ To create pages that are accessible via direct URL but hidden from the sidebar (
    - Not visible in sidebar navigation
    - Still searchable and linkable
 
+### Creating Category Pages (README.mdx)
+
+To create a page that serves as the content for a category (instead of appearing as a separate sidebar item):
+
+1. **Name the template `README.mdx`** in your category directory:
+
+   ```bash
+   src/pages/templates/getting-started/README.mdx
+   ```
+
+2. **Create include files directly in the category directory**:
+
+   ```bash
+   src/components/include/getting-started/
+   ├── typescript.incl.md
+   ├── csharp.incl.md
+   └── python.incl.md
+   ```
+
+3. **Add a `_category_.json` file** to configure the category:
+
+   ```json
+   {
+     "label": "Getting Started",
+     "position": 1,
+     "collapsed": false
+   }
+   ```
+
+4. **Generate docs** - README.mdx becomes `index.mdx` (the category page content)
+
+This creates a clean sidebar where "Getting Started" shows the README content when clicked, rather than having a separate "README" item in the sidebar.
+
+### Creating Regular Pages
+
+For regular pages within categories:
+
+1. **Create template normally**:
+
+   ```bash
+   src/pages/templates/getting-started/quickstart.mdx
+   ```
+
+2. **Create include files in a subdirectory**:
+   ```bash
+   src/components/include/getting-started/quickstart/
+   ├── typescript.incl.md
+   ├── csharp.incl.md
+   └── python.incl.md
+   ```
+
 ### Development Workflow
 
 When running `npm start`, two processes run concurrently:
 
 1. **Doc generator in watch mode** - Regenerates files when templates change
 2. **Docusaurus dev server** - Serves the documentation with hot reload
+
+For a simpler start without auto-regeneration, use `npm run start:simple`.
 
 Edit your templates and fragments, and changes will appear automatically.
 
@@ -407,6 +466,7 @@ teams.md/
 │   ├── pages/
 │   │   └── templates/              # Templates (source of truth)
 │   │       ├── getting-started/
+│   │       │   ├── README.mdx      # Category page template (generates as index.mdx)
 │   │       │   ├── quickstart.mdx
 │   │       │   ├── code-basics.mdx
 │   │       │   ├── running-in-teams/
@@ -420,15 +480,14 @@ teams.md/
 │   ├── components/
 │   │   ├── Language.tsx            # Runtime component
 │   │   └── include/                # Language-specific fragments (organized by page)
-│   │       ├── getting-started/
-│   │       │   ├── quickstart/     # One folder per page
-│   │       │   │   ├── typescript.incl.md
-│   │       │   │   ├── csharp.incl.md
-│   │       │   │   └── python.incl.md
-│   │       │   └── code-basics/
-│   │       │       ├── typescript.incl.md
-│   │       │       ├── csharp.incl.md
-│   │       │       └── python.incl.md
+│   │       ├── getting-started/    # Category pages: include files directly in directory
+│   │       │   ├── typescript.incl.md
+│   │       │   ├── csharp.incl.md
+│   │       │   └── python.incl.md
+│   │       ├── quickstart/         # Regular pages: include files in subdirectory
+│   │       │   ├── typescript.incl.md
+│   │       │   ├── csharp.incl.md
+│   │       │   └── python.incl.md
 │   │       └── essentials/
 │   │           └── api/
 │   │               ├── typescript.incl.md
@@ -440,18 +499,21 @@ teams.md/
 │   └── main/
 │       ├── typescript/     # Auto-generated files (DO NOT EDIT)
 │       │   ├── getting-started/
+│       │   │   ├── index.mdx       # Generated from README.mdx template
 │       │   │   ├── quickstart.mdx
 │       │   │   └── code-basics.mdx
 │       │   └── essentials/
 │       │       └── api.mdx
 │       ├── csharp/     # Auto-generated files (DO NOT EDIT)
 │       │   ├── getting-started/
+│       │   │   ├── index.mdx       # Generated from README.mdx template
 │       │   │   ├── quickstart.mdx
 │       │   │   └── code-basics.mdx
 │       │   └── essentials/
 │       │       └── api.mdx
 │       └── python/     # Auto-generated files (DO NOT EDIT)
 │           ├── getting-started/
+│           │   ├── index.mdx       # Generated from README.mdx template
 │           │   ├── quickstart.mdx
 │           │   └── code-basics.mdx
 │           └── essentials/
@@ -472,4 +534,6 @@ teams.md/
 8. **Use inline tags for simple text** - Package names, short commands, version numbers work well inline
 9. **Prefix utility pages with underscore** - Use `_filename.mdx` for pages that shouldn't appear in sidebar
 10. **Place category files with templates** - Keep `_category_.json` files in the same directory as their corresponding templates for easier maintenance
-11. **Avoid file extensions in links** - Use `./my-page` instead of `./my-page.mdx` for Docusaurus compatibility
+11. **Use README.mdx for category pages** - This creates cleaner navigation without extra sidebar items
+12. **Organize include files by purpose** - Category pages use direct structure, regular pages use subdirectories
+13. **Avoid file extensions in links** - Use `./my-page` instead of `./my-page.mdx` for Docusaurus compatibility
