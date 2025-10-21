@@ -254,8 +254,11 @@ export default function languageInclude(options: PluginOptions = { pagesRoot: ''
 
       // Process each language
       for (const lang of languages) {
-        // Structure: include/{relativePath}/{fileName}/{lang}.incl.md
-        const inclPath = path.join(pagesRoot, relativePath, fileName, `${lang}.incl.md`);
+        // For index files (category pages), look directly in the category directory
+        // For other files, use the original structure: include/{relativePath}/{fileName}/{lang}.incl.md
+        const inclPath = fileName === 'index'
+          ? path.join(pagesRoot, relativePath, `${lang}.incl.md`)
+          : path.join(pagesRoot, relativePath, fileName, `${lang}.incl.md`);
 
         let sectionContent: string | null = null;
 

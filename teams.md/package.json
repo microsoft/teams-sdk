@@ -4,18 +4,19 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "start:en": "docusaurus start --locale en",
-    "start:es": "docusaurus start --locale es",
-    "start:zh": "docusaurus start --locale zh-Hans",
+    "prestart": "npm run generate:docs",
+    "start": "concurrently --kill-others \"npm run generate:docs:watch\" \"docusaurus start\"",
+    "start:simple": "docusaurus start",
+    "prebuild": "npm run generate:docs",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
+    "generate:docs": "tsx scripts/generate-language-docs.ts",
+    "generate:docs:watch": "tsx scripts/generate-language-docs.ts --watch",
     "generate:llms": "tsx scripts/generate-llms-txt.ts"
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "@docusaurus/types": "3.9.1",
     "@types/chokidar": "^1.7.5",
     "chokidar": "^3.6.0",
+    "concurrently": "^9.2.1",
     "tsx": "^4.20.6",
     "typescript": "~5.6.2"
   },

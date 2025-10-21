@@ -79,11 +79,13 @@ function cleanGeneratedFilesForTemplate(templatePath: string): void {
 
   for (const lang of LANGUAGES) {
     const outputDir = path.join(DOCS_BASE, lang, path.dirname(relativePath));
-    const outputPath = path.join(outputDir, templateName);
+    // Handle both README.mdx -> index.mdx conversion and regular files
+    const outputFileName = templateName === 'README.mdx' ? 'index.mdx' : templateName;
+    const outputPath = path.join(outputDir, outputFileName);
 
     if (fs.existsSync(outputPath)) {
       fs.unlinkSync(outputPath);
-      console.log(`  Removed: docs/main/${lang}/${relativePath}`);
+      console.log(`  Removed: docs/main/${lang}/${path.dirname(relativePath)}/${outputFileName}`);
     }
   }
 }
@@ -122,7 +124,9 @@ function generateDocsForTemplate(templatePath: string): void {
   // Generate for each language
   for (const lang of LANGUAGES) {
     const outputDir = path.join(DOCS_BASE, lang, path.dirname(relativePath));
-    const outputPath = path.join(outputDir, templateName);
+    // Convert README.mdx to index.mdx so it becomes the category page content
+    const outputFileName = templateName === 'README.mdx' ? 'index.mdx' : templateName;
+    const outputPath = path.join(outputDir, outputFileName);
 
     // Ensure directory exists
     if (!fs.existsSync(outputDir)) {
