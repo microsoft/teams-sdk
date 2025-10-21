@@ -59,6 +59,7 @@ const config: Config = {
                     sidebarPath: './sidebars.ts',
                     sidebarCollapsed: false,
                     editUrl: 'https://github.com/microsoft/teams-ai/tree/main/teams.md/',
+                    exclude: ['**/LLMs.md'],
                     remarkPlugins: [
                         [
                             require('./src/plugins/language-include-plugin.ts').default,
