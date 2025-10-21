@@ -1,24 +1,26 @@
 import React from 'react';
 import PaginatorNavLinkOriginal from '@theme-original/PaginatorNavLink';
 import type { Props } from '@theme/PaginatorNavLink';
-import { useLocation } from '@docusaurus/router';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import { getLanguageFromPath, replaceLanguageInPath } from '../../utils/languageUtils';
+
+import { useLanguagePreference } from '../../hooks/useLanguagePreference';
+import { detectLanguageInPath, replaceLanguageInPath } from '../../utils/languageUtils';
 
 export default function PaginatorNavLink(props: Props): React.JSX.Element {
-  const location = useLocation();
   const baseUrl = useBaseUrl('/');
+  const { language: preferredLanguage } = useLanguagePreference();
 
   // If no permalink, use original behavior
   if (!props.permalink) {
     return <PaginatorNavLinkOriginal {...props} />;
   }
 
-  const currentLanguage = getLanguageFromPath(location.pathname, baseUrl);
-  const correctedPermalink = replaceLanguageInPath(props.permalink, baseUrl, currentLanguage);
+  // Check if the permalink contains a language path
+  const languageInPermalink = detectLanguageInPath(props.permalink, baseUrl);
 
-  // If the permalink was modified (had a different language), use the corrected one
-  if (correctedPermalink !== props.permalink) {
+  // If the link contains a language path, update it to match current preferred language
+  if (languageInPermalink !== null && languageInPermalink !== preferredLanguage) {
+    const correctedPermalink = replaceLanguageInPath(props.permalink, baseUrl, preferredLanguage);
     return <PaginatorNavLinkOriginal {...props} permalink={correctedPermalink} />;
   }
 
