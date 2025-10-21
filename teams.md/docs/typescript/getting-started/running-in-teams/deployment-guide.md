@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-summary: 
+summary:
 llms: ignore
 ---
 
@@ -13,24 +13,27 @@ We cover the most common setup and deployment steps for testing in teams, includ
 This section demonstrates how to configure authentication in your application using a **User Assigned Managed Identity** in Azure. You will require this setup if you have `msaAppType: 'UserAssignedMSI'` for the Azure Bot Service (required in dev env generally).
 
 In your `index.ts`, replace the initialization:
+
 ```typescript
 const app = new App({
-  plugins: [new DevtoolsPlugin()]
+  plugins: [new DevtoolsPlugin()],
 });
 ```
-with the following code to enable User Assigned Managed Identity authentication: 
+
+with the following code to enable User Assigned Managed Identity authentication:
+
 ```typescript
 // Create token factory function for Azure Identity
 const createTokenFactory = () => {
   return async (scope: string | string[], tenantId?: string): Promise<string> => {
     const managedIdentityCredential = new ManagedIdentityCredential({
-        clientId: process.env.CLIENT_ID
-      });
+      clientId: process.env.CLIENT_ID,
+    });
     const scopes = Array.isArray(scope) ? scope : [scope];
     const tokenResponse = await managedIdentityCredential.getToken(scopes, {
-      tenantId: tenantId
+      tenantId: tenantId,
     });
-   
+
     return tokenResponse.token;
   };
 };
@@ -38,7 +41,7 @@ const createTokenFactory = () => {
 // Configure authentication using TokenCredentials
 const tokenCredentials: TokenCredentials = {
   clientId: process.env.CLIENT_ID || '',
-  token: createTokenFactory()
+  token: createTokenFactory(),
 };
 
 const app = new App({
@@ -46,11 +49,14 @@ const app = new App({
   plugins: [new DevtoolsPlugin()],
 });
 ```
-The `createTokenFactory` function provides a method to retrieve access tokens from Azure on demand, and `TokenCredentials` passes this method to the app.  
+
+> **Note:** The `ManagedIdentityCredential` class is available in the [`@azure/identity`](https://www.npmjs.com/package/@azure/identity) package. Make sure to install it using `npm install @azure/identity` and import it in your code.
+
+The `createTokenFactory` function provides a method to retrieve access tokens from Azure on demand, and `TokenCredentials` passes this method to the app.
 
 ### Missing Service Principal in the Tenant
 
-This error occurs when the application has a single-tenant Azure Bot Service (`msaAppType: 'SingleTenant'`) instance, but your app registration has not yet been linked to a Service Principal in the tenant.    
+This error occurs when the application has a single-tenant Azure Bot Service (`msaAppType: 'SingleTenant'`) instance, but your app registration has not yet been linked to a Service Principal in the tenant.
 
 ```sh
 [ERROR] @teams/app Request failed with status code 401
@@ -73,12 +79,12 @@ This error occurs when the application has a single-tenant Azure Bot Service (`m
 2. **Navigate to App Registrations**  
    In the top search bar, search for **App registrations** and select it.
 3. **Search for your application**  
-   Use the **BOT_ID** from your environment file:  
-   - Local development → `env/.env.local`  
+   Use the **BOT_ID** from your environment file:
+   - Local development → `env/.env.local`
    - Azure deployment → `env/.env.dev`
 4. **Check if a Service Principal exists**  
-   Open the app registration and verify if a Service Principal is created. If it exists already, you should see an entry for a **Managed Application in your local directory** if it exists.
-  ![Screenshot of App Registrations pane in Azure Portal showing value of 'Graphlocal' under the 'Managed application in local directory' field.](/screenshots/existing-service-principal.png)
+    Open the app registration and verify if a Service Principal is created. If it exists already, you should see an entry for a **Managed Application in your local directory** if it exists.
+   ![Screenshot of App Registrations pane in Azure Portal showing value of 'Graphlocal' under the 'Managed application in local directory' field.](/screenshots/existing-service-principal.png)
 5. **Create a Service Principal if missing**  
    If it doesn’t exist, click **Create Service Principal** . Wait for the page to finish loading.
    ![Screenshot of App Registrations pane in Azure Portal showing value of 'Create Service Principal' under the 'Managed application in local directory' field.](/screenshots/create-service-principal.png)

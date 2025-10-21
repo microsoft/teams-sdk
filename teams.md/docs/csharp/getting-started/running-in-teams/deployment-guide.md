@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-summary: 
+summary:
 llms: ignore
 ---
 
@@ -13,11 +13,14 @@ We cover the most common setup and deployment steps for testing in Teams, includ
 This section demonstrates how to configure authentication in your application using a **User Assigned Managed Identity** in Azure. If you are using `msaAppType: 'UserAssignedMSI'` for the Azure Bot Service (required in dev env generally).
 
 In your `Program.cs`, replace the initialization:
+
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 builder.AddTeams();
 ```
-with the following code to enable User Assigned Managed Identity authentication: 
+
+with the following code to enable User Assigned Managed Identity authentication:
+
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,11 +49,14 @@ var appBuilder = App.Builder()
 
 builder.AddTeams(appBuilder);
 ```
-The `createTokenFactory` function provides a method to retrieve access tokens from Azure on demand, and `token_credentials` passes this method to the app. 
+
+> **Note:** The `ManagedIdentityCredential` class is available in the [`Azure.Identity`](https://www.nuget.org/packages/Azure.Identity/) package. Make sure to install it using `dotnet add package Azure.Identity` and include the necessary using statement in your code.
+
+The `createTokenFactory` function provides a method to retrieve access tokens from Azure on demand, and `token_credentials` passes this method to the app.
 
 ### Missing Service Principal in the Tenant
 
-This error occurs when the application has a single-tenant Azure Bot Service (`msaAppType: 'SingleTenant'`) instance, but your app registration has not yet been linked to a Service Principal in the tenant.  
+This error occurs when the application has a single-tenant Azure Bot Service (`msaAppType: 'SingleTenant'`) instance, but your app registration has not yet been linked to a Service Principal in the tenant.
 
 ```sh
 [ERROR] Echobot Failed to get bot token on app startup.
@@ -72,12 +78,12 @@ This error occurs when the application has a single-tenant Azure Bot Service (`m
 2. **Navigate to App Registrations**  
    In the top search bar, search for **App registrations** and select it.
 3. **Search for your application**  
-   Use the **BOT_ID** from your environment file:  
-   - Local development → `env/.env.local`  
+   Use the **BOT_ID** from your environment file:
+   - Local development → `env/.env.local`
    - Azure deployment → `env/.env.dev`
 4. **Check if a Service Principal exists**  
    Open the app registration and verify if a Service Principal is created. If it exists already, you should see an entry for a **Managed Application in your local directory** if it exists.
-    ![Existing Service Principal](/screenshots/existing-service-principal.png)
+   ![Existing Service Principal](/screenshots/existing-service-principal.png)
 5. **Create a Service Principal if missing**  
    If it doesn’t exist, click **Create Service Principal** . Wait for the page to finish loading.
    ![Create Service Principal](/screenshots/create-service-principal.png)
