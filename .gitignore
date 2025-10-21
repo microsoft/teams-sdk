@@ -27,6 +27,11 @@ out/
 build
 dist
 
+# Generated documentation files
+teams.md/docs/main/typescript/
+teams.md/docs/main/csharp/
+teams.md/docs/main/python/
+
 
 # Debug
 npm-debug.log*
