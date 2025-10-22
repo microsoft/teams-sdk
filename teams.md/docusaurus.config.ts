@@ -60,15 +60,6 @@ const config: Config = {
                     sidebarCollapsed: false,
                     editUrl: 'https://github.com/microsoft/teams-ai/tree/main/teams.md/',
                     exclude: ['**/LLMs.md'],
-                    remarkPlugins: [
-                        [
-                            require('./src/plugins/language-include-plugin.ts').default,
-                            {
-                                pagesRoot: path.join(__dirname, 'src', 'components', 'include'),
-                                languages: LANGUAGES,
-                            },
-                        ],
-                    ],
                 },
                 theme: {
                     customCss: ['./src/css/custom.css', './src/css/code-blocks.css'],
@@ -77,23 +68,6 @@ const config: Config = {
         ],
     ],
 
-    plugins: [
-        /** Docusaurus plugin to watch LanguageInclude related fragment & component files for hot reload */
-        function languageIncludeWatchPlugin() {
-            return {
-                name: 'language-include-watch',
-                getPathsToWatch() {
-                    return [
-                        path.join(__dirname, 'src', 'components', 'include', '**/*.incl.md'),
-                        path.join(__dirname, 'src', 'pages', 'templates', '**/*.mdx'),
-                    ];
-                },
-                loadContent() {
-                    console.info('[language-include-watch] Watching .incl.md and component files');
-                },
-            };
-        },
-    ],
     themes: [
         '@docusaurus/theme-mermaid',
         [

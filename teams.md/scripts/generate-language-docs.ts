@@ -10,6 +10,204 @@ const FRAGMENTS_DIR = path.join(__dirname, '..', 'src', 'components', 'include')
 
 const DOCS_BASE = path.join(__dirname, '..', 'docs', 'main');
 
+// For sections in an *.mdx file that is applicable to one or two languages, but not all three.
+// This is an intentional way of differentiating from missing sections in documentation that haven't been written yet.
+const NOT_APPLICABLE_REGEX = /^(not applicable|n\/a)\s*$/i;
+
+// Notation in *.incl.md files for sections to be added into the *.mdx
+const SECTION_REGEX = (sectionName: string) =>
+  new RegExp(`<!--\\s*${sectionName}\\s*-->\\s*([\\s\\S]*?)(?=<!--\\s*[\\w-]+\\s*-->|$)`, 'i');
+
+// Regex to find LanguageInclude tags
+const LANGUAGE_INCLUDE_REGEX = /<LanguageInclude\s+section="([^"]+)"\s*\/>/g;
+
+/**
+ * Extract a section from markdown content using HTML comment markers
+ */
+function extractSection(markdown: string, sectionName: string): string | null {
+  if (!markdown) {
+    return '';
+  }
+
+  const match = markdown.match(SECTION_REGEX(sectionName));
+
+  // Section not found
+  if (!match) {
+    return null;
+  }
+
+  const content = match[1].trim();
+
+  // Content not applicable
+  if (NOT_APPLICABLE_REGEX.test(content)) {
+    return '';
+  }
+
+  return content;
+}
+
+/**
+ * Process LanguageInclude tags in template content and replace with Language components or raw content
+ * - Production mode + target language: generates clean files with only raw content for that language
+ * - Development mode: generates Language components with helpful error messages for missing content
+ */
+function processLanguageIncludeTags(templateContent: string, templatePath: string, targetLanguage?: Language): string {
+  const relativePath = path.relative(TEMPLATES_DIR, templatePath);
+  const fileName = path.basename(templatePath, '.mdx');
+  const dirPath = path.dirname(relativePath);
+
+  let processedContent = templateContent;
+  let hasLanguageInclude = false;
+
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Replace all LanguageInclude tags
+  processedContent = processedContent.replace(LANGUAGE_INCLUDE_REGEX, (match, sectionName, offset) => {
+    hasLanguageInclude = true;
+    console.log(`  Processing section: ${sectionName}${targetLanguage ? ` for ${targetLanguage}` : ''}`);
+
+    // Determine if this is inline or block based on context
+    const beforeMatch = templateContent.substring(0, offset);
+
+    // Check if the tag is at the start of a line or after only whitespace (block)
+    // vs. if it's within text content (inline)
+    const lineStart = beforeMatch.lastIndexOf('\n');
+    const textBeforeOnLine = beforeMatch.substring(lineStart + 1);
+    const isBlock = /^\s*$/.test(textBeforeOnLine);
+
+    // Production mode with target language: only generate for that language
+    if (isProduction && targetLanguage) {
+      // Determine include file path
+      const inclPath = (fileName === 'index' || fileName === 'README')
+        ? path.join(FRAGMENTS_DIR, dirPath, `${targetLanguage}.incl.md`)
+        : path.join(FRAGMENTS_DIR, dirPath, fileName, `${targetLanguage}.incl.md`);
+
+      if (!fs.existsSync(inclPath)) {
+        // Skip missing content (prod)
+        return '';
+      }
+
+      try {
+        const fileContent = fs.readFileSync(inclPath, 'utf8');
+        const sectionContent = extractSection(fileContent, sectionName);
+
+        if (sectionContent === null || sectionContent === '') {
+          // Skip missing sections (null) or intentional N/A content (empty string)
+          return '';
+        }
+
+        return isBlock ? `${sectionContent}` : sectionContent;
+      } catch (error) {
+        console.warn(`generate-language-docs warning: Error reading ${inclPath}: ${error}`);
+        return '';
+      }
+    }
+
+    // Development mode or no target language: generate Language components for all languages
+    // This allows dev-time rendering of messages indicating what include sections are missing.
+    const languageComponents: string[] = [];
+    const languagesToProcess = targetLanguage ? [targetLanguage] : LANGUAGES;
+
+    for (const lang of languagesToProcess) {
+      // Determine include file path
+      const inclPath = (fileName === 'index' || fileName === 'README')
+        ? path.join(FRAGMENTS_DIR, dirPath, `${lang}.incl.md`)
+        : path.join(FRAGMENTS_DIR, dirPath, fileName, `${lang}.incl.md`);
+
+      let sectionContent: string | null = null;
+
+      if (!fs.existsSync(inclPath)) {
+        // File doesn't exist - show error in development, skip in production
+        if (!isProduction) {
+          const errorMsg = `[DevMode] Documentation file for ${LANGUAGE_NAMES[lang]} not found: ${path.relative(process.cwd(), inclPath)}`;
+          if (isBlock) {
+            languageComponents.push(
+              `<Language language="${lang}">\n\n${errorMsg}\n\n</Language>`
+            );
+          } else {
+            languageComponents.push(`<Language language="${lang}">${errorMsg}</Language>`);
+          }
+        }
+        continue;
+      }
+
+      try {
+        const fileContent = fs.readFileSync(inclPath, 'utf8');
+        sectionContent = extractSection(fileContent, sectionName);
+
+        if (sectionContent === null) {
+          // Section not found - show error in development, skip in production
+          if (!isProduction) {
+            const errorMsg = `[Dev] Section "${sectionName}" not found in ${LANGUAGE_NAMES[lang]} documentation`;
+            if (isBlock) {
+              languageComponents.push(
+                `<Language language="${lang}">\n\n${errorMsg}\n\n</Language>`
+              );
+            } else {
+              languageComponents.push(`<Language language="${lang}">${errorMsg}</Language>`);
+            }
+          }
+          continue;
+        }
+
+        if (sectionContent === '') {
+          // N/A section - intentionally skip any rendering
+          continue;
+        }
+
+        // Valid content found
+        if (isBlock) {
+          // Block-level: full Language component with markdown processing
+          languageComponents.push(
+            `<Language language="${lang}">\n\n${sectionContent}\n\n</Language>`
+          );
+        } else {
+          // Inline: single Language component with just the text content
+          languageComponents.push(`<Language language="${lang}">${sectionContent}</Language>`);
+        }
+      } catch (error) {
+        console.warn(`    Warning: Error reading ${inclPath}: ${error}`);
+        // Generate error component in development
+        if (!isProduction) {
+          const errorMsg = `[Dev] Error reading file: ${error}`;
+          if (isBlock) {
+            languageComponents.push(
+              `<Language language="${lang}">\n\n${errorMsg}\n\n</Language>`
+            );
+          } else {
+            languageComponents.push(`<Language language="${lang}">${errorMsg}</Language>`);
+          }
+        }
+      }
+    }
+
+    // Return joined Language components (or empty string if no components added)
+    if (isBlock) {
+      // Block: Each language on separate lines
+      return languageComponents.join('\n\n');
+    } else {
+      // Inline: Return all language components without line breaks to preserve list structure
+      return languageComponents.join('');
+    }
+  });
+
+  // Add Language component import if we processed any LanguageInclude tags and need Language components
+  const needsLanguageImport = hasLanguageInclude &&
+    (!isProduction || !targetLanguage) &&
+    !processedContent.includes("import Language from '@site/src/components/Language'");
+
+  if (needsLanguageImport) {
+    // Find where to insert the import (after frontmatter if it exists)
+    const frontmatterMatch = processedContent.match(/^---\n[\s\S]*?\n---\n/);
+    const insertPosition = frontmatterMatch ? frontmatterMatch[0].length : 0;
+
+    const importStatement = "import Language from '@site/src/components/Language';\n\n";
+    processedContent = processedContent.slice(0, insertPosition) + importStatement + processedContent.slice(insertPosition);
+  }
+
+  return processedContent;
+}
+
 /**
  * Clean up stale generated files before regeneration
  * Removes all .mdx files from docs/main/{lang}/ directories
@@ -93,7 +291,7 @@ function cleanGeneratedFilesForTemplate(templatePath: string): void {
 /**
  * Generate language-specific doc files from templates
  * Templates in src/components/ (with nested dirs) are copied to docs/main/{lang}/
- * Preserves directory structure
+ * Preserves directory structure and processes LanguageInclude tags
  */
 function generateDocsForTemplate(templatePath: string): void {
   // Calculate relative path from TEMPLATES_DIR to preserve nested structure
@@ -105,24 +303,25 @@ function generateDocsForTemplate(templatePath: string): void {
   // Read template content
   const templateContent = fs.readFileSync(templatePath, 'utf8');
 
-  // Validate template contains LanguageInclude tags
+  // Validate template contained LanguageInclude tags
   if (!templateContent.includes('<LanguageInclude')) {
     console.warn(`Warning: Template "${relativePath}" does not contain <LanguageInclude /> tags.`);
     console.warn(`This file will be duplicated but won't use language-specific fragments.`);
   }
 
-  // Extract frontmatter if exists
-  const frontmatterMatch = templateContent.match(/^---\n([\s\S]*?)\n---\n/);
-  let frontmatter = '';
-  let content = templateContent;
-
-  if (frontmatterMatch) {
-    frontmatter = frontmatterMatch[1];
-    content = templateContent.slice(frontmatterMatch[0].length);
-  }
-
-  // Generate for each language
   for (const lang of LANGUAGES) {
+    const processedContent = processLanguageIncludeTags(templateContent, templatePath, lang);
+
+    // Extract frontmatter if exists
+    const frontmatterMatch = processedContent.match(/^---\n([\s\S]*?)\n---\n/);
+    let frontmatter = '';
+    let content = processedContent;
+
+    if (frontmatterMatch) {
+      frontmatter = frontmatterMatch[1];
+      content = processedContent.slice(frontmatterMatch[0].length);
+    }
+
     const outputDir = path.join(DOCS_BASE, lang, path.dirname(relativePath));
     // Convert README.mdx to index.mdx so it becomes the category page content
     const outputFileName = templateName === 'README.mdx' ? 'index.mdx' : templateName;
@@ -148,7 +347,7 @@ function generateDocsForTemplate(templatePath: string): void {
     output += `  To make changes, edit the template file, then run: npm run generate:docs\n`;
     output += `-->\n\n`;
 
-    // Add content
+    // Add processed content (optimized for production, with Language components for development)
     output += content;
 
     // Write file
