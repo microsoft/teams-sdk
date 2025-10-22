@@ -174,7 +174,9 @@ function copyCategoryFiles(): void {
       if (entry.isDirectory()) {
         copyDirectory(sourcePath, currentRelativePath);
       } else if (entry.isFile() && entry.name === '_category_.json') {
-        // Copy this category file to all language directories
+        // Copy category file to all language directories with unique keys
+        const categoryContent = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
+
         for (const lang of LANGUAGES) {
           const targetDir = path.join(DOCS_BASE, lang, relativePath);
           const targetPath = path.join(targetDir, '_category_.json');
@@ -184,8 +186,13 @@ function copyCategoryFiles(): void {
             fs.mkdirSync(targetDir, { recursive: true });
           }
 
-          // Copy the file
-          fs.copyFileSync(sourcePath, targetPath);
+          // Add unique key based on language and relative path
+          const modifiedContent = {
+            ...categoryContent,
+            key: `${lang}-${relativePath.replace(/[/\\]/g, '-') || 'root'}`
+          };
+
+          fs.writeFileSync(targetPath, JSON.stringify(modifiedContent, null, 2) + '\n');
         }
 
         console.log(`Copied: ${currentRelativePath} -> all language directories`);
