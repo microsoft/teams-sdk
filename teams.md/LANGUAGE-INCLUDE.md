@@ -235,6 +235,7 @@ docs/main/{lang}/               # Auto-generated (DO NOT EDIT)
 7. **Add `sidebar_label`** to frontmatter for proper capitalization
 8. **Prefix utility pages with underscore** to hide from sidebar
 9. **Place `_category_.json` with templates** for easier maintenance
+10. **Use correct relative URLs**: No `.md` or `.mdx` extensions, relative to **generated file location**; no cross-language links
 
 ## Migrating Existing Documentation
 
