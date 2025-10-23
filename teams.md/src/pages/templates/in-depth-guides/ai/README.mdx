@@ -1,12 +1,13 @@
 ---
 sidebar_position: 5
-summary: Overview of AI components in Python Teams AI, including Prompts for orchestration and Models for LLM interfaces.
+sidebar_label: AI
+summary: Overview of AI components in Teams AI library, including Prompts for orchestration and Models for LLM interfaces.
 ---
 
 # 🤖 AI
 
 The AI packages in this library are designed to make it easier to build applications with LLMs.
-The `microsoft-teams-ai` package has two main components:
+The <LanguageInclude section="package-name" /> has two main components:
 
 ## 📦 Prompts
 
@@ -20,8 +21,8 @@ A `Model` is the component that interfaces with the LLM, being given some `input
 This layer deals with any of the nuances of the particular Models being used.
 
 It is in the model implementation that the individual LLM features (i.e. streaming/tools etc.)
-are made compatible with the more general features of the `microsoft-teams-ai` package.
+are made compatible with the more general features of the <LanguageInclude section="package-name" />.
 
 :::note
-You are not restricted to use the `microsoft-teams-ai` package to build your Teams Agent applications. You can use models directly if you choose. These packages are there to simplify the interactions with the models and Teams.
+You are not restricted to use the <LanguageInclude section="package-name" /> to build your Teams Agent applications. You can use models directly if you choose. These packages are there to simplify the interactions with the models and Teams.
 :::
