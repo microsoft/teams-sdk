@@ -1,0 +1,35 @@
+---
+sidebar_position: 1
+sidebar_label: Setup & Prerequisites
+summary: Prerequisites and setup guide for integrating LLMs into Teams AI applications, including API keys and configuration.
+---
+
+# Setup & Prerequisites
+
+There are a few prerequisites to getting started with integrating LLMs into your application:
+
+- LLM API Key - To generate messages using an LLM, you will need to have an API Key for the LLM you are using.
+  - [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service)
+  - [OpenAI](https://platform.openai.com/)
+
+<LanguageInclude section="package-install" />
+
+- In your application, you should include your keys in a secure way. <LanguageInclude section="config-method" />
+
+<LanguageInclude section="project-structure" />
+
+### Azure OpenAI
+
+You will need to deploy a model in Azure OpenAI. View the [resource creation guide](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal#deploy-a-model 'Azure OpenAI Model Deployment Guide') for more information on how to do this.
+
+<LanguageInclude section="azure-openai-config" />
+
+<LanguageInclude section="azure-openai-info" />
+
+### OpenAI
+
+You will need to create an OpenAI account and get an API key. View the [OpenAI Quickstart Guide](https://platform.openai.com/docs/quickstart/build-your-application 'OpenAI Quickstart Guide') for how to do this.
+
+<LanguageInclude section="openai-config" />
+
+<LanguageInclude section="additional-notes" />
