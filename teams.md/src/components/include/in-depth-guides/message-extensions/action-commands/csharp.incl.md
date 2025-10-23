@@ -1,114 +1,8 @@
----
-sidebar_position: 1
-summary: Learn how to create action commands for message extensions that present modal dialogs to collect or display information in Teams.
----
-
-# Action commands
-
-Action commands allow you to present your users with a modal pop-up called a dialog in Teams. The dialog collects or displays information, processes the interaction, and sends the information back to Teams compose box.
-
-## Action command invocation locations
-
-There are three different areas action commands can be invoked from:
-
-1. Compose Area
-2. Compose Box
-3. Message
-
-### Compose Area and Box
-
-![Screenshot of Teams with outlines around the 'Compose Box' (for typing messages) and the 'Compose Area' (the menu option next to the compose box that provides a search bar for actions and apps).](/screenshots/compose-area.png)
-
-### Message action command
-
-![Screenshot of message extension response in Teams. By selecting the '...' button, a menu has opened with 'More actions' option in which they can select from a list of available message extension actions.](/screenshots/message.png)
-
-:::tip
-See the [Invoke Locations](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/how-to/action-commands/define-action-command?tabs=Teams-toolkit%2Cdotnet#select-action-command-invoke-locations) guide to learn more about the different entry points for action commands.
-:::
-
-## Setting up your Teams app manifest
-
-To use action commands you have define them in the Teams app manifest. Here is an example:
-
-
-```json
-"composeExtensions": [
-    {
-        "botId": "${{BOT_ID}}",
-        "commands": [
-            {
-            "id": "createCard",
-            "type": "action",
-            "context": [
-                "compose",
-                "commandBox"
-            ],
-            "description": "Command to run action to create a card from the compose box.",
-            "title": "Create Card",
-            "parameters": [
-                {
-                    "name": "title",
-                    "title": "Card title",
-                    "description": "Title for the card",
-                    "inputType": "text"
-                },
-                {
-                    "name": "subTitle",
-                    "title": "Subtitle",
-                    "description": "Subtitle for the card",
-                    "inputType": "text"
-                },
-                {
-                    "name": "text",
-                    "title": "Text",
-                    "description": "Text for the card",
-                    "inputType": "textarea"
-                }
-            ]
-            },
-            {
-                "id": "getMessageDetails",
-                "type": "action",
-                "context": [
-                    "message"
-                ],
-                "description": "Command to run action on message context.",
-                "title": "Get Message Details"
-            },
-            {
-                "id": "fetchConversationMembers",
-                "description": "Fetch the conversation members",
-                "title": "Fetch Conversation Members",
-                "type": "action",
-                "fetchTask": true,
-                "context": [
-                    "compose"
-                ]
-            },
-        ]
-    }
-]
-```
-
-
-Here we are defining three different commands:
-
-1. `createCard` - that can be invoked from either the `compose` or `commandBox` areas. Upon invocation a dialog will popup asking the user to fill the `title`, `subTitle`, and `text`.
-
-![Screenshot of a message extension dialog with the editable fields 'Card title', 'Subtitle', and 'Text'.](/screenshots/parameters.png)
-
-2. `getMessageDetails` - It is invoked from the `message` overflow menu. Upon invocation the message payload will be sent to the app which will then return the details like `createdDate`...etc.
-
-![Screenshot of the 'More actions' message extension menu expanded with 'Get Message Details' option selected.](/screenshots/message-command.png)
-
-3. `fetchConversationMembers` - It is invoked from the `compose` area. Upon invocation the app will return an adaptive card in the form of a dialog with the conversation roster.
-
-![Screenshot of the 'Fetch Conversation Members' option exposed from the message extension menu '...' option.](/screenshots/fetch-conversation-members.png)
-
-## Handle submission
+<!-- handle-submission-intro -->
 
 Handle submission when the `createCard` or `getMessageDetails` actions commands are invoked.
+
+<!-- handle-submission-code -->
 
 ```csharp
 using System.Text.Json;
@@ -146,6 +40,8 @@ public Response OnMessageExtensionSubmit(
     }
 }
 ```
+
+<!-- create-card-function -->
 
 `HandleCreateCard()` method
 
@@ -206,6 +102,8 @@ private static Response HandleCreateCard(JsonElement? data, ILogger log)
 }
 ```
 
+<!-- create-message-details-function -->
+
 `HandleGetMessageDetails()` method
 
 ```csharp
@@ -263,10 +161,11 @@ private static Response HandleGetMessageDetails(SubmitActionActivity activity, I
 }
 ```
 
-
-## Handle opening adaptive card dialog
+<!-- handle-dialog-intro -->
 
 Handle opening adaptive card dialog when the `fetchConversationMembers` command is invoked.
+
+<!-- handle-dialog-code -->
 
 ```csharp
 using Microsoft.Teams.Api.Activities.Invokes.MessageExtensions;
@@ -288,6 +187,8 @@ public async Task<ActionResponse> OnMessageExtensionFetchTask(
     return CreateFetchTaskResponse(commandId, log);
 }
 ```
+
+<!-- create-conversation-members-function -->
 
 `CreateFetchTaskResponse()` method
 
@@ -352,8 +253,3 @@ private static Response CreateErrorActionResponse(string message)
     };
 }
 ```
-
-## Resources
-
-- [Action commands](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/how-to/action-commands/define-action-command?tabs=Teams-toolkit%2Cdotnet)
-- [Returning Adaptive Card Previews in Task Modules](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/how-to/action-commands/respond-to-task-module-submit?tabs=dotnet%2Cdotnet-1#bot-response-with-adaptive-card)
