@@ -1,14 +1,16 @@
----
-sidebar_position: 4
-summary: API guide in C# to implement User Authentication with SSO in Teams Apps.
----
+<!-- intro -->
 
-# 🔒 User Authentication
+N/A
 
-Once you have configured your Azure Bot resource and OAuth settings, as described in [User Authentication Setup](/teams/user-authentication/sso-setup), add the following code to your `App`:
+<!-- create-project -->
 
+Use your terminal to run the following command:
 
-## Configure the OAuth connection
+```sh
+npx @microsoft/teams.cli@latest new csharp oauth-app --template graph
+```
+
+<!-- configure-oauth -->
 
 ```cs
 var builder = WebApplication.CreateBuilder(args);
@@ -20,13 +22,8 @@ builder.AddTeams(appBuilder);
 var app = builder.Build();
 var teams = app.UseTeams();
 ```
-:::tip
-Make sure you use the same name you used when creating the OAuth connection in the Azure Bot Service resource.
-:::
 
-## Signing In
-
-You must call the `signin` method inside your route handler, for example: to signin when receiving the `/signin` message:
+<!-- signing-in -->
 
 ```cs
 teams.OnMessage("/signin", async context =>
@@ -43,9 +40,7 @@ teams.OnMessage("/signin", async context =>
 });
 ```
 
-## Subscribe to the SignIn event
-
-You can subscribe to the `signin` event, that will be triggered once the OAuth flow completes.
+<!-- signin-event -->
 
 ```cs
 teams.OnSignIn(async (_, teamsEvent) =>
@@ -55,9 +50,7 @@ teams.OnSignIn(async (_, teamsEvent) =>
 });
 ```
 
-## Start using the graph client
-
-From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+<!-- using-graph -->
 
 ```cs
 teams.OnMessage("/whoami", async context =>
@@ -84,9 +77,7 @@ teams.OnMessage(async context =>
 });
 ```
 
-## Signing Out
-
-You can signout by calling the `signout` method, this will remove the token from the User Token service cache
+<!-- signing-out -->
 
 ```cs
 teams.OnMessage("/signout", async context =>
@@ -101,4 +92,3 @@ teams.OnMessage("/signout", async context =>
     await context.Send("you have been signed out!");
 });
 ```
-

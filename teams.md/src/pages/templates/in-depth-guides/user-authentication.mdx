@@ -1,0 +1,100 @@
+---
+sidebar_position: 4
+sidebar_label: User Authentication
+summary: API guide to implement User Authentication with SSO in Teams Apps.
+---
+
+# 🔒 User Authentication
+
+<LanguageInclude section="intro" />
+
+:::info
+This is an advanced guide. It is highly recommended that you are familiar with [Teams Core Concepts](/teams/core-concepts) before attempting this guide.
+:::
+
+:::warning
+User authentication does not work with the developer tools setup. You have to run the app in Teams. Follow these [instructions](/main/typescript/getting-started/running-in-teams#debugging-in-teams) to run your app in Teams.
+:::
+
+:::info
+It is possible to authenticate the user into [other auth providers](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-identity-providers?view=azure-bot-service-4.0&tabs=adv2%2Cga2#other-identity-providers) like Facebook, Github, Google, Dropbox, and so on.
+:::
+
+Once you have configured your Azure Bot resource OAuth settings, as described in [User Authentication Setup](/teams/user-authentication/sso-setup), add the following code to your `App`:
+
+## Project Setup
+
+### Create an app with the `graph` template
+
+:::tip
+Skip this step if you want to add the auth configurations to an existing app.
+:::
+
+<LanguageInclude section="create-project" />
+
+### Add Agents Toolkit auth configuration
+
+Open your terminal with the project folder set as the current working directory and run the following command:
+
+```sh
+npx @microsoft/teams.cli config add atk.oauth
+```
+
+The `atk.oauth` configuration is a basic setup for Agents Toolkit along with configurations to authenticate the user with Microsoft Entra ID to access Microsoft Graph APIs.
+
+This [CLI](/developer-tools/cli) command adds configuration files required by Agents Toolkit, including:
+
+- Azure Application Entra ID manifest file `aad.manifest.json`.
+- Azure bicep files to provision Azure bot in `infra/` folder.
+
+:::info
+Agents Toolkit, in the debugging flow, will deploy the `aad.manifest.json` and `infra/azure.local.bicep` file to provision the Application Entra ID and Azure bot with oauth configurations.
+:::
+
+## Configure the OAuth connection
+
+<LanguageInclude section="configure-oauth" />
+
+:::tip
+Make sure you use the same name you used when creating the OAuth connection in the Azure Bot Service resource.
+:::
+
+:::note
+In many templates, `graph` is the default name of the OAuth connection, but you can change that by supplying a different connection name in your app configuration.
+:::
+
+## Signing In
+
+:::note
+This uses the Single Sign-On (SSO) authentication flow. To learn more about all the available flows and their differences see the [How Auth Works](/teams/user-authentication/auth-sso) guide.
+:::
+
+You must call the `signin` method inside your route handler, for example: to signin when receiving the `/signin` message:
+
+<LanguageInclude section="signing-in" />
+
+## Subscribe to the SignIn event
+
+You can subscribe to the `signin` event, that will be triggered once the OAuth flow completes.
+
+<LanguageInclude section="signin-event" />
+
+## Start using the graph client
+
+From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+
+:::note
+The default OAuth configuration requests the `User.ReadBasic.All` permission. It is possible to request other permissions by modifying the App Registration for the bot on Azure.
+:::
+
+<LanguageInclude section="using-graph" />
+
+## Signing Out
+
+You can signout by calling the `signout` method, this will remove the token from the User Token service cache
+
+<LanguageInclude section="signing-out" />
+
+## Resources
+
+[User Authentication Basics](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0)
