@@ -1,13 +1,8 @@
----
-sidebar_position: 2
-summary: Guide to processing dialog submissions in Teams applications, showing how to handle form data from both Adaptive Cards and web pages using the dialog.submit event handler with examples for different submission types.
----
-
-# Handling Dialog Submissions
+<!-- event-intro -->
 
 Dialogs have a specific `dialog_submit` event to handle submissions. When a user submits a form inside a dialog, the app is notified via this event, which is then handled to process the submission values, and can either send a response or proceed to more steps in the dialogs (see [Multi-step Dialogs](./handling-multi-step-forms)).
 
-In this example, we show how to handle dialog submissions from an Adaptive Card form:
+<!-- adaptive-card-example -->
 
 ```python
 from typing import Optional, Any
@@ -27,7 +22,7 @@ async def handle_dialog_submit(ctx: ActivityContext[TaskSubmitInvokeActivity]):
         return TaskModuleResponse(task=TaskModuleMessageResponse(value="Form was submitted"))
 ```
 
-Similarly, handling dialog submissions from rendered webpages is also possible:
+<!-- webpage-example -->
 
 ```python
 from typing import Optional, Any
@@ -49,3 +44,7 @@ async def handle_dialog_submit(ctx: ActivityContext[TaskSubmitInvokeActivity]):
             body=TaskModuleResponse(task=TaskModuleMessageResponse(value="Form submitted successfully"))
         )
 ```
+
+<!-- complete-example -->
+
+N/A

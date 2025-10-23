@@ -1,9 +1,4 @@
----
-sidebar_position: 2
-summary: Guide to processing dialog submissions in Teams applications, showing how to handle form data from both Adaptive Cards and web pages using the dialog.submit event handler with examples for different submission types.
----
-
-# Handling Dialog Submissions
+<!-- event-intro -->
 
 Dialogs have a specific `TaskSubmit` event to handle submissions. When a user submits a form inside a dialog, the app is notified via this event, which is then handled to process the submission values, and can either send a response or proceed to more steps in the dialogs (see [Multi-step Dialogs](./handling-multi-step-forms)).
 
@@ -13,7 +8,7 @@ Methods decorated with `[TaskSubmit]` **must** return `Task<Microsoft.Teams.Api.
 
 ## Basic Example
 
-In this example, we show how to handle dialog submissions from an Adaptive Card form:
+<!-- adaptive-card-example -->
 
 ```csharp
 using System.Text.Json;
@@ -67,7 +62,7 @@ public async Task<Microsoft.Teams.Api.TaskModules.Response> OnTaskSubmit([Contex
 }
 ```
 
-Similarly, handling dialog submissions from rendered webpages is also possible:
+<!-- webpage-example -->
 
 ```csharp
 // Add this case to the switch statement in OnTaskSubmit method
@@ -78,6 +73,8 @@ case "webpage_dialog":
     return new Microsoft.Teams.Api.TaskModules.Response(
         new Microsoft.Teams.Api.TaskModules.MessageTask("Form submitted successfully"));
 ```
+
+<!-- complete-example -->
 
 ### Complete TaskSubmit Handler Example
 
