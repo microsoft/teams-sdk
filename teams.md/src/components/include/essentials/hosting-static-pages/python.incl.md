@@ -15,4 +15,4 @@ app.tab("my_app", os.path.abspath("dist/client"))
 <!-- additional-resources -->
 
 - For more details about Tab apps, see the [Tabs](../in-depth-guides/tabs) in-depth guide.
-- For an example of hosting a Dialog, see the [Creating Dialogs](../in-depth-guides/dialogs/creating-dialogs.md) in-depth guide.
+- For an example of hosting a Dialog, see the [Creating Dialogs](../in-depth-guides/dialogs/creating-dialogs) in-depth guide.
