@@ -1,0 +1,27 @@
+---
+sidebar_position: 2
+sidebar_label: Listening To Events
+summary: Understanding how to listen to and handle events in Teams AI applications, including user actions and application server events.
+---
+
+# Listening To Events
+
+An **event** is a foundational concept in building agents — it represents something noteworthy happening either on Microsoft Teams or within your application. These events can originate from the user (e.g. installing or uninstalling your app, sending a message, submitting a form), or from your application server (e.g. startup, error in a handler).
+
+<LanguageInclude section="mermaid-diagram" />
+
+The Teams AI Library v2 makes it easy to subscribe to these events and respond appropriately. You can register event handlers to take custom actions when specific events occur — such as logging errors, triggering workflows, or sending follow-up messages.
+
+Here are the events that you can start building handlers for:
+
+<LanguageInclude section="events-table" />
+
+### Example 1
+
+We can subscribe to errors that occur in the app.
+
+<LanguageInclude section="example-1" />
+
+### Example 2
+
+<LanguageInclude section="example-2" />
