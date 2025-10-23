@@ -1,0 +1,25 @@
+---
+sidebar_position: 5
+sidebar_label: 'API Client'
+summary: Overview of the Teams API Client and how to use it to interact with conversations, meetings, and teams in your application.
+---
+
+# Teams API Client
+
+Teams has a number of areas that your application has access to via its API. These are all available via the <LanguageInclude section="api-object-name" /> object. Here is a short summary of the different areas:
+
+<LanguageInclude section="api-table" />
+
+An instance of the API client is passed to handlers that can be used to fetch details:
+
+## Example
+
+In this example, we use the API client to fetch the members in a conversation. The <LanguageInclude section="api-object-description" /> object is passed to the activity handler in this case.
+
+<LanguageInclude section="handler-example" />
+
+## Proactive API
+
+It's also possible to access the API client from outside a handler via the app instance. Here we have the same example as above, but we're access the API client via the app instance.
+
+<LanguageInclude section="proactive-example" />
