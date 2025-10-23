@@ -1,62 +1,4 @@
----
-sidebar_position: 2
-summary: How to implement search commands in message extensions to allow users to search external systems and insert results as cards.
----
-
-# 🔍 Search commands
-
-Message extension search commands allow users to search external systems and insert the results of that search into a message in the form of a card.
-
-## Search command invocation locations
-
-There are two different areas search commands can be invoked from:
-
-1. Compose Area
-2. Compose Box
-
-### Compose Area and Box
-
-![compose area and box](/screenshots/compose-area.png)
-
-## Setting up your Teams app manifest
-
-To use search commands you have to define them in the Teams app manifest. Here is an example:
-
-
-```json
-"composeExtensions": [
-    {
-        "botId": "${{BOT_ID}}",
-        "commands": [
-            {
-                "id": "searchQuery",
-                "context": [
-                    "compose",
-                    "commandBox"
-                ],
-                "description": "Test command to run query",
-                "title": "Search query",
-                "type": "query",
-                "parameters": [
-                    {
-                        "name": "searchQuery",
-                        "title": "Search Query",
-                        "description": "Your search query",
-                        "inputType": "text"
-                    }
-                ]
-            }
-        ]
-    }
-]
-```
-
-
-Here we are defining the `searchQuery` search (or query) command.
-
-## Handle submission
-
-Handle opening adaptive card dialog when the `searchQuery` query is submitted.
+<!-- handle-submission-code -->
 
 ```typescript
 import { cardAttachment } from '@microsoft/teams.api';
@@ -88,6 +30,8 @@ app.on('message.ext.query', async ({ activity }) => {
   return { status: 400 };
 });
 ```
+
+<!-- create-dummy-cards-function -->
 
 `createDummyCards()` function
 
@@ -143,15 +87,7 @@ export async function createDummyCards(searchQuery: string) {
 }
 ```
 
-The search results include both a full adaptive card and a preview card. The preview card appears as a list item in the search command area:
-
-![Search command preview card](/screenshots/preview-card.png)
-
-When a user clicks on a list item the dummy adaptive card is added to the compose box:
-
-![Card in compose box](/screenshots/card-in-compose.png)
-
-To implement custom actions when a user clicks on a search result item, you can add the `tap` property to the preview card. This allows you to handle the click event with custom logic:
+<!-- select-item-code -->
 
 ```typescript
 import { App } from '@microsoft/teams.apps';
@@ -167,8 +103,3 @@ app.on('message.ext.select-item', async ({ activity, send }) => {
   };
 });
 ```
-
-## Resources
-
-- [Search command](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/how-to/search-commands/define-search-command?tabs=Teams-toolkit%2Cdotnet)
-- [Just-In-Time Install](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/how-to/search-commands/universal-actions-for-search-based-message-extensions#just-in-time-install)
