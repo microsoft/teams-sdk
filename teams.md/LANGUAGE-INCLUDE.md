@@ -48,6 +48,7 @@ You can also use inline: The package name is <LanguageInclude section="package-n
 
 - **Block-level**: Content is parsed as Markdown/MDX with full formatting support
 - **Inline** (within text): Content is inserted as plain text (no Markdown parsing)
+- **Frontmatter limitations**: LanguageInclude tags cannot be used within frontmatter (summary, title, etc.) - these must be language-agnostic or handled through separate template files
 - Template files are NOT served directly - they generate files in `docs/main/{lang}/`
 
 ### 2. Fragment/Include Files (`src/components/include/**/{lang}.incl.md`)

@@ -212,7 +212,7 @@ function processLanguageIncludeTags(templateContent: string, templatePath: strin
  * Removes all .mdx files from docs/main/{lang}/ directories
  */
 function cleanGeneratedFiles(): void {
-  console.log('\nCleaning up stale generated files...\n');
+  console.log('Cleaning up stale generated files...');
 
   let deletedCount = 0;
 
@@ -262,7 +262,7 @@ function cleanGeneratedFiles(): void {
   if (deletedCount === 0) {
     console.log('No files to clean');
   } else {
-    console.log(`\nCleaned up ${deletedCount} file(s)\n`);
+    console.log(`  Cleaned up ${deletedCount} file(s)`);
   }
 }
 
@@ -297,15 +297,13 @@ function generateDocsForTemplate(templatePath: string): void {
   const relativePath = path.relative(TEMPLATES_DIR, templatePath);
   const templateName = path.basename(templatePath);
 
-  console.log(`Generating docs for template: ${relativePath}`);
-
   // Read template content
   const templateContent = fs.readFileSync(templatePath, 'utf8');
 
   // Validate template contained LanguageInclude tags
   if (!templateContent.includes('<LanguageInclude')) {
-    console.warn(`Warning: Template "${relativePath}" does not contain <LanguageInclude /> tags.`);
-    console.warn(`This file will be duplicated but won't use language-specific fragments.`);
+    console.warn(`\nWarning: Template "${relativePath}" does not contain <LanguageInclude /> tags.`);
+    console.warn(`  If the file is intended to be identical for all languages, ignore this warning.`);
   }
 
   for (const lang of LANGUAGES) {
@@ -360,8 +358,6 @@ function generateDocsForTemplate(templatePath: string): void {
  * Preserves directory structure
  */
 function copyCategoryFiles(): void {
-  console.log('Copying category configuration files...');
-
   function copyDirectory(sourceDir: string, relativePath: string = ''): void {
     const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
 
@@ -392,8 +388,6 @@ function copyCategoryFiles(): void {
 
           fs.writeFileSync(targetPath, JSON.stringify(modifiedContent, null, 2) + '\n');
         }
-
-        console.log(`Copied: ${currentRelativePath} -> all language directories`);
       }
     }
   }
@@ -435,8 +429,6 @@ function findTemplateFiles(): string[] {
  * Creates _category_.json files in docs/main/{lang}/ with proper positioning
  */
 function createLanguageRootCategories(): void {
-  console.log('Creating root-level language category files...');
-
   // Position values for each language for correct sidebar ordering
   const languagePositions = {
     typescript: 2.0,
@@ -463,7 +455,6 @@ function createLanguageRootCategories(): void {
 
     // Write the category file
     fs.writeFileSync(categoryPath, JSON.stringify(categoryConfig, null, 2), 'utf8');
-    console.log(`  Created: docs/main/${lang}/_category_.json`);
   }
 }
 
@@ -471,7 +462,7 @@ function createLanguageRootCategories(): void {
  * Generate all docs
  */
 function generateAll(): void {
-  console.log('\nGenerating language-specific documentation...\n');
+  console.log('generate-language-docs.ts: Generating language-specific documentation...\n');
 
   // Clean up stale files first
   cleanGeneratedFiles();
