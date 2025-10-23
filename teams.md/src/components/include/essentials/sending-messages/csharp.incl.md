@@ -1,18 +1,11 @@
----
-sidebar_position: 4
-summary: Comprehensive guide to sending messages in Teams using C#, covering basic text messages, streaming for long-form content, and @mentions, with examples in both controller and minimal API styles.
----
+<!-- basic-message-example -->
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Sending Messages
-
-Sending messages is a core part of an agent's functionality. With all activity handlers, a `Send` method is provided which allows your handlers to send a message back to the user to the relevant conversation. 
-
 <Tabs>
   <TabItem label="Controller" value="controller" default>
-    ```csharp 
+    ```csharp
     [Message]
     public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
     {
@@ -21,7 +14,7 @@ Sending messages is a core part of an agent's functionality. With all activity h
     ```
   </TabItem>
   <TabItem label="Minimal" value="minimal">
-    ```csharp 
+    ```csharp
     app.OnMessage(async context =>
     {
         await context.Send($"you said: {context.activity.Text}");
@@ -30,11 +23,11 @@ Sending messages is a core part of an agent's functionality. With all activity h
   </TabItem>
 </Tabs>
 
-In the above example, the handler gets a `message` activity, and uses the `send` method to send a reply to the user.
+<!-- signin-example -->
 
 <Tabs>
   <TabItem label="Controller" value="controller" default>
-    ```csharp 
+    ```csharp
     [SignIn.VerifyState]
     public async Task OnVerifyState([Context] SignIn.VerifyStateActivity activity, [Context] IContext.Client client)
     {
@@ -43,7 +36,7 @@ In the above example, the handler gets a `message` activity, and uses the `send`
     ```
   </TabItem>
   <TabItem label="Minimal" value="minimal">
-    ```csharp 
+    ```csharp
     app.OnVerifyState(async context =>
     {
         await context.Send("You have successfully signed in!");
@@ -52,19 +45,15 @@ In the above example, the handler gets a `message` activity, and uses the `send`
   </TabItem>
 </Tabs>
 
-You are not restricted to only replying to `message` activities. In the above example, the handler is listening to `SignIn.VerifyState` events, which are sent when a user successfully signs in. 
+<!-- signin-event-name -->
 
-:::tip
-This shows an example of sending a text message. Additionally, you are able to send back things like [adaptive cards](../../in-depth-guides/adaptive-cards) by using the same `Send` method. Look at the [adaptive card](../../in-depth-guides/adaptive-cards) section for more details.
-:::
+`SignIn.VerifyState`
 
-## Streaming
-
-You may also stream messages to the user which can be useful for long messages, or AI generated messages. The library makes this simple for you by providing a `Stream` function which you can use to send messages in chunks. 
+<!-- streaming-example -->
 
 <Tabs>
   <TabItem label="Controller" value="controller" default>
-    ```csharp 
+    ```csharp
     [Message]
     public void OnMessage([Context] MessageActivity activity, [Context] IStreamer stream)
     {
@@ -76,7 +65,7 @@ You may also stream messages to the user which can be useful for long messages, 
     ```
   </TabItem>
   <TabItem label="Minimal" value="minimal">
-    ```csharp 
+    ```csharp
     app.OnMessage(async context =>
     {
         context.Stream.Emit("hello");
@@ -89,19 +78,15 @@ You may also stream messages to the user which can be useful for long messages, 
   </TabItem>
 </Tabs>
 
-:::note
-Streaming is currently only supported in 1:1 conversations, not group chats or channels
-:::
+<!-- mention-method-name -->
 
-![Animated image showing agent response text incrementally appearing in the chat window.](/screenshots/streaming-chat.gif)
+`AddMention`
 
-## @Mention
-
-Sending a message at `@mentions` a user is as simple including the details of the user using the `AddMention` method
+<!-- mention-example -->
 
 <Tabs>
   <TabItem label="Controller" value="controller" default>
-    ```csharp 
+    ```csharp
     [Message]
     public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
     {
@@ -110,7 +95,7 @@ Sending a message at `@mentions` a user is as simple including the details of th
     ```
   </TabItem>
   <TabItem label="Minimal" value="minimal">
-    ```csharp 
+    ```csharp
     app.OnMessage(async context =>
     {
         await context.Send(new MessageActivity("hi!").AddMention(activity.From));
