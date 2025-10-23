@@ -1,16 +1,11 @@
----
-sidebar_position: 1
-summary: Guide to implementing proactive messaging in C# Teams applications, demonstrating how to store conversation IDs and send messages to users without requiring a trigger message, useful for notifications and reminders.
----
+<!-- conversation-id-field -->
+
+`conversationId`
+
+<!-- install-handler-example -->
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-
-# Proactive Messaging
-
-In [Sending Messages](./), you were shown how to respond to an event when it happens. However, there are times when you want to send a message to the user without them sending a message first. This is called proactive messaging. You can do this by using the `send` method in the `app` instance. This approach is useful for sending notifications or reminders to the user.
-
-The main thing to note is that you need to have the `conversationId` of the chat or channel that you want to send the message to. It's a good idea to store this value somewhere from an activity handler so that you can use it for proactive messaging later.
 
 <Tabs>
   <TabItem label="Controller" value="controller" default>
@@ -40,7 +35,7 @@ The main thing to note is that you need to have the `conversationId` of the chat
   </TabItem>
 </Tabs>
 
-Then, when you want to send a proactive message, you can retrieve the `conversationId` from storage and use it to send the message.
+<!-- send-proactive-example -->
 
 ```csharp
 public static class Notifications
@@ -55,7 +50,3 @@ public static class Notifications
     }
 }
 ```
-
-:::tip
-In this example, you see how to get the conversation id using one of the activity handlers. This is a good place to store the conversation id, but you can also do this in other places like when the user installs the app or when they sign in. The important thing is that you have the conversation id stored somewhere so you can use it later.
-:::
