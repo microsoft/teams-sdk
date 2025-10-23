@@ -19,10 +19,8 @@ new ActionSet(
   new ExecuteAction({ title: 'Submit Feedback' })
     .withData({ action: 'submit_feedback' })
     .withAssociatedInputs('auto'),
-  new OpenUrlAction('https://adaptivecards.microsoft.com').withTitle(
-    'Learn More'
-  )
-)
+  new OpenUrlAction('https://adaptivecards.microsoft.com').withTitle('Learn More')
+);
 ```
 
 <!-- json-safety-note -->
@@ -45,16 +43,20 @@ import { IOpenUrlAction } from '@microsoft/teams.cards';
 <!-- input-association-example -->
 
 ```typescript
-import { AdaptiveCard, TextInput, ToggleInput, ActionSet, ExecuteAction } from '@microsoft/teams.cards';
+import {
+  AdaptiveCard,
+  TextInput,
+  ToggleInput,
+  ActionSet,
+  ExecuteAction,
+} from '@microsoft/teams.cards';
 // ...
 
 function editProfileCard() {
   const card = new AdaptiveCard(
     new TextInput({ id: 'name' }).withLabel('Name').withValue('John Doe'),
     new TextInput({ id: 'email', label: 'Email', value: 'john@contoso.com' }),
-    new ToggleInput('Subscribe to newsletter')
-      .withId('subscribe')
-      .withValue('false'),
+    new ToggleInput('Subscribe to newsletter').withId('subscribe').withValue('false'),
     new ActionSet(
       new ExecuteAction({ title: 'Save' })
         .withData({
@@ -83,7 +85,13 @@ function editProfileCard() {
 <!-- input-validation-example -->
 
 ```typescript
-import { AdaptiveCard, NumberInput, TextInput, ActionSet, ExecuteAction } from '@microsoft/teams.cards';
+import {
+  AdaptiveCard,
+  NumberInput,
+  TextInput,
+  ActionSet,
+  ExecuteAction,
+} from '@microsoft/teams.cards';
 // ...
 
 function createProfileCardInputValidation() {
@@ -117,7 +125,10 @@ function createProfileCardInputValidation() {
 <!-- server-handler-example -->
 
 ```typescript
-import { AdaptiveCardActionErrorResponse, AdaptiveCardActionMessageResponse } from '@microsoft/teams.api';
+import {
+  AdaptiveCardActionErrorResponse,
+  AdaptiveCardActionMessageResponse,
+} from '@microsoft/teams.api';
 import { App } from '@microsoft/teams.apps';
 // ...
 
@@ -146,9 +157,7 @@ app.on('card.action', async ({ activity, send }) => {
       break;
 
     case 'purchase_item':
-      await send(
-        `Purchase request received for game: ${data.choiceGameSingle}`
-      );
+      await send(`Purchase request received for game: ${data.choiceGameSingle}`);
       break;
 
     case 'save_profile':

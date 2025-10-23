@@ -6,12 +6,12 @@ using Microsoft.Teams.Cards;
 var action = new ExecuteAction
 {
     Title = "Submit Feedback",
-    Data = new Union<string, SubmitActionData>(new SubmitActionData 
-    { 
-        NonSchemaProperties = new Dictionary<string, object?> 
-        { 
-            { "action", "submit_feedback" } 
-        } 
+    Data = new Union<string, SubmitActionData>(new SubmitActionData
+    {
+        NonSchemaProperties = new Dictionary<string, object?>
+        {
+            { "action", "submit_feedback" }
+        }
     }),
     AssociatedInputs = AssociatedInputs.Auto
 };
@@ -30,12 +30,12 @@ var card = new AdaptiveCard
         new ExecuteAction
         {
             Title = "Submit Feedback",
-            Data = new Union<string, SubmitActionData>(new SubmitActionData 
-            { 
-                NonSchemaProperties = new Dictionary<string, object?> 
-                { 
-                    { "action", "submit_feedback" } 
-                } 
+            Data = new Union<string, SubmitActionData>(new SubmitActionData
+            {
+                NonSchemaProperties = new Dictionary<string, object?>
+                {
+                    { "action", "submit_feedback" }
+                }
             })
         },
         new OpenUrlAction("https://adaptivecards.microsoft.com")
@@ -100,13 +100,13 @@ private static AdaptiveCard CreateProfileCard()
             {
                 Title = "Save",
                 // entity_id will come back after the user submits
-                Data = new Union<string, SubmitActionData>(new SubmitActionData 
-                { 
-                    NonSchemaProperties = new Dictionary<string, object?> 
-                    { 
-                        { "action", "save_profile" }, 
-                        { "entity_id", "12345" } 
-                    } 
+                Data = new Union<string, SubmitActionData>(new SubmitActionData
+                {
+                    NonSchemaProperties = new Dictionary<string, object?>
+                    {
+                        { "action", "save_profile" },
+                        { "entity_id", "12345" }
+                    }
                 }),
                 AssociatedInputs = AssociatedInputs.Auto
             }
@@ -176,12 +176,12 @@ private static AdaptiveCard CreateProfileCardWithValidation()
             {
                 Title = "Save",
                 // All inputs should be validated
-                Data = new Union<string, SubmitActionData>(new SubmitActionData 
-                { 
-                    NonSchemaProperties = new Dictionary<string, object?> 
-                    { 
-                        { "action", "save_profile" } 
-                    } 
+                Data = new Union<string, SubmitActionData>(new SubmitActionData
+                {
+                    NonSchemaProperties = new Dictionary<string, object?>
+                    {
+                        { "action", "save_profile" }
+                    }
                 }),
                 AssociatedInputs = AssociatedInputs.Auto
             }
