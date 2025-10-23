@@ -1,20 +1,24 @@
----
-sidebar_position: 7
-summary: A guide to using the Microsoft Graph API in C#, explaining the methods for accessing Microsoft 365 data using application or user tokens, with sample code for retrieving user details and integrating Graph API within message handlers.
----
+<!-- package-info -->
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+`Microsoft.Graph` package
 
-# Graph API Client
+<!-- migration-note -->
 
-[Microsoft Graph](https://docs.microsoft.com/en-us/graph/overview) gives you access to the wider Microsoft 365 ecosystem. You can enrich your application with data from across Microsoft 365.
+N/A
 
-The library gives your application easy access to the Microsoft Graph API via the `Microsoft.Graph` package.
+<!-- package-overview -->
 
-Microsoft Graph can be accessed by your application using its own application token, or by using the user's token. If you need access to resources that your application may not have, but your user does, you will need to use the user's scoped graph client. To grant explicit consent for your application to access resources on behalf of a user, follow the [auth guide](../in-depth-guides/user-authentication).
+N/A
 
-To access the graph using the Graph using the app, you may use the `app.Graph` object. 
+<!-- app-graph-object -->
+
+`app.Graph`
+
+<!-- app-access-method -->
+
+N/A
+
+<!-- app-graph-example -->
 
 ```csharp
 // Equivalent of https://learn.microsoft.com/en-us/graph/api/user-get
@@ -26,11 +30,18 @@ Console.WriteLine($"User Email: {user.mail}");
 Console.WriteLine($"User Job Title: {user.jobTitle}");
 ```
 
+<!-- user-graph-intro -->
+
 To access the graph using the user's token, you need to do this as part of a message handler:
+
+<!-- user-graph-example -->
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 <Tabs>
   <TabItem label="Controller" value="controller" default>
-    ```csharp 
+    ```csharp
     [Message]
     public async Task OnMessage([Context] MessageActivity activity, [Context] GraphClient userGraph)
     {
@@ -43,7 +54,7 @@ To access the graph using the user's token, you need to do this as part of a mes
     ```
   </TabItem>
   <TabItem label="Minimal" value="minimal">
-    ```csharp 
+    ```csharp
     app.OnMessage(async context =>
     {
         var user = await context.UserGraph.Me.GetAsync();
@@ -56,8 +67,22 @@ To access the graph using the user's token, you need to do this as part of a mes
   </TabItem>
 </Tabs>
 
-Here, the `userGraph` object is a scoped graph client for the user that sent the message.
+<!-- user-graph-object -->
 
-:::tip
-You also have access to the `appGraph` object in the activity handler. This is equivalent to `app.Graph`.
-:::
+`userGraph`
+
+<!-- app-graph-in-handler -->
+
+`appGraph`
+
+<!-- app-graph-reference -->
+
+`app.Graph`
+
+<!-- advanced-sections -->
+
+N/A
+
+<!-- additional-resources -->
+
+N/A

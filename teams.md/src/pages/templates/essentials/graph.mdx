@@ -1,0 +1,37 @@
+---
+sidebar_position: 7
+sidebar_label: 'Graph API Client'
+summary: Guide to using the Microsoft Graph API client to access Microsoft 365 data and services from your Teams AI application.
+---
+
+# Graph API Client
+
+[Microsoft Graph](https://docs.microsoft.com/en-us/graph/overview) gives you access to the wider Microsoft 365 ecosystem. You can enrich your application with data from across Microsoft 365.
+
+The library gives your application easy access to the Microsoft Graph API via the <LanguageInclude section="package-info" />.
+
+<LanguageInclude section="migration-note" />
+
+<LanguageInclude section="package-overview" />
+
+## Calling APIs
+
+Microsoft Graph can be accessed by your application using its own application token, or by using the user's token. If you need access to resources that your application may not have, but your user does, you will need to use the user's scoped graph client. To grant explicit consent for your application to access resources on behalf of a user, follow the [auth guide](../in-depth-guides/user-authentication).
+
+To access the graph using the Graph using the app, you may use the <LanguageInclude section="app-graph-object" /> object <LanguageInclude section="app-access-method" />.
+
+<LanguageInclude section="app-graph-example" />
+
+<LanguageInclude section="user-graph-intro" />
+
+<LanguageInclude section="user-graph-example" />
+
+Here, the <LanguageInclude section="user-graph-object" /> object is a scoped graph client for the user that sent the message.
+
+:::tip
+You also have access to the <LanguageInclude section="app-graph-in-handler" /> object in the activity handler. This is equivalent to <LanguageInclude section="app-graph-reference" />.
+:::
+
+<LanguageInclude section="advanced-sections" />
+
+<LanguageInclude section="additional-resources" />
