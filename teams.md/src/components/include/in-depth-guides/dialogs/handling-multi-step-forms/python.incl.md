@@ -1,13 +1,8 @@
----
-sidebar_position: 3
-summary: Tutorial on implementing multi-step dialogs in Teams, demonstrating how to create dynamic form flows that adapt based on user input, with examples of handling state between steps and conditional navigation.
----
-
-# Handling Multi-Step Forms
-
-Dialogs can become complex yet powerful with multi-step forms. These forms can alter the flow of the survey depending on the user's input or customize subsequent steps based on previous answers.
+<!-- initial-setup -->
 
 Start off by sending an initial card in the `dialog_open` event.
+
+<!-- initial-card -->
 
 ```python
 dialog_card = AdaptiveCard.model_validate(
@@ -34,6 +29,8 @@ dialog_card = AdaptiveCard.model_validate(
             }
         )
 ```
+
+<!-- submission-handler -->
 
 Then in the submission handler, you can choose to `continue` the dialog with a different card.
 
@@ -101,3 +98,7 @@ async def handle_dialog_submit(ctx: ActivityContext[TaskSubmitInvokeActivity]):
     return TaskModuleResponse(task=TaskModuleMessageResponse(value="Unknown submission type"))
 
 ```
+
+<!-- complete-example -->
+
+N/A

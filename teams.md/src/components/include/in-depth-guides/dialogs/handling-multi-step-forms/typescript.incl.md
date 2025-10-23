@@ -1,13 +1,8 @@
----
-sidebar_position: 3
-summary: How to create complex multi-step dialog forms with dynamic flow control based on user input and previous answers.
----
-
-# Handling Multi-Step Forms
-
-Dialogs can become complex yet powerful with multi-step forms. These forms can alter the flow of the survey depending on the user's input or customize subsequent steps based on previous answers.
+<!-- initial-setup -->
 
 Start off by sending an initial card in the `dialog.open` event.
+
+<!-- initial-card -->
 
 ```typescript
 import { cardAttachment } from '@microsoft/teams.api';
@@ -46,6 +41,8 @@ return {
   },
 };
 ```
+
+<!-- submission-handler -->
 
 Then in the submission handler, you can choose to `continue` the dialog with a different card.
 
@@ -96,14 +93,15 @@ app.on('dialog.submit', async ({ activity, send, next }) => {
   } else if (dialogType === 'webpage_dialog_step_2') {
     const name = activity.value.data.name;
     const email = activity.value.data.email;
-    await send(
-      `Hi ${name}, thanks for submitting the form! We got that your email is ${email}`
-    );
+    await send(`Hi ${name}, thanks for submitting the form! We got that your email is ${email}`);
     // You can also return a blank response
     return {
       status: 200,
     };
   }
-
 });
 ```
+
+<!-- complete-example -->
+
+N/A

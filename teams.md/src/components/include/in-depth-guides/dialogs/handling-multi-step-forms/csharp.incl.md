@@ -1,15 +1,10 @@
----
-sidebar_position: 3
-summary: Tutorial on implementing multi-step dialogs in Teams, demonstrating how to create dynamic form flows that adapt based on user input, with examples of handling state between steps and conditional navigation.
----
-
-# Handling Multi-Step Forms
-
-Dialogs can become complex yet powerful with multi-step forms. These forms can alter the flow of the survey depending on the user's input or customize subsequent steps based on previous answers.
+<!-- initial-setup -->
 
 ## Creating the Initial Dialog
 
 Start off by sending an initial card in the `TaskFetch` event.
+
+<!-- initial-card -->
 
 ```csharp
 using System.Text.Json;
@@ -66,6 +61,8 @@ private static Response CreateMultiStepFormDialog()
     return new Response(new ContinueTask(taskInfo));
 }
 ```
+
+<!-- submission-handler -->
 
 Then in the submission handler, you can choose to `continue` the dialog with a different card.
 
@@ -130,6 +127,8 @@ case "webpage_dialog_step_2":
     await client.Send($"Hi {nameStep2}, thanks for submitting the form! We got that your email is {emailStep2}");
     return new Response(new MessageTask("Multi-step form completed successfully"));
 ```
+
+<!-- complete-example -->
 
 ### Complete Multi-Step Form Handler
 
