@@ -64,7 +64,6 @@ function processLanguageIncludeTags(templateContent: string, templatePath: strin
   // Replace all LanguageInclude tags
   processedContent = processedContent.replace(LANGUAGE_INCLUDE_REGEX, (match, sectionName, offset) => {
     hasLanguageInclude = true;
-    console.log(`  Processing section: ${sectionName}${targetLanguage ? ` for ${targetLanguage}` : ''}`);
 
     // Determine if this is inline or block based on context
     const beforeMatch = templateContent.substring(0, offset);
@@ -525,18 +524,29 @@ function watch(): void {
     ignoreInitial: true,
   });
 
+  /**
+   * Handle changes to include files and regenerate corresponding templates
+   * Maps include file paths to their corresponding template files:
+   * - Category pages: src/components/include/{path}/{lang}.incl.md → src/pages/templates/{path}/README.mdx
+   * - Regular pages: src/components/include/{path}/{page}/{lang}.incl.md → src/pages/templates/{path}/{page}.mdx
+   */
   const handleInclChange = (filePath: string): void => {
-    // Parse fragment path to find matching template:
-    // Fragment: src/components/include/{relativePath}/{fileName}/{lang}.incl.md
-    // Template: src/pages/templates/{relativePath}/{fileName}.mdx
     const relativePath = path.relative(FRAGMENTS_DIR, filePath);
     const parts = relativePath.split(path.sep);
 
-    // Remove the language file (e.g., typescript.incl.md)
-    parts.pop();
+    const langFile = parts.pop();
 
-    // Reconstruct path to template
-    const templatePath = path.join(TEMPLATES_DIR, ...parts) + '.mdx';
+    let templatePath: string;
+
+    if (langFile && langFile.match(/^(typescript|csharp|python)\.incl\.md$/)) {
+      templatePath = path.join(TEMPLATES_DIR, ...parts, 'README.mdx');
+
+      if (!fs.existsSync(templatePath)) {
+        templatePath = path.join(TEMPLATES_DIR, ...parts) + '.mdx';
+      }
+    } else {
+      templatePath = path.join(TEMPLATES_DIR, ...parts) + '.mdx';
+    }
 
     if (fs.existsSync(templatePath)) {
       console.log(`\nFragment changed: ${relativePath}`);
