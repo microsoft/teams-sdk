@@ -1,36 +1,4 @@
----
-sidebar_position: 2
-summary: Guide to implementing interactive elements in Adaptive Cards using Python, covering action types (Execute, Submit, OpenUrl), input validation, data association, and server-side handling of card actions.
----
-
-# Executing Actions
-
-Adaptive Cards support interactive elements through **actions**—buttons, links, and input submission triggers that respond to user interaction.  
-You can use these to collect form input, trigger workflows, show task modules, open URLs, and more.
-
----
-
-## Action Types
-
-The Teams AI Library supports several action types for different interaction patterns:
-
-| Action Type               | Purpose                | Description                                                                  |
-| ------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| `Action.Execute`          | Server‑side processing | Send data to your bot for processing. Best for forms & multi‑step workflows. |
-| `Action.Submit`           | Simple data submission | Legacy action type. Prefer `Execute` for new projects.                       |
-| `Action.OpenUrl`          | External navigation    | Open a URL in the user's browser.                                            |
-| `Action.ShowCard`         | Progressive disclosure | Display a nested card when clicked.                                          |
-| `Action.ToggleVisibility` | UI state management    | Show/hide card elements dynamically.                                         |
-
-> For complete reference, see the [official documentation](https://adaptivecards.microsoft.com/?topic=Action.Execute).
-
----
-
-## Creating Actions with the SDK
-
-### Single Actions
-
-The SDK provides builder helpers that abstract the underlying JSON. For example:
+<!-- single-action-example -->
 
 ```python
 from microsoft.teams.cards.core import ExecuteAction
@@ -40,9 +8,8 @@ action = ExecuteAction(title="Submit Feedback")
                     .with_data({"action": "submit_feedback"})
                     .with_associated_inputs("auto")
 ```
-### Action Sets
 
-Group actions together using `ActionSet`:
+<!-- action-set-example -->
 
 ```python
 from microsoft.teams.cards.core import ActionSet, ExecuteAction, OpenUrlAction
@@ -57,9 +24,11 @@ action_set = ActionSet(
             ),
 ```
 
-### Raw JSON Alternative
+<!-- json-safety-note -->
 
-Just like when building cards, if you prefer to work with raw JSON, you can do just that. You get type safety for free in Python.
+You get type safety for free in Python.
+
+<!-- raw-json-example -->
 
 ```python
 json = {
@@ -69,13 +38,7 @@ json = {
 }
 ```
 
----
-
-## Working with Input Values
-
-### Associating data with the cards
-
-Sometimes you want to send a card and have it be associated with some data. Set the `data` value to be sent back to the client so you can associate it with a particular entity.
+<!-- input-association-example -->
 
 ```python
 from microsoft.teams.cards import AdaptiveCard, ActionSet, ExecuteAction, OpenUrlAction
@@ -93,17 +56,24 @@ profile_card = AdaptiveCard(
                     ExecuteAction(title="Save")
                     # entity_id will come back after the user submits
                     .with_data({"action": "save_profile", "entity_id": "12345"}),
-                    OpenUrlAction(url="https://adaptivecards.microsoft.com").with_title("Learn More")
                 ]
             ),
         ],
     )
 
+# Data received in handler:
+"""
+{
+  "action": "save_profile",
+  "entity_id": "12345",     # From action data
+  "name": "John Doe",       # From name input
+  "email": "john@doe.com",  # From email input
+  "subscribe": "true"       # From toggle input (as string)
+}
+"""
 ```
 
-### Input Validation
-
-Input Controls provide ways for you to validate. More details can be found on the Adaptive Cards [documentation](https://adaptivecards.microsoft.com/?topic=input-validation).
+<!-- input-validation-example -->
 
 ```python
 from microsoft.teams.cards import AdaptiveCard, ActionSet, ExecuteAction, NumberInput, TextInput
@@ -131,14 +101,9 @@ def create_profile_card_input_validation():
         ],
     )
     return card
-
 ```
 
-## Server Handlers
-
-### Basic Structure
-
-Card actions arrive as `card_action` activities in your app. These give you access to the validated input values plus any `data` values you had configured to be sent back to you.
+<!-- server-handler-example -->
 
 ```python
 from microsoft.teams.api import AdaptiveCardInvokeActivity, AdaptiveCardActionErrorResponse, AdaptiveCardActionMessageResponse, HttpError, InnerHttpError, AdaptiveCardInvokeResponse
@@ -192,3 +157,9 @@ async def handle_card_action(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -
         value="Action processed successfully",
     )
 ```
+
+<!-- data-typing-note -->
+
+:::note
+The `data` values are accessible as a dictionary and can be accessed using `.get()` method for safe access.
+:::

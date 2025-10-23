@@ -1,36 +1,4 @@
----
-sidebar_position: 2
-summary: How to implement interactive elements in Adaptive Cards through actions like buttons, links, and input submission triggers.
----
-
-# Executing Actions
-
-Adaptive Cards support interactive elements through **actions**—buttons, links, and input submission triggers that respond to user interaction.  
-You can use these to collect form input, trigger workflows, show task modules, open URLs, and more.
-
----
-
-## Action Types
-
-The Teams AI Library supports several action types for different interaction patterns:
-
-| Action Type               | Purpose                | Description                                                                  |
-| ------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| `Action.Execute`          | Server‑side processing | Send data to your bot for processing. Best for forms & multi‑step workflows. |
-| `Action.Submit`           | Simple data submission | Legacy action type. Prefer `Execute` for new projects.                       |
-| `Action.OpenUrl`          | External navigation    | Open a URL in the user's browser.                                            |
-| `Action.ShowCard`         | Progressive disclosure | Display a nested card when clicked.                                          |
-| `Action.ToggleVisibility` | UI state management    | Show/hide card elements dynamically.                                         |
-
-> For complete reference, see the [official documentation](https://adaptivecards.microsoft.com/?topic=Action.Execute).
-
----
-
-## Creating Actions with the SDK
-
-### Single Actions
-
-The SDK provides builder helpers that abstract the underlying JSON. For example:
+<!-- single-action-example -->
 
 ```typescript
 import { ExecuteAction } from '@microsoft/teams.cards';
@@ -41,9 +9,7 @@ new ExecuteAction({ title: 'Submit Feedback' })
   .withAssociatedInputs('auto'),
 ```
 
-### Action Sets
-
-Group actions together using `ActionSet`:
+<!-- action-set-example -->
 
 ```typescript
 import { ExecuteAction, OpenUrlAction, ActionSet } from '@microsoft/teams.cards';
@@ -59,9 +25,11 @@ new ActionSet(
 )
 ```
 
-### Raw JSON Alternative
+<!-- json-safety-note -->
 
-Just like when building cards, if you prefer to work with raw JSON, you can do just that. You get typesafety for free in typescript.
+You get type safety for free in TypeScript.
+
+<!-- raw-json-example -->
 
 ```typescript
 import { IOpenUrlAction } from '@microsoft/teams.cards';
@@ -74,13 +42,7 @@ import { IOpenUrlAction } from '@microsoft/teams.cards';
 } as const satisfies IOpenUrlAction
 ```
 
----
-
-## Working with Input Values
-
-### Associating data with the cards
-
-Sometimes you want to send a card and have it be associated with some data. Set the `data` value to be sent back to the client so you can associate it with a particular entity.
+<!-- input-association-example -->
 
 ```typescript
 import { AdaptiveCard, TextInput, ToggleInput, ActionSet, ExecuteAction } from '@microsoft/teams.cards';
@@ -118,9 +80,7 @@ function editProfileCard() {
 }
 ```
 
-### Input Validation
-
-Input Controls provide ways for you to validate. More details can be found on the Adaptive Cards [documentation](https://adaptivecards.microsoft.com/?topic=input-validation).
+<!-- input-validation-example -->
 
 ```typescript
 import { AdaptiveCard, NumberInput, TextInput, ActionSet, ExecuteAction } from '@microsoft/teams.cards';
@@ -154,13 +114,7 @@ function createProfileCardInputValidation() {
 }
 ```
 
----
-
-## Server Handlers
-
-### Basic Structure
-
-Card actions arrive as `card.action` activities in your app. These give you access to the validated input values plus any `data` values you had configured to be sent back to you.
+<!-- server-handler-example -->
 
 ```typescript
 import { AdaptiveCardActionErrorResponse, AdaptiveCardActionMessageResponse } from '@microsoft/teams.api';
@@ -225,6 +179,8 @@ app.on('card.action', async ({ activity, send }) => {
   } satisfies AdaptiveCardActionMessageResponse;
 });
 ```
+
+<!-- data-typing-note -->
 
 :::note
 The `data` values are not typed and come as `any`, so you will need to cast them to the correct type in this case.

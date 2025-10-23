@@ -1,36 +1,4 @@
----
-sidebar_position: 2
-summary: Guide to implementing interactive elements in Adaptive Cards using C#, covering action types (Execute, Submit, OpenUrl), input validation, data association, and server-side handling of card actions.
----
-
-# Executing Actions
-
-Adaptive Cards support interactive elements through **actions**—buttons, links, and input submission triggers that respond to user interaction.  
-You can use these to collect form input, trigger workflows, show task modules, open URLs, and more.
-
----
-
-## Action Types
-
-The Teams AI Library supports several action types for different interaction patterns:
-
-| Action Type               | Purpose                | Description                                                                  |
-| ------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| `Action.Execute`          | Server‑side processing | Send data to your bot for processing. Best for forms & multi‑step workflows. |
-| `Action.Submit`           | Simple data submission | Legacy action type. Prefer `Execute` for new projects.                       |
-| `Action.OpenUrl`          | External navigation    | Open a URL in the user's browser.                                            |
-| `Action.ShowCard`         | Progressive disclosure | Display a nested card when clicked.                                          |
-| `Action.ToggleVisibility` | UI state management    | Show/hide card elements dynamically.                                         |
-
-> For complete reference, see the [official documentation](https://adaptivecards.microsoft.com/?topic=Action.Execute).
-
----
-
-## Creating Actions with the SDK
-
-### Single Actions
-
-The SDK provides builder helpers that abstract the underlying JSON. For example:
+<!-- single-action-example -->
 
 ```csharp
 using Microsoft.Teams.Cards;
@@ -49,9 +17,7 @@ var action = new ExecuteAction
 };
 ```
 
-### Action Sets
-
-Group actions together by adding them to the card's Actions collection:
+<!-- action-set-example -->
 
 ```csharp
 using Microsoft.Teams.Cards;
@@ -80,9 +46,9 @@ var card = new AdaptiveCard
 };
 ```
 
-### Raw JSON Alternative
+<!-- json-safety-note -->
 
-Just like when building cards, if you prefer to work with raw JSON, you can do just that. 
+<!-- raw-json-example -->
 
 ```csharp
 var actionJson = """
@@ -95,13 +61,7 @@ var actionJson = """
 var action = OpenUrlAction.Deserialize(actionJson);
 ```
 
----
-
-## Working with Input Values
-
-### Associating data with the cards
-
-Sometimes you want to send a card and have it be associated with some data. Set the `data` value to be sent back to the client so you can associate it with a particular entity.
+<!-- input-association-example -->
 
 ```csharp
 private static AdaptiveCard CreateProfileCard()
@@ -149,19 +109,31 @@ private static AdaptiveCard CreateProfileCard()
                     } 
                 }),
                 AssociatedInputs = AssociatedInputs.Auto
-            },
-            new OpenUrlAction("https://adaptivecards.microsoft.com")
-            {
-                Title = "Learn More"
             }
         }
     };
 }
+
+// Data received in handler (conceptual structure)
+/*
+{
+  "action": "save_profile",
+  "entity_id": "12345",     // From action data
+  "name": "John Doe",       // From name input
+  "email": "john@doe.com",  // From email input
+  "subscribe": "true"       // From toggle input (as string)
+}
+
+Accessed in C# as:
+- data["action"] → "save_profile"
+- data["entity_id"] → "12345"
+- data["name"] → "John Doe"
+- data["email"] → "john@doe.com"
+- data["subscribe"] → "true"
+*/
 ```
 
-### Input Validation
-
-Input Controls provide ways for you to validate. More details can be found on the Adaptive Cards [documentation](https://adaptivecards.microsoft.com/?topic=input-validation).
+<!-- input-validation-example -->
 
 ```csharp
 private static AdaptiveCard CreateProfileCardWithValidation()
@@ -218,11 +190,7 @@ private static AdaptiveCard CreateProfileCardWithValidation()
 }
 ```
 
-## Server Handlers
-
-### Basic Structure
-
-Card actions arrive as `AdaptiveCard.Action` activities in your app. These give you access to the validated input values plus any `data` values you had configured to be sent back to you.
+<!-- server-handler-example -->
 
 ```csharp
 using System.Text.Json;
@@ -280,16 +248,7 @@ public async Task<ActionResponse> OnCardAction([Context] ActionActivity activity
             var name = GetFormValue("name") ?? "Unknown";
             var email = GetFormValue("email") ?? "No email";
             var subscribe = GetFormValue("subscribe") ?? "false";
-            var age = GetFormValue("age");
-            var location = GetFormValue("location") ?? "Not specified";
-
-            var response = $"Profile saved!\nName: {name}\nEmail: {email}\nSubscribed: {subscribe}";
-            if (!string.IsNullOrEmpty(age))
-                response += $"\nAge: {age}";
-            if (location != "Not specified")
-                response += $"\nLocation: {location}";
-
-            await client.Send(response);
+            await client.Send($"Profile saved!\nName: {name}\nEmail: {email}\nSubscribed: {subscribe}");
             break;
 
         case "create_task":
@@ -307,3 +266,9 @@ public async Task<ActionResponse> OnCardAction([Context] ActionActivity activity
     return new ActionResponse.Message("Action processed successfully") { StatusCode = 200 };
 }
 ```
+
+<!-- data-typing-note -->
+
+:::note
+The `data` values come from JSON and need to be extracted using the helper method shown above to handle different JSON element types.
+:::
