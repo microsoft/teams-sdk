@@ -1,22 +1,20 @@
----
-sidebar_position: 1
-summary: Learn to create Adaptive Cards in C# using builder helpers, enabling type-safe, maintainable UI development with IntelliSense support, visual designer integration, and end-to-end examples for interactive forms.
----
+<!-- package-name -->
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+`Microsoft.Teams.Cards`
 
-# Building Adaptive Cards
+<!-- intro-description -->
 
-Adaptive Cards are JSON payloads that describe rich, interactive UI fragments.
 With `Microsoft.Teams.Cards` you can build these cards entirely in C# while enjoying full IntelliSense and compiler safety.
 
----
+<!-- builder-description -->
 
-## The Builder Pattern
+`Microsoft.Teams.Cards` exposes small **builder helpers** including `AdaptiveCard`, `TextBlock`, `ToggleInput`, `ExecuteAction`, _etc._
 
-`Microsoft.Teams.Cards` exposes small **builder helpers** (`AdaptiveCard`, `TextBlock`, `ToggleInput`, `ExecuteAction`, _etc._).
-Each helper wraps raw JSON and provides fluent, chainable methods that keep your code concise and readable.
+<!-- language-name -->
+
+C#
+
+<!-- builder-example -->
 
 ```csharp
 using Microsoft.Teams.Cards;
@@ -41,12 +39,12 @@ var card = new AdaptiveCard
         new ExecuteAction
         {
             Title = "Submit",
-            Data = new Union<string, SubmitActionData>(new SubmitActionData 
-            { 
-                NonSchemaProperties = new Dictionary<string, object?> 
-                { 
-                    { "action", "submit_basic" } 
-                } 
+            Data = new Union<string, SubmitActionData>(new SubmitActionData
+            {
+                NonSchemaProperties = new Dictionary<string, object?>
+                {
+                    { "action", "submit_basic" }
+                }
             }),
             AssociatedInputs = AssociatedInputs.Auto
         }
@@ -54,49 +52,27 @@ var card = new AdaptiveCard
 };
 ```
 
-Benefits:
+<!-- source-code-note -->
 
-| Benefit     | Description                                                                   |
-| ----------- | ----------------------------------------------------------------------------- |
-| Readability | No deep JSON trees—just chain simple methods.                                 |
-| Re‑use      | Extract snippets to functions or classes and share across cards.              |
-| Safety      | Builders validate every property against the Adaptive Card schema (see next). |
-
-:::tip Finding Type Definitions
-The builder helpers use strongly-typed interfaces (e.g., `List<CardElement>`, `List<Action>`). If you need to see constructor signatures or property types:
-- **In your IDE**: Use IntelliSense (Ctrl+Space) or "Go to Definition" (F12)
-- **From command line**: Inspect the `Microsoft.Teams.Cards` package source in your NuGet packages folder
-- **For reference**: Source code lives in the `Microsoft.Teams.Cards` namespace
+:::info
+The builder helpers use strongly-typed interfaces. Use IntelliSense (Ctrl+Space) or "Go to Definition" (F12) in your IDE to explore available types and properties. Source code lives in the `Microsoft.Teams.Cards` namespace.
 :::
 
----
-
-## Type‑safe Authoring & IntelliSense
-
-The package bundles the **Adaptive Card v1.5 schema** as strict C# types.
-While coding you get:
-
-- **Autocomplete** for every element and attribute.
-- **In‑editor validation**—invalid enum values or missing required properties produce compilation errors.
-- Automatic upgrades when the schema evolves; simply update the package.
+<!-- type-safety-example -->
 
 ```csharp
 // "Huge" is not a valid size for TextBlock - this will cause a compilation error
-var textBlock = new TextBlock("Test") 
-{ 
-    Wrap = true, 
-    Weight = TextWeight.Bolder, 
+var textBlock = new TextBlock("Test")
+{
+    Wrap = true,
+    Weight = TextWeight.Bolder,
     Size = "Huge" // This is invalid - should be TextSize enum
 };
 ```
 
-## The Visual Designer
+<!-- additional-type-info -->
 
-Prefer a drag‑and‑drop approach? Use [Microsoft's Adaptive Card Designer](https://adaptivecards.microsoft.com/designer.html):
-
-1. Add elements visually until the card looks right.
-2. Copy the JSON payload from the editor pane.
-3. Paste the JSON into your project **or** convert it to builder calls:
+<!-- designer-example -->
 
 ```csharp
 var cardJson = """
@@ -163,17 +139,12 @@ var card = AdaptiveCard.Deserialize(cardJson);
 await client.Send(card);
 ```
 
-This method leverages the full Adaptive Card schema and ensures that the payload adheres strictly to `AdaptiveCard`.
+<!-- card-interface -->
 
-:::tip
-You can use a combination of raw JSON and builder helpers depending on whatever you find easier.
-:::
+`AdaptiveCard`
 
----
+<!-- example-intro -->
 
-## End‑to‑end Example – Task Form Card
-
-Below is a complete example showing a task management form.
 <Tabs>
   <TabItem label="Controller" value="controller" default>
     ```csharp
@@ -190,6 +161,7 @@ Below is a complete example showing a task management form.
         }
     }
     ```
+
   </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
@@ -205,10 +177,14 @@ Below is a complete example showing a task management form.
         }
     });
     ```
+
   </TabItem>
 </Tabs>
 
 The definition for `CreateTaskFormCard` is as follows
+
+<!-- task-form-example -->
+
 ```csharp
 private static AdaptiveCard CreateTaskFormCard()
 {
@@ -259,12 +235,12 @@ private static AdaptiveCard CreateTaskFormCard()
             new ExecuteAction
             {
                 Title = "Create Task",
-                Data = new Union<string, SubmitActionData>(new SubmitActionData 
-                { 
-                    NonSchemaProperties = new Dictionary<string, object?> 
-                    { 
-                        { "action", "create_task" } 
-                    } 
+                Data = new Union<string, SubmitActionData>(new SubmitActionData
+                {
+                    NonSchemaProperties = new Dictionary<string, object?>
+                    {
+                        { "action", "create_task" }
+                    }
                 }),
                 AssociatedInputs = AssociatedInputs.Auto,
                 Style = ActionStyle.Positive
@@ -273,18 +249,3 @@ private static AdaptiveCard CreateTaskFormCard()
     };
 }
 ```
-
-## Additional Resources
-
-- [**Official Adaptive Card Documentation**](https://adaptivecards.microsoft.com/)
-- [**Adaptive Cards Designer**](https://adaptivecards.microsoft.com/designer.html)
-
----
-
-### Summary
-
-- Use **builder helpers** for readable, maintainable card code.
-- Enjoy **full type safety** and IDE assistance.
-- Prototype quickly in the **visual designer** and refine with builders.
-
-Happy card building! 🎉

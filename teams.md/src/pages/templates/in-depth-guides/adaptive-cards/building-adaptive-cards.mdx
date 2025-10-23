@@ -1,0 +1,80 @@
+---
+sidebar_position: 1
+sidebar_label: Building Adaptive Cards
+summary: Guide to building Adaptive Cards with builder helpers for type-safe, maintainable UI development.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Building Adaptive Cards
+
+Adaptive Cards are JSON payloads that describe rich, interactive UI fragments.
+
+<LanguageInclude section="intro-description" />
+
+## The Builder Pattern
+
+<LanguageInclude section="builder-description" />
+
+Each helper wraps raw JSON and provides fluent, chainable methods that keep your code concise and readable.
+
+<LanguageInclude section="builder-example" />
+
+Benefits:
+
+| Benefit     | Description                                                                   |
+| ----------- | ----------------------------------------------------------------------------- |
+| Readability | No deep JSON trees—just chain simple methods.                                 |
+| Re‑use      | Extract snippets to functions or classes and share across cards.              |
+| Safety      | Builders validate every property against the Adaptive Card schema (see next). |
+
+<LanguageInclude section="source-code-note" />
+
+## Type‑safe Authoring & IntelliSense
+
+The package bundles the **Adaptive Card v1.5 schema** as strict <LanguageInclude section="language-name" /> types.
+While coding you get:
+
+- **Autocomplete** for every element and attribute.
+- **In‑editor validation**—invalid enum values or missing required properties produce build errors.
+- Automatic upgrades when the schema evolves; simply update the package.
+
+<LanguageInclude section="type-safety-example" />
+
+## The Visual Designer
+
+Prefer a drag‑and‑drop approach? Use [Microsoft's Adaptive Card Designer](https://adaptivecards.microsoft.com/designer.html):
+
+1. Add elements visually until the card looks right.
+2. Copy the JSON payload from the editor pane.
+3. Paste the JSON into your project **or** convert it to builder calls:
+
+<LanguageInclude section="designer-example" />
+
+This method leverages the full Adaptive Card schema and ensures that the payload adheres strictly to <LanguageInclude section="card-interface" />.
+
+:::tip
+You can use a combination of raw JSON and builder helpers depending on whatever you find easier.
+:::
+
+## End‑to‑end Example – Task Form Card
+
+Below is a complete example showing a task management form.
+
+<LanguageInclude section="example-intro" />
+
+<LanguageInclude section="task-form-example" />
+
+## Additional Resources
+
+- [**Official Adaptive Card Documentation**](https://adaptivecards.microsoft.com/)
+- [**Adaptive Cards Designer**](https://adaptivecards.microsoft.com/designer.html)
+
+### Summary
+
+- Use **builder helpers** for readable, maintainable card code.
+- Enjoy **full type safety** and IDE assistance.
+- Prototype quickly in the **visual designer** and refine with builders.
+
+Happy card building! 🎉
