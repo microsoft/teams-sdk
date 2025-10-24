@@ -1,30 +1,4 @@
----
-sidebar_position: 4
-summary: Guide to managing conversation state in LLM interactions, explaining how to maintain chat history using ChatPrompt's state management capabilities and implementing custom persistence strategies for multi-conversation scenarios.
----
-
-
-# Keeping State
-
-By default, LLMs are not stateful. This means that they do not remember previous messages or context when generating a response.
-It's common practice to keep state of the conversation history in your application and pass it to the LLM each time you make a request.
-
-By default, the `ChatPrompt` instance will create a temporary in-memory store to keep track of the conversation history. This is beneficial
-when you want to use it to generate an LLM response, but not persist the conversation history. But in other cases, you may want to keep the conversation history
-
-:::warning
-By reusing the same `ChatPrompt` class instance across multiple conversations will lead to the conversation history being shared across all conversations. Which is usually not the desired behavior.
-:::
-
-To avoid this, you need to get messages from your persistent (or in-memory) store and pass it in to the `ChatPrompt`.
-
-:::note
-The `ChatPrompt` class will modify the messages object that's passed into it. So if you want to manually manage it, you need to make a copy of the messages object before passing it in.
-:::
-
-## State Initialization
-
-Here's how to initialize and manage conversation state for multiple conversations:
+<!-- state-initialization -->
 
 ```python
 from microsoft.teams.ai import ChatPrompt, ListMemory, AIModel
@@ -52,7 +26,7 @@ async def clear_conversation_memory(conversation_id: str) -> None:
         print(f"Cleared memory for conversation {conversation_id}")
 ```
 
-## Stateful Chat Example
+<!-- usage-example -->
 
 ```python
 from microsoft.teams.ai import ChatPrompt, ListMemory, AIModel
@@ -75,7 +49,7 @@ async def handle_stateful_conversation(model: AIModel, ctx: ActivityContext[Mess
     chat_prompt = ChatPrompt(model, memory=memory)
 
     chat_result = await chat_prompt.send(
-        input=ctx.activity.text, 
+        input=ctx.activity.text,
         instructions="You are a helpful assistant that remembers our previous conversation."
     )
 
@@ -94,5 +68,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     """Handle messages using stateful conversation"""
     await handle_stateful_conversation(ai_model, ctx)
 ```
+
+<!-- additional-info -->
 
 ![Screenshot of chat between user and agent, user first states 'My dinosaur's name is Barnie' and later asks What's my pet's name and the agent responds correctly with 'Barnie'.](/screenshots/stateful-chat-example.png)

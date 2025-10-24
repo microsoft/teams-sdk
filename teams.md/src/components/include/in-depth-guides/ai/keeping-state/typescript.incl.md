@@ -1,25 +1,4 @@
----
-sidebar_position: 4
-summary: Guide to managing conversation state and history in AI applications, including persistent storage options for conversation context.
----
-
-# Keeping State
-
-By default, LLMs are not stateful. This means that they do not remember previous messages or context when generating a response.
-It's common practice to keep state of the conversation history in your application and pass it to the LLM each time you make a request.
-
-By default, the `ChatPrompt` instance will create a temporary in-memory store to keep track of the conversation history. This is beneficial
-when you want to use it to generate an LLM response, but not persist the conversation history. But in other cases, you may want to keep the conversation history
-
-:::warning
-By reusing the same `ChatPrompt` class instance across multiple conversations will lead to the conversation history being shared across all conversations. Which is usually not the desired behavior.
-:::
-
-To avoid this, you need to get messages from your persistent (or in-memory) store and pass it in to the `ChatPrompt`.
-
-:::note
-The `ChatPrompt` class will modify the messages object that's passed into it. So if you want to manually manage it, you need to make a copy of the messages object before passing it in.
-:::
+<!-- state-initialization -->
 
 ```typescript
 import { ChatPrompt, IChatModel, Message } from '@microsoft/teams.ai';
@@ -44,11 +23,9 @@ const getOrCreateConversationHistory = (conversationId: string) => {
 };
 ```
 
-```typescript
-import { ChatPrompt, IChatModel, Message } from '@microsoft/teams.ai';
-import { ActivityLike, IMessageActivity, MessageActivity } from '@microsoft/teams.api';
-// ...
+<!-- usage-example -->
 
+```typescript
 /**
  * Example of a stateful conversation handler that maintains conversation history
  * using an in-memory store keyed by conversation ID.
@@ -89,5 +66,7 @@ export const handleStatefulConversation = async (
   log.info('Messages after sending to prompt:', existingMessages);
 };
 ```
+
+<!-- additional-info -->
 
 ![Stateful Chat Example](/screenshots/stateful-chat-example.png)
