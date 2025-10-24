@@ -70,6 +70,12 @@ app.MapGet("/tabs/settings", async context =>
 });
 ```
 
+<!-- tabs-note -->
+
+:::note
+This will serve the HTML page to the `${BOT_ENDPOINT}/tabs/settings` endpoint as a tab. See [Tabs Guide](../tabs/README) to learn more.
+:::
+
 <!-- query-settings-code -->
 
 ```csharp
