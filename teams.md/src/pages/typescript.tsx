@@ -1,5 +1,7 @@
-import { Redirect } from "@docusaurus/router";
+import { Redirect } from '@docusaurus/router';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 export default function Typescript() {
-    return <Redirect to='typescript/getting-started' />;
+  const baseUrl = useBaseUrl('/');
+  return <Redirect to={`${baseUrl}typescript/getting-started`} />;
 }
