@@ -1,14 +1,12 @@
----
-sidebar_position: 2
-summary: Configure custom loggers in your Teams app to control log levels and output destinations.
----
+<!-- default-logger -->
 
-# 🗃️ Custom Logger
+`ConsoleLogger`
 
-The `App` will provide a default logger, but you can also provide your own.
-The default `Logger` instance will be set to `ConsoleLogger` from the
-`@microsoft/teams.common` package.
+<!-- package-name -->
 
+`@microsoft/teams.common`
+
+<!-- custom-logger-example -->
 
 ```typescript
 import { App } from '@microsoft/teams.apps';
@@ -30,4 +28,3 @@ app.on('message', async ({ send, activity, log }) => {
   await app.start();
 })();
 ```
-

@@ -1,14 +1,12 @@
----
-sidebar_position: 2
-summary: Guide to implementing custom logging in Python Teams AI applications using the ConsoleLogger and custom logger options.
----
+<!-- default-logger -->
 
-# 🗃️ Custom Logger
+`ConsoleLogger`
 
-The `App` will provide a default logger, but you can also provide your own.
-The default `Logger` instance will be set to `ConsoleLogger` from the
-`microsoft-teams-common` package.
+<!-- package-name -->
 
+`microsoft-teams-common`
+
+<!-- custom-logger-example -->
 
 ```python
 import asyncio
@@ -30,6 +28,4 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 if __name__ == "__main__":
     asyncio.run(app.start())
-
 ```
-
