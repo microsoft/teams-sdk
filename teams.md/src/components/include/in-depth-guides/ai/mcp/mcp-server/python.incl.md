@@ -1,11 +1,10 @@
----
-sidebar_position: 1
-summary: Tutorial on implementing an MCP (Machine Conversation Protocol) server in Teams applications using the McpPlugin, covering server configuration, tool exposure, and message handling for features like human-in-the-loop interactions and notifications.
----
+<!-- intro -->
 
-# MCP Server
+You are able to convert any `App` into an MCP server by using the `McpPlugin` from the `microsoft-teams-mcp` package. This plugin adds the necessary endpoints to your application to serve as an MCP server. The plugin allows you to define tools, resources, and prompts that can be exposed to other MCP applications.
 
-You are able to convert any `App` into an MCP server by using the `McpPlugin` from the `microsoft-teams-mcp` package. This plugin adds the necessary endpoints to your application to serve as an MCP server. The plugin allows you to define tools, resources, and prompts that can be exposed to other MCP applications. 
+<!-- install -->
+
+<!-- configuration -->
 
 Your plugin can be configured as follows:
 
@@ -22,7 +21,7 @@ mcp_server_plugin = McpServerPlugin(
 
 class EchoParams(BaseModel):
     input: str
-    
+
 async def echo_handler(params: EchoParams) -> str:
     return f"You said {params.input}"
 
@@ -37,9 +36,13 @@ mcp_server_plugin.use_tool(
 )
 ```
 
+<!-- path-note -->
+
 :::note
-> By default, the MCP server will be available at `/mcp` on your application. You can change this by setting the `path` property in the plugin configuration.
+By default, the MCP server will be available at `/mcp` on your application. You can change this by setting the `path` property in the plugin configuration.
 :::
+
+<!-- app-integration -->
 
 And included in the app like any other plugin:
 
@@ -51,23 +54,17 @@ from microsoft.teams.devtools import DevToolsPlugin
 app = App(plugins=[mcp_server_plugin, DevToolsPlugin()])
 ```
 
+<!-- devtools-tip -->
+
 :::tip
 You may use the [MCP-Inspector](https://modelcontextprotocol.io/legacy/tools/inspector) to test functionality with your server.
 :::
 
+<!-- devtools-gif -->
+
 ![MCP Server in Devtools](/screenshots/mcp-inspector.gif)
 
-## Piping messages to the user
-
-Since your agent is provisioned to work on Teams, one very helpful feature is to use this server as a way to send messages to the user. This can be helpful in various scenarios:
-
-1. Human in the loop - if the server or an MCP client needs to confirm something with the user, it is able to do so.
-2. Notifications - the server can be used as a way to send notifications to the user.
-
-Here is an example of how to do this. Configure your plugin so that:
-1. It can validate if the incoming request is allowed to send messages to the user
-2. It fetches the correct conversation ID for the given user. 
-3. It sends a proactive message to the user. See [Proactive Messaging](../../../essentials/sending-messages/proactive-messaging) for more details.
+<!-- proactive-messaging -->
 
 **Alert Tool for Proactive Messaging:**
 
@@ -114,6 +111,8 @@ mcp_server_plugin.use_tool(
 )
 ```
 
+<!-- message-handler -->
+
 **Store Conversation IDs in Message Handler:**
 
 ```python
@@ -130,7 +129,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     user_id = ctx.activity.from_.id
     conversation_id = ctx.activity.conversation.id
     conversation_storage[user_id] = conversation_id
-    
+
     # Echo back the message with info about stored conversation
     await ctx.reply(
         f"You said: {ctx.activity.text}\n\n"
@@ -138,4 +137,3 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         f"(for proactive messaging via MCP alert tool)"
     )
 ```
-

@@ -1,17 +1,16 @@
----
-sidebar_position: 1
-summary: How to convert your Teams app into an MCP server using the McpPlugin to expose tools, resources, and prompts to other MCP applications.
----
+<!-- intro -->
 
-# MCP Server
+You are able to convert any `App` into an MCP server by using the `McpPlugin`. This plugin adds the necessary endpoints to your application to serve as an MCP server. The plugin allows you to define tools, resources, and prompts that can be exposed to other MCP applications.
 
-You are able to convert any `App` into an MCP server by using the `McpPlugin`. This plugin adds the necessary endpoints to your application to serve as an MCP server. The plugin allows you to define tools, resources, and prompts that can be exposed to other MCP applications. 
+<!-- install -->
 
 Install it to your application:
 
 ```bash
 npm install @microsoft/teams.mcp
 ```
+
+<!-- configuration -->
 
 Your plugin can be configured as follows:
 
@@ -38,7 +37,7 @@ const mcpServerPlugin = new McpPlugin({
   },
   {
     readOnlyHint: true,
-    idempotentHint: true
+    idempotentHint: true,
   },
   async ({ input }) => {
     return {
@@ -53,9 +52,13 @@ const mcpServerPlugin = new McpPlugin({
 );
 ```
 
+<!-- path-note -->
+
 :::note
 By default, the MCP server will be available at `/mcp` on your application. You can change this by setting the `transport.path` property in the plugin configuration.
 :::
+
+<!-- app-integration -->
 
 And included in the app like any other plugin:
 
@@ -74,23 +77,17 @@ const app = new App({
 });
 ```
 
+<!-- devtools-tip -->
+
 :::tip
 Enabling mcp request inspection and the `DevtoolsPlugin` allows you to see all the requests and responses to and from your MCP server (similar to how the **Activities** tab works).
 :::
 
+<!-- devtools-gif -->
+
 ![MCP Server in Devtools](/screenshots/mcp-devtools.gif)
 
-## Piping messages to the user
-
-Since your agent is provisioned to work on Teams, one very helpful feature is to use this server as a way to send messages to the user. This can be helpful in various scenarios:
-
-1. Human in the loop - if the server or an MCP client needs to confirm something with the user, it is able to do so.
-2. Notifications - the server can be used as a way to send notifications to the user.
-
-Here is an example of how to do this. Configure your plugin so that:
-1. It can validate if the incoming request is allowed to send messages to the user
-2. It fetches the correct conversation ID for the given user. 
-3. It sends a proactive message to the user. See [Proactive Messaging](../../../essentials/sending-messages/proactive-messaging) for more details.
+<!-- proactive-messaging -->
 
 ```typescript
 import { z } from 'zod';
@@ -113,7 +110,7 @@ mcpServerPlugin.tool(
   },
   {
     readOnlyHint: true,
-    idempotentHint: true
+    idempotentHint: true,
   },
   async ({ input, userAadObjectId }, { authInfo }) => {
     if (!isAuthValid(authInfo)) {
@@ -148,6 +145,8 @@ mcpServerPlugin.tool(
 );
 ```
 
+<!-- message-handler -->
+
 ```typescript
 import { App } from '@microsoft/teams.apps';
 // ...
@@ -163,4 +162,3 @@ app.on('message', async ({ send, activity }) => {
   }
 });
 ```
-

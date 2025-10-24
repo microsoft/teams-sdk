@@ -1,0 +1,38 @@
+---
+sidebar_position: 1
+sidebar_label: MCP Server
+summary: How to convert your Teams app into an MCP server using the McpPlugin to expose tools, resources, and prompts to other MCP applications.
+---
+
+# MCP Server
+
+<LanguageInclude section="intro" />
+
+<LanguageInclude section="install" />
+
+<LanguageInclude section="configuration" />
+
+<LanguageInclude section="path-note" />
+
+<LanguageInclude section="app-integration" />
+
+<LanguageInclude section="devtools-tip" />
+
+<LanguageInclude section="devtools-gif" />
+
+## Piping messages to the user
+
+Since your agent is provisioned to work on Teams, one very helpful feature is to use this server as a way to send messages to the user. This can be helpful in various scenarios:
+
+1. Human in the loop - if the server or an MCP client needs to confirm something with the user, it is able to do so.
+2. Notifications - the server can be used as a way to send notifications to the user.
+
+Here is an example of how to do this. Configure your plugin so that:
+
+1. It can validate if the incoming request is allowed to send messages to the user
+2. It fetches the correct conversation ID for the given user.
+3. It sends a proactive message to the user. See [Proactive Messaging](../../../essentials/sending-messages/proactive-messaging) for more details.
+
+<LanguageInclude section="proactive-messaging" />
+
+<LanguageInclude section="message-handler" />
