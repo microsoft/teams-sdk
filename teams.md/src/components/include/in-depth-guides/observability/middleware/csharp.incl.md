@@ -1,4 +1,5 @@
 <!-- app-use-method -->
+
 `app.Use`
 
 <!-- middleware-example -->
