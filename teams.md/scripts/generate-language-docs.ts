@@ -3,7 +3,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
-import { LANGUAGES, Language, LANGUAGE_NAMES } from '../src/constants/languages';
+import * as yaml from 'js-yaml';
+import { LANGUAGES, LANGUAGE_NAMES, type Language } from '../src/constants/languages';
 
 const TEMPLATES_DIR = path.join(__dirname, '..', 'src', 'pages', 'templates');
 const FRAGMENTS_DIR = path.join(__dirname, '..', 'src', 'components', 'include');
@@ -288,6 +289,33 @@ function cleanGeneratedFilesForTemplate(templatePath: string): void {
 }
 
 /**
+ * Check if a template should be generated for a specific language based on frontmatter
+ */
+function shouldGenerateForLanguage(templateContent: string, language: Language): boolean {
+  const frontmatterMatch = templateContent.match(/^---\n([\s\S]*?)\n---/);
+
+  if (!frontmatterMatch) {
+    // No frontmatter = generate for all languages
+    return true;
+  }
+
+  try {
+    const frontmatter = yaml.load(frontmatterMatch[1]) as any;
+
+    // Check if languages array is specified
+    if (frontmatter.languages && Array.isArray(frontmatter.languages)) {
+      return frontmatter.languages.includes(language);
+    }
+
+    // No language restriction = generate for all languages
+    return true;
+  } catch (error) {
+    console.warn(`Warning: Error parsing frontmatter in template, generating for all languages:`, error);
+    return true;
+  }
+}
+
+/**
  * Generate language-specific doc files from templates
  * Templates in src/components/ (with nested dirs) are copied to docs/main/{lang}/
  * Preserves directory structure and processes LanguageInclude tags
@@ -300,13 +328,31 @@ function generateDocsForTemplate(templatePath: string): void {
   // Read template content
   const templateContent = fs.readFileSync(templatePath, 'utf8');
 
-  // Validate template contained LanguageInclude tags
-  if (!templateContent.includes('<LanguageInclude')) {
+  // Check frontmatter for warning suppression
+  const frontmatterMatch = templateContent.match(/^---\n([\s\S]*?)\n---/);
+  let suppressLanguageIncludeWarning = false;
+
+  if (frontmatterMatch) {
+    try {
+      const frontmatter = yaml.load(frontmatterMatch[1]) as any;
+      suppressLanguageIncludeWarning = frontmatter.suppressLanguageIncludeWarning === true;
+    } catch (error) {
+      // Ignore frontmatter parsing errors for this check
+    }
+  }
+
+  // Validate template contained LanguageInclude tags (unless suppressed)
+  if (!suppressLanguageIncludeWarning && !templateContent.includes('<LanguageInclude')) {
     console.warn(`\nWarning: Template "${relativePath}" does not contain <LanguageInclude /> tags.`);
     console.warn(`  If the file is intended to be identical for all languages, ignore this warning.`);
   }
 
   for (const lang of LANGUAGES) {
+    // Check if this template should be generated for this language
+    if (!shouldGenerateForLanguage(templateContent, lang)) {
+      continue;
+    }
+
     const processedContent = processLanguageIncludeTags(templateContent, templatePath, lang);
 
     // Extract frontmatter if exists
@@ -461,6 +507,8 @@ function createLanguageRootCategories(): void {
     fs.writeFileSync(categoryPath, JSON.stringify(categoryConfig, null, 2), 'utf8');
   }
 }
+
+
 
 /**
  * Generate all docs

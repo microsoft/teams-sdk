@@ -12,3 +12,11 @@ export const LANGUAGE_NAMES = {
 } as const;
 
 export const DEFAULT_LANGUAGE: Language = 'typescript';
+
+/**
+ * Maps page paths to arrays of languages where the page is NOT available
+ * e.g. Typescript has activity-ref.md but C# and Python do not.
+ */
+export interface LanguageAvailabilityMap {
+  [path: string]: Language[];
+}
