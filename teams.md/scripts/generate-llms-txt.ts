@@ -137,8 +137,8 @@ async function generateLlmsTxt(): Promise<void> {
  */
 async function generateLanguageFiles(language: Language, baseDir: string, outputDir: string, config: DocusaurusConfig): Promise<void> {
     // Collect all relevant files
-    const mainFiles: string[] = [];
-    const langFiles = collectFiles(path.join(baseDir, 'docs', language));
+    const mainFiles = collectFiles(path.join(baseDir, 'docs', 'main'));
+    const langFiles = collectFiles(path.join(baseDir, 'docs', 'main', language));
 
     // Process all files to get metadata and file mapping
     const { processedFiles, fileMapping } = await processAllFiles(
@@ -306,7 +306,7 @@ async function generateSmallVersionHierarchical(language: Language, baseDir: str
     content += COMMON_OVERALL_SUMMARY(language) + '\n\n';
 
     // Get hierarchical structure
-    const hierarchical = getHierarchicalFiles(baseDir, language);
+    const hierarchical = getHierarchicalFiles(baseDir, `main/${language}`);
 
     // Add Language-specific Documentation
     content += renderHierarchicalStructure(hierarchical.language, fullBaseUrl, language, fileMapping, 0);

@@ -58,6 +58,7 @@ const config: Config = {
                     sidebarPath: './sidebars.ts',
                     sidebarCollapsed: false,
                     editUrl: 'https://github.com/microsoft/teams-ai/tree/main/teams.md/',
+                    // Temporary exclude until generate-LLMs script is fully tested
                     exclude: ['**/LLMs.md'],
                 },
                 theme: {
