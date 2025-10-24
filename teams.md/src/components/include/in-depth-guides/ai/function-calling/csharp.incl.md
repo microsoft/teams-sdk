@@ -1,14 +1,8 @@
----
-sidebar_position: 3
-summary: Guide to implementing function calling in LLMs, showing how to integrate custom functions into ChatPrompt for task automation, including both single and multiple function scenarios with context-aware execution.
----
+<!-- adding-functions -->
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+registering functions with a `ChatPrompt` using the `.Function()` method
 
-# Functions
-
-It's possible to hook up functions that the LLM can decide to call if it thinks it can help with the task at hand. This is done by registering functions with a `ChatPrompt` using the `.Function()` method.
+<!-- sequence-diagram -->
 
 ```mermaid
 sequenceDiagram
@@ -30,9 +24,14 @@ sequenceDiagram
   ChatPrompt-->>User: send(result.content)
 ```
 
+<!-- single-function-example -->
+
 ## Single Function Example
 
 Here's a complete example showing how to create a Pokemon search function that the LLM can call.
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 <Tabs>
   <TabItem label="Imperative" value="imperative" default>
@@ -113,6 +112,7 @@ Here's a complete example showing how to create a Pokemon search function that t
         }
     }
     ```
+
   </TabItem>
   <TabItem label="Declarative" value="declarative">
     This approach uses attributes to declare prompts and functions, providing clean separation of concerns.
@@ -192,6 +192,7 @@ Here's a complete example showing how to create a Pokemon search function that t
         }
     });
     ```
+
   </TabItem>
 </Tabs>
 
@@ -207,6 +208,8 @@ Here's a complete example showing how to create a Pokemon search function that t
    - Validates them against the schema
    - Invokes the handler
    - Returns the result back to the LLM
+
+<!-- multiple-functions -->
 
 ## Multiple Functions
 
@@ -285,6 +288,7 @@ Additionally, for complex scenarios, you can add multiple functions to the `Chat
         }
     }
     ```
+
   </TabItem>
   <TabItem label="Declarative" value="declarative">
     **Create a Prompt Class:**
@@ -355,6 +359,7 @@ Additionally, for complex scenarios, you can add multiple functions to the `Chat
         }
     });
     ```
+
   </TabItem>
 </Tabs>
 

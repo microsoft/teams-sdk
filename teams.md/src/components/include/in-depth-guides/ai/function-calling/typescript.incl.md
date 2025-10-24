@@ -1,11 +1,8 @@
----
-sidebar_position: 3
-summary: How to implement function calling in AI models, allowing the LLM to execute functions as part of its response generation.
----
+<!-- adding-functions -->
 
-# Function / Tool Calling
+adding a `function` to the `ChatPrompt`
 
-It's possible to hook up functions that the LLM can decide to call if it thinks it can help with the task at hand. This is done by adding a `function` to the `ChatPrompt`.
+<!-- sequence-diagram -->
 
 ```mermaid
 sequenceDiagram
@@ -26,6 +23,8 @@ sequenceDiagram
   LLM-->>ChatPrompt: Final user-facing response
   ChatPrompt-->>User: send(result.content)
 ```
+
+<!-- single-function-example -->
 
 ```typescript
 import { ChatPrompt, IChatModel } from '@microsoft/teams.ai';
@@ -76,6 +75,8 @@ const prompt = new ChatPrompt({
 const result = await prompt.send(activity.text);
 await send(result.content ?? 'Sorry I could not find that pokemon');
 ```
+
+<!-- multiple-functions -->
 
 ## Multiple functions
 
@@ -142,6 +143,8 @@ const result = await prompt.send(activity.text);
 await send(result.content ?? 'Sorry I could not figure it out');
 ```
 
+<!-- advanced-features -->
+
 ## Stopping Functions early
 
 You'll notice that after the function responds, `ChatPrompt` re-sends the response from the function invocation back to the LLM which responds back with the user-facing message. It's possible to prevent this "automatic" function calling by passing in a flag
@@ -152,24 +155,26 @@ import { ActivityLike, IMessageActivity } from '@microsoft/teams.api';
 // ...
 
 const result = await prompt.send(activity.text, {
-  autoFunctionCalling: false // Disable automatic function calling
+  autoFunctionCalling: false, // Disable automatic function calling
 });
 // Extract the function call arguments from the result
 const functionCallArgs = result.function_calls?.[0].arguments;
 
 const firstCall = result.function_calls?.[0];
-  const fnResult = actualFunction(firstCall.arguments);
-  messages.push({
-    role: 'function',
-    function_id: firstCall.id,
-    content: fnResult,
-  });
+const fnResult = actualFunction(firstCall.arguments);
+messages.push({
+  role: 'function',
+  function_id: firstCall.id,
+  content: fnResult,
+});
 
-  // Optionally, you can call the chat prompt again after updating the messages with the results
-  const result = await prompt.send('What should we do next?', {
-    messages,
-    autoFunctionCalling: true // You can enable it here if you want
-  });
-  const functionCallArgs = result.function_calls?.[0].arguments; // Extract the function call arguments
-  await send(`The LLM responed with the following structured output: ${JSON.stringify(functionCallArgs, undefined, 2)}.`);
+// Optionally, you can call the chat prompt again after updating the messages with the results
+const result = await prompt.send('What should we do next?', {
+  messages,
+  autoFunctionCalling: true, // You can enable it here if you want
+});
+const functionCallArgs = result.function_calls?.[0].arguments; // Extract the function call arguments
+await send(
+  `The LLM responed with the following structured output: ${JSON.stringify(functionCallArgs, undefined, 2)}.`
+);
 ```

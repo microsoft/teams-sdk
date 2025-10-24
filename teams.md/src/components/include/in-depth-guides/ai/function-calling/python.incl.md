@@ -1,13 +1,30 @@
----
-sidebar_position: 3
-summary: Guide to implementing function calling in LLMs, showing how to integrate custom functions into ChatPrompt for task automation, including both single and multiple function scenarios with context-aware execution.
----
+<!-- adding-functions -->
 
-import FileCodeBlock from '@site/src/components/FileCodeBlock';
+adding a `function` to the `ChatPrompt`
 
-# Functions
+<!-- sequence-diagram -->
 
-It's possible to hook up functions that the LLM can decide to call if it thinks it can help with the task at hand. This is done by adding a `function` to the `ChatPrompt`.
+```mermaid
+sequenceDiagram
+  participant User
+  participant ChatPrompt
+  participant LLM
+  participant Function-PokemonSearch
+  participant ExternalAPI
+
+  User->>ChatPrompt: send(activity.text)
+  ChatPrompt->>LLM: Provide instructions, message, and available functions
+    LLM->>ChatPrompt: Decide to call `pokemon_search` with pokemon_name
+    ChatPrompt->>Function-PokemonSearch: Execute with pokemon_name
+    Function-PokemonSearch->>ExternalAPI: fetch pokemon data
+    ExternalAPI-->>Function-PokemonSearch: return pokemon info
+    Function-PokemonSearch-->>ChatPrompt: return result
+  ChatPrompt->>LLM: Send function result(s)
+  LLM-->>ChatPrompt: Final user-facing response
+  ChatPrompt-->>User: send(result.content)
+```
+
+<!-- single-function-example -->
 
 ```python
 import aiohttp
@@ -29,16 +46,16 @@ async def pokemon_search_handler(params: SearchPokemonParams) -> str:
             async with session.get(f"https://pokeapi.co/api/v2/pokemon/{params.pokemon_name.lower()}") as response:
                 if response.status != 200:
                     raise ValueError(f"Pokemon '{params.pokemon_name}' not found")
-                
+
                 data = await response.json()
-                
+
                 result_data = {
                     "name": data["name"],
                     "height": data["height"],
                     "weight": data["weight"],
                     "types": [type_info["type"]["name"] for type_info in data["types"]],
                 }
-                
+
                 return f"Pokemon {result_data['name']}: height={result_data['height']}, weight={result_data['weight']}, types={', '.join(result_data['types'])}"
     except Exception as e:
         raise ValueError(f"Error searching for Pokemon: {str(e)}")
@@ -62,13 +79,15 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
             input=ctx.activity.text,
             instructions="You are a helpful assistant that can look up Pokemon for the user.",
         )
-    
+
     if chat_result.response.content:
         message = MessageActivityInput(text=chat_result.response.content).add_ai_generated()
         await ctx.send(message)
     else:
         await ctx.reply("Sorry I could not find that pokemon")
 ```
+
+<!-- multiple-functions -->
 
 ## Multiple functions
 
@@ -113,7 +132,7 @@ def get_weather_handler(params: GetWeatherParams) -> str:
 @app.on_message
 async def handle_multiple_functions(ctx: ActivityContext[MessageActivity]):
     agent = Agent(model)
-    
+
     agent.with_function(
         Function(
             name="get_user_location",

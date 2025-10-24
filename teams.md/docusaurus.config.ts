@@ -2,7 +2,6 @@ import type * as Preset from '@docusaurus/preset-classic';
 import type { Config } from '@docusaurus/types';
 import path from 'node:path';
 import { themes as prismThemes } from 'prism-react-renderer';
-import { LANGUAGES } from './src/constants/languages';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 const baseUrl = '/teams-ai/';
