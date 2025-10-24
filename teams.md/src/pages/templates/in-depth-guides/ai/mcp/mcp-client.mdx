@@ -1,0 +1,45 @@
+---
+sidebar_position: 2
+sidebar_label: MCP Client
+summary: How to implement an MCP client to leverage remote MCP servers and their tools in your AI agent application.
+---
+
+# MCP Client
+
+You are able to leverage other MCP servers that expose tools via the <LanguageInclude section="protocol-name" /> as part of your application. This allows your AI agent to use remote tools to accomplish tasks.
+
+<LanguageInclude section="install" />
+
+:::info
+Take a look at [Function calling](../function-calling) to understand how the `ChatPrompt` leverages tools to enhance the LLM's capabilities. MCP extends this functionality by allowing remote tools, that may or may not be developed or maintained by you, to be used by your application.
+:::
+
+## Remote MCP Server
+
+The first thing that's needed is access to a **remote** MCP server. MCP Servers (at present) come using two main types protocols:
+
+1. StandardIO - This is a _local_ MCP server, which runs on your machine. An MCP client may connect to this server, and use standard input and outputs to communicate with it. Since our application is running remotely, this is not something that we want to use
+2. <LanguageInclude section="remote-protocol" /> - This is a _remote_ MCP server. An MCP client may
+   send it requests and the server responds in the expected MCP protocol.
+
+For hooking up to your <LanguageInclude section="server-setup" /> server, you will need to know the URL of the server, and if applicable, <LanguageInclude section="auth-requirements" /> that must be included as part of the header.
+
+## MCP Client Plugin
+
+The <LanguageInclude section="plugin-class" /> integrates directly with the `ChatPrompt` <LanguageInclude section="integration-method" />. When the `ChatPrompt`'s <LanguageInclude section="send-method" /> function is called, it calls the external MCP server and loads up all the tools that are available to it.
+
+Once loaded, it treats these tools like any functions that are available to the `ChatPrompt` object. If the LLM then decides to call one of these remote MCP tools, the MCP Client plugin will call the remote MCP server and return the result back to the LLM. The LLM can then use this result in its response.
+
+<LanguageInclude section="basic-example" />
+
+<LanguageInclude section="custom-headers" />
+
+<LanguageInclude section="multiple-servers" />
+
+:::note
+Feel free to build an MCP Server in a different agent using the [MCP Server Guide](./mcp-server). Or you can quickly set up an MCP server using [Azure Functions](https://techcommunity.microsoft.com/blog/appsonazureblog/build-ai-agent-tools-using-remote-mcp-with-azure-functions/4401059).
+:::
+
+<LanguageInclude section="example-gif" />
+
+<LanguageInclude section="pokemon-example" />

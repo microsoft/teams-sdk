@@ -1,14 +1,8 @@
----
-sidebar_position: 2
-summary: Guide to integrating remote MCP (Machine Conversation Protocol) servers into Teams applications, enabling AI agents to access external tools through SSE protocol, with practical examples of configuring the MCPClientPlugin.
----
+<!-- protocol-name -->
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+SSE protocol
 
-# MCP Client
-
-You are able to leverage other MCP servers that expose tools via the SSE protocol as part of your application. This allows your AI agent to use remote tools to accomplish tasks.
+<!-- install -->
 
 Install it to your application:
 
@@ -16,28 +10,38 @@ Install it to your application:
 dotnet add package Microsoft.Teams.Plugins.External.McpClient --prerelease
 ```
 
-:::info
-Take a look at [Function calling](../function-calling) to understand how the `ChatPrompt` leverages tools to enhance the LLM's capabilities. MCP extends this functionality by allowing remote tools, that may or may not be developed or maintained by you, to be used by your application.
-:::
+<!-- remote-protocol -->
 
-## Remote MCP Server
+SSE
 
-The first thing that's needed is access to a **remote** MCP server. MCP Servers (at present) come using two main types protocols:
+<!-- server-setup -->
 
-1. StandardIO - This is a _local_ MCP server, which runs on your machine. An MCP client may connect to this server, and use standard input and outputs to communicate with it. Since our application is running remotely, this is not something that we want to use
-2. SSE - This is a _remote_ MCP server. An MCP client may send it requests and the server responds in the expected MCP protocol.
+a valid SSE
 
-For hooking up to your a valid SSE server, you will need to know the URL of the server, and if applicable, and keys that must be included as part of the header.
+<!-- auth-requirements -->
 
-## MCP Client Plugin
+and keys
 
-The `MCPClientPlugin` (from `Microsoft.Teams.Plugins.External.McpClient` package) integrates directly with the `ChatPrompt` object as a plugin. When the `ChatPrompt`'s `send` function is called, it calls the external MCP server and loads up all the tools that are available to it.
+<!-- plugin-class -->
 
-Once loaded, it treats these tools like any functions that are available to the `ChatPrompt` object. If the LLM then decides to call one of these remote MCP tools, the MCP Client plugin will call the remote MCP server and return the result back to the LLM. The LLM can then use this result in its response.
+`MCPClientPlugin` (from `Microsoft.Teams.Plugins.External.McpClient` package)
+
+<!-- integration-method -->
+
+object as a plugin
+
+<!-- send-method -->
+
+`send`
+
+<!-- basic-example -->
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 <Tabs>
   <TabItem label="Controller" value="controller" default>
-    ```csharp 
+    ```csharp
     // DocsPrompt.cs
 
     using Microsoft.Teams.AI;
@@ -93,6 +97,7 @@ Once loaded, it treats these tools like any functions that are available to the 
     app.Run();
 
     ```
+
   </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
@@ -129,8 +134,15 @@ Once loaded, it treats these tools like any functions that are available to the 
     });
     webApp.Run();
     ```
+
   </TabItem>
 </Tabs>
+
+<!-- multiple-servers -->
+
+In this example, we augment the `ChatPrompt` with a remote MCP Server.
+
+<!-- custom-headers -->
 
 ### Custom Headers
 
@@ -138,18 +150,15 @@ Some MCP servers may require custom headers to be sent as part of the request. Y
 
 ```csharp
 new McpClientPlugin()
-    .UseMcpServer("https://learn.microsoft.com/api/mcp", 
-        new McpClientPluginParams() 
-        { 
-               HeadersFactory = () => new Dictionary<string, string>() 
-               { { "HEADER_KEY", "HEADER_VALUE" } } 
+    .UseMcpServer("https://learn.microsoft.com/api/mcp",
+        new McpClientPluginParams()
+        {
+               HeadersFactory = () => new Dictionary<string, string>()
+               { { "HEADER_KEY", "HEADER_VALUE" } }
         }
     );
 ```
 
-In this example, we augment the `ChatPrompt` with a a remote MCP Server.
+<!-- example-gif -->
 
-:::note
-Feel free to build an MCP Server in a different agent using the [MCP Server Guide](./mcp-server). Or you can quickly set up an MCP server using [Azure Functions](https://techcommunity.microsoft.com/blog/appsonazureblog/build-ai-agent-tools-using-remote-mcp-with-azure-functions/4401059).
-:::
-
+<!-- pokemon-example -->
