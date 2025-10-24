@@ -415,6 +415,10 @@ function findTemplateFiles(): string[] {
       if (entry.isDirectory()) {
         searchDirectory(fullPath);
       } else if (entry.isFile() && entry.name.endsWith('.mdx')) {
+        // Skip generation of underscore-prefixed files (utility/unlisted templates)
+        if (entry.name.startsWith('_')) {
+          continue;
+        }
         templates.push(fullPath);
       }
     }
