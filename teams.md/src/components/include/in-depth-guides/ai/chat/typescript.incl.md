@@ -1,51 +1,12 @@
----
-sidebar_position: 2
-summary: Guide to implementing chat generation with AI models in Teams applications using ChatPrompt and Model components.
----
-
-# 💬 Chat Generation
-
-Before going through this guide, please make sure you have completed the [setup and prerequisites](./setup-and-prereqs.md) guide.
-
-# Setup
-
-The basic setup involves creating a `ChatPrompt` and giving it the `Model` you want to use.
-
-```mermaid
-flowchart LR
-    Prompt
-
-    subgraph Application
-        Send --> Prompt
-        UserMessage["User Message<br/>Hi how are you?"] --> Send
-        Send --> Content["Content<br/>I am doing great! How can I help you?"]
-
-        subgraph Setup
-            Messages --> Prompt
-            Instructions --> Prompt
-            Options["Other options..."] --> Prompt
-
-            Prompt --> Model
-        end
-    end
-
-    subgraph LLMProvider
-        Model --> AOAI["Azure Open AI"]
-        Model --> OAI["Open AI"]
-        Model --> Anthropic["Claude"]
-        Model --> OtherModels["..."]
-    end
-```
-
-## Simple chat generation
-
-Chat generation is the the most basic way of interacting with an LLM model. It involves setting up your ChatPrompt, the Model, and sending it the message.
+<!-- simple-chat-setup -->
 
 Import the relevant objects:
 
 ```typescript
 import { OpenAIChatModel } from '@microsoft/teams.openai';
 ```
+
+<!-- simple-chat-code -->
 
 ```typescript
 import { ChatPrompt } from '@microsoft/teams.ai';
@@ -76,17 +37,21 @@ app.on('message', async ({ send, activity, next, log }) => {
 });
 ```
 
+<!-- declarative-approach -->
+
+N/A
+
+<!-- simple-chat-notes -->
+
 :::note
 The current `OpenAIChatModel` implementation uses chat-completions API. The responses API is coming soon.
 :::
 
-## Streaming chat responses
+<!-- additional-concepts -->
 
-LLMs can take a while to generate a response, so often streaming the response leads to a better, more responsive user experience.
+N/A
 
-:::warning
-Streaming is only currently supported for single 1:1 chats, and not for groups or channels.
-:::
+<!-- streaming-code -->
 
 ```typescript
 import { ChatPrompt } from '@microsoft/teams.ai';
@@ -121,5 +86,3 @@ app.on('message', async ({ stream, send, activity, next, log }) => {
   }
 });
 ```
-
-![Streaming the response](/screenshots/streaming-chat.gif)

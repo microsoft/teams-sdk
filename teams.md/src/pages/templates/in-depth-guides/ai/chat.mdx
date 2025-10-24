@@ -1,0 +1,65 @@
+---
+sidebar_position: 2
+sidebar_label: 💬 Chat Generation
+summary: Comprehensive guide to implementing chat generation with LLMs in Teams, covering setup with ChatPrompt and Model objects, basic message handling, and streaming responses for improved user experience.
+---
+
+# 💬 Chat Generation
+
+Before going through this guide, please make sure you have completed the [setup and prerequisites](./setup-and-prereqs.mdx) guide.
+
+# Setup
+
+The basic setup involves creating a `ChatPrompt` and giving it the `Model` you want to use.
+
+```mermaid
+flowchart LR
+    Prompt
+
+    subgraph Application
+        Send --> Prompt
+        UserMessage["User Message<br/>Hi how are you?"] --> Send
+        Send --> Content["Content<br/>I am doing great! How can I help you?"]
+
+        subgraph Setup
+            Messages --> Prompt
+            Instructions --> Prompt
+            Options["Other options..."] --> Prompt
+
+            Prompt --> Model
+        end
+    end
+
+    subgraph LLMProvider
+        Model --> AOAI["Azure Open AI"]
+        Model --> OAI["Open AI"]
+        Model --> Anthropic["Claude"]
+        Model --> OtherModels["..."]
+    end
+```
+
+## Simple chat generation
+
+Chat generation is the the most basic way of interacting with an LLM model. It involves setting up your ChatPrompt, the Model, and sending it the message.
+
+<LanguageInclude section="simple-chat-setup" />
+
+<LanguageInclude section="simple-chat-code" />
+
+<LanguageInclude section="declarative-approach" />
+
+<LanguageInclude section="simple-chat-notes" />
+
+<LanguageInclude section="additional-concepts" />
+
+## Streaming chat responses
+
+LLMs can take a while to generate a response, so often streaming the response leads to a better, more responsive user experience.
+
+:::warning
+Streaming is only currently supported for single 1:1 chats, and not for groups or channels.
+:::
+
+<LanguageInclude section="streaming-code" />
+
+![Animated image showing agent response text incrementally appearing in the chat window.](/screenshots/streaming-chat.gif)

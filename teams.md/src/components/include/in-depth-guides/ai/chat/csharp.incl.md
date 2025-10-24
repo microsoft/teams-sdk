@@ -1,49 +1,7 @@
----
-sidebar_position: 2
-summary: Comprehensive guide to implementing chat generation with LLMs in Teams, covering setup with ChatPrompt and Model objects, basic message handling, and streaming responses for improved user experience.
----
-
-# 💬 Chat Generation
-
-Before going through this guide, please make sure you have completed the [setup and prerequisites](./setup-and-prereqs.md) guide.
-
-# Setup
-
-The basic setup involves creating a `ChatPrompt` and giving it the `Model` you want to use.
-
-```mermaid
-flowchart LR
-    Prompt
-
-    subgraph Application
-        Send --> Prompt
-        UserMessage["User Message<br/>Hi how are you?"] --> Send
-        Send --> Content["Content<br/>I am doing great! How can I help you?"]
-
-        subgraph Setup
-            Messages --> Prompt
-            Instructions --> Prompt
-            Options["Other options..."] --> Prompt
-
-            Prompt --> Model
-        end
-    end
-
-    subgraph LLMProvider
-        Model --> AOAI["Azure Open AI"]
-        Model --> OAI["Open AI"]
-        Model --> Anthropic["Claude"]
-        Model --> OtherModels["..."]
-    end
-```
-
-## Simple chat generation
-
-Chat generation is the the most basic way of interacting with an LLM model. It involves setting up your ChatPrompt, the Model, and sending it the message.
-
-### Imperative Approach
+<!-- simple-chat-setup -->
 
 Import the relevant namespaces:
+
 ```csharp
 // AI
 using Microsoft.Teams.AI.Models.OpenAI;
@@ -56,6 +14,8 @@ using Microsoft.Teams.Apps.Annotations;
 ```
 
 Create a ChatModel, ChatPrompt, and handle user - LLM interactions:
+
+<!-- simple-chat-code -->
 
 ```csharp
 using Microsoft.Teams.AI.Models.OpenAI;
@@ -100,6 +60,8 @@ teamsApp.OnMessage(async (context) =>
 });
 ```
 
+<!-- declarative-approach -->
+
 ### Declarative Approach
 
 This approach uses attributes to declare prompts, providing clean separation of concerns.
@@ -143,17 +105,17 @@ teamsApp.OnMessage(async (context) =>
 });
 ```
 
+<!-- simple-chat-notes -->
+
 :::note
 The current `OpenAIChatModel` implementation uses chat-completions API. The responses API is coming soon.
 :::
 
-## Streaming chat responses
+<!-- additional-concepts -->
 
-LLMs can take a while to generate a response, so often streaming the response leads to a better, more responsive user experience.
+N/A
 
-:::warning
-Streaming is only currently supported for single 1:1 chats, and not for groups or channels.
-:::
+<!-- streaming-code -->
 
 ```csharp
 // Streaming handler
@@ -176,5 +138,3 @@ teamsApp.OnMessage(async (context) =>
     }
 });
 ```
-### User experience
-![Animated image showing agent response text incrementally appearing in the chat window.](/screenshots/streaming-chat.gif)
