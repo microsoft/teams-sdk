@@ -1,26 +1,15 @@
----
-sidebar_position: 7
-summary: Guide to implementing user feedback functionality in Teams applications, covering feedback UI components, event handling, and storage mechanisms for gathering and managing user responses to improve application performance.
----
-
-# Feedback
-
-User feedback is essential for the improvement of any application. Teams provides specialized UI components to help facilitate the gathering of feedback from users.
-
-![Animated image showing user selecting the thumbs-up button on an agent response and a dialog opening asking 'What did you like?'. The user types 'Nice' and hits Submit.](/screenshots/feedback.gif)
-
-## Storage
+<!-- storage -->
 
 Once you receive a feedback event, you can choose to store it in some persistent storage. You'll need to implement storage for tracking:
+
 - Like/dislike counts per message
 - Text feedback comments
 - Message ID associations
 
 For production applications, consider using databases, file systems, or cloud storage. The examples below use in-memory storage for simplicity.
 
-## Including Feedback Buttons
+<!-- including-feedback -->
 
-When sending a message that you want feedback in, simply `add_feedback()` to the message you are sending.
 ```python
 from microsoft.teams.ai import Agent
 from microsoft.teams.api import MessageActivityInput
@@ -31,21 +20,20 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     """Handle 'feedback demo' command to demonstrate feedback collection"""
     agent = Agent(current_model)
     chat_result = await agent.send(
-        input="Tell me a short joke", 
+        input="Tell me a short joke",
         instructions="You are a comedian. Keep responses brief and funny."
     )
-    
+
     if chat_result.response.content:
         message = MessageActivityInput(text=chat_result.response.content)
                     .add_ai_generated()
-                    # Create message with feedback enabled 
+                    # Create message with feedback enabled
                     .add_feedback()
         await ctx.send(message)
 ```
 
-## Handling the feedback
+<!-- handling-feedback -->
 
-Once the user decides to like/dislike the message, you can handle the feedback in a received event. Once received, you can choose to include it in your persistent store.
 ```python
 import json
 from typing import Dict, Any
@@ -86,4 +74,3 @@ async def handle_message_feedback(ctx: ActivityContext[MessageSubmitActionInvoke
 
     await ctx.reply(f"✅ Thank you for your feedback{reaction_text}{text_part}!")
 ```
-

@@ -1,0 +1,29 @@
+---
+sidebar_position: 7
+sidebar_label: Feedback
+summary: Guide to implementing user feedback functionality in Teams applications, covering feedback UI components, event handling, and storage mechanisms for gathering and managing user responses to improve application performance.
+---
+
+# Feedback
+
+User feedback is essential for the improvement of any application. Teams provides specialized UI components to help facilitate the gathering of feedback from users.
+
+![Animated image showing user selecting the thumbs-up button on an agent response and a dialog opening asking 'What did you like?'. The user types 'Nice' and hits Submit.](/screenshots/feedback.gif)
+
+## Storage
+
+Once you receive a feedback event, you can choose to store it in some persistent storage. In the example below, we are storing it in an in-memory store.
+
+<LanguageInclude section="storage" />
+
+## Including Feedback Buttons
+
+When sending a message that you want feedback in, simply add feedback functionality to the message you are sending.
+
+<LanguageInclude section="including-feedback" />
+
+## Handling the feedback
+
+Once the user decides to like/dislike the message, you can handle the feedback in a received event. Once received, you can choose to include it in your persistent store.
+
+<LanguageInclude section="handling-feedback" />

@@ -1,17 +1,4 @@
----
-sidebar_position: 7
-summary: How to implement user feedback collection in Teams AI applications using specialized UI components and feedback storage.
----
-
-# Feedback
-
-User feedback is essential for the improvement of any application. Teams provides specialized UI components to help facilitate the gathering of feedback from users.
-
-![Feedback Message](/screenshots/feedback.gif)
-
-## Storage
-
-Once you receive a feedback event, you can choose to store it in some persistent storage. In the example below, we are storing it in an in-memory store.
+<!-- storage -->
 
 ```typescript
 import { ChatPrompt, IChatModel } from '@microsoft/teams.ai';
@@ -31,13 +18,16 @@ export const storedFeedbackByMessageId = new Map<
 >();
 ```
 
-## Including Feedback Buttons
-
-When sending a message that you want feedback in, simply `addFeedback()` to the message you are sending.
+<!-- including-feedback -->
 
 ```typescript
 import { ChatPrompt, IChatModel } from '@microsoft/teams.ai';
-import { ActivityLike, IMessageActivity, MessageActivity, SentActivity } from '@microsoft/teams.api';
+import {
+  ActivityLike,
+  IMessageActivity,
+  MessageActivity,
+  SentActivity,
+} from '@microsoft/teams.api';
 // ...
 
 const { id: sentMessageId } = await send(
@@ -58,9 +48,7 @@ storedFeedbackByMessageId.set(sentMessageId, {
 });
 ```
 
-## Handling the feedback
-
-Once the user decides to like/dislike the message, you can handle the feedback in a received event. Once received, you can choose to include it in your persistent store.
+<!-- handling-feedback -->
 
 ```typescript
 import { App } from '@microsoft/teams.apps';
