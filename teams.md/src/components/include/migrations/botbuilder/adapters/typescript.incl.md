@@ -1,12 +1,4 @@
----
-sidebar_position: 1
-summary: How to migrate BotBuilder adapters to Teams AI Library v2 plugins for handling bot communication and middleware.
----
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-# Adapters
+<!-- content -->
 
 A BotBuilder `Adapter` is similar to a Teams AI `Plugin` in the sense that they are both
 an abstraction that is meant to send/receive activities. To make migrating stress free we have
