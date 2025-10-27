@@ -1,5 +1,6 @@
 {
   "label": "Listening To Activities",
   "position": 3,
-  "description": "Guide to handling Teams-specific activities like chat messages, card actions, and installs using the fluent router API."
+  "description": "Guide to handling Teams-specific activities like chat messages, card actions, and installs using the fluent router API.",
+  "collapsed": true
 }
