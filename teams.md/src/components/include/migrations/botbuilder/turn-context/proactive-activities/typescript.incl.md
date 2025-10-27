@@ -1,12 +1,4 @@
----
-sidebar_position: 2
-summary: Migrate from BotBuilder's complex conversation reference handling to Teams AI's simple conversation ID-based proactive messaging.
----
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-# Proactive Activities
+<!-- content -->
 
 The BotBuilder proactive message flow requires you to have a conversation reference stored somewhere. In Teams AI
 we expose a `send` method almost identical to the one passed into our activity handlers that accepts a `conversationId`,
