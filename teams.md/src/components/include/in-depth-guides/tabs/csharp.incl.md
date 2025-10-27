@@ -6,5 +6,5 @@ This library does not offer features for implementing Tab apps in C#. It does ho
 
 ### Additional resources
 
-- [Hosting Apps/Static Pages](../../essentials/hosting-static-pages.md)
+- [Hosting Apps/Static Pages](../../essentials/hosting-static-pages)
 - [TypeScript Tabs in-depth guide](../../../typescript/in-depth-guides/tabs)
