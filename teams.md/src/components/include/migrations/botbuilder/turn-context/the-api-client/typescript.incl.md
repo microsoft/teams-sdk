@@ -1,12 +1,4 @@
----
-sidebar_position: 3
-summary: Replace BotBuilder's static TeamsInfo class with Teams AI's injected ApiClient for cleaner API interactions.
----
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-# The API Client
+<!-- content -->
 
 BotBuilder exposes a static class `TeamsInfo` that allows you to query the api. In Teams AI
 we pass an instance of our `ApiClient` into all our activity handlers.
