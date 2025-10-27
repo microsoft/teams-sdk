@@ -54,3 +54,16 @@ export function replaceLanguageInPath(
 
   return pathname;
 }
+
+/**
+ * Converts a URL path to the manifest path format used for language availability checking
+ * @param pathname - The full URL pathname
+ * @param baseUrl - The base URL
+ * @returns The manifest path format (removes base and language, handles root)
+ */
+export function getManifestPathFromUrl(pathname: string, baseUrl: string): string {
+  // Remove base url and language:
+  const urlPath = pathname.replace(baseUrl, '').replace(/^[^/]+\//, '');
+  // Remove trailing slash; use '/' for root
+  return urlPath.replace(/\/$/, '') || '/';
+}
