@@ -1,12 +1,4 @@
----
-sidebar_position: 4
-summary: Migrate from BotBuilder's complex OAuthPrompt dialogs to Teams AI's simple signin/signout methods.
----
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-# User Authentication
+<!-- content -->
 
 BotBuilder uses its `dialogs` for authentication via the `OAuthPrompt`. Teams AI doesn't have any
 equivalent feature to dialogs, but we do support auth flows in our own way via our `signin` and `signout` methods.
