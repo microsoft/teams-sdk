@@ -1,12 +1,4 @@
----
-sidebar_position: 1
-summary: Migrate from BotBuilder's TurnContext activity sending to Teams AI's simplified send method with better Adaptive Card support.
----
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-# Sending Activities
+<!-- content -->
 
 BotBuilders pattern for sending activities via its `TurnContext` is similar to that
 in Teams AI, but one key difference is that when sending adaptive cards you don't need
