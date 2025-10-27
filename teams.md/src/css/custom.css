@@ -206,6 +206,105 @@
    RESPONSIVE DESIGN
    ========================================================================== */
 
+/* Simple language banner notification */
+.language-banner {
+  position: fixed;
+  top: var(--ifm-navbar-height, 60px);
+  left: 0;
+  right: 0;
+  width: 50%;
+  margin: 0 auto;
+  background: var(--ifm-color-info-contrast-background, #d1ecf1);
+  color: var(--ifm-color-info-contrast-foreground, #0c5460);
+  border: 1px solid var(--ifm-color-info);
+  border-radius: var(--ifm-border-radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  display: block;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.language-banner__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.language-banner__text {
+  flex: 1;
+  color: inherit;
+}
+
+.language-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.language-banner__button {
+  border: none;
+  border-radius: var(--ifm-button-border-radius);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.language-banner__button--primary {
+  background: var(--ifm-color-primary);
+  color: white;
+  font-weight: 500;
+}
+
+.language-banner__button--primary:hover {
+  background: var(--ifm-color-primary-dark);
+  text-decoration: none;
+  color: white;
+}
+
+.language-banner__button--secondary {
+  background: transparent;
+  color: var(--ifm-color-emphasis-600);
+  padding: 0.25rem 0.5rem;
+  font-size: 1.2rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.language-banner__button--secondary svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.language-banner__button--secondary:hover {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-800);
+}
+
+.language-banner__button:focus {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Mobile responsiveness for LanguageDropdown */
 @media (max-width: 768px) {
   .language-dropdown .navbar__link {
@@ -220,4 +319,15 @@
   #language-switch-list button {
     padding: 0.6rem 0.75rem;
   }
+}
+
+/* Language dropdown option styles */
+.language-dropdown-option {
+  background-color: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  display: block;
 }

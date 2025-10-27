@@ -4,7 +4,13 @@ import { useHistory } from '@docusaurus/router';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import { LANGUAGE_NAMES, LANGUAGES, type Language } from '../constants/languages';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
-import { getLanguageFromPath, replaceLanguageInPath } from '../utils/languageUtils';
+import {
+  getLanguageFromPath,
+  replaceLanguageInPath,
+  getManifestPathFromUrl,
+} from '../utils/languageUtils';
+import { isPageAvailableForLanguage } from '../utils/pageAvailability';
+import LanguageBanner from './LanguageBanner';
 
 interface LanguageDropdownProps {
   // Docusaurus navbar item props
@@ -20,17 +26,24 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
   const history = useHistory();
   const baseUrl = useBaseUrl('/');
   const { language, setLanguage } = useLanguagePreference();
-  const [isOpen, setIsOpen] = useState(false);
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const skipNextSync = useRef(false);
+  const optionRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
+  const [bannerRender, setBannerRender] = useState<{ language: Language } | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   const languagesArray = Object.entries(LANGUAGE_NAMES);
 
-  const handleLanguageChange = (newLanguage: Language) => {
+  const handleLanguageChange = async (newLanguage: Language) => {
     if (newLanguage === language) {
       return;
     }
+
+    skipNextSync.current = true;
 
     setIsOpen(false);
     setLanguage(newLanguage);
@@ -40,10 +53,44 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
 
     // Navigate to parallel newLanguage's page if we're currently in a language-specific page
     if (LANGUAGES.includes(currentLanguage)) {
-      const newPath = replaceLanguageInPath(currentPath, baseUrl, newLanguage);
-      history.push(newPath);
+      const targetUrl = replaceLanguageInPath(currentPath, baseUrl, newLanguage);
+
+      if (targetUrl === currentPath) {
+        history.push(`${baseUrl}${newLanguage}/`);
+      } else {
+        // Convert URL path to manifest path format
+        const manifestPath = getManifestPathFromUrl(currentPath, baseUrl);
+
+        try {
+          // Check if target page exists for the new language using availability data
+          const pageExists = await isPageAvailableForLanguage(manifestPath, newLanguage);
+
+          if (pageExists) {
+            history.push(targetUrl);
+          } else {
+            // Page doesn't exist, show redirect banner instead of navigating
+            setBannerRender({ language: newLanguage });
+          }
+        } catch (error) {
+          console.error('Error checking page availability:', error);
+          // On error, just navigate normally as fallback
+          history.push(targetUrl);
+        }
+      }
     }
-    // No navigation necessary if on a page generated from `/main/` folder (general content)
+    // No navigation necessary if on a page from `/main/` folder (general content)
+  };
+
+  const handleBannerDismiss = () => {
+    // Get the current URL language context to restore
+    const currentUrlLanguage = getLanguageFromPath(location.pathname, baseUrl);
+
+    // Restore language preference to match the current URL context
+    if (currentUrlLanguage && LANGUAGES.includes(currentUrlLanguage)) {
+      setLanguage(currentUrlLanguage);
+    }
+
+    setBannerRender(null);
   };
 
   // Keyboard navigation handling
@@ -102,14 +149,47 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
     }
   };
 
+  // Sync language preference with URL context whenever location changes
   useEffect(() => {
-    if (focusedIndex !== null && listRef.current) {
+    // prevent URL sync from overriding user update
+    if (skipNextSync.current) {
+      skipNextSync.current = false;
+      return;
+    }
+
+    const currentUrlLanguage = getLanguageFromPath(location.pathname, baseUrl);
+
+    if (
+      currentUrlLanguage &&
+      LANGUAGES.includes(currentUrlLanguage) &&
+      currentUrlLanguage !== language &&
+      !document.title.includes('Page Not Found')
+    ) {
+      const manifestPath = getManifestPathFromUrl(location.pathname, baseUrl);
+
+      const syncFunction = async () => {
+        try {
+          const pageExists = await isPageAvailableForLanguage(manifestPath, currentUrlLanguage);
+          if (pageExists && language !== currentUrlLanguage) {
+            setLanguage(currentUrlLanguage);
+          }
+        } catch {
+          if (language !== currentUrlLanguage) {
+            setLanguage(currentUrlLanguage);
+          }
+        }
+      };
+
+      syncFunction();
+    }
+  }, [location.pathname, baseUrl]);
+
+  useEffect(() => {
+    if (focusedIndex !== null) {
       try {
         const [targetLanguage] = languagesArray[focusedIndex];
-        // Focus goes to selected button element
-        const focusButton = listRef.current.querySelector<HTMLButtonElement>(
-          `#selection-${targetLanguage}`
-        );
+        // Focus goes to selected button element using direct ref
+        const focusButton = optionRefs.current[targetLanguage];
         focusButton?.focus();
       } catch (error) {
         console.warn('LanguageDropdown: Unable to find focusable element');
@@ -167,6 +247,10 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
           setFocusedIndex(null);
         }}
         onKeyDown={handleKeyDown}
+        // Indicates which option is active for screen readers
+        aria-activedescendant={
+          focusedIndex !== null ? `selection-${languagesArray[focusedIndex][0]}` : undefined
+        }
         aria-controls="language-switch-list"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -179,9 +263,12 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
       {isOpen && (
         <ul id="language-switch-list" role="listbox" ref={listRef} onKeyDown={handleKeyDown}>
           {Object.entries(LANGUAGE_NAMES).map(([lang, label], index) => (
-            <li key={lang} role="option" aria-selected={lang === language}>
+            <li aria-selected={lang === language} key={lang} id={`selection-${lang}`} role="option">
               <button
-                id={`selection-${lang}`}
+                ref={(el) => {
+                  optionRefs.current[lang] = el;
+                }}
+                className="language-dropdown-option"
                 onClick={() => handleLanguageChange(lang as Language)}
                 tabIndex={focusedIndex === index ? 0 : -1}
               >
@@ -190,6 +277,13 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
             </li>
           ))}
         </ul>
+      )}
+      {bannerRender && (
+        <LanguageBanner
+          targetLanguage={bannerRender.language}
+          baseUrl={baseUrl}
+          onDismiss={handleBannerDismiss}
+        />
       )}
     </div>
   );
