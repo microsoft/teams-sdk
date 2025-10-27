@@ -95,6 +95,8 @@ suppressLanguageIncludeWarning: true # Suppress warnings for static content
 ---
 ```
 
+**Important**: When a template file has `languages` frontmatter that restricts to specific languages, you should only create include files for those supported languages. For example, if a template is restricted to `['typescript', 'python']`, you should not create a `csharp.incl.md` file - only create `typescript.incl.md` and `python.incl.md`.
+
 Useful for:
 
 - Language-specific features
@@ -159,7 +161,8 @@ docs/main/{lang}/               # Auto-generated (DO NOT EDIT)
 8. **Add `sidebar_label`** to frontmatter for proper capitalization
 9. **Prefix utility pages with underscore** to hide from sidebar
 10. **Use correct relative URLs** (no extensions, relative to generated location)
-11. **Check `missing-pages.json`** after generation to verify restrictions
+11. **Remove file suffixes from markdown links** - use `[link](../page)` not `[link](../page.md)` or `[link](../README.md)`
+12. **Check `missing-pages.json`** after generation to verify restrictions
 
 ## Migration Guide
 
