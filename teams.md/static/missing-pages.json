@@ -2,5 +2,17 @@
   "essentials/on-activity/activity-ref": [
     "csharp",
     "python"
+  ],
+  "in-depth-guides/ai/a2a": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/ai/a2a/a2a-client": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/ai/a2a/a2a-server": [
+    "csharp",
+    "python"
   ]
 }

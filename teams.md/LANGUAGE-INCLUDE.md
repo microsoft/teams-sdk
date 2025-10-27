@@ -29,7 +29,7 @@ Your source of truth - write common content once with `<LanguageInclude />` plac
 ```mdx
 ---
 title: Getting Started
-languages: ['typescript', 'python'] # Optional: restrict languages
+languages: ['typescript', 'python'] # Optional: restrict languages to render documentation for
 ---
 
 # Getting Started
@@ -90,7 +90,7 @@ Control which languages generate pages using frontmatter:
 ```mdx
 ---
 title: TypeScript-only Feature
-languages: ['typescript'] # Restrict rendering to specific languages
+languages: ['typescript'] # Restrict rendering to specific languages. If all languages are supported, omit this field.
 suppressLanguageIncludeWarning: true # Suppress warnings for static content
 ---
 ```
