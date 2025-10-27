@@ -1,12 +1,4 @@
----
-sidebar_position: 2
-summary: How to migrate BotBuilder ActivityHandler patterns to Teams AI Library v2 activity routing system.
----
-
-# Activity Handlers
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+<!-- content -->
 
 A BotBuilder `ActivityHandler` is similar to the activity routing of the Teams AI `App`.
 The `BotBuilderPlugin` accepts a botbuilder Activity Handler instance so you can keep using your
