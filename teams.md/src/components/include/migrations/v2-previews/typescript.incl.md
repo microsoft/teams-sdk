@@ -1,8 +1,4 @@
----
-sidebar_position: 3
----
-
-# From V2 Previews
+<!-- content -->
 
 If you're moving from preview versions of Teams AI v2, you may encounter a few breaking changes along the way. This page outlines those and shows how to get back on track.
 
@@ -89,4 +85,3 @@ await app.graph.call(presence.setPresence.create, newPresence);
 await app.graph.call(setPresence.create, newPresence);
 await app.graph.call(updatePresence, newPresence);
 ```
-
