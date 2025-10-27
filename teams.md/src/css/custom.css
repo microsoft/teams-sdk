@@ -39,11 +39,6 @@
    NAVBAR COMPONENTS
    ========================================================================== */
 
-/* Navbar brand */
-.navbar__brand {
-  text-decoration: underline;
-}
-
 /* Navbar items styling */
 .navbar__items:not(.navbar__items--right) .navbar__item {
   border: none;
