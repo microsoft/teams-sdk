@@ -40,5 +40,47 @@
   "in-depth-guides/tabs/using-the-app": [
     "csharp",
     "python"
+  ],
+  "migrations/BotBuilder/activity-handlers": [
+    "csharp",
+    "python"
+  ],
+  "migrations/BotBuilder/adapters": [
+    "csharp",
+    "python"
+  ],
+  "migrations/BotBuilder/botbuilder": [
+    "csharp",
+    "python"
+  ],
+  "migrations/BotBuilder/turn-context": [
+    "csharp",
+    "python"
+  ],
+  "migrations/BotBuilder/turn-context/proactive-activities": [
+    "csharp",
+    "python"
+  ],
+  "migrations/BotBuilder/turn-context/sending-activities": [
+    "csharp",
+    "python"
+  ],
+  "migrations/BotBuilder/turn-context/the-api-client": [
+    "csharp",
+    "python"
+  ],
+  "migrations/BotBuilder/user-authentication": [
+    "csharp",
+    "python"
+  ],
+  "migrations": [
+    "csharp"
+  ],
+  "migrations/v1": [
+    "csharp"
+  ],
+  "migrations/v2-previews": [
+    "csharp",
+    "python"
   ]
 }
