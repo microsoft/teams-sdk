@@ -61,6 +61,9 @@ const config: Config = {
                     // Temporary exclude until generate-LLMs script is fully tested
                     exclude: ['**/LLMs.md'],
                 },
+                pages: {
+                    exclude: ['**/templates/**'],
+                },
                 theme: {
                     customCss: ['./src/css/custom.css', './src/css/code-blocks.css'],
                 },
