@@ -1,6 +1,6 @@
 <!-- botbuilder-adapter-note -->
 
-We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](../BotBuilder/README.md).
+We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](./BotBuilder/botbuilder.mdx).
 
 <!-- installation -->
 
@@ -106,102 +106,101 @@ npm install @microsoft/teams.apps
 * })();
   // highlight-success-end
 
+      ```
 
-    ```
+    </TabItem>
+    <TabItem value="v2" label="Teams AI v2">
+      ```ts
+      import { App } from '@microsoft/teams.apps';
+      import { LocalStorage } from '@microsoft/teams.common/storage';
 
-  </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
-    ```ts
-    import { App } from '@microsoft/teams.apps';
-    import { LocalStorage } from '@microsoft/teams.common/storage';
+      // Define app
+      const app = new App({
+        clientId: process.env.ENTRA_APP_CLIENT_ID!,
+        clientSecret: process.env.ENTRA_APP_CLIENT_SECRET!,
+        tenantId: process.env.ENTRA_TENANT_ID!,
+      });
 
-    // Define app
-    const app = new App({
-      clientId: process.env.ENTRA_APP_CLIENT_ID!,
-      clientSecret: process.env.ENTRA_APP_CLIENT_SECRET!,
-      tenantId: process.env.ENTRA_TENANT_ID!,
-    });
+      // Optionally create local storage
+      const storage = new LocalStorage();
 
-    // Optionally create local storage
-    const storage = new LocalStorage();
+      // Listen for errors
+      app.event('error', async (client) => {
+        console.error('Error event received:', client.error);
+        if (client.activity) {
+          await app.send(
+            client.activity.conversation.id,
+            'An error occurred while processing your message.',
+          );
+        }
+      });
 
-    // Listen for errors
-    app.event('error', async (client) => {
-      console.error('Error event received:', client.error);
-      if (client.activity) {
-        await app.send(
-          client.activity.conversation.id,
-          'An error occurred while processing your message.',
-        );
-      }
-    });
+      // App creates local server with route for /api/messages
+      // To reuse your restify or other server,
+      // create a custom `HttpPlugin`.
+      (async () => {
+        // starts the server
+        await app.start();
+      })();
+      ```
 
-    // App creates local server with route for /api/messages
-    // To reuse your restify or other server,
-    // create a custom `HttpPlugin`.
-    (async () => {
-      // starts the server
-      await app.start();
-    })();
-    ```
+    </TabItem>
+    <TabItem value="v1" label="Teams AI v1">
+      ```ts
+      import {
+        ConfigurationServiceClientCredentialFactory,
+        MemoryStorage,
+        TurnContext,
+      } from 'botbuilder';
+      import { Application, TeamsAdapter } from '@microsoft/teams-ai';
+      import * as restify from 'restify';
 
-  </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
-    ```ts
-    import {
-      ConfigurationServiceClientCredentialFactory,
-      MemoryStorage,
-      TurnContext,
-    } from 'botbuilder';
-    import { Application, TeamsAdapter } from '@microsoft/teams-ai';
-    import * as restify from 'restify';
+      // Create adapter.
+      const adapter = new TeamsAdapter(
+          {},
+          new ConfigurationServiceClientCredentialFactory({
+              MicrosoftAppId: process.env.ENTRA_APP_CLIENT_ID,
+              MicrosoftAppPassword: process.env.ENTRA_APP_CLIENT_SECRET,
+              MicrosoftAppType: 'SingleTenant',
+              MicrosoftAppTenantId: process.env.ENTRA_APP_TENANT_ID
+          })
+      );
 
-    // Create adapter.
-    const adapter = new TeamsAdapter(
-        {},
-        new ConfigurationServiceClientCredentialFactory({
-            MicrosoftAppId: process.env.ENTRA_APP_CLIENT_ID,
-            MicrosoftAppPassword: process.env.ENTRA_APP_CLIENT_SECRET,
-            MicrosoftAppType: 'SingleTenant',
-            MicrosoftAppTenantId: process.env.ENTRA_APP_TENANT_ID
-        })
-    );
+      // Catch-all for errors.
+      const onTurnErrorHandler = async (context: TurnContext, error: any) => {
+          console.error(`\n [onTurnError] unhandled error: ${error}`);
+          // Send a message to the user
+          await context.sendActivity('The bot encountered an error or bug.');
+      };
 
-    // Catch-all for errors.
-    const onTurnErrorHandler = async (context: TurnContext, error: any) => {
-        console.error(`\n [onTurnError] unhandled error: ${error}`);
-        // Send a message to the user
-        await context.sendActivity('The bot encountered an error or bug.');
-    };
+      // Set the onTurnError for the singleton CloudAdapter.
+      adapter.onTurnError = onTurnErrorHandler;
 
-    // Set the onTurnError for the singleton CloudAdapter.
-    adapter.onTurnError = onTurnErrorHandler;
+      // Create HTTP server.
+      const server = restify.createServer();
+      server.use(restify.plugins.bodyParser());
 
-    // Create HTTP server.
-    const server = restify.createServer();
-    server.use(restify.plugins.bodyParser());
+      server.listen(process.env.port || process.env.PORT || 3978, () => {
+          console.log(`\n${server.name} listening to ${server.url}`);
+      });
 
-    server.listen(process.env.port || process.env.PORT || 3978, () => {
-        console.log(`\n${server.name} listening to ${server.url}`);
-    });
+      // Define storage and application
+      const app = new Application<ApplicationTurnState>({
+          storage: new MemoryStorage()
+      });
 
-    // Define storage and application
-    const app = new Application<ApplicationTurnState>({
-        storage: new MemoryStorage()
-    });
+      // Listen for incoming server requests.
+      server.post('/api/messages', async (req, res) => {
+          // Route received a request to adapter for processing
+          await adapter.process(req, res, async (context) => {
+              // Dispatch to application for routing
+              await app.run(context);
+          });
+      });
+      ```
 
-    // Listen for incoming server requests.
-    server.post('/api/messages', async (req, res) => {
-        // Route received a request to adapter for processing
-        await adapter.process(req, res, async (context) => {
-            // Dispatch to application for routing
-            await app.run(context);
-        });
-    });
-    ```
-
-  </TabItem>
-</Tabs>
+    </TabItem>
+  </Tabs>
 
 <!-- activity-handlers-intro -->
 
@@ -340,66 +339,65 @@ npm install @microsoft/teams.apps
 - });
   // highlight-success-end
 
+      ```
 
-    ```
-
-  </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
-    ```ts
-    app.on('dialog.open', (client) => {
-      const dialogType = client.activity.value.data?.opendialogtype;
-      if (dialogType === 'some-type') {
-        return {
-          task: {
-            type: 'continue',
-            value: {
-              title: 'Dialog title',
-              height: 'medium',
-              width: 'medium',
-              url: `https://${process.env.YOUR_WEBSITE_DOMAIN}/some-path`,
-              fallbackUrl: `https://${process.env.YOUR_WEBSITE_DOMAIN}/fallback-path-for-web`,
-              completionBotId: process.env.ENTRA_APP_CLIENT_ID!,
+    </TabItem>
+    <TabItem value="v2" label="Teams AI v2">
+      ```ts
+      app.on('dialog.open', (client) => {
+        const dialogType = client.activity.value.data?.opendialogtype;
+        if (dialogType === 'some-type') {
+          return {
+            task: {
+              type: 'continue',
+              value: {
+                title: 'Dialog title',
+                height: 'medium',
+                width: 'medium',
+                url: `https://${process.env.YOUR_WEBSITE_DOMAIN}/some-path`,
+                fallbackUrl: `https://${process.env.YOUR_WEBSITE_DOMAIN}/fallback-path-for-web`,
+                completionBotId: process.env.ENTRA_APP_CLIENT_ID!,
+              },
             },
-          },
+          };
+        }
+      });
+
+      app.on('dialog.submit', async (client) => {
+        const dialogType = client.activity.value.data?.submissiondialogtype;
+        if (dialogType === 'some-type') {
+          const { data } = client.activity.value;
+          await client.send(JSON.stringify(data));
+        }
+        return undefined;
+      });
+      ```
+
+    </TabItem>
+    <TabItem value="v1" label="Teams AI v1">
+      ```ts
+      app.taskModules.fetch('connect-account', async (context, state, data) => {
+        const taskInfo: TaskModuleTaskInfo = {
+          title: 'Connect your Microsoft 365 account',
+          height: 'medium',
+          width: 'medium',
+          url: `https://${process.env.NEXT_PUBLIC_BOT_DOMAIN}/connections`,
+          fallbackUrl: `https://${process.env.NEXT_PUBLIC_BOT_DOMAIN}/connections`,
+          completionBotId: process.env.NEXT_PUBLIC_BOT_ID,
         };
-      }
-    });
-
-    app.on('dialog.submit', async (client) => {
-      const dialogType = client.activity.value.data?.submissiondialogtype;
-      if (dialogType === 'some-type') {
-        const { data } = client.activity.value;
-        await client.send(JSON.stringify(data));
-      }
-      return undefined;
-    });
-    ```
-
-  </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
-    ```ts
-    app.taskModules.fetch('connect-account', async (context, state, data) => {
-      const taskInfo: TaskModuleTaskInfo = {
-        title: 'Connect your Microsoft 365 account',
-        height: 'medium',
-        width: 'medium',
-        url: `https://${process.env.NEXT_PUBLIC_BOT_DOMAIN}/connections`,
-        fallbackUrl: `https://${process.env.NEXT_PUBLIC_BOT_DOMAIN}/connections`,
-        completionBotId: process.env.NEXT_PUBLIC_BOT_ID,
-      };
-      return taskInfo;
-    });
-    app.taskModules.submit('connect-account', async (context, state, data) => {
-      console.log(
-        `bot-app.ts taskModules.submit("connect-account"): data`,
-        JSON.stringify(data, null, 4)
-      );
-      await context.sendActivity('You are all set! Now, how can I help you today?');
-      return undefined;
-    });
-    ```
-  </TabItem>
-</Tabs>
+        return taskInfo;
+      });
+      app.taskModules.submit('connect-account', async (context, state, data) => {
+        console.log(
+          `bot-app.ts taskModules.submit("connect-account"): data`,
+          JSON.stringify(data, null, 4)
+        );
+        await context.sendActivity('You are all set! Now, how can I help you today?');
+        return undefined;
+      });
+      ```
+    </TabItem>
+  </Tabs>
 
 <!-- adaptive-cards -->
 
@@ -1143,4 +1141,4 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
 Comparison code coming soon!
 :::
 
-If you aren't ready to migrate all of your code, you can run your existing Teams AI v1 code in parallel with Teams AI v2. Learn more [here](../BotBuilder/adapters.mdx).
+If you aren't ready to migrate all of your code, you can run your existing Teams AI v1 code in parallel with Teams AI v2. Learn more [here](./BotBuilder/adapters).
