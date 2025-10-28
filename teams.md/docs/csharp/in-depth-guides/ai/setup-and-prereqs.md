@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-summary: Prerequisites and setup guide for integrating LLMs into C# Teams AI applications, including API keys and configuration.
+summary: Prerequisites and setup guide for integrating LLMs into C# Teams SDK applications, including API keys and configuration.
 ---
 
 # Setup & Prerequisites
@@ -10,7 +10,7 @@ There are a few prerequisites to getting started with integrating LLMs into your
 - LLM API Key - To generate messages using an LLM, you will need to have an API Key for the LLM you are using.
   - [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service)
   - [OpenAI](https://platform.openai.com/)
-- **NuGet Package** - Install the Microsoft Teams AI library:
+- **NuGet Package** - Install the Microsoft Teams SDK:
   ```bash
   dotnet add package Microsoft.Teams.AI
   ```

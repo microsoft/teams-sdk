@@ -1,6 +1,6 @@
 ---
 sidebar_position: 4
-summary: How to implement user sign-in with OAuth in C# Teams AI applications using the built-in signin method.
+summary: How to implement user sign-in with OAuth in C# Teams SDK applications using the built-in signin method.
 ---
 
 # Signing In

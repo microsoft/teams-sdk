@@ -12,7 +12,7 @@ You can use these to collect form input, trigger workflows, show task modules, o
 
 ## Action Types
 
-The Teams AI Library supports several action types for different interaction patterns:
+The Teams SDK supports several action types for different interaction patterns:
 
 | Action Type               | Purpose                | Description                                                                  |
 | ------------------------- | ---------------------- | ---------------------------------------------------------------------------- |

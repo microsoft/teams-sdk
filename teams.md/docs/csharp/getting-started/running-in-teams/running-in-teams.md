@@ -103,7 +103,7 @@ If you want to monitor the activities and events in your app, you can still use 
 
 For deployment and resource management we recommend the Microsoft 365 Agents Toolkit. Refer to our [Deployment guide](./deployment-guide.md) for common scenarios and potential issues. 
 
-If you prefer to set everything up by hand, follow the standard [Teams app documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-publish-overview). The Teams AI library itself doesn't handle deployment or Azure resources, so you'll need to rely on the general [Microsoft Teams deployment documentation](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview) for in-depth help.
+If you prefer to set everything up by hand, follow the standard [Teams app documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-publish-overview). The Teams SDK itself doesn't handle deployment or Azure resources, so you'll need to rely on the general [Microsoft Teams deployment documentation](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview) for in-depth help.
 
 ## Next steps
 

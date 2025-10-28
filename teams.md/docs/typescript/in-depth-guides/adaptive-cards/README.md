@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-summary: Introduction to Adaptive Cards in Teams AI applications for creating rich, interactive user experiences across various scenarios.
+summary: Introduction to Adaptive Cards in Teams SDK applications for creating rich, interactive user experiences across various scenarios.
 ---
 
 # Adaptive Cards

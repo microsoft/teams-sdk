@@ -1,11 +1,11 @@
 ---
-sidebar_position: 1
-summary: Step-by-step guide to quickly get started with Teams AI Library v2 using the Teams CLI to create your first agent. Start here to build your first agent or application. We STRONGLY recommend using this as a guide to get started. It will help you build your project structure and scaffold your project.
+sidebar_position: 0
+summary: Step-by-step guide to quickly get started with Teams SDK using the Teams CLI to create your first agent. Start here to build your first agent or application. We STRONGLY recommend using this as a guide to get started. It will help you build your project structure and scaffold your project.
 ---
 
 # Quickstart
 
-Get started with Teams AI Library (v2) quickly using the Teams CLI.
+Get started with Teams SDK quickly using the Teams CLI.
 
 ## Set up a new project
 

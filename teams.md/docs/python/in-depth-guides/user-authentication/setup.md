@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-summary: Guide to configuring user authentication in Python Teams AI applications, including OAuth setup and secure API access.
+summary: Guide to configuring user authentication in Python Teams SDK applications, including OAuth setup and secure API access.
 ---
 
 # App Setup

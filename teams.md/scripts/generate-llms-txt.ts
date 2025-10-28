@@ -33,10 +33,10 @@ const COMMON_OVERALL_SUMMARY = (language: Language) => {
     const tips = LANGUAGE_SPECIFIC_TIPS[language];
     const formattedTips = tips.map(tip => `- ${tip}`).join('\n');
 
-    return `> Microsoft Teams AI Library (v2) - A comprehensive framework for building AI-powered Teams applications using ${langName}. Using this Library, you can easily build and integrate a variety of features in Microsoft Teams by building Agents or Tools. The documentation here helps by giving background information and code samples on how best to do this.
+    return `> Microsoft Teams SDK - A comprehensive framework for building AI-powered Teams applications using ${langName}. Using this SDK, you can easily build and integrate a variety of features in Microsoft Teams by building Agents or Tools. The documentation here helps by giving background information and code samples on how best to do this.
 
 IMPORTANT THINGS TO REMEMBER:
-- This Library is NOT based off of BotFramework (which the _previous_ version of the Teams AI Library was based on). This Library is a completely new framework. Use this guide to find snippets to drive your decisions.
+- This SDK is NOT based off of BotFramework (which the _previous_ version of the Teams SDK was based on). This SDK is a completely new framework. Use this guide to find snippets to drive your decisions.
 - When scaffolding new applications, using the CLI is a lot simpler and preferred than doing it all by yourself. See the Quickstart guide for that.
 ${formattedTips}
 
@@ -100,7 +100,7 @@ function getDocusaurusConfig(baseDir: string): DocusaurusConfig {
 }
 
 /**
- * Generates llms.txt files for Teams AI documentation
+ * Generates llms.txt files for Teams SDK documentation
  * Creates both small and full versions for TypeScript and C# docs
  */
 async function generateLlmsTxt(): Promise<void> {
@@ -314,7 +314,7 @@ async function generateSmallVersionHierarchical(language: Language, baseDir: str
     const cleanBaseUrl = config.baseUrl.startsWith('/') ? config.baseUrl : '/' + config.baseUrl;
     const fullBaseUrl = `${cleanUrl}${cleanBaseUrl}`;
 
-    let content = `# Teams AI Library - ${langName} Documentation\n\n`;
+    let content = `# Teams SDK - ${langName} Documentation\n\n`;
     content += COMMON_OVERALL_SUMMARY(language) + '\n\n';
 
     // Get hierarchical structure
@@ -507,7 +507,7 @@ function extractSummaryFromFile(filePath: string): string {
  */
 async function generateFullVersion(language: Language, processedFiles: ProcessedFile[], baseDir: string): Promise<string> {
     const langName = LANG_NAME_BY_LANGUAGE[language]
-    let content = `# Teams AI Library - ${langName} Documentation (Complete)\n\n`;
+    let content = `# Teams SDK - ${langName} Documentation (Complete)\n\n`;
     content += COMMON_OVERALL_SUMMARY(language) + '\n\n';
 
     // Group files by section

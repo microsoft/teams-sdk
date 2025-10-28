@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-summary: Complete reference guide for all activity types and routes available in Teams AI applications, including core activities and configuration routes.
+summary: Complete reference guide for all activity types and routes available in Teams SDK applications, including core activities and configuration routes.
 ---
 
 # Activity Type Reference

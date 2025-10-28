@@ -1,12 +1,12 @@
 ---
 sidebar_position: 1
-summary: Migration guide from BotBuilder to Teams AI Library v2, including the BotBuilder plugin for compatibility with existing activity handlers and adapters.
+summary: Migration guide from BotBuilder to Teams SDK, including the BotBuilder plugin for compatibility with existing activity handlers and adapters.
 llms: ignore
 ---
 
 # From BotBuilder
 
-This new iteration of Teams AI has been rebuilt from the ground up. To easy the migration process
+This new iteration of Teams SDK has been rebuilt from the ground up. To easy the migration process
 we have created a plugin `@microsoft/teams.botbuilder`, which allows you to use a botbuilder `activity handler`
 and `adapter` to send/receive activities through our new abstractions.
 

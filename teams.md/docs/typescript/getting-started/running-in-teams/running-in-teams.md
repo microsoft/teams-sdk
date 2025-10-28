@@ -44,7 +44,7 @@ This [CLI](/developer-tools/cli) command adds configuration files required by Ag
 
 | Tool Name | Command | Description                                                                                                                                        |
 | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Teams CLI | `teams` | A command-line tool for setting up and utilizing the Teams AI v2 library, including integration with Microsoft 365 Agents Toolkit when desired. |
+| Teams CLI | `teams` | A command-line tool for setting up and utilizing the Teams SDK, including integration with Microsoft 365 Agents Toolkit when desired. |
 | Microsoft 365 Agents Toolkit | `atk`   | A tool for managing provisioning, deployment, and in-client debugging for Teams applications. |
 
 ## Debugging in Teams
@@ -70,7 +70,7 @@ When debugging starts, the Agents Toolkit will:
 - **Launch Teams** in an incognito window in your browser.
 - **Upload the package** to Teams and signal it to sideload (install) the app just for your use.
 
-If you set up Agents Toolkit via the Teams AI CLI, you should see something like the following in your terminal:
+If you set up Agents Toolkit via the Teams CLI, you should see something like the following in your terminal:
 
 
 ```sh
@@ -105,7 +105,7 @@ If you want to monitor the activities and events in your app, you can still use 
 ## Troubleshooting
 
 For deployment and resource management we recommend the Microsoft 365 Agents Toolkit. Refer to our [Deployment guide](./deployment-guide.md) for common scenarios and potential issues. 
-If you prefer to set everything up by hand, follow the standard [Teams app documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-publish-overview). The Teams AI library itself doesn't handle deployment or Azure resources, so you'll need to rely on the general [Microsoft Teams deployment documentation](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview) for in-depth help.
+If you prefer to set everything up by hand, follow the standard [Teams app documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-publish-overview). The Teams SDK itself doesn't handle deployment or Azure resources, so you'll need to rely on the general [Microsoft Teams deployment documentation](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview) for in-depth help.
 
 ## Next steps
 

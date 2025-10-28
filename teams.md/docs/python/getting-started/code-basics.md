@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-summary: Understanding the structure and key components of a Python Teams AI application including the Application class, dependency injection, and project organization.
+summary: Understanding the structure and key components of a Python Teams SDK application including the Application class, dependency injection, and project organization.
 ---
 
 # Code Basics

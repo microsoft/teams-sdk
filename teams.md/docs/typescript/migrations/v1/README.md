@@ -1,18 +1,18 @@
 ---
 sidebar_position: 2
-summary: Migration guide from Teams AI v1 to v2 highlighting the key changes and upgrade steps.
+summary: Migration guide from Teams SDK v1 to v2 highlighting the key changes and upgrade steps.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Migrating from Teams AI v1
+# Migrating from Teams SDK v1
 
-Welcome, fellow agent developer! You've made it through a full major release of Teams AI, and now you want to take the plunge into v2. In this guide, we'll walk you through everything you need to know, from migrating core features like message handlers and auth, to optional AI features like `ActionPlanner`. We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](../BotBuilder/README.md).
+Welcome, fellow agent developer! You've made it through a full major release of Teams SDK, and now you want to take the plunge into v2. In this guide, we'll walk you through everything you need to know, from migrating core features like message handlers and auth, to optional AI features like `ActionPlanner`. We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](../BotBuilder/README.md).
 
-## Installing Teams AI v2
+## Installing Teams SDK
 
-First, let's install Teams AI v2 into your project. Notably, this won't replace any existing installation of Teams AI v1. When you've completed your migration, you can safely remove the `@microsoft/teams-ai` dependency from your `package.json` file.
+First, let's install Teams SDK into your project. Notably, this won't replace any existing installation of Teams SDK v1. When you've completed your migration, you can safely remove the `@microsoft/teams-ai` dependency from your `package.json` file.
 
 ```sh
 npm install @microsoft/teams.apps
@@ -23,7 +23,7 @@ npm install @microsoft/teams.apps
 First, migrate your `Application` class from v1 to the new `App` class.
 
 <Tabs>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```ts
     import { App } from '@microsoft/teams.apps';
     import { LocalStorage } from '@microsoft/teams.common/storage';
@@ -59,7 +59,7 @@ First, migrate your `Application` class from v1 to the new `App` class.
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     import {
       ConfigurationServiceClientCredentialFactory,
@@ -118,12 +118,12 @@ First, migrate your `Application` class from v1 to the new `App` class.
 
 ## Migrate activity handlers
 
-Both Teams AI v1 and v2 are built atop incoming `Activity` requests, which trigger handlers in your code when specific type of activities are received. The syntax for how you register different types of `Activity` handlers differs between the v1 and v2 versions of our SDK.
+Both Teams SDK v1 and v2 are built atop incoming `Activity` requests, which trigger handlers in your code when specific type of activities are received. The syntax for how you register different types of `Activity` handlers differs between the v1 and v2 versions of our SDK.
 
 ### Message handlers
 
 <Tabs>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     // triggers when user sends "/hi" or "@bot /hi"
     app.message("/hi", async (context) => {
@@ -141,7 +141,7 @@ Both Teams AI v1 and v2 are built atop incoming `Activity` requests, which trigg
     );
     ```
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```ts
     // triggers when user sends "/hi" or "@bot /hi"
     app.message('/hi', async (client) => {
@@ -163,7 +163,7 @@ Both Teams AI v1 and v2 are built atop incoming `Activity` requests, which trigg
 ### Task modules
 
 <Tabs>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```ts
     app.on('dialog.open', (client) => {
       const dialogType = client.activity.value.data?.opendialogtype;
@@ -195,7 +195,7 @@ Both Teams AI v1 and v2 are built atop incoming `Activity` requests, which trigg
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     app.taskModules.fetch('connect-account', async (context, state, data) => {
       const taskInfo: TaskModuleTaskInfo = {
@@ -224,11 +224,11 @@ Learn more [here](../../in-depth-guides/dialogs/README.md).
 
 ## Adaptive cards
 
-In Teams AI v2, cards have much more rich type validation than existed in v1. However, assuming your cards were valid, it should be easy to migrate to v2.
+In Teams SDK, cards have much more rich type validation than existed in v1. However, assuming your cards were valid, it should be easy to migrate to v2.
 
 <Tabs>
-  <TabItem value="v2-option1" label="Teams AI v2 (Option 1)">
-    For existing cards like this, the simplest way to convert that to Teams AI v2 is this:
+  <TabItem value="v2-option1" label="Teams SDK (Option 1)">
+    For existing cards like this, the simplest way to convert that to Teams SDK is this:
 
     ```ts
     app.message('/card', async (client) => {
@@ -252,7 +252,7 @@ In Teams AI v2, cards have much more rich type validation than existed in v1. Ho
     ```
 
   </TabItem>
-  <TabItem value="v2-option2" label="Teams AI v2 (Option 2)">
+  <TabItem value="v2-option2" label="Teams SDK (Option 2)">
     For a more thorough port, you could also do the following:
 
     ```ts
@@ -268,7 +268,7 @@ In Teams AI v2, cards have much more rich type validation than existed in v1. Ho
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     app.message('/card', async (context: TurnContext) => {
       const card = CardFactory.adaptiveCard({
@@ -299,10 +299,10 @@ Learn more [here](../../in-depth-guides/adaptive-cards/README.md).
 
 ## Authentication
 
-Most agents feature authentication for user identification, interacting with APIs, etc. Whether your Teams AI v1 app used Entra SSO or custom OAuth, porting to v2 should be simple.
+Most agents feature authentication for user identification, interacting with APIs, etc. Whether your Teams SDK v1 app used Entra SSO or custom OAuth, porting to v2 should be simple.
 
 <Tabs>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```ts
     const app = new App({
       oauth: {
@@ -348,7 +348,7 @@ Most agents feature authentication for user identification, interacting with API
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     const storage = new MemoryStorage();
     const app = new Application({
@@ -434,11 +434,11 @@ Most agents feature authentication for user identification, interacting with API
 
 ### Action planner
 
-When we created Teams AI v1, LLM's didn't natively support tool calling or orchestration. A lot has changed since then, which is why we decided to deprecate `ActionPlanner` from Teams AI v1, and replace it with something a bit more lightweight. Notably, Teams AI v1 had two similar concepts: functions and actions. In Teams AI v2, these are consolidated into functions.
+When we created Teams SDK v1, LLM's didn't natively support tool calling or orchestration. A lot has changed since then, which is why we decided to deprecate `ActionPlanner` from Teams SDK v1, and replace it with something a bit more lightweight. Notably, Teams SDK v1 had two similar concepts: functions and actions. In Teams SDK, these are consolidated into functions.
 
 <Tabs>
-  <TabItem value="v2" label="Teams AI v2">
-    In Teams AI v2, there is no `actions.json` file. Instead, function prompts, parameters, etc. are declared in your code.
+  <TabItem value="v2" label="Teams SDK">
+    In Teams SDK, there is no `actions.json` file. Instead, function prompts, parameters, etc. are declared in your code.
 
     ```ts
     import '@azure/openai/types';
@@ -517,7 +517,7 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK v1">
 
     ```ts
     // Create AI components
@@ -621,7 +621,7 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
 If you supported feedback for AI generated messages, migrating is simple.
 
 <Tabs>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```ts
     import { MessageActivity } from '@microsoft/teams.api';
 
@@ -640,10 +640,10 @@ If you supported feedback for AI generated messages, migrating is simple.
     });
     ```
 
-    _Note:_ In Teams AI v2, you do not need to opt into feedback at the `App` level.
+    _Note:_ In Teams SDK, you do not need to opt into feedback at the `App` level.
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     export const app = new Application({
       ai: {
@@ -674,7 +674,7 @@ If you supported feedback for AI generated messages, migrating is simple.
   </TabItem>
 </Tabs>
 
-You can learn more about feedback in Teams AI v2 [here](../../in-depth-guides/feedback.md).
+You can learn more about feedback in Teams SDK [here](../../in-depth-guides/feedback.md).
 
 ## Incrementally migrating code via botbuilder plugin
 
@@ -682,4 +682,4 @@ You can learn more about feedback in Teams AI v2 [here](../../in-depth-guides/fe
 Comparison code coming soon!
 :::
 
-If you aren't ready to migrate all of your code, you can run your existing Teams AI v1 code in parallel with Teams AI v2. Learn more [here](../BotBuilder/adapters.mdx).
+If you aren't ready to migrate all of your code, you can run your existing Teams SDK v1 code in parallel with Teams SDK. Learn more [here](../BotBuilder/adapters.mdx).

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 7
-summary: How to implement user feedback collection in Teams AI applications using specialized UI components and feedback storage.
+summary: How to implement user feedback collection in Teams SDK applications using specialized UI components and feedback storage.
 ---
 
 # Feedback

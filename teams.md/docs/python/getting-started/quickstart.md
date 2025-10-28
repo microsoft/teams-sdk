@@ -1,11 +1,11 @@
 ---
 sidebar_position: 1
-summary: Quick start guide for Python Teams AI Library v2 using the Teams CLI to create and run your first Python agent.
+summary: Quick start guide for Python Teams SDK using the Teams CLI to create and run your first Python agent.
 ---
 
 # Quickstart
 
-Get started with Teams AI Library (v2) quickly using the Teams CLI.
+Get started with Teams SDK quickly using the Teams CLI.
 
 ## Set up a new project
 
@@ -15,7 +15,7 @@ Get started with Teams AI Library (v2) quickly using the Teams CLI.
 - **UV** v0.8.11 or higher. Install or upgrade from [https://docs.astral.sh/uv/getting-started/installation/](https://docs.astral.sh/uv/getting-started/installation/)
 
 :::info
-UV is a fast Python package installer and resolver. While you can use other package managers like pip, UV provides better performance and dependency resolution for Teams AI Library projects.
+UV is a fast Python package installer and resolver. While you can use other package managers like pip, UV provides better performance and dependency resolution for Teams SDK projects.
 :::
 
 ## Instructions

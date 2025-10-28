@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-summary: Prerequisites and setup guide for integrating LLMs into Teams AI applications, including API keys and Azure OpenAI configuration.
+summary: Prerequisites and setup guide for integrating LLMs into Teams SDK applications, including API keys and Azure OpenAI configuration.
 ---
 
 # Setup & Prerequisites

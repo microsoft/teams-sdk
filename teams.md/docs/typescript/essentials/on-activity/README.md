@@ -7,7 +7,7 @@ summary: Guide to handling Teams-specific activities like chat messages, card ac
 
 An **Activity** is the Teams‑specific payload that flows between the user and your bot.  
 Where _events_ describe high‑level happenings inside your app, _activities_ are the raw Teams messages such as chat text, card actions, installs, or invoke calls.  
-The Teams AI Library v2 exposes a fluent router so you can subscribe to these activities with `app.on('<route>', …)`.
+The Teams SDK exposes a fluent router so you can subscribe to these activities with `app.on('<route>', …)`.
 
 ```mermaid
 flowchart LR

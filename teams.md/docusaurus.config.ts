@@ -7,7 +7,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 const baseUrl = '/teams-ai/';
 const config: Config = {
-    title: 'Teams AI Library (v2)',
+    title: 'Teams SDK',
     favicon: 'img/msft-logo-48x48.png',
 
     // Set the production url of your site here
@@ -121,10 +121,10 @@ const config: Config = {
             respectPrefersColorScheme: true,
         },
         navbar: {
-            title: 'Teams AI (v2)',
+            title: 'Teams SDK',
             hideOnScroll: true,
             logo: {
-                alt: 'Teams AI (v2)',
+                alt: 'Teams SDK',
                 src: 'img/teams.png',
             },
             items: [

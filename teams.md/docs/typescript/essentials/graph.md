@@ -1,6 +1,6 @@
 ---
 sidebar_position: 7
-summary: Guide to using the Microsoft Graph API client to access Microsoft 365 data and services from your Teams AI application.
+summary: Guide to using the Microsoft Graph API client to access Microsoft 365 data and services from your Teams SDK application.
 ---
 
 # Graph API Client
@@ -10,7 +10,7 @@ summary: Guide to using the Microsoft Graph API client to access Microsoft 365 d
 The library gives your application easy access to the Microsoft Graph API via the `@microsoft/teams.graph`, `@microsoft/teams.graph-endpoints` and `@microsoft/teams.graph-endpoints-beta` packages.
 
 :::note
-If you're migrating from an earlier preview version of the Teams AI v2 library, please see the [migration guide](../migrations/preview/) for details on breaking changes.
+If you're migrating from an earlier preview version of the Teams SDK, please see the [migration guide](../migrations/preview/) for details on breaking changes.
 :::
 
 ## Package overview

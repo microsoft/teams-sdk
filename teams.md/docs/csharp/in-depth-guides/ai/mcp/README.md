@@ -5,7 +5,7 @@ summary: Overview of Model Context Protocol (MCP) integration in C# Teams AI for
 
 # MCP
 
-Teams AI Library has optional packages which support the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) as a service or client. This allows you to use MCP to call functions and tools in your application. 
+Teams SDK has optional packages which support the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) as a service or client. This allows you to use MCP to call functions and tools in your application. 
 
 MCP servers and MCP clients dynamically load function definitions and tools.
 

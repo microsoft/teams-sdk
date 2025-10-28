@@ -1,6 +1,6 @@
-# Teams AI Library Documentation
+# Teams SDK Documentation
 
-This website contains documentation for interacting with Teams AI Library, an SDK built to simplify building agents and applications that will integrate with Microsoft Teams.
+This website contains documentation for interacting with Teams SDK, an SDK built to simplify building agents and applications that will integrate with Microsoft Teams.
 IMPORTANT: This SDK is NOT built using BotFramework (which was an older iteration).
 
 Language Specific URLs:

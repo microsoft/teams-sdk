@@ -13,7 +13,7 @@ The `@microsoft/teams.client` package in this library builds on TeamsJS and MSAL
 
 - **Remote Service Authentication** through MSAL-based authentication and token acquisition.
 - **Graph API Integration** by offering a pre-configured and type-safe Microsoft Graph client.
-- **Agent Function Calling** by handling authentication and including app context when calling server-side functions implemented Teams AI agents.
+- **Agent Function Calling** by handling authentication and including app context when calling server-side functions implemented Teams SDK agents.
 - **Scope Consent Management** by providing simple APIs to test for and request user consent.
 
 ## Resources
