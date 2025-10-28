@@ -130,5 +130,5 @@ app.on('message.ext.setting', async ({ activity, send }) => {
 <!-- tabs-note -->
 
 :::note
-This will serve the HTML page to the `${BOT_ENDPOINT}/tabs/settings` endpoint as a tab. See [Tabs Guide](../tabs/README) to learn more.
+This will serve the HTML page to the `${BOT_ENDPOINT}/tabs/settings` endpoint as a tab. See [Tabs Guide](../tabs) to learn more.
 :::
