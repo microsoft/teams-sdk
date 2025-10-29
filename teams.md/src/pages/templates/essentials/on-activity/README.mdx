@@ -31,8 +31,6 @@ Here is an example of a basic message handler:
 
 <LanguageInclude section="example-explanation" />
 
-<LanguageInclude section="activity-reference-link" />
-
 ## Middleware pattern
 
 <LanguageInclude section="middleware-intro" />
@@ -40,9 +38,7 @@ Here is an example of a basic message handler:
 <LanguageInclude section="middleware-examples" />
 
 :::info
-Just like other middlewares, if you stop the chain by not calling `next()`, the activity will not be passed to the next handler.
-
-<LanguageInclude section="middleware-note" />
+Just like other middlewares, if you stop the chain by not calling `next()`, the activity will not be passed to the next handler. The order of registration for the handlers also matters as that determines how the handlers will be called.
 :::
 
 <LanguageInclude section="activity-reference-footer" />

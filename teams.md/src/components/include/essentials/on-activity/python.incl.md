@@ -14,10 +14,6 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 In the above example, the `ctx.activity` parameter is of type `MessageActivity`, which has a `text` property. You'll notice that the handler here does not return anything, but instead handles it by `send`ing a message back. For message activities, Teams does not expect your application to return anything (though it's usually a good idea to send some sort of friendly acknowledgment!).
 
-<!-- activity-reference-link -->
-
-N/A
-
 <!-- middleware-intro -->
 
 The `event` activity handlers (and attributes) follow a [middleware](https://www.patterns.dev/vanilla/mediator-pattern/) pattern similar to how `python` middlewares work. This means that for each activity handler, a `next` function is passed in which can be called to pass control to the next handler. This allows you to build a chain of handlers that can process the same activity in different ways.
@@ -46,10 +42,6 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     await ctx.send(f"You said '{ctx.activity.text}'")
 ```
-
-<!-- middleware-note -->
-
-The order of registration for the handlers also matters as that determines how the handlers will be called.
 
 <!-- activity-reference-footer -->
 

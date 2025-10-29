@@ -16,10 +16,6 @@ In the above example, the `activity` parameter is of type `MessageActivity`, whi
 
 [Other activity types](./activity-ref) have different properties and different required results. For a given handler, the library will automatically determine the type of `activity` and also enforce the correct return type.
 
-<!-- activity-reference-link -->
-
-N/A
-
 <!-- middleware-intro -->
 
 The `on` activity handlers follow a [middleware](https://www.patterns.dev/vanilla/mediator-pattern/) pattern similar to how `express` middlewares work. This means that for each activity handler, a `next` function is passed in which can be called to pass control to the next handler. This allows you to build a chain of handlers that can process the same activity in different ways.
@@ -51,10 +47,6 @@ app.on('message', async ({ activity }) => {
   await send(`Hello! you said ${activity.text}`);
 });
 ```
-
-<!-- middleware-note -->
-
-N/A
 
 <!-- activity-reference-footer -->
 
