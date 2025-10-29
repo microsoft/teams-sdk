@@ -122,7 +122,3 @@ return InvokeResponse(
                 )
             )
 ```
-
-<!-- embedded-web-content -->
-
-N/A

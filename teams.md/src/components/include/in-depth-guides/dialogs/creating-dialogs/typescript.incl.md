@@ -145,7 +145,3 @@ return {
   },
 };
 ```
-
-<!-- embedded-web-content -->
-
-N/A
