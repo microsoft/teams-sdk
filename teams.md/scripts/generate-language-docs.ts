@@ -12,6 +12,7 @@ import {
 } from '../src/constants/languages';
 
 const missingPagesManifest: LanguageAvailabilityMap = {};
+const contentGapsManifest: { [templatePath: string]: { [sectionName: string]: Language[] } } = {};
 
 const TEMPLATES_DIR = path.join(__dirname, '..', 'src', 'pages', 'templates');
 const FRAGMENTS_DIR = path.join(__dirname, '..', 'src', 'components', 'include');
@@ -31,10 +32,14 @@ const LANGUAGE_INCLUDE_REGEX = /<LanguageInclude\s+section="([^"]+)"\s*\/>/g;
 
 /**
  * Extract a section from markdown content using HTML comment markers
+ * - null: section not found (no matching HTML comment)
+ * - '': section found but marked as N/A (intentionally empty)
+ * - 'EMPTY_SECTION': section found but has no content (should show error in dev)
+ * - string: section content
  */
 function extractSection(markdown: string, sectionName: string): string | null {
   if (!markdown) {
-    return '';
+    return 'EMPTY_SECTION';
   }
 
   const match = markdown.match(SECTION_REGEX(sectionName));
@@ -49,6 +54,11 @@ function extractSection(markdown: string, sectionName: string): string | null {
   // Content not applicable
   if (NOT_APPLICABLE_REGEX.test(content)) {
     return '';
+  }
+
+  // Section exists but has no content
+  if (content === '') {
+    return 'EMPTY_SECTION';
   }
 
   return content;
@@ -105,8 +115,8 @@ function processLanguageIncludeTags(
           const fileContent = fs.readFileSync(inclPath, 'utf8');
           const sectionContent = extractSection(fileContent, sectionName);
 
-          if (sectionContent === null || sectionContent === '') {
-            // Skip missing sections (null) or intentional N/A content (empty string)
+          if (sectionContent === null || sectionContent === '' || sectionContent === 'EMPTY_SECTION') {
+            // Skip missing sections (null), intentional N/A content (empty string), or empty sections
             return '';
           }
 
@@ -158,10 +168,21 @@ function processLanguageIncludeTags(
           const fileContent = fs.readFileSync(inclPath, 'utf8');
           sectionContent = extractSection(fileContent, sectionName);
 
-          if (sectionContent === null) {
-            // Section not found - show error in development, skip in production
+          if (sectionContent === null || sectionContent === 'EMPTY_SECTION') {
+            // Section not found (null) or section exists but has no content (EMPTY_SECTION)
+            // Track this gap in the manifest
+            const gapKey = path.relative(TEMPLATES_DIR, templatePath);
+            if (!contentGapsManifest[gapKey]) {
+              contentGapsManifest[gapKey] = {};
+            }
+            if (!contentGapsManifest[gapKey][sectionName]) {
+              contentGapsManifest[gapKey][sectionName] = [];
+            }
+            contentGapsManifest[gapKey][sectionName].push(lang);
+
+            // Both cases show the same error in development, skip in production
             if (!isProduction) {
-              const errorMsg = `[Dev] Section "${sectionName}" not found in ${LANGUAGE_NAMES[lang]} documentation`;
+              const errorMsg = `**[Dev] Section "${sectionName}" not found in ${LANGUAGE_NAMES[lang]} documentation.** Either mark the section explicitly as N/A for intentionally ignored, or fill in documentation.`;
               if (isBlock) {
                 languageComponents.push(
                   `<Language language="${lang}">\n\n${errorMsg}\n\n</Language>`
@@ -577,6 +598,59 @@ function writePageManifest(): void {
 }
 
 /**
+ * Write the content gaps manifest for tracking missing sections
+ */
+function writeContentGapsManifest(): void {
+  const generatedDir = path.join(__dirname, 'generated');
+  const manifestPath = path.join(generatedDir, 'content-gaps.json');
+  const readmePath = path.join(generatedDir, 'content-gaps.md');
+
+  // Ensure generated directory exists
+  if (!fs.existsSync(generatedDir)) {
+    fs.mkdirSync(generatedDir, { recursive: true });
+  }
+
+  fs.writeFileSync(manifestPath, JSON.stringify(contentGapsManifest, null, 2), 'utf8');
+
+  // Generate human-readable markdown report
+  let markdownContent = `# Content Gaps Report\n\n`;
+  markdownContent += `Generated: ${new Date().toISOString()}\n\n`;
+  markdownContent += `This report tracks missing sections in language-specific documentation.\n\n`;
+
+  const totalGaps = Object.keys(contentGapsManifest).length;
+
+  markdownContent += `**${totalGaps} template(s) have missing sections**\n\n`;
+
+  if (totalGaps > 0) {
+    for (const [templatePath, sections] of Object.entries(contentGapsManifest)) {
+      markdownContent += `## \`${templatePath}\`\n\n`;
+
+      for (const [sectionName, languages] of Object.entries(sections)) {
+        const langNames = languages.map(lang => LANGUAGE_NAMES[lang]).join(', ');
+        markdownContent += `- **\`${sectionName}\`**: Missing in ${langNames}\n`;
+      }
+      markdownContent += `\n`;
+    }
+  }
+
+  markdownContent += `## Summary\n\n`;
+  const totalSectionGaps = Object.values(contentGapsManifest)
+    .flatMap(sections => Object.values(sections))
+    .reduce((total, langs) => total + langs.length, 0);
+  markdownContent += `- **${totalGaps}** templates with gaps\n`;
+  markdownContent += `- **${totalSectionGaps}** total missing sections\n`;
+
+  fs.writeFileSync(readmePath, markdownContent, 'utf8');
+
+  console.log(
+    `\nWrote content gaps manifest to ${path.relative(process.cwd(), manifestPath)} (${totalGaps} templates with gaps)`
+  );
+  console.log(
+    `Generated readable report: ${path.relative(process.cwd(), readmePath)}`
+  );
+}
+
+/**
  * Generate all docs
  */
 function generateAll(): void {
@@ -585,8 +659,9 @@ function generateAll(): void {
   // Clean up stale files first
   cleanGeneratedFiles();
 
-  // Reset manifest
+  // Reset manifests
   Object.keys(missingPagesManifest).forEach((key) => delete missingPagesManifest[key]);
+  Object.keys(contentGapsManifest).forEach((key) => delete contentGapsManifest[key]);
 
   const templates = findTemplateFiles();
 
@@ -605,6 +680,9 @@ function generateAll(): void {
 
   // Write the page manifest
   writePageManifest();
+
+  // Write the content gaps manifest
+  writeContentGapsManifest();
 
   console.log(`\nGenerated ${templates.length} template(s) for ${LANGUAGES.length} languages\n`);
 }
