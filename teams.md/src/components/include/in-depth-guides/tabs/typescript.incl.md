@@ -11,4 +11,6 @@ The `@microsoft/teams.client` package in this library builds on TeamsJS and MSAL
 
 <!-- additional-resources -->
 
-N/A
+### Additional resources
+
+- [Hosting Apps/Static Pages](../../essentials/hosting-static-pages)
