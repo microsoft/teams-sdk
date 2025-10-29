@@ -38,7 +38,3 @@ Once you have your API key, include the following key/values in your `.env` file
 ```env
 OPENAI_API_KEY=sk-your-openai-api-key
 ```
-
-<!-- additional-notes -->
-
-N/A
