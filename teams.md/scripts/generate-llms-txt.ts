@@ -377,7 +377,8 @@ function renderHierarchicalStructure(structure: { [key: string]: FolderStructure
                 // Add summary from README if available
                 try {
                     const readmeContent = fs.readFileSync(readmeFile.path, 'utf8');
-                    const summary = FrontmatterParser.getProperty(readmeContent, 'summary');
+                    const { frontmatter } = FrontmatterParser.extract(readmeContent);
+                    const summary = frontmatter.summary;
                     if (summary) {
                         if (indentLevel === 0) {
                             content += `${summary}\n\n`;
@@ -458,13 +459,13 @@ function extractSummaryFromFile(filePath: string): string {
         const fileContent = fs.readFileSync(filePath, 'utf8');
 
         // First check for summary in frontmatter
-        const summary = FrontmatterParser.getProperty<string>(fileContent, 'summary');
-        if (summary) {
+        const { frontmatter, content } = FrontmatterParser.extract(fileContent);
+        const summary = frontmatter.summary;
+        if (summary && typeof summary === 'string') {
             return summary;
         }
 
         // Fallback to extracting first meaningful paragraph if no summary in frontmatter
-        const { content } = FrontmatterParser.extract(fileContent);
         const paragraphs = content.split('\n\n');
         for (const paragraph of paragraphs) {
             const clean = paragraph

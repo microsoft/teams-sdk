@@ -127,7 +127,7 @@ async function parseMarkdownContent(
     config: DocusaurusConfig | null,
     language: string | null
 ): Promise<ParsedMarkdown> {
-    // Extract and remove frontmatter
+    // Extract and remove frontmatter using enhanced parser with js-yaml
     const { frontmatter, content: contentWithoutFrontmatter } = FrontmatterParser.extract(rawContent);
     let content = contentWithoutFrontmatter;
 
@@ -214,7 +214,7 @@ async function loadCodeFile(src: string, baseDir: string): Promise<string> {
 }
 
 /**
- * Parses attributes from JSX-style attribute string
+ * Parse JSX-style attributes from attribute string
  * @param attributeString - String containing attributes
  * @returns Parsed attributes
  */

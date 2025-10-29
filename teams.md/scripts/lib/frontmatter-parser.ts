@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 
 /**
  * Regular expression to match YAML frontmatter at the start of a file
@@ -21,7 +22,7 @@ interface ExtractResult {
  */
 export class FrontmatterParser {
     /**
-     * Extracts and parses frontmatter from content
+     * Extracts and parses frontmatter from content using js-yaml
      * @param content - Raw file content
      * @returns Object with parsed frontmatter and content without frontmatter
      */
@@ -36,22 +37,36 @@ export class FrontmatterParser {
             };
         }
 
-        const frontmatter = this.parse(match[1]);
-        const contentWithoutFrontmatter = content.replace(match[0], '').trimStart();
+        try {
+            // Use js-yaml for robust YAML parsing instead of custom parser
+            const frontmatter = yaml.load(match[1]) as FrontmatterData || {};
+            const contentWithoutFrontmatter = content.replace(match[0], '').trimStart();
 
-        return {
-            frontmatter,
-            content: contentWithoutFrontmatter,
-            hasFrontmatter: true
-        };
+            return {
+                frontmatter,
+                content: contentWithoutFrontmatter,
+                hasFrontmatter: true
+            };
+        } catch (error) {
+            console.warn(`Warning: Error parsing frontmatter with js-yaml, falling back to simple parser:`, error);
+            // Fallback to simple parser
+            const frontmatter = this.parseSimple(match[1]);
+            const contentWithoutFrontmatter = content.replace(match[0], '').trimStart();
+
+            return {
+                frontmatter,
+                content: contentWithoutFrontmatter,
+                hasFrontmatter: true
+            };
+        }
     }
 
     /**
-     * Parses frontmatter text into an object
+     * Parses frontmatter text into an object (simple parser - kept for fallback)
      * @param frontmatterText - Raw frontmatter content (without --- delimiters)
      * @returns Parsed frontmatter object
      */
-    static parse(frontmatterText: string): FrontmatterData {
+    static parseSimple(frontmatterText: string): FrontmatterData {
         const frontmatter: FrontmatterData = {};
         const lines = frontmatterText.split('\n');
 

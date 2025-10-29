@@ -3,7 +3,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
-import * as yaml from 'js-yaml';
+import { FrontmatterParser } from './lib/frontmatter-parser';
 import {
   LANGUAGES,
   LANGUAGE_NAMES,
@@ -341,30 +341,15 @@ function cleanGeneratedFilesForTemplate(templatePath: string): void {
  * Check if a template should be generated for a specific language based on frontmatter
  */
 function shouldGenerateForLanguage(templateContent: string, language: Language): boolean {
-  const frontmatterMatch = templateContent.match(/^---\n([\s\S]*?)\n---/);
+  const { frontmatter } = FrontmatterParser.extract(templateContent);
 
-  if (!frontmatterMatch) {
-    // No frontmatter = generate for all languages
-    return true;
+  // Check if languages array is specified
+  if (frontmatter.languages && Array.isArray(frontmatter.languages)) {
+    return frontmatter.languages.includes(language);
   }
 
-  try {
-    const frontmatter = yaml.load(frontmatterMatch[1]) as any;
-
-    // Check if languages array is specified
-    if (frontmatter.languages && Array.isArray(frontmatter.languages)) {
-      return frontmatter.languages.includes(language);
-    }
-
-    // No language restriction = generate for all languages
-    return true;
-  } catch (error) {
-    console.warn(
-      `Warning: Error parsing frontmatter in template, generating for all languages:`,
-      error
-    );
-    return true;
-  }
+  // No language restriction = generate for all languages
+  return true;
 }
 
 /**
@@ -381,17 +366,8 @@ function generateDocsForTemplate(templatePath: string): void {
   const templateContent = fs.readFileSync(templatePath, 'utf8');
 
   // Check frontmatter for warning suppression
-  const frontmatterMatch = templateContent.match(/^---\n([\s\S]*?)\n---/);
-  let suppressLanguageIncludeWarning = false;
-
-  if (frontmatterMatch) {
-    try {
-      const frontmatter = yaml.load(frontmatterMatch[1]) as any;
-      suppressLanguageIncludeWarning = frontmatter.suppressLanguageIncludeWarning === true;
-    } catch (error) {
-      // Ignore frontmatter parsing errors for this check
-    }
-  }
+  const { frontmatter } = FrontmatterParser.extract(templateContent);
+  const suppressLanguageIncludeWarning = frontmatter.suppressLanguageIncludeWarning === true;
 
   // Validate template contained LanguageInclude tags (unless suppressed)
   if (!suppressLanguageIncludeWarning && !templateContent.includes('<LanguageInclude')) {
