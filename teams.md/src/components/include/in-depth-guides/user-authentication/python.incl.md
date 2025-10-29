@@ -1,7 +1,3 @@
-<!-- intro -->
-
-At times agents must access secured online resources on behalf of the user, such as checking email, checking on flight status, or placing an order. To enable this, the user must authenticate their identity and grant consent for the application to access these resources. This process results in the application receiving a token, which the application can then use to access the permitted resources on the user's behalf.
-
 <!-- create-project -->
 
 Use your terminal to run the following command:

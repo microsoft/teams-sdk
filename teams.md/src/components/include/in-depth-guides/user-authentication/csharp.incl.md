@@ -1,7 +1,3 @@
-<!-- intro -->
-
-N/A
-
 <!-- create-project -->
 
 Use your terminal to run the following command:
