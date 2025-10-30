@@ -218,7 +218,8 @@ Example content gaps report:
 6. **Distinguish between missing and intentional**: Empty sections show errors, `N/A` sections are silently skipped
 7. **Test all supported languages** before committing
 8. **Use block-level tags for rich content**, inline tags for simple text
-9. **Add `sidebar_label`** to frontmatter for proper capitalization
+9. **Add `title`** to frontmatter for proper capitalization and navigation rendering
+   - Use `sidebar_label` to customize sidebar text if needed
 10. **Prefix utility pages with underscore** to hide from sidebar
 11. **Use correct relative URLs** (no extensions, relative to generated location)
 12. **Remove file suffixes from markdown links** - use `[link](../page)` not `[link](../page.md)` or `[link](../README.md)`
