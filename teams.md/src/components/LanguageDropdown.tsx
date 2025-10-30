@@ -50,10 +50,10 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
     setLanguage(newLanguage);
 
     const currentPath = location.pathname;
-    const currentLanguage = getLanguageFromPath(currentPath, baseUrl);
+    const currentLanguage = getLanguageFromPathStrict(currentPath, baseUrl);
 
     // Navigate to parallel newLanguage's page if we're currently in a language-specific page
-    if (LANGUAGES.includes(currentLanguage)) {
+    if (currentLanguage && LANGUAGES.includes(currentLanguage)) {
       const targetUrl = replaceLanguageInPath(currentPath, baseUrl, newLanguage);
 
       if (targetUrl === currentPath) {
