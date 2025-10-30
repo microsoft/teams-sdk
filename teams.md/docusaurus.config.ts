@@ -196,6 +196,13 @@ const config: Config = {
                 'json',
             ],
         },
+        announcementBar: {
+            id: 'teams-sdk-rename',
+            content: 'We have been renamed to Teams SDK! 🎉 🥳',
+            isCloseable: true,
+            backgroundColor: '#515cc6',
+            textColor: '#fff'
+        },
     } satisfies Preset.ThemeConfig,
 };
 

@@ -4,6 +4,10 @@ Teams SDK represents a fundamental reimagining of how Teams apps and AI agents a
 
 For a detailed explanation of the motivations and architectural decisions behind v2, please see our [WHY.md](https://microsoft.github.io/teams-ai/why) document.
 
+## We have a new name!
+
+We are very excited to announce that "Teams AI" is now officially "Teams SDK"! This change reflects our commitment to providing a comprehensive development framework for building all types of Teams applications, including AI-powered agents.
+
 ## Code repositories per SDK language
 
 The SDK code for each language are in individual repos:
