@@ -1,6 +1,6 @@
 <!-- overview -->
 
-This library does not offer features for implementing Tab apps in C#. It does however let you host tab apps and implement functions that can be called by Tab apps.
+This SDK does not offer features for implementing Tab apps in C#. It does however let you host tab apps and implement functions that can be called by Tab apps.
 
 <!-- additional-resources -->
 

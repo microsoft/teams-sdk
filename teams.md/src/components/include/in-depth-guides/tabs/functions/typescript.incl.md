@@ -1,6 +1,6 @@
 <!-- overview -->
 
-Agents may want to expose REST APIs that client applications can call. This library makes it easy to implement those APIs through the `app.function()` method. The function takes a name and a callback that implements the function.
+Agents may want to expose REST APIs that client applications can call. This SDK makes it easy to implement those APIs through the `app.function()` method. The function takes a name and a callback that implements the function.
 
 <!-- example -->
 
@@ -10,7 +10,7 @@ app.function('do-something', () => {
 });
 ```
 
-This registers a REST API hosted at `http://localhost:{PORT}/api/functions/do-something` or `https://{BOT_DOMAIN}/api/functions/do-something` that clients can POST to. When they do, this library validates that the caller provides a valid Microsoft Entra bearer token before invoking the registered callback. If the token is missing or invalid, the request is denied with a HTTP 401.
+This registers a REST API hosted at `http://localhost:{PORT}/api/functions/do-something` or `https://{BOT_DOMAIN}/api/functions/do-something` that clients can POST to. When they do, this SDK validates that the caller provides a valid Microsoft Entra bearer token before invoking the registered callback. If the token is missing or invalid, the request is denied with a HTTP 401.
 
 The function can be typed to accept input arguments. The clients would include those in the POST request payload, and they are made available in the callback through the `data` context argument.
 
@@ -23,7 +23,7 @@ app.function<{}, { message: string }>('process-message', ({ data, log }) => {
 <!-- validation-warning -->
 
 :::warning
-This library does not validate that the function arguments are of the expected types or otherwise trustworthy. You must take care to validate the input arguments before using them.
+This SDK does not validate that the function arguments are of the expected types or otherwise trustworthy. You must take care to validate the input arguments before using them.
 :::
 
 <!-- return-values -->

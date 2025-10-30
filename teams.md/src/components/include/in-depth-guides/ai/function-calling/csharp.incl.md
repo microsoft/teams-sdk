@@ -199,7 +199,7 @@ import TabItem from '@theme/TabItem';
 ### How It Works
 
 1. **Function Definition**: The function is defined as a regular C# method with parameters decorated with the `[Param]` attribute
-2. **Automatic Schema Generation**: The library automatically generates the JSON schema for the function parameters using reflection
+2. **Automatic Schema Generation**: The SDK automatically generates the JSON schema for the function parameters using reflection
 3. **Function Registration**:
    - **Imperative Approach**: The `.Function()` method registers the function with the prompt, providing the name, description, and handler
    - **Declarative Approach**: The `[Function]` attribute automatically registers methods when using `OpenAIChatPrompt.From()`

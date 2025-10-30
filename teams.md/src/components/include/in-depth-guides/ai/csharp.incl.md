@@ -1,3 +1,3 @@
 <!-- package-name -->
 
-`Microsoft.Teams.AI` library
+`Microsoft.Teams.AI`

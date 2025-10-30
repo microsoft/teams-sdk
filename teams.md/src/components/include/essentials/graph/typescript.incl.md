@@ -5,7 +5,7 @@
 <!-- migration-note -->
 
 :::note
-If you're migrating from an earlier preview version of the Teams SDK library, please see the [migration guide](../migrations/v2-previews) for details on breaking changes.
+If you're migrating from an earlier preview version of the Teams SDK, please see the [migration guide](../migrations/v2-previews) for details on breaking changes.
 :::
 
 <!-- package-overview -->
@@ -20,7 +20,7 @@ The Graph API surface is vast, and this is reflected in the size of the endpoint
 | `@microsoft/teams.graph-endpoints`      | Yes      | Request-builder functions and types to call any of the production ready Graph APIs. |
 | `@microsoft/teams.graph-endpoints-beta` | Yes      | Same, but for Graph APIs still in preview.                                          |
 
-To use this library to call Graph APIs, the first step is to install the optional endpoints package using your favorite package manager. For instance:
+To use this SDK to call Graph APIs, the first step is to install the optional endpoints package using your favorite package manager. For instance:
 
 ```sh
 npm install @microsoft/teams.graph-endpoints
@@ -86,7 +86,7 @@ app.on('message', async ({ activity, userGraph }) => {
 
 The Graph Client provides a straight-forward `call` method to interact with Microsoft Graph and issue requests scoped to a specific user or application. Paired with the Graph Endpoints packages, it offers discoverable and type-safe access to the vast Microsoft Graph API surface.
 
-Having an understanding of [how the graph API works](https://learn.microsoft.com/en-us/graph/use-the-api) will help you make the most of the library. For example, to get the `id` of the chat instance between a user and an app, [Microsoft Graph](https://learn.microsoft.com/en-us/graph/api/userscopeteamsappinstallation-get-chat?view=graph-rest-1.0&tabs=http) exposes it via:
+Having an understanding of [how the graph API works](https://learn.microsoft.com/en-us/graph/use-the-api) will help you make the most of the SDK. For example, to get the `id` of the chat instance between a user and an app, [Microsoft Graph](https://learn.microsoft.com/en-us/graph/api/userscopeteamsappinstallation-get-chat?view=graph-rest-1.0&tabs=http) exposes it via:
 
 ```
 GET /users/{user-id | user-principal-name}/teamwork/installedApps/{app-installation-id}/chat
