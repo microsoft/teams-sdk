@@ -5,7 +5,7 @@ import { useLocation } from '@docusaurus/router';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
 import { useLanguagePreference } from '../../hooks/useLanguagePreference';
-import { detectLanguageInPath } from '../../utils/languageUtils';
+import { getLanguageFromPathStrict } from '../../utils/languageUtils';
 
 export default function DocSidebarItems(props: Props): React.JSX.Element {
   const location = useLocation();
@@ -13,7 +13,7 @@ export default function DocSidebarItems(props: Props): React.JSX.Element {
   const { language: preferredLanguage } = useLanguagePreference();
 
   // Use language from URL if present, otherwise fall back to user preference
-  const urlLanguage = detectLanguageInPath(location.pathname, baseUrl);
+  const urlLanguage = getLanguageFromPathStrict(location.pathname, baseUrl);
   const currentLanguage = urlLanguage || preferredLanguage;
 
   // Filter to show /docs/main content + current language content only
@@ -27,7 +27,7 @@ export default function DocSidebarItems(props: Props): React.JSX.Element {
       const hasLanguageContent = item.items.some((childItem: any) => {
         const childHref = 'href' in childItem ? childItem.href : undefined;
         if (childHref && typeof childHref === 'string') {
-          const childLanguage = detectLanguageInPath(childHref, baseUrl);
+          const childLanguage = getLanguageFromPathStrict(childHref, baseUrl);
           return childLanguage !== null;
         }
         return false;
@@ -38,7 +38,7 @@ export default function DocSidebarItems(props: Props): React.JSX.Element {
         const categoryLanguage = item.items.find((childItem: any) => {
           const childHref = 'href' in childItem ? childItem.href : undefined;
           if (childHref && typeof childHref === 'string') {
-            return detectLanguageInPath(childHref, baseUrl) !== null;
+            return getLanguageFromPathStrict(childHref, baseUrl) !== null;
           }
           return false;
         });
@@ -46,7 +46,7 @@ export default function DocSidebarItems(props: Props): React.JSX.Element {
         if (categoryLanguage) {
           const childHref = 'href' in categoryLanguage ? categoryLanguage.href : undefined;
           if (childHref && typeof childHref === 'string') {
-            const detectedLang = detectLanguageInPath(childHref, baseUrl);
+            const detectedLang = getLanguageFromPathStrict(childHref, baseUrl);
             return detectedLang === currentLanguage;
           }
         }
@@ -57,7 +57,7 @@ export default function DocSidebarItems(props: Props): React.JSX.Element {
     // Check if this item corresponds to a language directory by examining its href
     if (itemHref && typeof itemHref === 'string') {
       // Use explicit language detection that returns null if no language found
-      const itemLanguage = detectLanguageInPath(itemHref, baseUrl);
+      const itemLanguage = getLanguageFromPathStrict(itemHref, baseUrl);
 
       // If this item links to a language directory, only show if it matches current language
       if (itemLanguage !== null) {

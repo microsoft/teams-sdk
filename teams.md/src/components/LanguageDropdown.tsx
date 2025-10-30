@@ -6,6 +6,7 @@ import { LANGUAGE_NAMES, LANGUAGES, type Language } from '../constants/languages
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
 import {
   getLanguageFromPath,
+  getLanguageFromPathStrict,
   replaceLanguageInPath,
   getManifestPathFromUrl,
 } from '../utils/languageUtils';
@@ -157,11 +158,10 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
       return;
     }
 
-    const currentUrlLanguage = getLanguageFromPath(location.pathname, baseUrl);
+    const currentUrlLanguage = getLanguageFromPathStrict(location.pathname, baseUrl);
 
     if (
       currentUrlLanguage &&
-      LANGUAGES.includes(currentUrlLanguage) &&
       currentUrlLanguage !== language &&
       !document.title.includes('Page Not Found')
     ) {

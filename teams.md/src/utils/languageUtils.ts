@@ -27,7 +27,7 @@ export function getLanguageFromPath(pathname: string, baseUrl: string): Language
  * @param baseUrl - The base URL
  * @returns The detected language or null
  */
-export function detectLanguageInPath(pathname: string, baseUrl: string): Language | null {
+export function getLanguageFromPathStrict(pathname: string, baseUrl: string): Language | null {
   const languagePattern = createLanguagePattern(baseUrl);
   const match = pathname.match(languagePattern);
   return match ? (match[1] as Language) : null;
