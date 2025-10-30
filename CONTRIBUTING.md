@@ -1,6 +1,6 @@
 # Instructions for Contributing Code
 
-Teams AI v2 is a mono-repo that hosts GitHub submodules to other repos that contain code by language. The submodules in this repository uses the latest commit from those submodules. To make changes to Teams AI v2 Typescript, C#, Python, please use the following repos:
+Teams SDK is a mono-repo that hosts GitHub submodules to other repos that contain code by language. The submodules in this repository uses the latest commit from those submodules. To make changes to Teams SDK Typescript, C#, Python, please use the following repos:
 
 - [Teams.ts](https://github.com/microsoft/teams.ts)
 - [Teams.net](https://github.com/microsoft/teams.net)
@@ -24,7 +24,7 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 Microsoft Teams is currently accepting contributions in the form of bug fixes and new
 features. Any submission must have an issue tracking it in the issue tracker that has
-been approved by the Teams AI team. Your pull request should include a link to
+been approved by the Teams SDK team. Your pull request should include a link to
 the bug that you are fixing. If you've submitted a PR for a bug, please post a
 comment in the bug to avoid duplication of effort.
 
@@ -42,7 +42,7 @@ You may visit https://cla.azure.com to sign digitally.
 
 ### Documentation
 
-Please note that we place high importance on documentation, which we host as [Teams AI v2 github pages](https://microsoft.github.io/teams-ai/).
+Please note that we place high importance on documentation, which we host as [Teams SDK github pages](https://microsoft.github.io/teams-ai/).
 
 ### Testing changes
 

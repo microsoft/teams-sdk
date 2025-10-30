@@ -1,10 +1,10 @@
 {
   "title": {
-    "message": "Teams AI (v2)",
+    "message": "Teams SDK",
     "description": "The title in the navbar"
   },
   "logo.alt": {
-    "message": "Teams AI (v2)",
+    "message": "Teams SDK",
     "description": "The alt text of navbar logo"
   },
   "item.label.Typescript": {

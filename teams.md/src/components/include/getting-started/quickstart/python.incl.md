@@ -6,7 +6,7 @@
 import Admonition from '@theme/Admonition';
 
 <Admonition type="info">
-UV is a fast Python package installer and resolver. While you can use other package managers like pip, UV provides better performance and dependency resolution for Teams AI Library projects.
+UV is a fast Python package installer and resolver. While you can use other package managers like pip, UV provides better performance and dependency resolution for Teams SDK projects.
 </Admonition>
 
 <!-- create-command -->

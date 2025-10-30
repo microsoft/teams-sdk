@@ -16,7 +16,7 @@ We plan to add more features to DevTools for a wider variety of testing. Stay tu
 
 ## Using DevTools
 
-Use the Teams AI v2 dev package as a plugin.
+Use the Teams SDK dev package as a plugin.
 
 ### Installation
 

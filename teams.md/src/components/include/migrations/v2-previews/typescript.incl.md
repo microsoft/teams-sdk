@@ -1,6 +1,6 @@
 <!-- content -->
 
-If you're moving from preview versions of Teams AI v2, you may encounter a few breaking changes along the way. This page outlines those and shows how to get back on track.
+If you're moving from preview versions of Teams SDK, you may encounter a few breaking changes along the way. This page outlines those and shows how to get back on track.
 
 ## Graph Client
 

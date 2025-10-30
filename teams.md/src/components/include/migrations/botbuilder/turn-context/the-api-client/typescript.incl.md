@@ -1,6 +1,6 @@
 <!-- content -->
 
-BotBuilder exposes a static class `TeamsInfo` that allows you to query the api. In Teams AI
+BotBuilder exposes a static class `TeamsInfo` that allows you to query the api. In Teams SDK
 we pass an instance of our `ApiClient` into all our activity handlers.
 
 <Tabs groupId="sending-activities">
@@ -62,7 +62,7 @@ we pass an instance of our `ApiClient` into all our activity handlers.
     }
     ```
   </TabItem>
-  <TabItem value="Teams AI">
+  <TabItem value="Teams SDK">
     ```typescript showLineNumbers
     import { App } from '@microsoft/teams.apps';
 

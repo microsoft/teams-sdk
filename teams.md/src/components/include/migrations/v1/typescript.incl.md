@@ -4,7 +4,7 @@ We'll also discuss how you can migrate features over incrementally via the [botb
 
 <!-- installation -->
 
-First, let's install Teams AI v2 into your project. Notably, this won't replace any existing installation of Teams AI v1. When you've completed your migration, you can safely remove the `@microsoft/teams-ai` dependency from your `package.json` file.
+First, let's install Teams SDK into your project. Notably, this won't replace any existing installation of Teams SDK. When you've completed your migration, you can safely remove the `@microsoft/teams-ai` dependency from your `package.json` file.
 
 ```sh
 npm install @microsoft/teams.apps
@@ -109,7 +109,7 @@ npm install @microsoft/teams.apps
       ```
 
     </TabItem>
-    <TabItem value="v2" label="Teams AI v2">
+    <TabItem value="v2" label="Teams SDK">
       ```ts
       import { App } from '@microsoft/teams.apps';
       import { LocalStorage } from '@microsoft/teams.common/storage';
@@ -145,7 +145,7 @@ npm install @microsoft/teams.apps
       ```
 
     </TabItem>
-    <TabItem value="v1" label="Teams AI v1">
+    <TabItem value="v1" label="Teams SDK">
       ```ts
       import {
         ConfigurationServiceClientCredentialFactory,
@@ -244,7 +244,7 @@ npm install @microsoft/teams.apps
     // highlight-success-end
     ```
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```ts
     // triggers when user sends "/hi" or "@bot /hi"
     app.message("/hi", async (context) => {
@@ -262,7 +262,7 @@ npm install @microsoft/teams.apps
     );
     ```
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```ts
     // triggers when user sends "/hi" or "@bot /hi"
     app.message('/hi', async (client) => {
@@ -342,7 +342,7 @@ npm install @microsoft/teams.apps
       ```
 
     </TabItem>
-    <TabItem value="v2" label="Teams AI v2">
+    <TabItem value="v2" label="Teams SDK">
       ```ts
       app.on('dialog.open', (client) => {
         const dialogType = client.activity.value.data?.opendialogtype;
@@ -374,7 +374,7 @@ npm install @microsoft/teams.apps
       ```
 
     </TabItem>
-    <TabItem value="v1" label="Teams AI v1">
+    <TabItem value="v1" label="Teams SDK">
       ```ts
       app.taskModules.fetch('connect-account', async (context, state, data) => {
         const taskInfo: TaskModuleTaskInfo = {
@@ -450,8 +450,8 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v2-option1" label="Teams AI v2 (Option 1)">
-    For existing cards like this, the simplest way to convert that to Teams AI v2 is this:
+  <TabItem value="v2-option1" label="Teams SDK (Option 1)">
+    For existing cards like this, the simplest way to convert that to Teams SDK is this:
 
     ```ts
     app.message('/card', async (client) => {
@@ -475,7 +475,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v2-option2" label="Teams AI v2 (Option 2)">
+  <TabItem value="v2-option2" label="Teams SDK (Option 2)">
     For a more thorough port, you could also do the following:
 
     ```ts
@@ -491,7 +491,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```ts
     app.message('/card', async (context: TurnContext) => {
       const card = CardFactory.adaptiveCard({
@@ -611,7 +611,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```ts
     const app = new App({
       oauth: {
@@ -657,7 +657,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```ts
     const storage = new MemoryStorage();
     const app = new Application({
@@ -743,7 +743,7 @@ npm install @microsoft/teams.apps
 
 ### Action planner
 
-When we created Teams AI v1, LLM's didn't natively support tool calling or orchestration. A lot has changed since then, which is why we decided to deprecate `ActionPlanner` from Teams AI v1, and replace it with something a bit more lightweight. Notably, Teams AI v1 had two similar concepts: functions and actions. In Teams AI v2, these are consolidated into functions.
+When we created Teams SDK, LLM's didn't natively support tool calling or orchestration. A lot has changed since then, which is why we decided to deprecate `ActionPlanner` from Teams SDK, and replace it with something a bit more lightweight. Notably, Teams SDK had two similar concepts: functions and actions. In Teams SDK, these are consolidated into functions.
 
 <Tabs>
   <TabItem value="Diff" default>
@@ -852,8 +852,8 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
-    In Teams AI v2, there is no `actions.json` file. Instead, function prompts, parameters, etc. are declared in your code.
+  <TabItem value="v2" label="Teams SDK">
+    In Teams SDK, there is no `actions.json` file. Instead, function prompts, parameters, etc. are declared in your code.
 
     ```ts
     import '@azure/openai/types';
@@ -932,7 +932,7 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
 
     ```ts
     // Create AI components
@@ -1080,7 +1080,7 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```ts
     import { MessageActivity } from '@microsoft/teams.api';
 
@@ -1099,10 +1099,10 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
     });
     ```
 
-    _Note:_ In Teams AI v2, you do not need to opt into feedback at the `App` level.
+    _Note:_ In Teams SDK, you do not need to opt into feedback at the `App` level.
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```ts
     export const app = new Application({
       ai: {
@@ -1141,4 +1141,4 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
 Comparison code coming soon!
 :::
 
-If you aren't ready to migrate all of your code, you can run your existing Teams AI v1 code in parallel with Teams AI v2. Learn more [here](./botbuilder/adapters).
+If you aren't ready to migrate all of your code, you can run your existing Teams SDK code in parallel with Teams SDK. Learn more [here](./BotBuilder/adapters).

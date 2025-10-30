@@ -1,6 +1,6 @@
 <!-- package-install -->
 
-**NuGet Package** - Install the Microsoft Teams AI library:
+**NuGet Package** - Install the Microsoft Teams SDK:
 
 ```bash
 dotnet add package Microsoft.Teams.AI

@@ -1,6 +1,6 @@
 <!-- intro -->
 
-The Teams AI Library v2 exposes a fluent router so you can subscribe to these activities with `@app.event("activity")`.
+The Teams SDK v2 exposes a fluent router so you can subscribe to these activities with `@app.event("activity")`.
 
 <!-- basic-example -->
 

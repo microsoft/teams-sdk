@@ -1,6 +1,6 @@
 <!-- content -->
 
-The BotBuilder proactive message flow requires you to have a conversation reference stored somewhere. In Teams AI
+The BotBuilder proactive message flow requires you to have a conversation reference stored somewhere. In Teams SDK
 we expose a `send` method almost identical to the one passed into our activity handlers that accepts a `conversationId`,
 so all you need to store is that!
 
@@ -73,7 +73,7 @@ so all you need to store is that!
     // highlight-end
     ```
   </TabItem>
-  <TabItem value="Teams AI">
+  <TabItem value="Teams SDK">
     ```typescript showLineNumbers
     import { App } from '@microsoft/teams.apps';
 

@@ -1,5 +1,5 @@
 /**
- * Supported languages for Teams AI documentation
+ * Supported languages for Teams SDK documentation
  * This is the single source of truth for all language-related code
  */
 export const LANGUAGES = ['typescript', 'csharp', 'python'] as const;

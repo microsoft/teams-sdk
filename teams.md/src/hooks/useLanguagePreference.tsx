@@ -16,7 +16,7 @@ interface LanguageContextProps {
 
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
-const STORAGE_KEY = 'teams-ai-language-preference';
+const STORAGE_KEY = 'teams-sdk-language-preference';
 
 // Type guard to check if a string is a valid Language
 const isLanguage = (value: string): value is Language =>

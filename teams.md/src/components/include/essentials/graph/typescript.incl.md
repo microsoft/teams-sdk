@@ -5,7 +5,7 @@
 <!-- migration-note -->
 
 :::note
-If you're migrating from an earlier preview version of the Teams AI v2 library, please see the [migration guide](../migrations/v2-previews) for details on breaking changes.
+If you're migrating from an earlier preview version of the Teams SDK library, please see the [migration guide](../migrations/v2-previews) for details on breaking changes.
 :::
 
 <!-- package-overview -->

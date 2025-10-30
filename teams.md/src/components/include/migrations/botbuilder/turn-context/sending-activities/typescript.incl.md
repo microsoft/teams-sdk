@@ -1,7 +1,7 @@
 <!-- content -->
 
 BotBuilders pattern for sending activities via its `TurnContext` is similar to that
-in Teams AI, but one key difference is that when sending adaptive cards you don't need
+in Teams SDK, but one key difference is that when sending adaptive cards you don't need
 to construct the entire activity yourself.
 
 <Tabs groupId="sending-activities">
@@ -41,7 +41,7 @@ to construct the entire activity yourself.
     }
     ```
   </TabItem>
-  <TabItem value="Teams AI">
+  <TabItem value="Teams SDK">
     ```typescript showLineNumbers
     app.on('message', async ({ send }) => {
       // highlight-next-line
@@ -90,7 +90,7 @@ to construct the entire activity yourself.
     }
     ```
   </TabItem>
-  <TabItem value="Teams AI">
+  <TabItem value="Teams SDK">
     ```typescript showLineNumbers
     app.on('message', async ({ send }) => {
       // highlight-next-line
@@ -169,7 +169,7 @@ to construct the entire activity yourself.
     }
     ```
   </TabItem>
-  <TabItem value="Teams AI">
+  <TabItem value="Teams SDK">
     ```typescript showLineNumbers
     import { AdaptiveCard, TextBlock } from '@microsoft/teams.cards';
 
@@ -234,7 +234,7 @@ to construct the entire activity yourself.
     }
     ```
   </TabItem>
-  <TabItem value="Teams AI">
+  <TabItem value="Teams SDK">
     ```typescript showLineNumbers
     import { AdaptiveCard, TextBlock } from '@microsoft/teams.cards';
 

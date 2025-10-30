@@ -1,19 +1,18 @@
 ---
 sidebar_position: 2
-title: Migrating from Teams AI v1
-sidebar_label: Migrating from Teams AI v1
+title: Migrating from Teams SDK v1
 languages: ['typescript', 'python']
-summary: Migration guide from Teams AI v1 to v2 highlighting the key changes and upgrade steps.
+summary: Migration guide from Teams SDK v1 to v2 highlighting the key changes and upgrade steps.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Migrating from Teams AI v1
+# Migrating from Teams SDK v1
 
-Welcome, fellow agent developer! You've made it through a full major release of Teams AI, and now you want to take the plunge into v2. In this guide, we'll walk you through everything you need to know, from migrating core features like message handlers and auth, to optional AI features like `ActionPlanner`. <LanguageInclude section="botbuilder-adapter-note" />
+Welcome, fellow agent developer! You've made it through a full major release of Teams SDK, and now you want to take the plunge into v2. In this guide, we'll walk you through everything you need to know, from migrating core features like message handlers and auth, to optional AI features like `ActionPlanner`. <LanguageInclude section="botbuilder-adapter-note" />
 
-## Installing Teams AI v2
+## Installing Teams SDK
 
 <LanguageInclude section="installation" />
 
@@ -25,7 +24,7 @@ First, migrate your `Application` class from v1 to the new `App` class.
 
 ## Migrate activity handlers
 
-Both Teams AI v1 and v2 are built atop incoming `Activity` requests, which trigger handlers in your code when specific type of activities are received. The syntax for how you register different types of `Activity` handlers differs <LanguageInclude section="activity-handlers-intro" /> between the v1 and v2 versions of our SDK.
+Both v1 and v2 are built atop incoming `Activity` requests, which trigger handlers in your code when specific type of activities are received. The syntax for how you register different types of `Activity` handlers differs <LanguageInclude section="activity-handlers-intro" /> between the v1 and v2 versions of our SDK.
 
 ### Message handlers
 
@@ -41,7 +40,7 @@ Learn more in the [Dialogs guide](../in-depth-guides/dialogs).
 
 ## Adaptive cards
 
-In Teams AI v2, cards have much more rich type validation than existed in v1. However, assuming your cards were valid, it should be easy to migrate to v2.
+In Teams SDK v2, cards have much more rich type validation than existed in v1. However, assuming your cards were valid, it should be easy to migrate to v2.
 
 <LanguageInclude section="adaptive-cards" />
 
@@ -49,7 +48,7 @@ Learn more in the [Adaptive Cards guide](../in-depth-guides/adaptive-cards).
 
 ## Authentication
 
-Most agents feature authentication for user identification, interacting with APIs, etc. Whether your Teams AI v1 app used Entra SSO or custom OAuth, porting to v2 should be simple.
+Most agents feature authentication for user identification, interacting with APIs, etc. Whether your Teams SDK app used Entra SSO or custom OAuth, porting to v2 should be simple.
 
 <LanguageInclude section="authentication" />
 
@@ -63,6 +62,6 @@ If you supported feedback for AI generated messages, migrating is simple.
 
 <LanguageInclude section="feedback" />
 
-You can learn more about feedback in Teams AI v2 in the [Feedback guide](../in-depth-guides/feedback).
+You can learn more about feedback in Teams SDK in the [Feedback guide](../in-depth-guides/feedback).
 
 <LanguageInclude section="botbuilder-plugin" />

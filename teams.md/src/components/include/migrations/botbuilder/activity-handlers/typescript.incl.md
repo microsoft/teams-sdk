@@ -1,13 +1,12 @@
 <!-- content -->
 
-A BotBuilder `ActivityHandler` is similar to the activity routing of the Teams AI `App`.
+A BotBuilder `ActivityHandler` is similar to the activity routing of the Teams SDK `App`.
 The `BotBuilderPlugin` accepts a botbuilder Activity Handler instance so you can keep using your
-existing activity handlers while migrating however many you want to new Teams AI handlers. This allows for
+existing activity handlers while migrating however many you want to new Teams SDK handlers. This allows for
 a more incremental migration strategy.
 
 :::info
-this snippet shows how to use the `BotBuilderPlugin` to route activities using
-botbuilder alongside the default Teams AI activity routing.
+this snippet shows how to use the `BotBuilderPlugin` to route activities using botbuilder alongside the default Teams SDK activity routing.
 :::
 
 <Tabs>
@@ -32,6 +31,7 @@ botbuilder alongside the default Teams AI activity routing.
       await app.start();
     })();
     ```
+
   </TabItem>
   <TabItem value="adapter.ts">
     ```typescript
@@ -54,6 +54,7 @@ botbuilder alongside the default Teams AI activity routing.
 
     export default adapter;
     ```
+
   </TabItem>
   <TabItem value="activity-handler.ts">
     ```typescript
@@ -75,6 +76,7 @@ botbuilder alongside the default Teams AI activity routing.
     const handler = new ActivityHandler();
     export default handler;
     ```
+
   </TabItem>
 </Tabs>
 

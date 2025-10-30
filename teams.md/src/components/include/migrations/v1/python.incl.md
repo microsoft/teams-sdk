@@ -2,7 +2,7 @@
 
 <!-- installation -->
 
-First, let's install Teams AI v2 into your project. Notably, this won't replace any existing installation of Teams AI v1. When you've completed your migration, you can safely remove the `teams-ai` dependency from your `pyproject.toml` file.
+First, let's install Teams SDK into your project. Notably, this won't replace any existing installation of Teams SDK. When you've completed your migration, you can safely remove the `teams-ai` dependency from your `pyproject.toml` file.
 
 ```sh
 uv add microsoft-teams-apps
@@ -95,7 +95,7 @@ uv add microsoft-teams-apps
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```python
     # in main.py
     import asyncio
@@ -131,7 +131,7 @@ uv add microsoft-teams-apps
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```python
     # in api.py
     from http import HTTPStatus
@@ -246,7 +246,7 @@ slightly
     ```
 
   </TabItem>
-<TabItem value="v2" label="Teams AI v2">
+<TabItem value="v2" label="Teams SDK">
     ```python
     # Triggered when user sends "hi", "hello", or "greetings"
     @app.on_message_pattern(re.compile(r"hello|hi|greetings"))
@@ -262,7 +262,7 @@ slightly
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```python
     # Triggered when user sends "hi"
     @app.message(re.compile(r"hi", re.IGNORECASE))
@@ -343,7 +343,7 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```python
     @app.on_dialog_open
     async def handle_dialog_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
@@ -378,7 +378,7 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```python
     @app.task_module.fetch("connect-account")
     async def on_connect_account(context: TurnContext, _state: TurnState):
@@ -455,8 +455,8 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     ```
 
   </TabItem>
-  <TabItem value="v2-option1" label="Teams AI v2 (Option 1)">
-    For existing cards like this, the simplest way to convert that to Teams AI v2 is this:
+  <TabItem value="v2-option1" label="Teams SDK (Option 1)">
+    For existing cards like this, the simplest way to convert that to Teams SDK is this:
 
     ```python
     @app.on_message_pattern("/card")
@@ -483,7 +483,7 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     ```
 
   </TabItem>
-  <TabItem value="v2-option2" label="Teams AI v2 (Option 2)">
+  <TabItem value="v2-option2" label="Teams SDK (Option 2)">
     For a more thorough port, you could also do the following:
 
     ```python
@@ -500,7 +500,7 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```python
     @app.message("/card")
     async def adaptive_card(context: TurnContext, _state: AppTurnState) -> bool:
@@ -610,7 +610,7 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```python
     app = App()
 
@@ -641,7 +641,7 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```python
     app = Application[TurnState[ConversationState, UserState, TempState]](
         ApplicationOptions(
@@ -731,7 +731,7 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams AI v2">
+  <TabItem value="v2" label="Teams SDK">
     ```python
     # Reply with message including feedback buttons
     @app.on_message
@@ -743,10 +743,10 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
         # Custom logic here..
     ```
 
-    _Note:_ In Teams AI v2, you do not need to opt into feedback at the `App` level.
+    _Note:_ In Teams SDK, you do not need to opt into feedback at the `App` level.
 
   </TabItem>
-  <TabItem value="v1" label="Teams AI v1">
+  <TabItem value="v1" label="Teams SDK">
     ```python
     app = Application[AppTurnState](
         ApplicationOptions(
