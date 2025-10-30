@@ -1,6 +1,6 @@
-# Welcome to the Teams SDK v2 ([Docs](https://microsoft.github.io/teams-ai/))
+# Welcome to the Teams SDK ([Docs](https://microsoft.github.io/teams-ai/))
 
-Teams SDK v2 represents a fundamental reimagining of how Teams apps and AI agents are built, while maintaining compatibility with existing botframework-based agents. This new version focuses on developer experience, simplified architecture, and enhanced AI capabilities.
+Teams SDK represents a fundamental reimagining of how Teams apps and AI agents are built, while maintaining compatibility with existing botframework-based agents. This new version focuses on developer experience, simplified architecture, and enhanced AI capabilities.
 
 For a detailed explanation of the motivations and architectural decisions behind v2, please see our [WHY.md](https://microsoft.github.io/teams-ai/why) document.
 
