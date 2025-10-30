@@ -109,7 +109,7 @@ npm install @microsoft/teams.apps
       ```
 
     </TabItem>
-    <TabItem value="v2" label="Teams SDK">
+    <TabItem value="v2" label="Teams SDK v2">
       ```ts
       import { App } from '@microsoft/teams.apps';
       import { LocalStorage } from '@microsoft/teams.common/storage';
@@ -145,7 +145,7 @@ npm install @microsoft/teams.apps
       ```
 
     </TabItem>
-    <TabItem value="v1" label="Teams SDK">
+    <TabItem value="v1" label="Teams SDK v1">
       ```ts
       import {
         ConfigurationServiceClientCredentialFactory,
@@ -244,7 +244,7 @@ npm install @microsoft/teams.apps
     // highlight-success-end
     ```
   </TabItem>
-  <TabItem value="v1" label="Teams SDK">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     // triggers when user sends "/hi" or "@bot /hi"
     app.message("/hi", async (context) => {
@@ -262,7 +262,7 @@ npm install @microsoft/teams.apps
     );
     ```
   </TabItem>
-  <TabItem value="v2" label="Teams SDK">
+  <TabItem value="v2" label="Teams SDK v2">
     ```ts
     // triggers when user sends "/hi" or "@bot /hi"
     app.message('/hi', async (client) => {
@@ -342,7 +342,7 @@ npm install @microsoft/teams.apps
       ```
 
     </TabItem>
-    <TabItem value="v2" label="Teams SDK">
+    <TabItem value="v2" label="Teams SDK v2">
       ```ts
       app.on('dialog.open', (client) => {
         const dialogType = client.activity.value.data?.opendialogtype;
@@ -374,7 +374,7 @@ npm install @microsoft/teams.apps
       ```
 
     </TabItem>
-    <TabItem value="v1" label="Teams SDK">
+    <TabItem value="v1" label="Teams SDK v1">
       ```ts
       app.taskModules.fetch('connect-account', async (context, state, data) => {
         const taskInfo: TaskModuleTaskInfo = {
@@ -450,7 +450,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v2-option1" label="Teams SDK (Option 1)">
+  <TabItem value="v2-option1" label="Teams SDK v2 (Option 1)">
     For existing cards like this, the simplest way to convert that to Teams SDK is this:
 
     ```ts
@@ -475,7 +475,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v2-option2" label="Teams SDK (Option 2)">
+  <TabItem value="v2-option2" label="Teams SDK v2 (Option 2)">
     For a more thorough port, you could also do the following:
 
     ```ts
@@ -491,7 +491,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams SDK">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     app.message('/card', async (context: TurnContext) => {
       const card = CardFactory.adaptiveCard({
@@ -611,7 +611,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams SDK">
+  <TabItem value="v2" label="Teams SDK v2">
     ```ts
     const app = new App({
       oauth: {
@@ -657,7 +657,7 @@ npm install @microsoft/teams.apps
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams SDK">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     const storage = new MemoryStorage();
     const app = new Application({
@@ -852,7 +852,7 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams SDK">
+  <TabItem value="v2" label="Teams SDK v2">
     In Teams SDK, there is no `actions.json` file. Instead, function prompts, parameters, etc. are declared in your code.
 
     ```ts
@@ -932,7 +932,7 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
     ```
 
   </TabItem>
-  <TabItem value="v1" label="Teams SDK">
+  <TabItem value="v1" label="Teams SDK v1">
 
     ```ts
     // Create AI components
@@ -1080,7 +1080,7 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
     ```
 
   </TabItem>
-  <TabItem value="v2" label="Teams SDK">
+  <TabItem value="v2" label="Teams SDK v2">
     ```ts
     import { MessageActivity } from '@microsoft/teams.api';
 
@@ -1102,7 +1102,7 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
     _Note:_ In Teams SDK, you do not need to opt into feedback at the `App` level.
 
   </TabItem>
-  <TabItem value="v1" label="Teams SDK">
+  <TabItem value="v1" label="Teams SDK v1">
     ```ts
     export const app = new Application({
       ai: {
