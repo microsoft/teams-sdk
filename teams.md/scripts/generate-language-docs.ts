@@ -3,6 +3,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as chokidar from 'chokidar';
+import * as yaml from 'js-yaml';
+
 import { FrontmatterParser } from './lib/frontmatter-parser';
 import {
   LANGUAGES,
@@ -19,6 +21,12 @@ const FRAGMENTS_DIR = path.join(__dirname, '..', 'src', 'components', 'include')
 
 const DOCS_BASE = path.join(__dirname, '..', 'docs', 'main');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Track all include files that are actually referenced by templates
+// Languages excluded from a template via frontmatter will not be processed
+const processedIncludeFiles = new Set<string>();
+
 // For sections in an *.mdx file that is applicable to one or two languages, but not all three.
 // This is an intentional way of differentiating from missing sections in documentation that haven't been written yet.
 const NOT_APPLICABLE_REGEX = /^(not applicable|n\/a)\s*$/i;
@@ -29,6 +37,11 @@ const SECTION_REGEX = (sectionName: string) =>
 
 // Regex to find LanguageInclude tags
 const LANGUAGE_INCLUDE_REGEX = /<LanguageInclude\s+section="([^"]+)"\s*\/>/g;
+
+const languagePattern = LANGUAGES.join('|');
+const LANGUAGE_INCL_FILENAME_REGEX = new RegExp(`^(${languagePattern})\\.incl\\.md$`);
+
+const FRONTMATTER_REGEX = /^---\n[\s\S]*?\n---\n/;
 
 /**
  * Extract a section from markdown content using HTML comment markers
@@ -65,6 +78,37 @@ function extractSection(markdown: string, sectionName: string): string | null {
 }
 
 /**
+ * Given a template path and language, return the include file path for that language.
+ */
+function getIncludeFilePath(templatePath: string, language: Language): string {
+  const relativePath = path.relative(TEMPLATES_DIR, templatePath);
+  const fileName = path.basename(templatePath, '.mdx');
+  const dirPath = path.dirname(relativePath);
+
+  // Category files can be either index or README
+  if (fileName === 'index' || fileName === 'README') {
+    return path.join(FRAGMENTS_DIR, dirPath, `${language}.incl.md`);
+  } else {
+    return path.join(FRAGMENTS_DIR, dirPath, fileName, `${language}.incl.md`);
+  }
+}
+
+/**
+ * Given an include file path, return the expected template path.
+ */
+function getTemplatePathFromInclude(includePath: string): string {
+  const rel = path.relative(FRAGMENTS_DIR, includePath);
+  const parts = rel.split(path.sep);
+
+  // foo/bar/lang.incl.md => foo/bar.mdx
+  if (parts.length >= 2) {
+    return path.join(TEMPLATES_DIR, ...parts.slice(0, -1)) + '.mdx';
+  } else {
+    return '(unknown)';
+  }
+}
+
+/**
  * Process LanguageInclude tags in template content and replace with Language components or raw content
  * - Production mode + target language: generates clean files with only raw content for that language
  * - Development mode: generates Language components with helpful error messages for missing content
@@ -74,14 +118,8 @@ function processLanguageIncludeTags(
   templatePath: string,
   targetLanguage?: Language
 ): string {
-  const relativePath = path.relative(TEMPLATES_DIR, templatePath);
-  const fileName = path.basename(templatePath, '.mdx');
-  const dirPath = path.dirname(relativePath);
-
   let processedContent = templateContent;
   let hasLanguageInclude = false;
-
-  const isProduction = process.env.NODE_ENV === 'production';
 
   // Replace all LanguageInclude tags
   processedContent = processedContent.replace(
@@ -100,12 +138,7 @@ function processLanguageIncludeTags(
 
       // Production mode with target language: only generate for that language
       if (isProduction && targetLanguage) {
-        // Determine include file path
-        const inclPath =
-          fileName === 'index' || fileName === 'README'
-            ? path.join(FRAGMENTS_DIR, dirPath, `${targetLanguage}.incl.md`)
-            : path.join(FRAGMENTS_DIR, dirPath, fileName, `${targetLanguage}.incl.md`);
-
+        const inclPath = getIncludeFilePath(templatePath, targetLanguage);
         if (!fs.existsSync(inclPath)) {
           // Skip missing content (prod)
           return '';
@@ -133,23 +166,20 @@ function processLanguageIncludeTags(
       const languagesToProcess = targetLanguage ? [targetLanguage] : LANGUAGES;
 
       for (const lang of languagesToProcess) {
-        // Determine include file path
-        const inclPath =
-          fileName === 'index' || fileName === 'README'
-            ? path.join(FRAGMENTS_DIR, dirPath, `${lang}.incl.md`)
-            : path.join(FRAGMENTS_DIR, dirPath, fileName, `${lang}.incl.md`);
-
+        const inclPath = getIncludeFilePath(templatePath, lang);
         let sectionContent: string | null = null;
 
+        const isLanguageRestricted = shouldGenerateForLanguage(templateContent, lang);
+
+        if (!isLanguageRestricted) {
+          // Template doesn't target this language; skip
+          continue;
+        }
+
+        // Only mark as incl file path as used if this template is supposed to generate for this language
+        processedIncludeFiles.add(path.resolve(inclPath));
+
         if (!fs.existsSync(inclPath)) {
-          // File doesn't exist - check if this template is language-restricted
-          const isLanguageRestricted = shouldGenerateForLanguage(templateContent, lang);
-
-          if (!isLanguageRestricted) {
-            // Template doesn't target this language; skip
-            continue;
-          }
-
           // File missing for a language the template should support - show error in development
           if (!isProduction) {
             const errorMsg = `[DevMode] Documentation file for ${LANGUAGE_NAMES[lang]} not found: ${path.relative(process.cwd(), inclPath)}`;
@@ -244,7 +274,7 @@ function processLanguageIncludeTags(
 
   if (needsLanguageImport) {
     // Find where to insert the import (after frontmatter if it exists)
-    const frontmatterMatch = processedContent.match(/^---\n[\s\S]*?\n---\n/);
+    const frontmatterMatch = processedContent.match(FRONTMATTER_REGEX);
     const insertPosition = frontmatterMatch ? frontmatterMatch[0].length : 0;
 
     const importStatement = "import Language from '@site/src/components/Language';\n\n";
@@ -257,6 +287,31 @@ function processLanguageIncludeTags(
   return processedContent;
 }
 
+function deleteInDirectory(dir: string, deletedCount: { count: number }): void {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      deleteInDirectory(fullPath, deletedCount);
+      // Remove empty directories
+      try {
+        fs.rmdirSync(fullPath);
+      } catch (e) {
+        // Directory not empty and will be cleaned up later
+      }
+    } else if (entry.isFile() && entry.name.endsWith('.mdx')) {
+      fs.unlinkSync(fullPath);
+      deletedCount.count++;
+    } else if (entry.isFile() && entry.name === '_category_.json') {
+      // Delete all category files - they will be regenerated from templates
+      fs.unlinkSync(fullPath);
+      deletedCount.count++;
+    }
+  }
+}
+
 /**
  * Clean up stale generated files before regeneration
  * Removes all .mdx files from docs/main/{lang}/ directories
@@ -264,7 +319,7 @@ function processLanguageIncludeTags(
 function cleanGeneratedFiles(): void {
   console.log('Cleaning up stale generated files...');
 
-  let deletedCount = 0;
+  let deletedCount = { count: 0 };
 
   for (const lang of LANGUAGES) {
     const langDir = path.join(DOCS_BASE, lang);
@@ -275,44 +330,20 @@ function cleanGeneratedFiles(): void {
 
     // Also remove root-level category file for this language
     const rootCategoryPath = path.join(langDir, '_category_.json');
+
     if (fs.existsSync(rootCategoryPath)) {
       fs.unlinkSync(rootCategoryPath);
-      deletedCount++;
+      deletedCount.count++;
     }
 
     // Recursively find and delete all .mdx and _category_.json files
-    function deleteInDirectory(dir: string): void {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-
-        if (entry.isDirectory()) {
-          deleteInDirectory(fullPath);
-          // Remove empty directories
-          try {
-            fs.rmdirSync(fullPath);
-          } catch (e) {
-            // Directory not empty and will be cleaned up later
-          }
-        } else if (entry.isFile() && entry.name.endsWith('.mdx')) {
-          fs.unlinkSync(fullPath);
-          deletedCount++;
-        } else if (entry.isFile() && entry.name === '_category_.json') {
-          // Delete all category files - they will be regenerated from templates
-          fs.unlinkSync(fullPath);
-          deletedCount++;
-        }
-      }
-    }
-
-    deleteInDirectory(langDir);
+    deleteInDirectory(langDir, deletedCount);
   }
 
-  if (deletedCount === 0) {
+  if (deletedCount.count === 0) {
     console.log('No files to clean');
   } else {
-    console.log(`  Cleaned up ${deletedCount} file(s)`);
+    console.log(`  Cleaned up ${deletedCount.count} file(s)\n`);
   }
 }
 
@@ -327,6 +358,7 @@ function cleanGeneratedFilesForTemplate(templatePath: string): void {
   for (const lang of LANGUAGES) {
     const outputDir = path.join(DOCS_BASE, lang, path.dirname(relativePath));
     // Handle both README.mdx -> index.mdx conversion and regular files
+    // Note: README.mdx category templates are converted to index.mdx for generated output
     const outputFileName = templateName === 'README.mdx' ? 'index.mdx' : templateName;
     const outputPath = path.join(outputDir, outputFileName);
 
@@ -375,7 +407,7 @@ function generateDocsForTemplate(templatePath: string): void {
       `\nWarning: Template "${relativePath}" does not contain <LanguageInclude /> tags.`
     );
     console.warn(
-      `  If the file is intended to be identical for all languages, ignore this warning.`
+      `  If the file is intended to be identical for all languages, ignore this warning.\n  Suppress this warning by adding suppressLanguageIncludeWarning: true to the file's fronmatter`
     );
   }
 
@@ -397,13 +429,12 @@ function generateDocsForTemplate(templatePath: string): void {
     const processedContent = processLanguageIncludeTags(templateContent, templatePath, lang);
 
     // Extract frontmatter if exists
-    const frontmatterMatch = processedContent.match(/^---\n([\s\S]*?)\n---\n/);
-    let frontmatter = '';
-    let content = processedContent;
+    const { frontmatter, hasFrontmatter, content: contentWithoutFrontmatter } = FrontmatterParser.extract(processedContent);
+    let content = contentWithoutFrontmatter;
+    let frontmatterRaw = '';
 
-    if (frontmatterMatch) {
-      frontmatter = frontmatterMatch[1];
-      content = processedContent.slice(frontmatterMatch[0].length);
+    if (hasFrontmatter && frontmatter && Object.keys(frontmatter).length > 0) {
+      frontmatterRaw = `---\n${yaml.dump(frontmatter)}---\n`
     }
 
     const outputDir = path.join(DOCS_BASE, lang, path.dirname(relativePath));
@@ -421,7 +452,7 @@ function generateDocsForTemplate(templatePath: string): void {
 
     // Add frontmatter first if it exists (must be at the very top)
     if (frontmatter) {
-      output += `---\n${frontmatter}\n---\n\n`;
+      output += `${frontmatterRaw}\n`;
     }
 
     // Add auto-generation warning after frontmatter
@@ -554,6 +585,36 @@ function createLanguageRootCategories(): void {
   }
 }
 
+  // After all templates are processed, warn about orphaned include files
+  function warnOrphanedIncludeFiles() {
+    const orphanedFiles: Array<{ lang: string; fullPath: string; relTemplate: string }> = [];
+    function scanDir(dir: string) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          scanDir(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith('.incl.md')) {
+          if (!processedIncludeFiles.has(path.resolve(fullPath))) {
+            // Extract language from filename
+            const match = entry.name.match(LANGUAGE_INCL_FILENAME_REGEX);
+            const lang = match ? match[1] : 'unknown';
+            const templatePath = getTemplatePathFromInclude(fullPath);
+            const relTemplate = path.relative(process.cwd(), templatePath);
+            orphanedFiles.push({ lang, fullPath, relTemplate });
+          }
+        }
+      }
+    }
+    scanDir(FRAGMENTS_DIR);
+    if (orphanedFiles.length > 0) {
+      console.warn(`\n[DevMode] Orphaned include files were found. These files are not referenced by any template (possibly due to 'language' frontmatter restrictions):`);
+      orphanedFiles.forEach(({ lang, fullPath, relTemplate }) => {
+        console.warn(`  - [${lang}] ${fullPath}\n      Template: ${relTemplate}`);
+      });
+    }
+  }
+
 /**
  * Write the missing pages manifest to static directory
  */
@@ -621,9 +682,7 @@ function writeContentGapsManifest(): void {
   console.log(
     `\nWrote content gaps manifest to ${path.relative(process.cwd(), manifestPath)} (${totalGaps} templates with gaps)`
   );
-  console.log(
-    `Generated readable report: ${path.relative(process.cwd(), readmePath)}`
-  );
+  console.log(`Generated readable report: ${path.relative(process.cwd(), readmePath)}`);
 }
 
 /**
@@ -653,6 +712,11 @@ function generateAll(): void {
 
   // Create root-level category files for language directories
   createLanguageRootCategories();
+
+  // Warn about orphaned include files
+  if (!isProduction) {
+    warnOrphanedIncludeFiles();
+  }
 
   // Write the page manifest
   writePageManifest();
@@ -707,7 +771,7 @@ function watch(): void {
 
     let templatePath: string;
 
-    if (langFile && langFile.match(/^(typescript|csharp|python)\.incl\.md$/)) {
+    if (langFile && LANGUAGE_INCL_FILENAME_REGEX.test(langFile)) {
       templatePath = path.join(TEMPLATES_DIR, ...parts, 'README.mdx');
 
       if (!fs.existsSync(templatePath)) {
