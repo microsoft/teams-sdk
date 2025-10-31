@@ -1,6 +1,6 @@
 <!-- botbuilder-adapter-note -->
 
-We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](./BotBuilder/botbuilder.mdx).
+We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](./botbuilder/botbuilder.mdx).
 
 <!-- installation -->
 
@@ -1141,4 +1141,4 @@ When we created Teams AI v1, LLM's didn't natively support tool calling or orche
 Comparison code coming soon!
 :::
 
-If you aren't ready to migrate all of your code, you can run your existing Teams AI v1 code in parallel with Teams AI v2. Learn more [here](./BotBuilder/adapters).
+If you aren't ready to migrate all of your code, you can run your existing Teams AI v1 code in parallel with Teams AI v2. Learn more [here](./botbuilder/adapters).

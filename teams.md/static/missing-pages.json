@@ -41,40 +41,40 @@
     "csharp",
     "python"
   ],
-  "migrations/BotBuilder/activity-handlers": [
-    "csharp",
-    "python"
-  ],
-  "migrations/BotBuilder/adapters": [
-    "csharp",
-    "python"
-  ],
-  "migrations/BotBuilder/botbuilder": [
-    "csharp",
-    "python"
-  ],
-  "migrations/BotBuilder/turn-context": [
-    "csharp",
-    "python"
-  ],
-  "migrations/BotBuilder/turn-context/proactive-activities": [
-    "csharp",
-    "python"
-  ],
-  "migrations/BotBuilder/turn-context/sending-activities": [
-    "csharp",
-    "python"
-  ],
-  "migrations/BotBuilder/turn-context/the-api-client": [
-    "csharp",
-    "python"
-  ],
-  "migrations/BotBuilder/user-authentication": [
-    "csharp",
-    "python"
-  ],
   "migrations": [
     "csharp"
+  ],
+  "migrations/botbuilder/activity-handlers": [
+    "csharp",
+    "python"
+  ],
+  "migrations/botbuilder/adapters": [
+    "csharp",
+    "python"
+  ],
+  "migrations/botbuilder/botbuilder": [
+    "csharp",
+    "python"
+  ],
+  "migrations/botbuilder/turn-context": [
+    "csharp",
+    "python"
+  ],
+  "migrations/botbuilder/turn-context/proactive-activities": [
+    "csharp",
+    "python"
+  ],
+  "migrations/botbuilder/turn-context/sending-activities": [
+    "csharp",
+    "python"
+  ],
+  "migrations/botbuilder/turn-context/the-api-client": [
+    "csharp",
+    "python"
+  ],
+  "migrations/botbuilder/user-authentication": [
+    "csharp",
+    "python"
   ],
   "migrations/v1": [
     "csharp"
