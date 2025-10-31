@@ -44,7 +44,7 @@ Final rendered page    ← Language-specific content only
 
 [⭐ Skip to Best Practices section](#best-practices)
 
-### Templates (`src/pages/templates/*.mdx`)
+### Templates (`src/pages/templates/**/*.mdx`)
 
 Your source of truth - write common content once with `<LanguageInclude />` placeholders:
 
@@ -95,16 +95,6 @@ N/A
 - Category pages: `src/components/include/{category}/{lang}.incl.md`
 - Regular pages: `src/components/include/{category}/{filename}/{lang}.incl.md`
 
-## Commands
-
-```bash
-npm run generate:docs        # Generate once
-npm run generate:docs:watch  # Watch mode
-npm start                    # Full development
-npm run start:simple         # Docusaurus only
-npm run build                # Production build
-```
-
 ## Language Filtering
 
 Control which languages generate pages using frontmatter:
@@ -121,8 +111,8 @@ suppressLanguageIncludeWarning: true # Suppress warnings for static content
 
 Useful for:
 
-- Language-specific features
-- Migration periods
+*- Language-specific features
+*- Migration periods
 - Framework-specific documentation
 
 ## Page Types
