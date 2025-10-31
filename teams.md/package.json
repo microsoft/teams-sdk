@@ -16,7 +16,8 @@
     "typecheck": "tsc",
     "generate:docs": "tsx scripts/generate-language-docs.ts",
     "generate:docs:watch": "tsx scripts/generate-language-docs.ts --watch",
-    "generate:llms": "tsx scripts/generate-llms-txt.ts"
+    "generate:llms": "tsx scripts/generate-llms-txt.ts",
+    "scaffold": "node src/scripts/scaffold.js"
   },
   "dependencies": {
     "@docusaurus/core": "^3.9.2",

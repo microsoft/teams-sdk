@@ -39,3 +39,35 @@ $ npm run generate:docs
 ```
 
 This command generates documentation files for the website using the custom LanguageInclude system. To see how to use LanguageInclude, check out the [Language Include documentation](./LANGUAGE-INCLUDE.md).
+
+### Watch docs generation
+
+```
+$ npm run generate:docs:watch
+```
+
+Watches for changes and regenerates documentation files automatically.
+
+### TypeScript type checking
+
+```
+$ npm run typecheck
+```
+
+Runs TypeScript type checking on the codebase.
+
+### Prebuild
+
+```
+$ npm run prebuild
+```
+
+Runs docs generation before building the site.
+
+### Scaffold folders/files
+
+```
+$ npm run scaffold -- <path>
+```
+
+Scaffolds template/include folders and files. See `src/scripts/scaffold.js` for details.
