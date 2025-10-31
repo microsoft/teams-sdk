@@ -137,7 +137,7 @@ async function generateLlmsTxt(): Promise<void> {
  */
 async function generateLanguageFiles(language: Language, baseDir: string, outputDir: string, config: DocusaurusConfig): Promise<void> {
     // Collect all relevant files
-    const mainFiles = collectFiles(path.join(baseDir, 'docs', 'main'));
+    const mainFiles: string[] = [];
     const langFiles = collectFiles(path.join(baseDir, 'docs', 'main', language));
 
     // Process all files to get metadata and file mapping
