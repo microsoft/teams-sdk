@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { LANGUAGE_NAMES, type Language } from '../constants/languages';
 
@@ -13,14 +13,11 @@ export default function LanguageBanner({
   baseUrl,
   onDismiss,
 }: LanguageBannerProps) {
-  // Auto-dismiss after 10 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onDismiss();
-    }, 10000);
+  const actionRef = useRef<HTMLButtonElement>(null);
 
-    return () => clearTimeout(timer);
-  }, [onDismiss]);
+  useEffect(() => {
+    actionRef.current?.focus();
+  }, []);
 
   const handleGoToLanguageDocs = () => {
     window.location.href = `${baseUrl}${targetLanguage}/`;
@@ -35,14 +32,21 @@ export default function LanguageBanner({
     document.body;
 
   return createPortal(
-    <div aria-live="polite" className="language-banner">
+    <div
+      aria-live="polite"
+      aria-labelledby="language-banner-heading"
+      role="region"
+      className="language-banner"
+    >
       <div className="language-banner__content">
         <div className="language-banner__text">
-          <strong>This page isn't available for {LANGUAGE_NAMES[targetLanguage]}.&nbsp;</strong>
+          <strong>This page isn't available for {LANGUAGE_NAMES[targetLanguage]}. </strong>
           Go to the {LANGUAGE_NAMES[targetLanguage]} documentation home instead?
         </div>
         <div className="language-banner__actions">
           <button
+            type="button"
+            ref={actionRef}
             className="language-banner__button language-banner__button--primary"
             onClick={handleGoToLanguageDocs}
           >

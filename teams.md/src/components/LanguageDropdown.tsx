@@ -31,13 +31,19 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const skipNextSync = useRef(false);
-  const optionRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   const [bannerRender, setBannerRender] = useState<{ language: Language } | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   const languagesArray = Object.entries(LANGUAGE_NAMES);
+
+  const getLanguageIndex = (lang: Language): number => {
+    return Math.max(
+      0,
+      languagesArray.findIndex(([l]) => l === lang)
+    );
+  };
 
   const handleLanguageChange = async (newLanguage: Language) => {
     if (newLanguage === language) {
@@ -63,8 +69,18 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
         const manifestPath = getManifestPathFromUrl(currentPath, baseUrl);
 
         try {
+          // Debugging output
+          console.log('[LanguageDropdown] Checking page availability:', {
+            manifestPath,
+            newLanguage,
+          });
           // Check if target page exists for the new language using availability data
           const pageExists = await isPageAvailableForLanguage(manifestPath, newLanguage);
+          console.log('[LanguageDropdown] Page exists result:', {
+            manifestPath,
+            newLanguage,
+            pageExists,
+          });
 
           if (pageExists) {
             history.push(targetUrl);
@@ -73,7 +89,7 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
             setBannerRender({ language: newLanguage });
           }
         } catch (error) {
-          console.error('Error checking page availability:', error);
+          console.error('Error checking page availability:', error, { manifestPath, newLanguage });
           // On error, just navigate normally as fallback
           history.push(targetUrl);
         }
@@ -94,8 +110,45 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
     setBannerRender(null);
   };
 
+  const openListbox = () => {
+    setIsOpen(true);
+    setFocusedIndex(getLanguageIndex(language));
+    // Move focus to listbox
+    setTimeout(() => listRef.current?.focus(), 0);
+  };
+
+  const closeListbox = () => {
+    setIsOpen(false);
+    setFocusedIndex(null);
+    buttonRef.current?.focus();
+  };
+
+  const handleButtonClick = () => {
+    if (isOpen) {
+      closeListbox();
+    } else {
+      openListbox();
+    }
+  };
+
+  const handleBlur: React.FocusEventHandler<HTMLButtonElement> = (e) => {
+    const next = e.relatedTarget as Node | null;
+    if (!next || !listRef.current?.contains(next)) {
+      // If focus didn’t move into the listbox, close
+      setIsOpen(false);
+    }
+  };
+  const handleButtonKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (!isOpen) {
+        openListbox();
+      }
+    }
+  };
+
   // Keyboard navigation handling
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement | HTMLUListElement>) => {
+  const handleListKeyDown = (e: React.KeyboardEvent<HTMLButtonElement | HTMLUListElement>) => {
     if (!isOpen) {
       return;
     }
@@ -135,19 +188,31 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
           return nextIndex;
         });
         break;
+      case 'Tab':
+        closeListbox();
+        break;
       case 'Escape':
         e.preventDefault();
-        setIsOpen(false);
-        buttonRef.current?.focus();
+        closeListbox();
         break;
       case 'Enter':
         e.preventDefault();
         if (focusedIndex !== null) {
           const [lang] = languagesArray[focusedIndex];
           handleLanguageChange(lang as Language);
+          closeListbox();
         }
         break;
     }
+  };
+
+  const handleOptionClick = (language: Language) => {
+    handleLanguageChange(language);
+    closeListbox();
+  };
+
+  const handleOptionMouseMove = (index: number) => {
+    setFocusedIndex(index);
   };
 
   // Sync language preference with URL context whenever location changes
@@ -185,27 +250,6 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
   }, [location.pathname, baseUrl]);
 
   useEffect(() => {
-    if (focusedIndex !== null) {
-      try {
-        const [targetLanguage] = languagesArray[focusedIndex];
-        // Focus goes to selected button element using direct ref
-        const focusButton = optionRefs.current[targetLanguage];
-        focusButton?.focus();
-      } catch (error) {
-        console.warn('LanguageDropdown: Unable to find focusable element');
-      }
-    }
-  }, [focusedIndex]);
-
-  // Return focus to button when dropdown closes
-  useEffect(() => {
-    if (!isOpen) {
-      buttonRef.current?.focus();
-    }
-  }, [isOpen]);
-
-  // Click outside detection
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         isOpen &&
@@ -220,60 +264,49 @@ export default function LanguageDropdown(props: LanguageDropdownProps) {
   }, [isOpen]);
 
   return (
-    <div
-      role="combobox"
-      aria-controls="language-switch-list"
-      aria-expanded={isOpen}
-      aria-label="language-dropdown-div"
-      aria-owns="language-switch-list"
-      className={`language-dropdown ${className}`.trim()}
-      {...otherProps}
-    >
+    <div className={`language-dropdown ${className}`.trim()} {...otherProps}>
       <button
+        type="button"
         ref={buttonRef}
         id="language-switch-dropdown-button"
         // Docusaurus navbar styling
         className="navbar__link"
-        onBlur={(e) => {
-          if (
-            !e.currentTarget.contains(e.relatedTarget) &&
-            !listRef.current?.contains(e.relatedTarget)
-          ) {
-            setIsOpen(false);
-          }
-        }}
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setFocusedIndex(null);
-        }}
-        onKeyDown={handleKeyDown}
-        // Indicates which option is active for screen readers
-        aria-activedescendant={
-          focusedIndex !== null ? `selection-${languagesArray[focusedIndex][0]}` : undefined
-        }
+        onBlur={handleBlur}
+        onClick={handleButtonClick}
+        onKeyDown={handleButtonKeyDown}
         aria-controls="language-switch-list"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        aria-label={`Current language: ${LANGUAGE_NAMES[language]}. Select from dropdown to change language.`}
+        aria-label={`Current language: ${LANGUAGE_NAMES[language]}. Open to change language.`}
       >
         {LANGUAGE_NAMES[language]}
         {/* Visual dropdown indicator arrow - aria-hidden ok */}
         <span aria-hidden="true" className="language-dropdown-arrow"></span>
       </button>
       {isOpen && (
-        <ul id="language-switch-list" role="listbox" ref={listRef} onKeyDown={handleKeyDown}>
+        <ul
+          id="language-switch-list"
+          ref={listRef}
+          role="listbox"
+          tabIndex={-1}
+          aria-label="Language"
+          aria-activedescendant={
+            focusedIndex !== null ? `selection-${languagesArray[focusedIndex][0]}` : undefined
+          }
+          onKeyDown={handleListKeyDown}
+        >
           {Object.entries(LANGUAGE_NAMES).map(([lang, label], index) => (
-            <li aria-selected={lang === language} key={lang} id={`selection-${lang}`} role="option">
-              <button
-                ref={(el) => {
-                  optionRefs.current[lang] = el;
-                }}
-                className="language-dropdown-option"
-                onClick={() => handleLanguageChange(lang as Language)}
-                tabIndex={focusedIndex === index ? 0 : -1}
-              >
-                {label}
-              </button>
+            <li
+              aria-selected={lang === language}
+              key={lang}
+              id={`selection-${lang}`}
+              role="option"
+              data-active={focusedIndex === index}
+              className="language-dropdown-option"
+              onClick={() => handleOptionClick(lang as Language)}
+              onMouseMove={() => handleOptionMouseMove(index)}
+            >
+              {label}
             </li>
           ))}
         </ul>
