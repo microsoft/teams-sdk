@@ -44,15 +44,15 @@
   "migrations": [
     "csharp"
   ],
+  "migrations/botbuilder": [
+    "csharp",
+    "python"
+  ],
   "migrations/botbuilder/activity-handlers": [
     "csharp",
     "python"
   ],
   "migrations/botbuilder/adapters": [
-    "csharp",
-    "python"
-  ],
-  "migrations/botbuilder/botbuilder": [
     "csharp",
     "python"
   ],
