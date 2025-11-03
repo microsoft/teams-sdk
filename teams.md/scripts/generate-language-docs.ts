@@ -12,6 +12,7 @@ import {
   type Language,
   type LanguageAvailabilityMap,
 } from '../src/constants/languages';
+import normalizePath from '../src/utils/normalizePath';
 
 const missingPagesManifest: LanguageAvailabilityMap = {};
 const contentGapsManifest: { [templatePath: string]: { [sectionName: string]: Language[] } } = {};
@@ -391,7 +392,7 @@ function shouldGenerateForLanguage(templateContent: string, language: Language):
  */
 function generateDocsForTemplate(templatePath: string): void {
   // Calculate relative path from TEMPLATES_DIR to preserve nested structure
-  const relativePath = path.relative(TEMPLATES_DIR, templatePath);
+  const relativePath = normalizePath(path.relative(TEMPLATES_DIR, templatePath));
   const templateName = path.basename(templatePath);
 
   // Read template content
@@ -600,7 +601,7 @@ function createLanguageRootCategories(): void {
             const match = entry.name.match(LANGUAGE_INCL_FILENAME_REGEX);
             const lang = match ? match[1] : 'unknown';
             const templatePath = getTemplatePathFromInclude(fullPath);
-            const relTemplate = path.relative(process.cwd(), templatePath);
+            const relTemplate = normalizePath(path.relative(process.cwd(), templatePath));
             orphanedFiles.push({ lang, fullPath, relTemplate });
           }
         }
@@ -619,7 +620,7 @@ function createLanguageRootCategories(): void {
  * Write the missing pages manifest to static directory
  */
 function writePageManifest(): void {
-  const manifestPath = path.join(__dirname, '..', 'static', 'missing-pages.json');
+  const manifestPath = normalizePath(path.join(__dirname, '..', 'static', 'missing-pages.json'));
 
   // Ensure static directory exists
   const staticDir = path.dirname(manifestPath);
@@ -638,9 +639,9 @@ function writePageManifest(): void {
  * Write the content gaps manifest for tracking missing sections
  */
 function writeContentGapsManifest(): void {
-  const generatedDir = path.join(__dirname, 'generated');
-  const manifestPath = path.join(generatedDir, 'content-gaps.json');
-  const readmePath = path.join(generatedDir, 'content-gaps.md');
+  const generatedDir = normalizePath(path.join(__dirname, 'generated'));
+  const manifestPath = normalizePath(path.join(generatedDir, 'content-gaps.json'));
+  const readmePath = normalizePath(path.join(generatedDir, 'content-gaps.md'));
 
   // Ensure generated directory exists
   if (!fs.existsSync(generatedDir)) {
