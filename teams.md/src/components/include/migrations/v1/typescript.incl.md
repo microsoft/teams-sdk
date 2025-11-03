@@ -1,6 +1,6 @@
 <!-- botbuilder-adapter-note -->
 
-We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](./botbuilder/botbuilder.mdx).
+We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](./botbuilder).
 
 <!-- installation -->
 
