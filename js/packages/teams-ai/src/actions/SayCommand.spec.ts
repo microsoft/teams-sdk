@@ -152,7 +152,7 @@ describe('actions.sayCommand', () => {
             const citations = [
                 {
                     title: 'the title',
-                    url: '',
+                    url: 'http://example.com',
                     filepath: '',
                     content: 'some citation text...'
                 }
@@ -192,7 +192,8 @@ describe('actions.sayCommand', () => {
                                     appearance: {
                                         '@type': 'DigitalDocument',
                                         name: 'the title',
-                                        abstract: 'some citation text...'
+                                        abstract: 'some citation text...',
+                                        url: 'http://example.com'
                                     }
                                 }
                             ]
