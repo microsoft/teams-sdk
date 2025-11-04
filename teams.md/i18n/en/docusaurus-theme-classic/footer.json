@@ -17,7 +17,7 @@
   },
   "link.item.label.GitHub": {
     "message": "GitHub",
-    "description": "The label of footer link with label=GitHub linking to https://github.com/microsoft/teams-ai/tree/main"
+    "description": "The label of footer link with label=GitHub linking to https://github.com/microsoft/teams-sdk/tree/main"
   },
   "copyright": {
     "message": "Copyright © 2025 Microsoft Corporation. All rights reserved.",

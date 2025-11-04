@@ -1,5 +1,5 @@
 {
-  "name": "teams-ai",
+  "name": "teams-sdk",
   "private": true,
   "scripts": {
     "clean": "npx turbo clean",

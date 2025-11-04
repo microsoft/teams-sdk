@@ -83,12 +83,12 @@ function getDocusaurusConfig(baseDir: string): DocusaurusConfig {
             configContent.match(/baseUrl:\s*['"]([^'"]+)['"]/);
 
         const url = urlMatch ? urlMatch[1] : 'https://microsoft.github.io';
-        const baseUrl = baseUrlMatch ? baseUrlMatch[1] : '/teams-ai/';
+        const baseUrl = baseUrlMatch ? baseUrlMatch[1] : '/teams-sdk/';
 
         return { url, baseUrl };
     } catch (error) {
         console.warn('⚠️ Could not read Docusaurus config, using defaults');
-        return { url: 'https://microsoft.github.io', baseUrl: '/teams-ai/' };
+        return { url: 'https://microsoft.github.io', baseUrl: '/teams-sdk/' };
     }
 }
 

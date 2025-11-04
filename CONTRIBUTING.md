@@ -42,7 +42,7 @@ You may visit https://cla.azure.com to sign digitally.
 
 ### Documentation
 
-Please note that we place high importance on documentation, which we host as [Teams SDK github pages](https://microsoft.github.io/teams-ai/).
+Please note that we place high importance on documentation, which we host as [Teams SDK github pages](https://microsoft.github.io/teams-sdk/).
 
 ### Testing changes
 

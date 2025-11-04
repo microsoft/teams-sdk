@@ -71,12 +71,12 @@ Language-specific content organized by HTML comment sections:
 <!-- install -->
 
 ```bash
-npm install @microsoft/teams-ai
+npm install @microsoft/teams.ts
 ```
 
 <!-- package-name -->
 
-@microsoft/teams-ai
+@microsoft/teams.ts
 
 <!-- advanced -->
 
@@ -111,8 +111,9 @@ suppressLanguageIncludeWarning: true # Suppress warnings for static content
 
 Useful for:
 
-*- Language-specific features
-*- Migration periods
+_- Language-specific features
+_- Migration periods
+
 - Framework-specific documentation
 
 ## Page Types

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { themes as prismThemes } from 'prism-react-renderer';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-const baseUrl = '/teams-ai/';
+const baseUrl = '/teams-sdk/';
 const config: Config = {
     title: 'Teams SDK',
     favicon: 'img/msft-logo-48x48.png',
@@ -18,7 +18,7 @@ const config: Config = {
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
     organizationName: 'microsoft', // Usually your GitHub org/user name.
-    projectName: 'teams-ai', // Usually your repo name.
+    projectName: baseUrl, // Usually your repo name.
 
     onBrokenLinks: 'throw',
 
@@ -41,7 +41,7 @@ const config: Config = {
             tagName: 'link',
             attributes: {
                 rel: 'llms.txt',
-                href: 'https://microsoft.github.io/teams-ai/llms_docs/llms.txt'
+                href: 'https://microsoft.github.io/teams-sdk/llms_docs/llms.txt'
             }
         }
     ],
@@ -57,7 +57,7 @@ const config: Config = {
                     path: 'docs/main',
                     sidebarPath: './sidebars.ts',
                     sidebarCollapsed: false,
-                    editUrl: 'https://github.com/microsoft/teams-ai/tree/main/teams.md/',
+                    editUrl: 'https://github.com/microsoft/teams-sdk/tree/main/teams.md/',
                     // Temporary exclude until generate-LLMs script is fully tested
                     exclude: ['**/LLMs.md'],
                 },
@@ -99,7 +99,7 @@ const config: Config = {
             },
             items: [
                 {
-                    href: 'https://github.com/microsoft/teams-ai/tree/main',
+                    href: 'https://github.com/microsoft/teams-sdk/tree/main',
                     position: 'right',
                     className: 'header-github-link',
                 },
@@ -138,11 +138,11 @@ const config: Config = {
                     items: [
                         {
                             label: 'GitHub',
-                            href: 'https://github.com/microsoft/teams-ai/tree/main',
+                            href: 'https://github.com/microsoft/teams-sdk/tree/main',
                         },
                         {
                             label: 'Contributing',
-                            href: 'https://github.com/microsoft/teams-ai/blob/main/CONTRIBUTING.md',
+                            href: 'https://github.com/microsoft/teams-sdk/blob/main/CONTRIBUTING.md',
                         },
                         {
                             label: 'Blog',
