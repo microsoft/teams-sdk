@@ -1141,4 +1141,4 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
 Comparison code coming soon!
 :::
 
-If you aren't ready to migrate all of your code, you can run your existing Teams SDK code in parallel with Teams SDK. Learn more [here](./BotBuilder/adapters).
+If you aren't ready to migrate all of your code, you can run your existing Teams SDK code in parallel with Teams SDK. Learn more [here](./botbuilder/adapters).
