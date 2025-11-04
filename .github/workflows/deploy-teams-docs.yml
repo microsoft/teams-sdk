@@ -35,6 +35,10 @@ jobs:
         working-directory: teams.md
         run: npm run generate:llms
 
+      - name: Clear build artifacts
+        working-directory: teams.md
+        run: npm run clear
+
       - name: Build static site
         working-directory: teams.md
         run: npm run build

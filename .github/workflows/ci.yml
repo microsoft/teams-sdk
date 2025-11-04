@@ -26,6 +26,10 @@ jobs:
         run: npm ci
         working-directory: teams.md
 
+      - name: Clear build artifacts
+        working-directory: teams.md
+        run: npm run clear
+
       - name: Build (teams.md)
         run: npm run build
         working-directory: teams.md
