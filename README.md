@@ -18,6 +18,10 @@ The SDK code for each language are in individual repos:
 
 For language-specific bugs or issues, please use the Issues tab in the respective language repository.
 
+## Agent Accelerator Templates
+
+You can find a set of open-source agent accelerator templates in the [Teams Agent Accelerators repository](https://github.com/microsoft/teams-agent-accelerator-templates). These templates provide a great starting point for building your own agents using the Teams SDK.
+
 ### Quick start
 
 The Teams SDK CLI makes it easy to bootstrap your first agent. First, install the CLI via NPM:
