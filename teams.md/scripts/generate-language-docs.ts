@@ -202,7 +202,7 @@ function processLanguageIncludeTags(
           if (sectionContent === null || sectionContent === 'EMPTY_SECTION') {
             // Section not found (null) or section exists but has no content (EMPTY_SECTION)
             // Track this gap in the manifest
-            const gapKey = path.relative(TEMPLATES_DIR, templatePath);
+            const gapKey = normalizePath(path.relative(TEMPLATES_DIR, templatePath));
             if (!contentGapsManifest[gapKey]) {
               contentGapsManifest[gapKey] = {};
             }
@@ -549,6 +549,8 @@ function findTemplateFiles(): string[] {
   }
 
   searchDirectory(TEMPLATES_DIR);
+  // Deterministic ordering across platforms
+  templates.sort((a, b) => normalizePath(a).localeCompare(normalizePath(b)));
   return templates;
 }
 
@@ -649,7 +651,8 @@ function writeContentGapsManifest(): void {
     fs.mkdirSync(generatedDir, { recursive: true });
   }
 
-  fs.writeFileSync(manifestPath, JSON.stringify(contentGapsManifest, null, 2), 'utf8');
+  // Directly stringify manifest (order not important; stable stringify ensures deterministic output anyway)
+  fs.writeFileSync(manifestPath, stringify(contentGapsManifest, { space: 2 }) + '\n', 'utf8');
 
   // Generate human-readable markdown report
   let markdownContent = `# Content Gaps Report\n\n`;
@@ -663,7 +666,6 @@ function writeContentGapsManifest(): void {
   if (totalGaps > 0) {
     for (const [templatePath, sections] of Object.entries(contentGapsManifest)) {
       markdownContent += `## \`${templatePath}\`\n\n`;
-
       for (const [sectionName, languages] of Object.entries(sections)) {
         const langNames = languages.map(lang => LANGUAGE_NAMES[lang]).join(', ');
         markdownContent += `- **\`${sectionName}\`**: Missing in ${langNames}\n`;
@@ -675,7 +677,7 @@ function writeContentGapsManifest(): void {
   markdownContent += `## Summary\n\n`;
   const totalSectionGaps = Object.values(contentGapsManifest)
     .flatMap(sections => Object.values(sections))
-    .reduce((total, langs) => total + langs.length, 0);
+    .reduce((total, langs: Language[]) => total + langs.length, 0);
   markdownContent += `- **${totalGaps}** templates with gaps\n`;
   markdownContent += `- **${totalSectionGaps}** total missing sections\n`;
 
