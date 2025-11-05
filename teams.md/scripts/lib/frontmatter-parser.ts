@@ -1,11 +1,13 @@
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
+import readFileUtf8Normalized from '../../src/utils/readFileUtf8Normalized';
+
 /**
  * Regular expression to match YAML frontmatter at the start of a file
  * Matches content between --- delimiters
  */
-const FRONTMATTER_REGEX = /^---\s*\n([\s\S]*?)\n---/;
+export const FRONTMATTER_REGEX = /^---\s*\r?\n([\s\S]*?)\r?\n---/;
 
 interface FrontmatterData {
     [key: string]: string | number | boolean;
@@ -95,7 +97,7 @@ export class FrontmatterParser {
         }
 
         try {
-            const content = fs.readFileSync(filePath, 'utf8');
+            const content = readFileUtf8Normalized(filePath);
             return this.extract(content);
         } catch (error) {
             console.warn(`⚠️ Error reading frontmatter from ${filePath}:`, (error as Error).message);

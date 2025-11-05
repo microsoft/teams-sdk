@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { FrontmatterParser } from './frontmatter-parser';
+import readFileUtf8Normalized from '../../src/utils/readFileUtf8Normalized';
 
 interface ProcessedContent {
     title: string;
@@ -37,7 +39,7 @@ export function shouldIgnoreFileBySection(filePath: string): boolean {
 
         if (fs.existsSync(readmePath)) {
             try {
-                const readmeContent = fs.readFileSync(readmePath, 'utf8');
+                const readmeContent = readFileUtf8Normalized(readmePath);
                 const readmeFrontmatter = FrontmatterParser.extract(readmeContent).frontmatter;
                 // Only ignore entire section if README has 'llms: ignore' (not 'ignore-file')
                 if (readmeFrontmatter.llms === 'ignore' || readmeFrontmatter.llms === false) {
@@ -79,7 +81,7 @@ export async function processContent(
             return { title: '', content: '', frontmatter: {}, filePath, sidebarPosition: 999, relativeUrl: '' };
         }
 
-        const rawContent = fs.readFileSync(filePath, 'utf8');
+    const rawContent = readFileUtf8Normalized(filePath);
 
         // Check if this file should be excluded from LLM output
         if (FrontmatterParser.shouldIgnore(rawContent)) {
@@ -207,7 +209,7 @@ async function loadCodeFile(src: string, baseDir: string): Promise<string> {
     }
 
     if (fs.existsSync(filePath)) {
-        return fs.readFileSync(filePath, 'utf8').trim();
+        return readFileUtf8Normalized(filePath).trim();
     } else {
         throw new Error(`File not found: ${filePath}`);
     }

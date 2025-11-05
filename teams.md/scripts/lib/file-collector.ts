@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { FrontmatterParser } from './frontmatter-parser';
+import readFileUtf8Normalized from '../../src/utils/readFileUtf8Normalized';
 
 interface FileInfo {
     name: string;
@@ -138,7 +140,7 @@ export function buildHierarchicalStructure(rootPath: string): { [key: string]: F
                 // Get folder ordering from README.md
                 if (fs.existsSync(readmePath)) {
                     try {
-                        const readmeContent = fs.readFileSync(readmePath, 'utf8');
+                        const readmeContent = readFileUtf8Normalized(readmePath);
                         const { frontmatter, content } = FrontmatterParser.extract(readmeContent);
 
                         // Skip this entire folder if README is marked to ignore
@@ -178,7 +180,7 @@ export function buildHierarchicalStructure(rootPath: string): { [key: string]: F
                 let fileTitle = item.name;
 
                 try {
-                    const fileContent = fs.readFileSync(fullPath, 'utf8');
+                    const fileContent = readFileUtf8Normalized(fullPath);
                     const { frontmatter, content } = FrontmatterParser.extract(fileContent);
 
                     // Skip this file if marked to ignore (including ignore-file)

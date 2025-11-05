@@ -2,10 +2,12 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { collectFiles, getHierarchicalFiles } from './lib/file-collector';
 import { processContent } from './lib/content-processor';
 import { FrontmatterParser } from './lib/frontmatter-parser';
 import { LANGUAGES, Language, LANGUAGE_NAMES } from '../src/constants/languages';
+import readFileUtf8Normalized from '../src/utils/readFileUtf8Normalized';
 
 const LANGUAGE_SPECIFIC_TIPS: Record<Language, string[]> = {
     typescript: [
@@ -72,9 +74,9 @@ interface FolderStructure {
  */
 function getDocusaurusConfig(baseDir: string): DocusaurusConfig {
     try {
-        // Read the docusaurus.config.ts file
-        const configPath = path.join(baseDir, 'docusaurus.config.ts');
-        const configContent = fs.readFileSync(configPath, 'utf8');
+    // Read the docusaurus.config.ts file
+    const configPath = path.join(baseDir, 'docusaurus.config.ts');
+    const configContent = readFileUtf8Normalized(configPath);
 
         // Extract URL and baseUrl using regex (simple approach)
         const urlMatch = configContent.match(/url:\s*['"]([^'"]+)['"]/);
@@ -376,7 +378,7 @@ function renderHierarchicalStructure(structure: { [key: string]: FolderStructure
 
                 // Add summary from README if available
                 try {
-                    const readmeContent = fs.readFileSync(readmeFile.path, 'utf8');
+                    const readmeContent = readFileUtf8Normalized(readmeFile.path);
                     const { frontmatter } = FrontmatterParser.extract(readmeContent);
                     const summary = frontmatter.summary;
                     if (summary) {
@@ -456,7 +458,7 @@ function renderHierarchicalStructure(structure: { [key: string]: FolderStructure
  */
 function extractSummaryFromFile(filePath: string): string {
     try {
-        const fileContent = fs.readFileSync(filePath, 'utf8');
+        const fileContent = readFileUtf8Normalized(filePath);
 
         // First check for summary in frontmatter
         const { frontmatter, content } = FrontmatterParser.extract(fileContent);
