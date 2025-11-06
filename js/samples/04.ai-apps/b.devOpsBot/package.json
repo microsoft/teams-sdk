@@ -7,7 +7,7 @@
     "main": "./lib/index.js",
     "scripts": {
         "build": "tsc --build && shx cp -r ./src/prompts ./lib/",
-        "clean": "rimraf node_modules lib tsconfig.tsbuildinfo",
+        "clean": "npx rimraf node_modules lib tsconfig.tsbuildinfo",
         "lint": "eslint **/src/**/*.{j,t}s{,x} --fix --no-error-on-unmatched-pattern",
         "start": "tsc --build && node ./lib/index.js",
         "test": "echo \"Error: no test specified\" && exit 1",
@@ -35,7 +35,6 @@
         "eslint": "^8.57.1",
         "nodemon": "~3.0.1",
         "prettier": "^3.5.3",
-        "rimraf": "^5.0.10",
         "shx": "^0.4.0",
         "ts-node": "^10.9.2",
         "typescript": "~5.5.4"
