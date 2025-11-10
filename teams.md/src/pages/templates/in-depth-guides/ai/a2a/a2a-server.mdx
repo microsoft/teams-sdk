@@ -2,7 +2,7 @@
 sidebar_position: 1
 title: A2A Server
 summary: How to implement an A2A server to expose your Teams app capabilities to other agents using the A2A protocol.
-languages: ['typescript']
+languages: ['typescript', 'python']
 ---
 
 import FileCodeBlock from '@site/src/components/FileCodeBlock';
@@ -13,9 +13,9 @@ import FileCodeBlock from '@site/src/components/FileCodeBlock';
 
 An A2A server is an agent that exposes its capabilities to other agents using the A2A protocol. With this package, you can make your Teams app accessible to A2A clients.
 
-## Adding the A2APlugin
+## Adding the `A2APlugin`
 
-To enable A2A server functionality, add the `A2APlugin` to your Teams app and provide an `agentCard`:
+To enable A2A server functionality, add the `A2APlugin` to your Teams app and provide an <LanguageInclude section="agent-card" />:
 
 <LanguageInclude section="plugin-example" />
 
@@ -29,7 +29,12 @@ Handle incoming A2A requests by adding an event handler for the `a2a:message` ev
 
 <LanguageInclude section="event-handler" />
 
-<LanguageInclude section="note-handler" />
+:::note
+
+- You must have only a single handler that calls `respond`.
+- You **must** call `respond` as the last step in your handler. This resolves the open request to the caller.
+
+:::
 
 ## Sequence Diagram
 
@@ -39,6 +44,7 @@ sequenceDiagram
     participant App
     participant A2APlugin
     participant YourEventHandler
+
     A2A Client->>App: /task/send
     App->>A2APlugin: Call A2APlugin
     A2APlugin->>YourEventHandler: Call your event handler a2a:message

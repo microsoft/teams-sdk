@@ -1,3 +1,7 @@
+<!-- agent-card -->
+
+`agentCard`
+
 <!-- plugin-example -->
 
 ```typescript
@@ -56,10 +60,3 @@ app.event('a2a:message', async ({ respond, requestContext }) => {
 });
 ```
 
-<!-- note-handler -->
-
-:::note
-
-- You must have only a single handler that calls `respond`.
-- You **must** call `respond` as the last step in your handler. This resolves the open request to the caller.
-  :::

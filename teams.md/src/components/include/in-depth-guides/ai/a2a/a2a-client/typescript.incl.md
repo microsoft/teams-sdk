@@ -93,3 +93,41 @@ export const advancedPrompt = new ChatPrompt(
   cardUrl: 'http://localhost:4000/a2a/.well-known/agent-card.json',
 });
 ```
+
+<!-- sequence-diagram -->
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant ChatPrompt
+    participant A2AClientPlugin
+    participant A2AClient
+    participant LLM
+    participant A2AServer
+
+    Note over User,A2AServer: Configuration
+    User->>ChatPrompt: usePlugin('a2a', {cardUrl})
+    ChatPrompt->>A2AClientPlugin: onUsePlugin()
+
+    Note over User,A2AServer: Message Flow
+    User->>ChatPrompt: send(message)
+    ChatPrompt->>A2AClientPlugin: onBuildPrompt()
+    A2AClientPlugin->>A2AClient: getAgentCard()
+    A2AClient->>A2AServer: GET /.well-known/agent-card.json
+    A2AServer-->>A2AClient: AgentCard
+    A2AClient-->>A2AClientPlugin: AgentCard
+    A2AClientPlugin-->>ChatPrompt: Enhanced system prompt
+
+    ChatPrompt->>A2AClientPlugin: onBuildFunctions()
+    A2AClientPlugin-->>ChatPrompt: Function tools for agents
+
+    ChatPrompt->>LLM: Enhanced prompt + tools
+    LLM-->>ChatPrompt: Function call (messageAgent)
+    ChatPrompt->>A2AClientPlugin: Execute function handler
+    A2AClientPlugin->>A2AClient: sendMessage()
+    A2AClient->>A2AServer: POST /a2a/task/send
+    A2AServer-->>A2AClient: Response
+    A2AClient-->>A2AClientPlugin: Response
+    A2AClientPlugin-->>ChatPrompt: Processed response
+    ChatPrompt-->>User: Final response
+```
