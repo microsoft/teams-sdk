@@ -32,8 +32,8 @@ The authentication method is determined by the environment variables you set:
 | not_set | | | No-Auth |
 | set | set | | SecretsAuth |
 | set | not_set | | User Managed Identity Auth |
-| set | not_set | set (same as CLIENT_ID) | User Managed Identity Auth |
-| set | not_set | set (diff from CLIENT_ID) | FIC (user managed identity) |
+| set | not_set | set (same as CLIENT_ID) | User Managed Identity Auth * |
+| set | not_set | set (diff from CLIENT_ID) | FIC (user managed identity) * |
 | set | not_set | "system" | FIC (system identity) |
 
 Choose the authentication method that best fits your deployment scenario and security requirements.
