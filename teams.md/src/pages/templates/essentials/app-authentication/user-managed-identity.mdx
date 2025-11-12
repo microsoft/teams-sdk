@@ -1,0 +1,49 @@
+---
+sidebar_position: 2
+title: User Managed Identity
+summary: Using Azure User Managed Identities for bot authentication
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# User Managed Identity
+
+This authentication mechanism makes use of a [User-Managed-Identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview#managed-identity-types). There is no need to have any secrets that need to be rotated with this method. When your bot is created, a managed identity is created alongside it. You assign this managed-identity to the service that is running your application which allows that VM to authenticate against the app.
+
+## Setup Steps
+
+### Create Azure Bot with User Managed Identity
+
+When creating your application, you must select `User Managed Identity` for the `Type of App` when creating your Azure Bot.
+
+![User Managed Identity](/screenshots/umi-auth.png)
+
+### Assign the Managed Identity
+
+<Tabs>
+<TabItem value="portal" label="Azure Portal">
+
+1. Navigate to your compute resource (App Service, Container App, VM, etc.)
+2. Go to `Identity` section
+3. Under `User assigned` tab, click `Add`
+4. Select the User Managed Identity that was created with your Azure Bot
+
+</TabItem>
+<TabItem value="cli" label="Azure CLI">
+
+```bash
+# Assign user managed identity to your compute resource
+# Example for App Service:
+az webapp identity assign \
+  --name $APP_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --identities $MANAGED_IDENTITY_RESOURCE_ID
+```
+
+</TabItem>
+</Tabs>
+
+### Configure Your Application
+
+<LanguageInclude section="configure-application" />

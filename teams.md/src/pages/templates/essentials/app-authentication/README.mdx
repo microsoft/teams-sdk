@@ -1,0 +1,39 @@
+---
+sidebar_position: 5
+title: App Authentication
+summary: Overview of app authentication in Teams SDK applications, using client secrets, user managed identities and federated identity credentials
+suppressLanguageIncludeWarning: true
+---
+
+# App Authentication
+
+Your application needs to authenticate to be able to send a message to Teams as your bot. All bots typically have 3 entities at play:
+
+1. Your Application Service (what the SDK helps you write)
+2. Your App Registration (a registration of your bot on Azure)
+3. An Azure Bot instance in your tenant (the configuration of a "bot" manifestation of your application)
+
+Authentication means your App Service needs the ability to certify that it is _allowed_ to send a message as your Azure Bot. See [Core Concepts](../../../teams/core-concepts) for more details on how to set up your resources on Azure.
+
+## Authentication Methods
+
+There are 3 main ways of authenticating:
+
+1. **[Client Secret Authentication](client-secret)** - Simple password-based authentication
+2. **[User Managed Identity](user-managed-identity)** - No secrets, uses Azure managed identities
+3. **[Federated Identity Credentials](federated-identity-credentials)** - Assigns managed identities to App Registration
+
+## Configuration Reference
+
+The authentication method is determined by the environment variables you set:
+
+| CLIENT_ID | CLIENT_SECRET | MANAGED_IDENTITY_CLIENT_ID | Output |
+|-|-|-|-|
+| not_set | | | No-Auth |
+| set | set | | SecretsAuth |
+| set | not_set | | User Managed Identity Auth |
+| set | not_set | set (same as CLIENT_ID) | User Managed Identity Auth |
+| set | not_set | set (diff from CLIENT_ID) | FIC (user managed identity) |
+| set | not_set | "system" | FIC (system identity) |
+
+Choose the authentication method that best fits your deployment scenario and security requirements.
