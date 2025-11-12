@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 4
 summary: Overview of user authentication in Teams SDK applications, including OAuth, SSO, and secure resource access.
 ---
 
