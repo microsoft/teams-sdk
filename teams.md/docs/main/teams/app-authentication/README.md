@@ -19,7 +19,7 @@ Each method has different setup requirements in Azure Portal or Azure CLI.
 
 ## After Setup
 
-Once you've completed the Azure setup for your chosen authentication method, you'll need to configure your application code. See the [App Authentication configuration guide](/essentials/app-authentication) for details on environment variables and code configuration.
+Once you've completed the Azure setup for your chosen authentication method, you'll need to configure your application code. See the [App Authentication configuration guide](../../teams/app-authentication/) for details on environment variables and code configuration.
 
 ## Troubleshooting
 

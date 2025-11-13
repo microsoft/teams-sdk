@@ -54,4 +54,4 @@ The command will output the secret value. Save it securely.
 
 ## Next Steps
 
-After completing the Azure setup, configure your application code with the appropriate environment variables. See the [App Authentication configuration guide](/essentials/app-authentication#client-secret) for details.
+After completing the Azure setup, configure your application code with the appropriate environment variables. See the App Authentication Essentials Guide for details.
