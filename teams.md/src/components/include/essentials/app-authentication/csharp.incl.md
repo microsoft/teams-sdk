@@ -46,3 +46,9 @@ The `createTokenFactory` function provides a method to retrieve access tokens fr
 Set the following environment variable:
 
 - `CLIENT_ID`: Your Application (client) ID
+
+<!-- availability-note -->
+
+:::note
+Support for C# is coming soon.
+:::

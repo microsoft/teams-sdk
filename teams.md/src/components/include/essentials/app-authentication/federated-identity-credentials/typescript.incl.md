@@ -1,3 +1,0 @@
-<!-- availability-note -->
-
-N/A
