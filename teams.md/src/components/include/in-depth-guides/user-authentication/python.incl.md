@@ -85,3 +85,14 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
     await ctx.sign_out()
     await ctx.send("You have been signed out!")
 ```
+
+<!-- regional-bot -->
+
+```python
+app = App(
+    default_connection_name='graph',
+    api_client_settings=ApiClientSettings(
+        oauth_url="https://europe.token.botframework.com"
+    )
+)
+```

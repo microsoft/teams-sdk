@@ -86,3 +86,16 @@ app.message('/signout', async ({ send, signout, isSignedIn }) => {
   await send('you have been signed out!');
 });
 ```
+
+<!-- regional-bot -->
+
+```ts
+const app = new App({
+  oauth: {
+    defaultConnectionName: 'graph'
+  },
+  apiClientSettings: {
+      oauthUrl: 'https://europe.token.botframework.com',
+    }
+});
+```
