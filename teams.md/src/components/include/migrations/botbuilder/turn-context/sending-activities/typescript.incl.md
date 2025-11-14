@@ -1,8 +1,4 @@
-<!-- content -->
-
-BotBuilders pattern for sending activities via its `TurnContext` is similar to that
-in Teams SDK, but one key difference is that when sending adaptive cards you don't need
-to construct the entire activity yourself.
+<!-- examples -->
 
 <Tabs groupId="sending-activities">
   <TabItem value="Diff" default>

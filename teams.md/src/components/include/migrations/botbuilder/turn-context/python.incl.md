@@ -1,3 +1,3 @@
 <!-- context-name -->
 
-`IActivityContext`
+`ActivityContext`
