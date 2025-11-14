@@ -1,7 +1,8 @@
-<!-- content -->
+<!-- auth-methods -->
 
-BotBuilder uses its `dialogs` for authentication via the `OAuthPrompt`. Teams SDK doesn't have any
-equivalent feature to dialogs, but we do support auth flows in our own way via our `sign_in` and `sign_out` methods.
+`sign_in` and `sign_out`
+
+<!-- example -->
 
 <Tabs groupId="sending-activities">
   <TabItem value="Diff" default>

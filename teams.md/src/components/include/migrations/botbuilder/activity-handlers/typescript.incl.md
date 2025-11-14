@@ -1,13 +1,4 @@
-<!-- content -->
-
-A BotBuilder `ActivityHandler` is similar to the activity routing of the Teams SDK `App`.
-The `BotBuilderPlugin` accepts a botbuilder Activity Handler instance so you can keep using your
-existing activity handlers while migrating however many you want to new Teams SDK handlers. This allows for
-a more incremental migration strategy.
-
-:::info
-this snippet shows how to use the `BotBuilderPlugin` to route activities using botbuilder alongside the default Teams SDK activity routing.
-:::
+<!-- example -->
 
 <Tabs>
   <TabItem value="index.ts" default>

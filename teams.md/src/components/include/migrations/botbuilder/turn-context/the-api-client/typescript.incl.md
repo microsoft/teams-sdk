@@ -1,7 +1,4 @@
-<!-- content -->
-
-BotBuilder exposes a static class `TeamsInfo` that allows you to query the api. In Teams SDK
-we pass an instance of our `ApiClient` into all our activity handlers.
+<!-- example -->
 
 <Tabs groupId="sending-activities">
   <TabItem value="Diff" default>
