@@ -2,11 +2,18 @@
 sidebar_position: 1
 sidebar_label: From BotBuilder
 title: From BotBuilder
-languages: ['typescript']
+languages: ['typescript', 'csharp', 'python']
 summary: Migration guide from BotBuilder to Teams SDK, including the BotBuilder plugin for compatibility with existing activity handlers and adapters.
 llms: ignore
 ---
 
 # From BotBuilder
 
-<LanguageInclude section="content" />
+This new iteration of Teams SDK has been rebuilt from the ground up. 
+To ease the migration process, we've introduced a plugin <LanguageInclude section="plugin-name" /> 
+that lets you use a BotBuilder `ActivityHandler` and `CloudAdapter` to send or receive activities through our new abstractions.
+
+## Why a Plugin?
+
+Using a plugin lets us take advantage of all the new features in the Teams SDK while enabling developers to easily and incrementally
+migrate from legacy activity handlers to our new handlers registered on the `App` class.

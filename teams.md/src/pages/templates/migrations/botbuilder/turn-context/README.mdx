@@ -1,7 +1,7 @@
 ---
 title: Turn Context
 sidebar_position: 3
-languages: ['typescript']
+languages: ['typescript', 'csharp', 'python']
 summary: Understand how Teams SDK's IActivityContext replaces BotBuilder's TurnContext for handling incoming data and APIs.
 ---
 
@@ -10,4 +10,6 @@ import TabItem from '@theme/TabItem';
 
 # Turn Context
 
-<LanguageInclude section="content" />
+While BotBuilder has a `TurnContext`, Teams SDK has <LanguageInclude section="context-name" /> which serves the same purpose.
+The context is passed into activity handlers and provides a structured way for developers to interface
+with apis and incoming data.
