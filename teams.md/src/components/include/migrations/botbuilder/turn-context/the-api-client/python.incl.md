@@ -4,38 +4,31 @@
   <TabItem value="Diff" default>
   ```python
   # highlight-error-start
--  from botbuilder.core import BotFrameworkAdapter, TurnContext
+-  from botbuilder.core import ActivityHandler, TurnContext
 -  from botbuilder.core.teams import TeamsInfo
   # highlight-error-end
   # highlight-success-line
-+  from teams import App
++  from microsoft.teams.apps import ActivityContext
++  from microsoft.teams.api import MessageActivity
 
   # highlight-error-start
--  adapter = BotFrameworkAdapter(settings)
-  # highlight-error-end
-  # highlight-success-line
-+  app = App()
-
-  # highlight-error-start
--  class MyActivityHandler(TeamsActivityHandler):
+-  class MyActivityHandler(ActivityHandler):
 -      async def on_message_activity(self, turn_context: TurnContext):
 -          members = await TeamsInfo.get_members(turn_context)
   # highlight-error-end
   # highlight-success-start
 +  @app.on_message
-+  async def on_message(context):
-+      members = await context.api.conversations.members(context.activity.conversation.id).get()
++  async def on_message(context: ActivityContext[MessageActivity]):
++      members = await context.api.conversations.members(context.activity.conversation.id).get_all()
   # highlight-success-end
   ```
   </TabItem>
   <TabItem value="BotBuilder">
     ```python showLineNumbers
-    from botbuilder.core import BotFrameworkAdapter, TurnContext
+    from botbuilder.core import ActivityHandler, TurnContext
     from botbuilder.core.teams import TeamsInfo
 
-    adapter = BotFrameworkAdapter(settings)
-
-    class MyActivityHandler(TeamsActivityHandler):
+    class MyActivityHandler(ActivityHandler):
         async def on_message_activity(self, turn_context: TurnContext):
             # highlight-next-line
             members = await TeamsInfo.get_members(turn_context)
@@ -43,12 +36,11 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from teams import App
-
-    app = App()
+    from microsoft.teams.api import MessageActivity
+    from microsoft.teams.apps import ActivityContext
 
     @app.on_message
-    async def on_message(context):
+    async def on_message(context: ActivityContext[MessageActivity]):
         # highlight-next-line
         members = await context.api.conversations.members(context.activity.conversation.id).get()
     ```

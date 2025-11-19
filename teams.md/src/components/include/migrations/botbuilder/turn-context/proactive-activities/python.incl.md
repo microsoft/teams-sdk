@@ -6,20 +6,25 @@
 
 `conversation_id`
 
+<!-- context-name -->
+
+`ActivityContext`
+
 <!-- example -->
 
 <Tabs groupId="sending-activities">
   <TabItem value="Diff" default>
     ```python
     # highlight-error-start
--   from botbuilder.core import BotFrameworkAdapter, TurnContext
--   from botbuilder.schema import ConversationReference
+-   from botbuilder.core import TurnContext
+-   from botbuilder.integration.aiohttp import CloudAdapter, ConfigurationBotFrameworkAuthentication
+-   from botbuilder.schema import ChannelAccount, ConversationAccount, ConversationReference
     # highlight-error-end
     # highlight-success-line
-+   from teams import App
++   from microsoft.teams.apps import App
 
     # highlight-error-start
--   adapter = BotFrameworkAdapter(settings)
+-   adapter = CloudAdapter(ConfigurationBotFrameworkAuthentication(config))
     # highlight-error-end
     # highlight-success-line
 +   app = App()
@@ -39,21 +44,20 @@
 -   await adapter.continue_conversation(
 -       conversation_reference,
 -       send_proactive,
--       app_id=settings.app_id
 -   )
     # highlight-error-end
     # highlight-success-start
-+   await app.start()
 +   await app.send("your-conversation-id", "proactive hello")
     # highlight-success-end
     ```
   </TabItem>
   <TabItem value="BotBuilder">
     ```python showLineNumbers
-    from botbuilder.core import BotFrameworkAdapter, TurnContext
-    from botbuilder.schema import ConversationReference
+    from botbuilder.core import TurnContext
+    from botbuilder.integration.aiohttp import CloudAdapter, ConfigurationBotFrameworkAuthentication
+    from botbuilder.schema import ChannelAccount, ConversationAccount, ConversationReference
 
-    adapter = BotFrameworkAdapter(settings)
+    adapter = CloudAdapter(ConfigurationBotFrameworkAuthentication(config))
 
     # highlight-start
     conversation_reference = ConversationReference(
@@ -69,20 +73,18 @@
 
     await adapter.continue_conversation(
         conversation_reference,
-        send_proactive,
-        app_id=settings.app_id
+        send_proactive
     )
     # highlight-end
     ```
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from teams import App
+    from microsoft.teams.apps import App
 
     app = App()
 
     # highlight-start
-    await app.start()
     await app.send("your-conversation-id", "proactive hello")
     # highlight-end
     ```

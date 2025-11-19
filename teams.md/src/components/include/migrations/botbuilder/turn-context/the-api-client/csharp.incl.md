@@ -11,14 +11,7 @@
 +  using Microsoft.Teams.Apps;
 
   // highlight-error-start
--  var auth = new ConfigurationBotFrameworkAuthentication(configuration);
--  var adapter = new CloudAdapter(auth);
-  // highlight-error-end
-  // highlight-success-line
-+  var app = new TeamsApp();
-
-  // highlight-error-start
--  public class MyActivityHandler : TeamsActivityHandler
+-  public class MyActivityHandler : ActivityHandler
 -  {
 -      protected override async Task OnMessageActivityAsync(
 -          ITurnContext<IMessageActivity> turnContext,
@@ -29,9 +22,10 @@
 -  }
   // highlight-error-end
   // highlight-success-start
-+  app.OnMessage(async (context) =>
++  var teams = app.UseTeams();
++  teams.OnMessage(async (context) =>
 +  {
-+      var members = await context.Api.Conversations.Members(context.Activity.Conversation.Id).GetAsync();
++      var members = await context.Api.Conversations.Members.GetAsync(context.Activity.Conversation.Id);
 +  });
   // highlight-success-end
   ```
@@ -40,9 +34,6 @@
     ```csharp showLineNumbers
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Teams;
-
-    var auth = new ConfigurationBotFrameworkAuthentication(configuration);
-    var adapter = new CloudAdapter(auth);
 
     public class MyActivityHandler : TeamsActivityHandler
     {
@@ -59,13 +50,11 @@
   <TabItem value="Teams SDK">
     ```csharp showLineNumbers
     using Microsoft.Teams.Apps;
-
-    var app = new TeamsApp();
-
+    
     app.OnMessage(async (context) =>
     {
         // highlight-next-line
-        var members = await context.Api.Conversations.Members(context.Activity.Conversation.Id).GetAsync();
+        var members = await context.Api.Conversations.Members.GetAsync(context.Activity.Conversation.Id);
     });
     ```
   </TabItem>

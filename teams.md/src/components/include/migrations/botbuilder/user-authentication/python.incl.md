@@ -9,7 +9,7 @@
     ```python
     # highlight-error-start
 -   from botbuilder.core import (
--       TeamsActivityHandler,
+-       ActivityHandler,
 -       ConversationState,
 -       UserState,
 -       MemoryStorage,
@@ -26,11 +26,12 @@
 -   )
     # highlight-error-end
     # highlight-success-start
-+   from teams import App
++   from microsoft.teams.apps import ActivityContext, App, SignInEvent
++   from microsoft.teams.api import MessageActivity
     # highlight-success-end
 
     # highlight-error-start
--   class MyActivityHandler(TeamsActivityHandler):
+-   class MyActivityHandler(ActivityHandler):
 -       def __init__(self, connection_name: str, conversation_state: ConversationState, user_state: UserState):
 -           super().__init__()
 -           self.conversation_state = conversation_state
@@ -100,42 +101,24 @@
 -   )
     # highlight-error-end
     # highlight-success-start
-+   app = App(
-+       oauth=OAuthOptions(
-+           default_connection_name=connection_name
-+       )
-+   )
++   app = App(default_connection_name=connection_name)
 +
-+   @app.on_message("/signout")
-+   async def on_signout(context):
++   @app.on_message_pattern("/signout")
++   async def on_signout(context: ActivityContext[MessageActivity]):
 +       if not context.is_signed_in:
 +           return
 +       await context.sign_out()
 +       await context.send("You have been signed out.")
 +
 +   @app.on_message
-+   async def on_message(context):
++   async def on_message(context: ActivityContext[MessageActivity]):
 +       if not context.is_signed_in:
 +           await context.sign_in()
 +           return
 +
-+   @app.on_event("signin")
-+   async def on_signin(context):
-+       await context.send("You have been signed in.")
-    # highlight-success-end
-
-    # highlight-error-start
--   from aiohttp import web
--   
--   async def messages(req):
--       return await adapter.process_activity(req, None, handler.on_turn)
--   
--   app = web.Application()
--   app.router.add_post('/api/messages', messages)
--   web.run_app(app, host='0.0.0.0', port=3978)
-    # highlight-error-end
-    # highlight-success-start
-+   app.start()
++   @app.event("sign_in")
++   async def on_signin(event: SignInEvent):
++       await event.activity_ctx.send("You have been signed in.")
     # highlight-success-end
     ```
 
@@ -143,7 +126,7 @@
   <TabItem value="BotBuilder">
     ```python showLineNumbers
     from botbuilder.core import (
-        TeamsActivityHandler,
+        ActivityHandler,
         ConversationState,
         UserState,
         MemoryStorage,
@@ -159,7 +142,7 @@
         DialogTurnStatus
     )
 
-    class MyActivityHandler(TeamsActivityHandler):
+    class MyActivityHandler(ActivityHandler):
         def __init__(self, connection_name: str, conversation_state: ConversationState, user_state: UserState):
             super().__init__()
             self.conversation_state = conversation_state
@@ -214,7 +197,6 @@
             if results.status == DialogTurnStatus.Empty:
                 await dialog_context.begin_dialog(self.id)
 
-    adapter = BotFrameworkAdapter(settings)
     storage = MemoryStorage()
     conversation_state = ConversationState(storage)
     user_state = UserState(storage)
@@ -223,46 +205,32 @@
         conversation_state,
         user_state
     )
-
-    from aiohttp import web
-    
-    async def messages(req):
-        return await adapter.process_activity(req, None, handler.on_turn)
-    
-    app = web.Application()
-    app.router.add_post('/api/messages', messages)
-    web.run_app(app, host='0.0.0.0', port=3978)
     ```
 
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from teams import App
+    from microsoft.teams.apps import ActivityContext, App, SignInEvent
+    from microsoft.teams.api import MessageActivity
 
-    app = App(
-        oauth=OAuthOptions(
-            default_connection_name=connection_name
-        )
-    )
+    app = App(default_connection_name=connection_name)
 
-    @app.on_message("/signout")
-    async def on_signout(context):
+    @app.on_message_pattern("/signout")
+    async def on_signout(context: ActivityContext[MessageActivity]):
         if not context.is_signed_in:
             return
         await context.sign_out()
         await context.send("You have been signed out.")
 
     @app.on_message
-    async def on_message(context):
+    async def on_message(context: ActivityContext[MessageActivity]):
         if not context.is_signed_in:
             await context.sign_in()
             return
 
-    @app.on_event("signin")
-    async def on_signin(context):
+    @app.event("sign_in")
+    async def on_signin(event: SignInEvent):
         await context.send("You have been signed in.")
-
-    app.start()
     ```
 
   </TabItem>

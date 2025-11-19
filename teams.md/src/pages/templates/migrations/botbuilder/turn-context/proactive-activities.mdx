@@ -11,8 +11,9 @@ import TabItem from '@theme/TabItem';
 
 # Proactive Activities
 
-The BotBuilder proactive message flow requires you to have a conversation reference stored somewhere. In Teams SDK
-we expose a <LanguageInclude section="method-name" /> method almost identical to the one passed into our activity handlers that accepts a <LanguageInclude section="param-name" />,
-so all you need to store is that!
+The BotBuilder proactive message flow requires storing a conversation reference. 
+In Teams SDK, we expose a <LanguageInclude section="method-name" /> method in the `App` class, almost identical to the one 
+passed into our activity handlers through our context. 
+LanguageInclude section="method-name" /> method  accepts a <LanguageInclude section="param-name" />, so storing just that is enough!
 
 <LanguageInclude section="example" />

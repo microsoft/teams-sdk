@@ -1,3 +1,3 @@
 <!-- plugin-name -->
 
-for Python
+`microsoft-teams-botbuilder`

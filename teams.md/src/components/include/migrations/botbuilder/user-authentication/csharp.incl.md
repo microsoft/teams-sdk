@@ -10,14 +10,13 @@
     // highlight-error-start
 -   using Microsoft.Bot.Builder;
 -   using Microsoft.Bot.Builder.Dialogs;
--   using Microsoft.Bot.Schema;
     // highlight-error-end
     // highlight-success-start
 +   using Microsoft.Teams.Apps;
     // highlight-success-end
 
     // highlight-error-start
--   public class MyActivityHandler : TeamsActivityHandler
+-   public class MyActivityHandler : ActivityHandler
 -   {
 -       private readonly ConversationState _conversationState;
 -       private readonly UserState _userState;
@@ -86,9 +85,6 @@
     // highlight-error-end
 
     // highlight-error-start
--   var builder = WebApplication.CreateBuilder(args);
--   var auth = new ConfigurationBotFrameworkAuthentication(builder.Configuration);
--   var adapter = new CloudAdapter(auth);
 -   var storage = new MemoryStorage();
 -   var conversationState = new ConversationState(storage);
 -   var userState = new UserState(storage);
@@ -100,47 +96,31 @@
     // highlight-error-end
     // highlight-success-start
 +   var builder = WebApplication.CreateBuilder(args);
-+   var app = new TeamsApp(new TeamsAppOptions
-+   {
-+       OAuth = new OAuthOptions
-+       {
-+           DefaultConnectionName = builder.Configuration["ConnectionName"]
-+       }
-+   });
++   var appBuilder = App.Builder().AddOAuth("ConnectionName");
++   builder.AddTeams(appBuilder);
++   var app = builder.Build();
++   var teams = app.UseTeams();
 +
-+   app.OnMessage("/signout", async (context) =>
++   teams.OnMessage("/signout", async (context) =>
 +   {
 +       if (!context.IsSignedIn) return;
-+       await context.SignOutAsync();
-+       await context.SendAsync("You have been signed out.");
++       await context.SignOut();
++       await context.Send("You have been signed out.");
 +   });
 +
-+   app.OnMessage(async (context) =>
++   teams.OnMessage(async (context) =>
 +   {
 +       if (!context.IsSignedIn)
 +       {
-+           await context.SignInAsync();
++           await context.SignIn();
 +           return;
 +       }
 +   });
 +
-+   app.OnEvent("signin", async (context) =>
++   teams.OnSignIn(async (_, @event) =>
 +   {
-+       await context.SendAsync("You have been signed in.");
++       await context.Send("You have been signed in.");
 +   });
-    // highlight-success-end
-
-    // highlight-error-start
--   var webApp = builder.Build();
--   webApp.UseHttpsRedirection();
--   webApp.MapPost("/api/messages", async (HttpRequest req, HttpResponse res) =>
--   {
--       await adapter.ProcessAsync(req, res, handler);
--   });
--   await webApp.RunAsync();
-    // highlight-error-end
-    // highlight-success-start
-+   await app.StartAsync();
     // highlight-success-end
     ```
 
@@ -216,9 +196,6 @@
         }
     }
 
-    var builder = WebApplication.CreateBuilder(args);
-    var auth = new ConfigurationBotFrameworkAuthentication(builder.Configuration);
-    var adapter = new CloudAdapter(auth);
     var storage = new MemoryStorage();
     var conversationState = new ConversationState(storage);
     var userState = new UserState(storage);
@@ -227,14 +204,6 @@
         conversationState,
         userState
     );
-
-    var webApp = builder.Build();
-    webApp.UseHttpsRedirection();
-    webApp.MapPost("/api/messages", async (HttpRequest req, HttpResponse res) =>
-    {
-        await adapter.ProcessAsync(req, res, handler);
-    });
-    await webApp.RunAsync();
     ```
 
   </TabItem>
@@ -243,36 +212,32 @@
     using Microsoft.Teams.Apps;
 
     var builder = WebApplication.CreateBuilder(args);
-    var app = new TeamsApp(new TeamsAppOptions
-    {
-        OAuth = new OAuthOptions
-        {
-            DefaultConnectionName = builder.Configuration["ConnectionName"]
-        }
-    });
+    var appBuilder = App.Builder().AddOAuth("ConnectionName");
+    var app = builder.Build();
+    var teams = app.UseTeams();
 
-    app.OnMessage("/signout", async (context) =>
+    teams.OnMessage("/signout", async (context) =>
     {
         if (!context.IsSignedIn) return;
-        await context.SignOutAsync();
-        await context.SendAsync("You have been signed out.");
+        await context.SignOut();
+        await context.Send("You have been signed out.");
     });
 
-    app.OnMessage(async (context) =>
+    teams.OnMessage(async (context) =>
     {
         if (!context.IsSignedIn)
         {
-            await context.SignInAsync();
+            await context.SignIn();
             return;
         }
     });
 
-    app.OnEvent("signin", async (context) =>
+    teams.OnSignIn(async (_, @event) =>
     {
-        await context.SendAsync("You have been signed in.");
+        await context.Send("You have been signed in.");
     });
 
-    await app.StartAsync();
+    app.Run()
     ```
 
   </TabItem>

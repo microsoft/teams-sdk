@@ -9,11 +9,11 @@ llms: ignore
 
 # From BotBuilder
 
-This new iteration of Teams SDK has been rebuilt from the ground up. To ease the migration process
-we have created a plugin <LanguageInclude section="plugin-name" />, which allows you to use a botbuilder `ActivityHandler`
-and `adapter` to send/receive activities through our new abstractions.
+This new iteration of Teams SDK has been rebuilt from the ground up. 
+To ease the migration process, we've introduced a plugin <LanguageInclude section="plugin-name" /> 
+that lets you use a BotBuilder `ActivityHandler` and `CloudAdapter` to send or receive activities through our new abstractions.
 
 ## Why a Plugin?
 
-Because by using a plugin we are able to leverage all our new features while allowing developers to easily and incrementally
-migrate activity handlers from the legacy activity handlers to our new `App` class handlers.
+Using a plugin lets us take advantage of all the new features in the Teams SDK while enabling developers to easily and incrementally
+migrate from legacy activity handlers to our new handlers registered on the `App` class.

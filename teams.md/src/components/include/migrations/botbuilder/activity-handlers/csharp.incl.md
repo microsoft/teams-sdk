@@ -3,45 +3,82 @@
 <Tabs>
   <TabItem value="Program.cs" default>
     ```csharp
+    using Microsoft.Bot.Builder.Integration.AspNet.Core;
+    using Microsoft.Teams.Api.Activities;
     using Microsoft.Teams.Apps;
-    using Microsoft.Teams.Plugins.AspNetCore.BotBuilder;
+    using Microsoft.Teams.Apps.Activities;
+    using Microsoft.Teams.Apps.Annotations;
+    using Microsoft.Teams.Plugins.AspNetCore.Extensions;
 
-    var builder = WebApplication.CreateBuilder(args);
-
-    // Add the BotBuilder plugin
-    builder.Services.AddSingleton<TeamsActivityHandler, MyActivityHandler>();
-    builder.Services.AddSingleton<BotBuilderPlugin>();
-
-    var app = builder.Build();
-
-    // Configure Teams App with BotBuilder plugin
-    // highlight-next-line
-    var teamsApp = new TeamsApp(app.Services, new[] { app.Services.GetRequiredService<BotBuilderPlugin>() });
-
-    teamsApp.OnMessage(async (context) =>
+    public static partial class Program
     {
-        await context.SendAsync("hi from teams...");
-    });
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+            builder.Services.AddTransient<Controller>();
+            builder
+                .AddTeams()
+                // highlight-next-line
+                .AddBotBuilder<Bot, BotBuilderAdapter, ConfigurationBotFrameworkAuthentication>();
 
-    await teamsApp.StartAsync();
-    app.Run();
+            var app = builder.Build();
+
+            app.UseTeams();
+            app.Run();
+        }
+
+        [TeamsController]
+        public class Controller
+        {
+            [Message]
+            public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client, [Context] Microsoft.Teams.Common.Logging.ILogger log)
+            {
+                await client.Typing();
+                await client.Send($"hi from teams...");
+            }
+        }
+    }
     ```
 
   </TabItem>
-  <TabItem value="MyActivityHandler.cs">
+  <TabItem value="BotBuilderAdapter.cs">
+    ```csharp
+    using Microsoft.Bot.Builder.Integration.AspNet.Core;
+    using Microsoft.Bot.Connector.Authentication;
+
+    // replace with your Adapter
+    // highlight-start
+    public class BotBuilderAdapter : CloudAdapter
+    {
+        public BotBuilderAdapter(BotFrameworkAuthentication auth, ILogger<IBotFrameworkHttpAdapter> logger)
+            : base(auth, logger)
+        {
+            OnTurnError = async (turnContext, exception) =>
+            {
+                logger.LogError(exception, $"[OnTurnError] unhandled error : {exception.Message}");
+
+                // Send a message to the user
+                await turnContext.SendActivityAsync("The bot encountered an error or bug.");
+            };
+        }
+    }
+    // highlight-end
+    ```
+
+  </TabItem>
+  <TabItem value="ActivityHandler.cs">
     ```csharp
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Schema;
 
-    // replace with your TeamsActivityHandler
+    // replace with your ActivityHandler
     // highlight-start
-    public class MyActivityHandler : TeamsActivityHandler
+    public class Bot : ActivityHandler
     {
-        protected override async Task OnMessageActivityAsync(
-            ITurnContext<IMessageActivity> turnContext,
-            CancellationToken cancellationToken)
+        protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            await turnContext.SendActivityAsync("hi from botbuilder...", cancellationToken: cancellationToken);
+            var replyText = $"hi from botbuilder...";
+            await turnContext.SendActivityAsync(MessageFactory.Text(replyText, replyText), cancellationToken);
         }
     }
     // highlight-end

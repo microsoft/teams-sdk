@@ -20,13 +20,6 @@
 +   using Microsoft.Teams.Apps;
 
     // highlight-error-start
--   var auth = new ConfigurationBotFrameworkAuthentication(configuration);
--   var adapter = new CloudAdapter(auth);
-    // highlight-error-end
-    // highlight-success-line
-+   var app = new TeamsApp();
-
-    // highlight-start
 -   var conversationReference = new ConversationReference
 -   {
 -       ServiceUrl = "...",
@@ -44,10 +37,10 @@
 -           await turnContext.SendActivityAsync("proactive hello", cancellationToken: cancellationToken);
 -       },
 -       default);
-    // highlight-end
+    // highlight-error-end
     // highlight-success-start
-+   await app.StartAsync();
-+   await app.SendAsync("your-conversation-id", "proactive hello");
++   var teams = app.UseTeams();
++   await teams.Send("your-conversation-id", "proactive hello");
     // highlight-success-end
     ```
   </TabItem>
@@ -56,9 +49,6 @@
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Integration.AspNet.Core;
     using Microsoft.Bot.Schema;
-
-    var auth = new ConfigurationBotFrameworkAuthentication(configuration);
-    var adapter = new CloudAdapter(auth);
 
     // highlight-start
     var conversationReference = new ConversationReference
@@ -85,11 +75,9 @@
     ```csharp showLineNumbers
     using Microsoft.Teams.Apps;
 
-    var app = new TeamsApp();
-
     // highlight-start
-    await app.StartAsync();
-    await app.SendAsync("your-conversation-id", "proactive hello");
+    var teams = app.UseTeams();
+    await teams.Send("your-conversation-id", "proactive hello");
     // highlight-end
     ```
   </TabItem>

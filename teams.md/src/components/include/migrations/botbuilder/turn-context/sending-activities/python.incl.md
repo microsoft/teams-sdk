@@ -4,24 +4,32 @@
   <TabItem value="Diff" default>
     ```python
     # highlight-error-start
--   from botbuilder.core import TeamsActivityHandler, TurnContext
+-   from botbuilder.core import ActivityHandler, TurnContext
+-   from botbuilder.schema import Activity
+    # highlight-error-end
+    # highlight-success-start
++   from microsoft.teams.api import MessageActivity, TypingActivityInput
++   from microsoft.teams.apps import ActivityContext, App
+    # highlight-success-end
 
--   class MyActivityHandler(TeamsActivityHandler):
+    # highlight-error-start
+-   class MyActivityHandler(ActivityHandler):
 -       async def on_message_activity(self, turn_context: TurnContext):
 -           await turn_context.send_activity(Activity(type="typing"))
     # highlight-error-end
     # highlight-success-start
 +   @app.on_message
-+   async def on_message(context):
-+       await context.send(Activity(type="typing"))
++   async def on_message(context: ActivityContext[MessageActivity]):
++       await context.send(TypingActivityInput())
     # highlight-success-end
     ```
   </TabItem>
   <TabItem value="BotBuilder">
     ```python showLineNumbers
-    from botbuilder.core import TeamsActivityHandler, TurnContext
+    from botbuilder.core import ActivityHandler, TurnContext
+    from botbuilder.schema import Activity
 
-    class MyActivityHandler(TeamsActivityHandler):
+    class MyActivityHandler(ActivityHandler):
         async def on_message_activity(self, turn_context: TurnContext):
             # highlight-next-line
             await turn_context.send_activity(Activity(type="typing"))
@@ -29,10 +37,13 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
+    from microsoft.teams.api import MessageActivity, TypingActivityInput
+    from microsoft.teams.apps import ActivityContext, App
+
     @app.on_message
-    async def on_message(context):
+    async def on_message(context: ActivityContext[MessageActivity]):
         # highlight-next-line
-        await context.send(Activity(type="typing"))
+        await context.send(TypingActivityInput())
     ```
   </TabItem>
 </Tabs>
@@ -43,24 +54,30 @@
   <TabItem value="Diff" default>
     ```python
     # highlight-error-start
--   from botbuilder.core import TeamsActivityHandler, TurnContext
+-   from botbuilder.core import ActivityHandler, TurnContext
+    # highlight-error-end
+    # highlight-success-start
++   from microsoft.teams.api import MessageActivity
++   from microsoft.teams.apps import ActivityContext, App
+    # highlight-success-end
 
--   class MyActivityHandler(TeamsActivityHandler):
+    # highlight-error-start
+-   class MyActivityHandler(ActivityHandler):
 -       async def on_message_activity(self, turn_context: TurnContext):
 -           await turn_context.send_activity("hello world")
     # highlight-error-end
     # highlight-success-start
 +   @app.on_message
-+   async def on_message(context):
++   async def on_message(context: ActivityContext[MessageActivity]):
 +       await context.send("hello world")
     # highlight-success-end
     ```
   </TabItem>
   <TabItem value="BotBuilder">
     ```python showLineNumbers
-    from botbuilder.core import TeamsActivityHandler, TurnContext
+    from botbuilder.core import ActivityHandler, TurnContext
 
-    class MyActivityHandler(TeamsActivityHandler):
+    class MyActivityHandler(ActivityHandler):
         async def on_message_activity(self, turn_context: TurnContext):
             # highlight-next-line
             await turn_context.send_activity("hello world")
@@ -68,8 +85,11 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
+    from microsoft.teams.api import MessageActivity
+    from microsoft.teams.apps import ActivityContext, App
+
     @app.on_message
-    async def on_message(context):
+    async def on_message(context: ActivityContext[MessageActivity]):
         # highlight-next-line
         await context.send("hello world")
     ```
@@ -81,74 +101,56 @@
 <Tabs groupId="sending-activities">
   <TabItem value="Diff" default>
     ```python
-    # highlight-error-line
--   from botbuilder.core import TeamsActivityHandler, TurnContext
--   from botbuilder.schema import Attachment
-    # highlight-success-line
-+   from teams.cards import AdaptiveCard, TextBlock
+    # highlight-error-start
+-   from botbuilder.core import ActivityHandler, TurnContext
+-   from botbuilder.schema import Activity, Attachment
+    # higlight-error-end
+    # highlight-success-start
++   from microsoft.teams.api import MessageActivity
++   from microsoft.teams.apps import ActivityContext, App
++   from microsoft.teams.cards import AdaptiveCard, TextBlock
+    # highlight-success-end
 
     # highlight-error-start
--   class MyActivityHandler(TeamsActivityHandler):
+-   class MyActivityHandler(ActivityHandler):
 -       async def on_message_activity(self, turn_context: TurnContext):
--           card = {
--               "type": "AdaptiveCard",
--               "version": "1.0",
--               "body": [
--                   {"type": "TextBlock", "text": "hello world"}
--               ]
--           }
--           attachment = Attachment(
--               content_type="application/vnd.microsoft.card.adaptive",
--               content=card
--           )
--           activity = Activity(
--               type="message",
--               attachments=[attachment]
--           )
--           await turn_context.send_activity(activity)
+-         card = {"type": "AdaptiveCard", "version": "1.0", "body": [{"type": "TextBlock", "text": "hello world"}]}
+-         attachment = Attachment(content_type="application/vnd.microsoft.card.adaptive", content=card)
+-         activity = Activity(type="message", attachments=[attachment])
+-         await turn_context.send_activity(activity)
     # highlight-error-end
     # highlight-success-start
 +   @app.on_message
-+   async def on_message(context):
-+       await context.send(AdaptiveCard(TextBlock("hello world")))
++   async def on_message(context: ActivityContext[MessageActivity]):
++       await context.send(AdaptiveCard().with_body([TextBlock(text="Hello from Adaptive Card!")]))
     # highlight-success-end
     ```
   </TabItem>
   <TabItem value="BotBuilder">
     ```python showLineNumbers
-    from botbuilder.core import TeamsActivityHandler, TurnContext
-    from botbuilder.schema import Attachment
+    from botbuilder.core import ActivityHandler, TurnContext
+    from botbuilder.schema import Activity, Attachment
 
-    class MyActivityHandler(TeamsActivityHandler):
+    class MyActivityHandler(ActivityHandler):
         async def on_message_activity(self, turn_context: TurnContext):
-            # highlight-start
-            card = {
-                "type": "AdaptiveCard",
-                "version": "1.0",
-                "body": [
-                    {"type": "TextBlock", "text": "hello world"}
-                ]
-            }
-            attachment = Attachment(
-                content_type="application/vnd.microsoft.card.adaptive",
-                content=card
-            )
-            activity = Activity(
-                type="message",
-                attachments=[attachment]
-            )
-            await turn_context.send_activity(activity)
-            # highlight-end
+          # hightlight-start
+          card = {"type": "AdaptiveCard", "version": "1.0", "body": [{"type": "TextBlock", "text": "hello world"}]}
+          attachment = Attachment(content_type="application/vnd.microsoft.card.adaptive", content=card)
+          activity = Activity(type="message", attachments=[attachment])
+          await turn_context.send_activity(activity)
+          # highlight-end
     ```
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from teams.cards import AdaptiveCard, TextBlock
+    from microsoft.teams.api import MessageActivity
+    from microsoft.teams.apps import ActivityContext, App
+    from microsoft.teams.cards import AdaptiveCard, TextBlock
 
     @app.on_message
-    async def on_message(context):
+    async def on_message(context: ActivityContext[MessageActivity]):
         # highlight-next-line
-        await context.send(AdaptiveCard(TextBlock("hello world")))
+        await context.send(AdaptiveCard(body=[TextBlock(text="Hello from Adaptive Card!")]))
     ```
   </TabItem>
 </Tabs>
@@ -158,34 +160,37 @@
 <Tabs groupId="sending-activities">
   <TabItem value="Diff" default>
     ```python
-    # highlight-error-line
--   from botbuilder.core import TeamsActivityHandler, TurnContext
--   from botbuilder.schema import Attachment, Activity
-    # highlight-success-line
-+   from teams.schema import MessageActivity, Attachment
+    # highlight-error-start
+-   from botbuilder.core import ActivityHandler, TurnContext
+-   from botbuilder.schema import Activity, Attachment
+    # highlight-error-end
+    # highlight-success-start
++   from microsoft.teams.api import Attachment, MessageActivity, MessageActivityInput
++   from microsoft.teams.apps import ActivityContext, App
+    # highlight-success-start
 
     # highlight-error-start
--   class MyActivityHandler(TeamsActivityHandler):
+-   class MyActivityHandler(ActivityHandler):
 -       async def on_message_activity(self, turn_context: TurnContext):
--           attachment = Attachment(...)
--           activity = Activity(type="message", attachments=[attachment])
--           await turn_context.send_activity(activity)
+-         attachment = Attachment(...)
+-         activity = Activity(type="message", attachments=[attachment])
+-         await turn_context.send_activity(activity)
     # highlight-error-end
     # highlight-success-start
 +   @app.on_message
-+   async def on_message(context):
-+       activity = MessageActivity()
-+       activity.add_attachment(Attachment(...))
++   async def on_message(context: ActivityContext[MessageActivity]):
++       attachment = Attachment(...)
++       activity = MessageActivityInput().add_attachments([attachment])
 +       await context.send(activity)
     # highlight-success-end
     ```
   </TabItem>
   <TabItem value="BotBuilder">
     ```python showLineNumbers
-    from botbuilder.core import TeamsActivityHandler, TurnContext
-    from botbuilder.schema import Attachment, Activity
+    from botbuilder.core import ActivityHandler, TurnContext
+    from botbuilder.schema import Activity, Attachment
 
-    class MyActivityHandler(TeamsActivityHandler):
+    class MyActivityHandler(ActivityHandler):
         async def on_message_activity(self, turn_context: TurnContext):
             # highlight-start
             attachment = Attachment(...)
@@ -196,13 +201,14 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from teams.schema import MessageActivity, Attachment
+    from microsoft.teams.api import Attachment, MessageActivity, MessageActivityInput
+    from microsoft.teams.apps import ActivityContext, App
 
     @app.on_message
-    async def on_message(context):
+    async def on_message(context: ActivityContext[MessageActivity]):
         # highlight-start
-        activity = MessageActivity()
-        activity.add_attachment(Attachment(...))
+        attachment = Attachment(...)
+        activity = MessageActivityInput().add_attachments([attachment])
         await context.send(activity)
         # highlight-end
     ```

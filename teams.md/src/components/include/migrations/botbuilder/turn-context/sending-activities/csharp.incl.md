@@ -5,23 +5,32 @@
     ```csharp
     // highlight-error-start
 -   using Microsoft.Bot.Builder;
+-   using Microsoft.Bot.Schema;
+    // highlight-error-end
+    // highlight-success-start
++   using Microsoft.Teams.Apps;
++   using Microsoft.Teams.Plugins.AspNetCore.Extensions;
++   using Microsoft.Teams.Api.Activities;
+    //highlight-success-end
 
--   public class MyActivityHandler : TeamsActivityHandler
+    // highlight-error-start
+-   public class MyActivityHandler : ActivityHandler
 -   {
 -       protected override async Task OnMessageActivityAsync(
 -           ITurnContext<IMessageActivity> turnContext,
 -           CancellationToken cancellationToken)
 -       {
 -           await turnContext.SendActivityAsync(
--               MessageFactory.Text("typing"), 
+-               Activity.CreateTypingActivity(), 
 -               cancellationToken: cancellationToken);
 -       }
 -   }
     // highlight-error-end
     // highlight-success-start
-+   app.OnMessage(async (context) =>
++   var teams = app.UseTeams();
++   teams.OnMessage(async (context) =>
 +   {
-+       await context.SendAsync(new Activity { Type = "typing" });
++       await context.Send(new Activity(type:"typing"));
 +   });
     // highlight-success-end
     ```
@@ -29,8 +38,9 @@
   <TabItem value="BotBuilder">
     ```csharp showLineNumbers
     using Microsoft.Bot.Builder;
+    using Microsoft.Bot.Schema;
 
-    public class MyActivityHandler : TeamsActivityHandler
+    public class MyActivityHandler : ActivityHandler
     {
         protected override async Task OnMessageActivityAsync(
             ITurnContext<IMessageActivity> turnContext,
@@ -38,7 +48,7 @@
         {
             // highlight-next-line
             await turnContext.SendActivityAsync(
-                MessageFactory.Text("typing"), 
+                Activity.CreateTypingActivity(), 
                 cancellationToken: cancellationToken);
         }
     }
@@ -46,10 +56,15 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```csharp showLineNumbers
-    app.OnMessage(async (context) =>
+    using Microsoft.Teams.Apps;
+    using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+    using Microsoft.Teams.Api.Activities;
+
+    var teams = app.UseTeams();
+    teams.OnMessage(async (context) =>
     {
         // highlight-next-line
-        await context.SendAsync(new Activity { Type = "typing" });
+        await context.Send(new Activity(type:"typing"));
     });
     ```
   </TabItem>
@@ -62,8 +77,15 @@
     ```csharp
     // highlight-error-start
 -   using Microsoft.Bot.Builder;
+-   using Microsoft.Bot.Schema;
+    // highlight-error-end
+    // highlight-success-start
++   using Microsoft.Teams.Apps;
++   using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+    //highlight-success-end
 
--   public class MyActivityHandler : TeamsActivityHandler
+    // highlight-error-start
+-   public class MyActivityHandler : ActivityHandler
 -   {
 -       protected override async Task OnMessageActivityAsync(
 -           ITurnContext<IMessageActivity> turnContext,
@@ -74,9 +96,10 @@
 -   }
     // highlight-error-end
     // highlight-success-start
-+   app.OnMessage(async (context) =>
++   var teams = app.UseTeams();
++   teams.OnMessage(async (context) =>
 +   {
-+       await context.SendAsync("hello world");
++       await context.Send("hello world");
 +   });
     // highlight-success-end
     ```
@@ -84,8 +107,9 @@
   <TabItem value="BotBuilder">
     ```csharp showLineNumbers
     using Microsoft.Bot.Builder;
+    using Microsoft.Bot.Schema;
 
-    public class MyActivityHandler : TeamsActivityHandler
+    public class MyActivityHandler : ActivityHandler
     {
         protected override async Task OnMessageActivityAsync(
             ITurnContext<IMessageActivity> turnContext,
@@ -99,10 +123,14 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```csharp showLineNumbers
-    app.OnMessage(async (context) =>
+    using Microsoft.Teams.Apps;
+    using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+
+    var teams = app.UseTeams();
+    teams.OnMessage(async (context) =>
     {
         // highlight-next-line
-        await context.SendAsync("hello world");
+        await context.Send("hello world");
     });
     ```
   </TabItem>
@@ -113,14 +141,18 @@
 <Tabs groupId="sending-activities">
   <TabItem value="Diff" default>
     ```csharp
-    // highlight-error-line
+    // highlight-error-start
 -   using Microsoft.Bot.Builder;
 -   using Microsoft.Bot.Schema;
-    // highlight-success-line
+    // highlight-error-end
+    // highlight-success-start
++   using Microsoft.Teams.Apps;
 +   using Microsoft.Teams.Cards;
++   using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+    // highlight-success-end
 
     // highlight-error-start
--   public class MyActivityHandler : TeamsActivityHandler
+-   public class MyActivityHandler : ActivityHandler
 -   {
 -       protected override async Task OnMessageActivityAsync(
 -           ITurnContext<IMessageActivity> turnContext,
@@ -146,9 +178,10 @@
 -   }
     // highlight-error-end
     // highlight-success-start
-+   app.OnMessage(async (context) =>
++   var teams = app.UseTeams();
++   teams.OnMessage(async (context) =>
 +   {
-+       await context.SendAsync(new AdaptiveCard(new TextBlock("hello world")));
++       await context.Send(new AdaptiveCard(new TextBlock("hello world")));
 +   });
     // highlight-success-end
     ```
@@ -158,7 +191,7 @@
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Schema;
 
-    public class MyActivityHandler : TeamsActivityHandler
+    public class MyActivityHandler : ActivityHandler
     {
         protected override async Task OnMessageActivityAsync(
             ITurnContext<IMessageActivity> turnContext,
@@ -189,11 +222,14 @@
   <TabItem value="Teams SDK">
     ```csharp showLineNumbers
     using Microsoft.Teams.Cards;
+    using Microsoft.Teams.Apps;
+    using Microsoft.Teams.Plugins.AspNetCore.Extensions;
 
-    app.OnMessage(async (context) =>
+    var teams = app.UseTeams();
+    teams.OnMessage(async (context) =>
     {
         // highlight-next-line
-        await context.SendAsync(new AdaptiveCard(new TextBlock("hello world")));
+        await context.Send(new AdaptiveCard(new TextBlock("hello world")));
     });
     ```
   </TabItem>
@@ -204,14 +240,18 @@
 <Tabs groupId="sending-activities">
   <TabItem value="Diff" default>
     ```csharp
-    // highlight-error-line
+    // highlight-error-start
 -   using Microsoft.Bot.Builder;
 -   using Microsoft.Bot.Schema;
-    // highlight-success-line
-+   using Microsoft.Teams.Schema;
+    // highlight-error-end
+    // highlight-success-start
++   using Microsoft.Teams.Apps;
++   using Microsoft.Teams.Api;
++   using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+    // highlight-success-end
 
     // highlight-error-start
--   public class MyActivityHandler : TeamsActivityHandler
+-   public class MyActivityHandler : ActivityHandler
 -   {
 -       protected override async Task OnMessageActivityAsync(
 -           ITurnContext<IMessageActivity> turnContext,
@@ -223,7 +263,8 @@
 -   }
     // highlight-error-end
     // highlight-success-start
-+   app.OnMessage(async (context) =>
++   var teams = app.UseTeams();
++   teams.OnMessage(async (context) =>
 +   {
 +       var activity = new MessageActivity();
 +       activity.AddAttachment(new Attachment { /* ... */ });
@@ -237,7 +278,7 @@
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Schema;
 
-    public class MyActivityHandler : TeamsActivityHandler
+    public class MyActivityHandler : ActivityHandler
     {
         protected override async Task OnMessageActivityAsync(
             ITurnContext<IMessageActivity> turnContext,
@@ -253,9 +294,12 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```csharp showLineNumbers
-    using Microsoft.Teams.Schema;
-
-    app.OnMessage(async (context) =>
+    using Microsoft.Teams.Api;
+    using Microsoft.Teams.Apps;
+    using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+    
+    var teams = app.UseTeams();
+    teams.OnMessage(async (context) =>
     {
         // highlight-start
         var activity = new MessageActivity();

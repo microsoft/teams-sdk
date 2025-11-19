@@ -232,7 +232,6 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```typescript showLineNumbers
-    import { AdaptiveCard, TextBlock } from '@microsoft/teams.cards';
 
     app.on('message', async ({ send }) => {
       // highlight-next-line
