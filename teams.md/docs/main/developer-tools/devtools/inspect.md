@@ -21,7 +21,7 @@ The Activities page displays all activities sent to and from your agent in a gri
 
 ### Monitor activity while testing Teams in browser
 
-When testing your sideloaded app in the Teams web client, you can monitor activities in DevTools. Once your agent has launched, the agent server will indicate what port DevTools is running on). Open another browser tab and navigate to the DevTools Activities URL. Interact with your agent in the Teams web client and see the activities in DevTools. To learn more, review the [Agents Toolkit](../../teams/agents-toolkit) page.
+When testing your sideloaded app in the Teams web client, you can monitor activities in DevTools. Once your agent has launched, the agent server will indicate what port DevTools is running on). Open another browser tab and navigate to the DevTools Activities URL. Interact with your agent in the Teams web client and see the activities in DevTools. To learn more, review the [Agents Toolkit](../../teams/configuration/agents-toolkit) page.
 
 You can filter activities by type using the filter icon in the Type column header.
 

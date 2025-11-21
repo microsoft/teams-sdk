@@ -1,11 +1,11 @@
 ---
-sidebar_position: 3
+sidebar_position: 1
 summary: Automate Teams app development with Microsoft 365 Agents Toolkit for manifest management, sideloading, and deployment.
 ---
 
 # Microsoft 365 Agents Toolkit
 
-Microsoft 365 Agents Toolkit provides a powerful VS Code extension and CLI tool that helps automate important tasks like manifest management, sideloading, deployment, and provisioning. If you encounter any issues while using it (such as problems with the extension, running apps, deployment and provisioning, or debugging via F5), please report them in the [Agents Toolkit GitHub repository](https://github.com/OfficeDev/microsoft-365-agents-toolkit).
+Microsoft 365 Agents Toolkit provides a powerful VS Code extension and CLI tool that helps automate important tasks like provisioning and deployment. The project is maintained separately in this repository - [Agents Toolkit GitHub repository](https://github.com/OfficeDev/microsoft-365-agents-toolkit).
 
 ## Installing Agents Toolkit
 
@@ -16,7 +16,7 @@ Agents Toolkit can be installed as an extension and CLI. Please see the document
 
 :::note
 
-- [Teams SDK CLI](../developer-tools/cli) - helper for Teams SDK. It scaffolds agents, wires in deep Teams features (Adaptive Cards, Conversation History, Memory...etc), and adds all the config files you need while you're coding.
+- [Teams SDK CLI](../../developer-tools/cli) - helper for Teams SDK. It scaffolds agents, wires in deep Teams features (Adaptive Cards, Conversation History, Memory...etc), and adds all the config files you need while you're coding.
 - Agents Toolkit CLI - app deployment helper. It sideloads, provisions Azure resources, handles manfiest/tenant plumbing, and keeps your dev, test, and prod environments in sync.
   :::
 
@@ -31,4 +31,4 @@ Generally, you can use the toolkit to add required resources to Azure based on y
 ## Resources
 
 - [Microsoft 365 Agents Toolkit](https://learn.microsoft.com/microsoftteams/platform/toolkit/teams-toolkit-fundamentals): Extensive documentation covering usage and supported scenarios of Agents Toolkit.
-- [Teams SDK CLI documentation](../developer-tools/cli): Instructions on adding Agents Toolkit configurations to your Teams SDK agent.
+- [Teams SDK CLI documentation](../../developer-tools/cli): Instructions on adding Agents Toolkit configurations to your Teams SDK agent.

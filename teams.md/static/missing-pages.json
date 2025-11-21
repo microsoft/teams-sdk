@@ -1,4 +1,7 @@
 {
+  "essentials/app-authentication": [
+    "csharp"
+  ],
   "essentials/on-activity/activity-ref": [
     "csharp",
     "python"

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 6
 summary: Learn how to enable your Teams app to work in M365 Copilot by updating the app manifest.
 ---
 
