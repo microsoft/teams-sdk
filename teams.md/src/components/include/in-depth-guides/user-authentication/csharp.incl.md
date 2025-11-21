@@ -90,5 +90,4 @@ teams.OnMessage("/signout", async context =>
 ```
 <!-- regional-bot -->
 
-```cs
-```
+N/A
