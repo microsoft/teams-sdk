@@ -85,3 +85,22 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
     await ctx.sign_out()
     await ctx.send("You have been signed out!")
 ```
+
+<!-- regional-bot -->
+## Regional Configs
+
+To properly configure your regional bot, you will need to make a few updates. This example uses West Europe, but follow the equivalent for other regions.
+
+1. In `azurebot.bicep`, replace all `global` occurrences to `westeurope`
+2. In `manifest.json`, in `validDomains`, `*.botframework.com` should be replaced by `europe.token.botframework.com`
+3. In `aad.manifest.json`, replace `https://token.botframework.com/.auth/web/redirect` with `https://europe.token.botframework.com/.auth/web/redirect`
+4. You will also need to update the setup of your App instance to add in your Oauth URL.
+
+```python
+app = App(
+    default_connection_name='graph',
+    api_client_settings=ApiClientSettings(
+        oauth_url="https://europe.token.botframework.com"
+    )
+)
+```
