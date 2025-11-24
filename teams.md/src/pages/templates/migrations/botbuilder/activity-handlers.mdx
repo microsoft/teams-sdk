@@ -21,3 +21,5 @@ This snippet shows how to use the `BotBuilderPlugin` to route activities using b
 :::
 
 <LanguageInclude section="example" />
+
+When a message is received, both handlers execute - first the BotBuilder handler, then the Teams SDK handler. This lets you migrate incrementally while keeping both systems running side by side.

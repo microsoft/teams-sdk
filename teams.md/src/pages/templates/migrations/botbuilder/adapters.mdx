@@ -20,3 +20,5 @@ This snippet shows how to use the `BotBuilderPlugin` to send and receive activit
 :::
 
 <LanguageInclude section="example" />
+
+When a message is received, both handlers execute - first the BotBuilder handler, then the Teams SDK handler. This allows you to migrate incrementally while keeping both systems operational.
