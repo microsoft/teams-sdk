@@ -38,8 +38,8 @@ const NOT_APPLICABLE_REGEX = /^(not applicable|n\/a)\s*$/i;
 const SECTION_REGEX = (sectionName: string) =>
   new RegExp(`<!--\\s*${sectionName}\\s*-->\\s*([\\s\\S]*?)(?=<!--\\s*[\\w-]+\\s*-->|$)`, 'i');
 
-// Regex to find LanguageInclude tags
-const LANGUAGE_INCLUDE_REGEX = /<LanguageInclude\s+section="([^"]+)"\s*\/>/g;
+// Regex to find LanguageInclude tags (supports both section and content props)
+const LANGUAGE_INCLUDE_REGEX = /<LanguageInclude\s+(?:section="([^"]+)"|content=\{(\{[^}]+\})\})\s*\/>/g;
 
 const languagePattern = LANGUAGES.join('|');
 const LANGUAGE_INCL_FILENAME_REGEX = new RegExp(`^(${languagePattern})\\.incl\\.md$`);
@@ -125,7 +125,7 @@ function processLanguageIncludeTags(
   // Replace all LanguageInclude tags
   processedContent = processedContent.replace(
     LANGUAGE_INCLUDE_REGEX,
-    (match, sectionName, offset) => {
+    (match, sectionName, inlineContent, offset) => {
       hasLanguageInclude = true;
 
       // Determine if this is inline or block based on context
@@ -137,6 +137,40 @@ function processLanguageIncludeTags(
       const textBeforeOnLine = beforeMatch.substring(lineStart + 1);
       const isBlock = /^\s*$/.test(textBeforeOnLine);
 
+      // Handle inline content (content={{...}})
+      if (inlineContent) {
+        try {
+          // Parse the inline content object
+          const contentObj = JSON.parse(inlineContent);
+          
+          // Production mode with target language
+          if (isProduction && targetLanguage) {
+            const content = contentObj[targetLanguage];
+            return content || '';
+          }
+          
+          // Development mode: generate Language components for all languages
+          const languageComponents: string[] = [];
+          for (const lang of LANGUAGES) {
+            const content = contentObj[lang];
+            if (content) {
+              if (isBlock) {
+                languageComponents.push(
+                  `<Language language="${lang}">\n\n${content}\n\n</Language>`
+                );
+              } else {
+                languageComponents.push(`<Language language="${lang}">${content}</Language>`);
+              }
+            }
+          }
+          return languageComponents.join('\n');
+        } catch (error) {
+          console.warn(`generate-language-docs warning: Error parsing inline content: ${error}`);
+          return match; // Return original tag on error
+        }
+      }
+
+      // Handle section reference (section="...")
       // Production mode with target language: only generate for that language
       if (isProduction && targetLanguage) {
         const inclPath = getIncludeFilePath(templatePath, targetLanguage);
