@@ -1,6 +1,6 @@
 <!-- example -->
 
-<Tabs groupId="sending-activities">
+<Tabs groupId="user-auth">
   <TabItem value="Diff" default>
     ```typescript
     // highlight-error-start

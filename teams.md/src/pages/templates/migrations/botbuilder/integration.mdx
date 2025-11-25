@@ -1,0 +1,46 @@
+---
+sidebar_position: 1
+languages: ['typescript', 'csharp', 'python']
+title: Adapters
+summary: How to migrate BotBuilder adapters to Teams SDK plugins for handling bot communication and middleware.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# BotBuilder Integration in Teams SDK
+
+# Adapters
+A BotBuilder `CloudAdapter` is responsible for managing communication between a bot and its users.
+It serves as the entry point for incoming activities and forwards them to the registered `ActivityHandler` for processing. 
+You can customize the Adapter to add middleware for logging, authentication, or pre-processing, and define error handling.
+
+The `BotBuilderPlugin` provided within the Teams SDK, connects the SDK with the BotBuilder framework.
+It can either use an existing `CloudAdapter` or create a new one, allowing activities to be processed through BotBuilder
+while still handling events via the Teams SDK App framework.
+
+# Turn Context
+Each incoming activity is wrapped in a `TurnContext`, which represents the context of a single turn in the conversation.
+TurnContext provides access to:
+- The incoming activity (message, command, event).
+- Services for sending responses back to the user.
+- Conversation, user, and channel metadata.
+
+Teams SDK has <LanguageInclude content={{"typescript": "`IActivityContext`", "csharp": "`IActivityContext`", "python": "`ActivityContext`"}} /> for the same purpose.
+
+# Activity Handlers
+The BotBuilder `ActivityHandler` contains the actual bot logic for processing messages, commands, or events
+similar to how the Teams SDK `App` routes messages and events. You can override other methods,
+such as `OnMembersAddedAsync` or `OnMessageActivityAsync`, to handle different activity types.
+
+The `CloudAdapter` creates the `TurnContext`, and the `ActivityHandler` uses it to read the activity and send responses.
+
+With the BotBuilder Plugin, when a message or activity is received:
+1. The BotBuilder `ActivityHandler` runs first, handling the activity as usual.
+2. The Teams SDK handler executes afterward, allowing new Teams SDK logic to execute.
+
+:::info
+This snippet shows how to use the `BotBuilderPlugin` to send and receive activities using botbuilder instead of the default Teams SDK http plugin.
+:::
+
+<LanguageInclude section="example" />

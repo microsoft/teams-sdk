@@ -1,6 +1,6 @@
 <!-- example -->
 
-<Tabs groupId="sending-activities">
+<Tabs groupId="api-client">
   <TabItem value="Diff" default>
   ```typescript
   // highlight-error-start
