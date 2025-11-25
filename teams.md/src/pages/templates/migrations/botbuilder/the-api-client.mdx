@@ -14,4 +14,21 @@ import TabItem from '@theme/TabItem';
 BotBuilder exposes a static class `TeamsInfo` that allows you to query the api. In Teams SDK
 we pass an instance of our `ApiClient` into all our activity handlers through the context.
 
+## API Comparison
+
+The following table shows common BotBuilder `TeamsInfo` methods and their equivalent Teams SDK `ApiClient` methods:
+
+| BotBuilder (TeamsInfo) | Teams SDK (ApiClient) | Description |
+|------------------------|----------------------|-------------|
+| `getMembers(context)` | `api.conversations.members(conversationId).get()` | Get members of a conversation |
+| `getTeamDetails(context, teamId)` | `api.teams(teamId).get()` | Get details of a team |
+| `getTeamChannels(context, teamId)` | `api.teams(teamId).channels.get()` | Get channels in a team |
+| `getTeamMember(context, teamId, userId)` | `api.teams(teamId).members(userId).get()` | Get a specific team member |
+| `getMeetingParticipant(context, meetingId, participantId)` | `api.meetings(meetingId).participants(participantId).get()` | Get meeting participant details |
+| `sendMessageToTeamsChannel(context, teamId, message)` | `api.conversations.create()` then `api.conversations(id).activities.create()` | Send message to a channel |
+
+:::tip
+The Teams SDK `ApiClient` uses a fluent API pattern that makes it easier to discover available methods through IDE autocompletion.
+:::
+
 <LanguageInclude section="example" />
