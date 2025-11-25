@@ -1,3 +1,16 @@
+<!-- api-table -->
+
+The following table shows common BotBuilder `TeamsInfo` methods and their equivalent Teams SDK `ApiClient` methods:
+
+| BotBuilder (TeamsInfo) | Teams SDK (ApiClient) | Description |
+|------------------------|----------------------|-------------|
+| `TeamsInfo.getMembers(context)` | `api.conversations.members(conversationId).get()` | Get members of a conversation |
+| `TeamsInfo.getTeamDetails(context, teamId)` | `api.teams(teamId).get()` | Get details of a team |
+| `TeamsInfo.getTeamChannels(context, teamId)` | `api.teams(teamId).channels.get()` | Get channels in a team |
+| `TeamsInfo.getTeamMember(context, teamId, userId)` | `api.teams(teamId).members(userId).get()` | Get a specific team member |
+| `TeamsInfo.getMeetingParticipant(context, meetingId, participantId)` | `api.meetings(meetingId).participants(participantId).get()` | Get meeting participant details |
+| `TeamsInfo.sendMessageToTeamsChannel(context, teamId, message)` | `api.conversations.create()` then `api.conversations(id).activities.create()` | Send message to a channel |
+
 <!-- example -->
 
 <Tabs groupId="api-client">

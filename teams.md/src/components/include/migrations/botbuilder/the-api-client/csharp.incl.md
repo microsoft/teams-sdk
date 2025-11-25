@@ -1,3 +1,16 @@
+<!-- api-table -->
+
+The following table shows common BotBuilder `TeamsInfo` methods and their equivalent Teams SDK `ApiClient` methods:
+
+| BotBuilder (TeamsInfo) | Teams SDK (ApiClient) | Description |
+|------------------------|----------------------|-------------|
+| `TeamsInfo.GetMembersAsync(context)` | `context.Api.Conversations.Members.GetAsync(conversationId)` | Get members of a conversation |
+| `TeamsInfo.GetTeamDetailsAsync(context, teamId)` | `context.Api.Teams(teamId).GetAsync()` | Get details of a team |
+| `TeamsInfo.GetTeamChannelsAsync(context, teamId)` | `context.Api.Teams(teamId).Channels.GetAsync()` | Get channels in a team |
+| `TeamsInfo.GetTeamMemberAsync(context, teamId, userId)` | `context.Api.Teams(teamId).Members(userId).GetAsync()` | Get a specific team member |
+| `TeamsInfo.GetMeetingParticipantAsync(context, meetingId, participantId)` | `context.Api.Meetings(meetingId).Participants(participantId).GetAsync()` | Get meeting participant details |
+| `TeamsInfo.SendMessageToTeamsChannelAsync(context, teamId, message)` | `context.Api.Conversations.CreateAsync()` then `context.Api.Conversations(id).Activities.CreateAsync()` | Send message to a channel |
+
 <!-- example -->
 
 <Tabs groupId="api-client">
