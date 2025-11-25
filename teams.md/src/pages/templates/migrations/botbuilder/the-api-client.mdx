@@ -14,12 +14,14 @@ import TabItem from '@theme/TabItem';
 BotBuilder exposes a static class `TeamsInfo` that allows you to query the api. In Teams SDK
 we pass an instance of our `ApiClient` into all our activity handlers through the context.
 
-## API Comparison
-
-<LanguageInclude section="api-table" />
-
 :::tip
 The Teams SDK `ApiClient` uses a fluent API pattern that makes it easier to discover available methods through IDE autocompletion.
 :::
 
 <LanguageInclude section="example" />
+
+## Mapping TeamsInfo APIs to Teams SDK ApiClient Methods
+
+The following table shows common BotBuilder `TeamsInfo` methods and their equivalent Teams SDK `ApiClient` methods:
+
+<LanguageInclude section="api-table" />

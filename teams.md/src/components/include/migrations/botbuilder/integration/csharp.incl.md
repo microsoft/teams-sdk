@@ -24,20 +24,15 @@
 
             var app = builder.Build();
 
-            app.UseTeams();
+            var teams = app.UseTeams();
             app.Run();
         }
 
-        [TeamsController]
-        public class Controller
+        teams.OnMessage(async context =>
         {
-            [Message]
-            public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client, [Context] Microsoft.Teams.Common.Logging.ILogger log)
-            {
-                await client.Typing();
-                await client.Send($"hi from teams...");
-            }
-        }
+            await context.Client.Typing();
+            await context.Client.Send($"hi from teams...");
+        });
     }
     ```
 
@@ -87,17 +82,3 @@
 
   </TabItem>
 </Tabs>
-
-In this example:
-- `BotBuilderAdapter` extends `CloudAdapter` to handle incoming activities, manage errors through `OnTurnError`, and provide middleware support.
-- `Bot` (inheriting from ActivityHandler) contains the core bot logic, handling incoming messages and sending responses via the `ITurnContext`.
-- `Program.cs` sets up a Teams SDK `app` and registers the `BotBuilderPlugin` with your `Bot` and `BotBuilderAdapter`. It also defines a Teams SDK controller that responds to messages.
-
-In the ouptut below, 
-The first line comes from the BotBuilder `ActivityHandler`. The second line comes from the Teams SDK controller.
-This shows that both handlers can process the same message sequentially when using the `BotBuilderPlugin`.
-
-```
-hi from botbuilder...
-hi from teams...
-```

@@ -1,46 +1,67 @@
 ---
 sidebar_position: 1
 languages: ['typescript', 'csharp', 'python']
-title: Adapters
+title: Using the BotBuilder Plugin
 summary: How to migrate BotBuilder adapters to Teams SDK plugins for handling bot communication and middleware.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# BotBuilder Integration in Teams SDK
+# Using the BotBuilder Plugin
 
 # Adapters
 A BotBuilder `CloudAdapter` is responsible for managing communication between a bot and its users.
 It serves as the entry point for incoming activities and forwards them to the registered `ActivityHandler` for processing. 
-You can customize the Adapter to add middleware for logging, authentication, or pre-processing, and define error handling.
+You can customize the adapter to add middleware for logging, authentication, and define error handling.
 
 The `BotBuilderPlugin` provided within the Teams SDK, connects the SDK with the BotBuilder framework.
-It can either use an existing `CloudAdapter` or create a new one, allowing activities to be processed through BotBuilder
+It can either use an existing `CloudAdapter` or create a new default one, allowing activities to be processed through BotBuilder
 while still handling events via the Teams SDK App framework.
+
+# Activity Handlers
+The BotBuilder `ActivityHandler` contains the actual bot logic for processing messages or events
+similar to how the Teams SDK `App` routes messages and events. You can override any number of methods,
+such as <LanguageInclude content={{"typescript": "`OnMembersAdded`", "csharp": "`OnMembersAddedAsync`", "python": "`on_members_added_activity`"}} />
+or <LanguageInclude content={{"typescript": "`onMessage`", "csharp": "`OnMessageActivityAsync`", "python": "`on_message_activity`"}} /> ,
+to handle different activity types.
 
 # Turn Context
 Each incoming activity is wrapped in a `TurnContext`, which represents the context of a single turn in the conversation.
 TurnContext provides access to:
-- The incoming activity (message, command, event).
+- The incoming activity (message, event).
 - Services for sending responses back to the user.
 - Conversation, user, and channel metadata.
 
 Teams SDK has <LanguageInclude content={{"typescript": "`IActivityContext`", "csharp": "`IActivityContext`", "python": "`ActivityContext`"}} /> for the same purpose.
 
-# Activity Handlers
-The BotBuilder `ActivityHandler` contains the actual bot logic for processing messages, commands, or events
-similar to how the Teams SDK `App` routes messages and events. You can override other methods,
-such as `OnMembersAddedAsync` or `OnMessageActivityAsync`, to handle different activity types.
+# How it all comes together
 
 The `CloudAdapter` creates the `TurnContext`, and the `ActivityHandler` uses it to read the activity and send responses.
 
-With the BotBuilder Plugin, when a message or activity is received:
-1. The BotBuilder `ActivityHandler` runs first, handling the activity as usual.
-2. The Teams SDK handler executes afterward, allowing new Teams SDK logic to execute.
+With the `BotBuilderPlugin`, when a message or activity is received:
+1. The BotBuilder ActivityHandler runs first, handling the activity according to standard Bot Framework logic.
+2. The Teams SDK app based activity handlers execute afterward, allowing Teams SDK logic to execute.
 
 :::info
 This snippet shows how to use the `BotBuilderPlugin` to send and receive activities using botbuilder instead of the default Teams SDK http plugin.
 :::
 
 <LanguageInclude section="example" />
+
+In this example:
+- <LanguageInclude content={{"typescript": "`adapter.ts`", "csharp": "`BotBuilderAdapter.cs`", "python": "`adapter.py`"}} /> defines a `CloudAdapter` to
+handle incoming activities, and can include middleware support or error handling.
+- <LanguageInclude content={{"typescript": "`activity-handler.ts`", "csharp": "`Bot.cs`", "python": "`activity_handler.py`"}} /> defines the `ActivityHandler` and contains the core bot logic,
+handling incoming messages and sending responses via the `TurnContext`.
+- <LanguageInclude content={{"typescript": "`index.ts`", "csharp": "`Program.cs`", "python": "`app.py`"}} /> sets up a Teams SDK `app`
+and registers the `BotBuilderPlugin` with your adapter and activity handler. It also defines a native Teams SDK activity handler that responds to messages.
+
+In the ouptut below, 
+The first line comes from the BotBuilder ActivityHandler. The second line comes from the Teams SDK message activity handler.
+This shows that both handlers can process the same message sequentially when using the BotBuilder Plugin.
+
+```
+hi from botbuilder...
+hi from teams...
+```

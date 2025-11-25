@@ -98,7 +98,7 @@ N/A
 - Category pages: `src/components/include/{category}/{lang}.incl.md`
 - Regular pages: `src/components/include/{category}/{filename}/{lang}.incl.md`
 
-### Inline Content (New!)
+### Inline Content
 
 For simple, short language-specific text (like API names, method names, or simple phrases), you can use inline content directly in templates without creating separate include files:
 

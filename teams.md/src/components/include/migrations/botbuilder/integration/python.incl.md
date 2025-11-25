@@ -68,17 +68,3 @@
 
   </TabItem>
 </Tabs>
-
-In this example:
-- `adapter.py` defines a `CloudAdapter`, which handles incoming activities, manages errors through `on_turn_error`, and provides middleware support.
-- `activity_handler.py` defines `MyActivityHandler` (inheriting from ActivityHandler) containing the core bot logic, sending responses via the `TurnContext`.
-- `app.py` sets up the Teams SDK App and registers the `BotBuilderPlugin` with your adapter and activity handler. It also defines a Teams SDK handler that responds to messages.
-
-In the output, the first line comes from the BotBuilder `ActivityHandler`.
-The second line comes from the Teams SDK handler.
-This demonstrates that both handlers can process the same message sequentially when using the `BotBuilderPlugin`.
-
-```
-hi from botbuilder...
-hi from teams...
-```

@@ -70,17 +70,3 @@
 
   </TabItem>
 </Tabs>
-
-In this example:
-- `adapter.ts` defines a `CloudAdapter`, which handles incoming activities, and can include middleware support or error handling.
-- `activity-handler.ts` defines `ActivityHandler` (extending TeamsActivityHandler), containing the core bot logic, sending responses via the `ITurnContext`.
-- `index.ts` sets up the Teams SDK `App` and registers the `BotBuilderPlugin` with your adapter and handler. It also defines a Teams SDK handler that responds to messages.
-
-In the output, the first line comes from the BotBuilder `ActivityHandler`.
-The second line comes from the Teams SDK handler.
-This demonstrates that both handlers can process the same message sequentially when using the `BotBuilderPlugin`.
-
-```
-hi from botbuilder...
-hi from teams...
-```
