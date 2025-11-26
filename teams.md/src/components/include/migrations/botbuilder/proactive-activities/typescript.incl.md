@@ -1,10 +1,6 @@
-<!-- content -->
+<!-- example -->
 
-The BotBuilder proactive message flow requires you to have a conversation reference stored somewhere. In Teams SDK
-we expose a `send` method almost identical to the one passed into our activity handlers that accepts a `conversationId`,
-so all you need to store is that!
-
-<Tabs groupId="sending-activities">
+<Tabs groupId="proactive-activities">
   <TabItem value="Diff" default>
     ```typescript
     // highlight-error-start

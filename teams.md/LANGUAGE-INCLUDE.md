@@ -58,9 +58,12 @@ languages: ['typescript', 'python'] # Optional: restrict languages to render doc
 
 Shared content for all languages.
 
-<LanguageInclude section="install" />  <!-- Block-level: full Markdown -->
+<LanguageInclude section="install" />  <!-- Block-level: full Markdown from include files -->
 
-The package name is <LanguageInclude section="package-name" />. <!-- Inline: plain text -->
+The package name is <LanguageInclude section="package-name" />. <!-- Inline: from include files -->
+
+<!-- NEW: Inline content without separate include files -->
+The context type is <LanguageInclude content={{"typescript": "`IContext`", "python": "`Context`"}} />.
 ```
 
 ### Fragments (`src/components/include/**/{lang}.incl.md`)
@@ -94,6 +97,25 @@ N/A
 
 - Category pages: `src/components/include/{category}/{lang}.incl.md`
 - Regular pages: `src/components/include/{category}/{filename}/{lang}.incl.md`
+
+### Inline Content
+
+For simple, short language-specific text (like API names, method names, or simple phrases), you can use inline content directly in templates without creating separate include files:
+
+```mdx
+<LanguageInclude content={{"typescript": "`send`", "csharp": "`SendAsync`", "python": "`send`"}} />
+```
+
+**When to use inline content:**
+- Short text snippets (API names, method names, parameter names)
+- Simple differences between languages
+- Content that's easier to read inline than in separate files
+
+**When to use include files:**
+- Code examples
+- Complex or multi-line content
+- Content that benefits from syntax highlighting
+- Larger documentation sections
 
 ## Language Filtering
 

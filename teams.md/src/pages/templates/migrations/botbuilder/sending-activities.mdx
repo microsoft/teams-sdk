@@ -2,7 +2,7 @@
 sidebar_position: 1
 sidebar_label: Sending Activities
 title: Sending Activities
-languages: ['typescript']
+languages: ['typescript', 'csharp', 'python']
 summary: Migrate from BotBuilder's TurnContext activity sending to Teams SDK's simplified send method with better Adaptive Card support.
 ---
 
@@ -11,4 +11,7 @@ import TabItem from '@theme/TabItem';
 
 # Sending Activities
 
-<LanguageInclude section="content" />
+BotBuilder's pattern for sending activities via its `TurnContext` is similar to that in Teams SDK,
+but one key difference is that sending adaptive cards doesn't require constructing the entire activity yourself.
+
+<LanguageInclude section="examples" />

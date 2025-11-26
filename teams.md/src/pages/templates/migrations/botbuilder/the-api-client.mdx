@@ -1,0 +1,27 @@
+---
+sidebar_position: 3
+sidebar_label: The API Client
+title: The API Client
+languages: ['typescript', 'csharp', 'python']
+summary: Replace BotBuilder's static TeamsInfo class with Teams SDK's injected ApiClient for cleaner API interactions.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# The API Client
+
+BotBuilder exposes a static class `TeamsInfo` that allows you to query the api. In Teams SDK
+we pass an instance of our `ApiClient` into all our activity handlers through the context.
+
+:::tip
+The Teams SDK `ApiClient` uses a fluent API pattern that makes it easier to discover available methods through IDE autocompletion.
+:::
+
+<LanguageInclude section="example" />
+
+## Mapping TeamsInfo APIs to Teams SDK ApiClient Methods
+
+The following table shows common BotBuilder `TeamsInfo` methods and their equivalent Teams SDK `ApiClient` methods:
+
+<LanguageInclude section="api-table" />
