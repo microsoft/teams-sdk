@@ -88,3 +88,6 @@ teams.OnMessage("/signout", async context =>
     await context.Send("you have been signed out!");
 });
 ```
+<!-- regional-bot -->
+
+N/A
