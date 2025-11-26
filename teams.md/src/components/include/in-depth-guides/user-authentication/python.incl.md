@@ -88,8 +88,9 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
 
 <!-- regional-bot -->
 ## Regional Configs
+You may be building a regional bot that is deployed in a specific Azure region (such as West Europe, East US, etc.) rather than global. This is important for organizations that have data residency requirements or want to reduce latency by keeping data and authentication flows within a specific area.
 
-To properly configure your regional bot, you will need to make a few updates. This example uses West Europe, but follow the equivalent for other regions.
+To properly configure your regional bot with ATK, you will need to make a few updates. This example uses West Europe, but follow the equivalent for other regions.
 
 1. In `azurebot.bicep`, replace all `global` occurrences to `westeurope`
 2. In `manifest.json`, in `validDomains`, `*.botframework.com` should be replaced by `europe.token.botframework.com`
@@ -100,7 +101,7 @@ To properly configure your regional bot, you will need to make a few updates. Th
 app = App(
     default_connection_name='graph',
     api_client_settings=ApiClientSettings(
-        oauth_url="https://europe.token.botframework.com"
+        oauth_url=os.environ.get("OAUTH_URL") # Value would be "https://europe.token.botframework.com"
     )
 )
 ```
