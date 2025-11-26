@@ -104,7 +104,7 @@
     # highlight-error-start
 -   from botbuilder.core import ActivityHandler, TurnContext
 -   from botbuilder.schema import Activity, Attachment
-    # higlight-error-end
+    # highlight-error-end
     # highlight-success-start
 +   from microsoft.teams.api import MessageActivity
 +   from microsoft.teams.apps import ActivityContext, App
@@ -167,7 +167,7 @@
     # highlight-success-start
 +   from microsoft.teams.api import Attachment, MessageActivity, MessageActivityInput
 +   from microsoft.teams.apps import ActivityContext, App
-    # highlight-success-start
+    # highlight-success-end
 
     # highlight-error-start
 -   class MyActivityHandler(ActivityHandler):
