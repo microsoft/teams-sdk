@@ -77,7 +77,7 @@
 
 | BotBuilder (TeamsInfo) | Teams SDK (ApiClient) |
 |------------------------|----------------------|
-| `TeamsInfo.getMember(context, userId)` | `api.conversations.members.getById(conversationId, userId)` |
+| `TeamsInfo.getMember(context, userId)` | `api.conversations.members(conversationId).getById(userId)` |
 | `TeamsInfo.getTeamDetails(context, teamId)` | `api.teams.getById(teamId)` |
 | `TeamsInfo.getMeetingInfo(context, meetingId)` | `api.meetings.getById(meetingId)` |
-| `TeamsInfo.sendMessageToTeamsChannel(context, teamId, message)` | `api.conversations.create()` then `api.conversations.activities.create(conversationId, activity)` |
+| `TeamsInfo.sendMessageToTeamsChannel(context, teamId, message)` | `api.conversations.create(CreateConversationParams)` then `api.conversations.activities(conversationId).create(activity)` |
