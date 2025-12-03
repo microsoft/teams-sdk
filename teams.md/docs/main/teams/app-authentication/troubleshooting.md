@@ -76,6 +76,7 @@ This error occurs when the application has a single-tenant Azure Bot Service (`m
 
 3. **Search for your application**
    Use the **BOT_ID** from your environment file:
+
    - Local development → `env/.env.local`
    - Azure deployment → `env/.env.dev`
 

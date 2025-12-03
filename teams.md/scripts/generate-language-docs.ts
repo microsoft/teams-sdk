@@ -39,7 +39,8 @@ const SECTION_REGEX = (sectionName: string) =>
   new RegExp(`<!--\\s*${sectionName}\\s*-->\\s*([\\s\\S]*?)(?=<!--\\s*[\\w-]+\\s*-->|$)`, 'i');
 
 // Regex to find LanguageInclude tags (supports both section and content props)
-const LANGUAGE_INCLUDE_REGEX = /<LanguageInclude\s+(?:section="([^"]+)"|content=\{(\{[^}]+\})\})\s*\/>/g;
+const LANGUAGE_INCLUDE_REGEX =
+  /<LanguageInclude\s+(?:section="([^"]+)"|content=\{(\{[^}]+\})\})\s*\/>/g;
 
 const languagePattern = LANGUAGES.join('|');
 const LANGUAGE_INCL_FILENAME_REGEX = new RegExp(`^(${languagePattern})\\.incl\\.md$`);
@@ -142,13 +143,13 @@ function processLanguageIncludeTags(
         try {
           // Parse the inline content object
           const contentObj = JSON.parse(inlineContent);
-          
+
           // Production mode with target language
           if (isProduction && targetLanguage) {
             const content = contentObj[targetLanguage];
             return content || '';
           }
-          
+
           // Development mode: generate Language components for all languages
           const languageComponents: string[] = [];
           for (const lang of LANGUAGES) {
@@ -183,7 +184,11 @@ function processLanguageIncludeTags(
           const fileContent = readFileUtf8Normalized(inclPath);
           const sectionContent = extractSection(fileContent, sectionName);
 
-          if (sectionContent === null || sectionContent === '' || sectionContent === 'EMPTY_SECTION') {
+          if (
+            sectionContent === null ||
+            sectionContent === '' ||
+            sectionContent === 'EMPTY_SECTION'
+          ) {
             // Skip missing sections (null), intentional N/A content (empty string), or empty sections
             return '';
           }
@@ -464,12 +469,16 @@ function generateDocsForTemplate(templatePath: string): void {
     const processedContent = processLanguageIncludeTags(templateContent, templatePath, lang);
 
     // Extract frontmatter if exists
-    const { frontmatter, hasFrontmatter, content: contentWithoutFrontmatter } = FrontmatterParser.extract(processedContent);
+    const {
+      frontmatter,
+      hasFrontmatter,
+      content: contentWithoutFrontmatter,
+    } = FrontmatterParser.extract(processedContent);
     let content = contentWithoutFrontmatter;
     let frontmatterRaw = '';
 
     if (hasFrontmatter && frontmatter && Object.keys(frontmatter).length > 0) {
-      frontmatterRaw = `---\n${yaml.dump(frontmatter)}---\n`
+      frontmatterRaw = `---\n${yaml.dump(frontmatter)}---\n`;
     }
 
     const outputDir = path.join(DOCS_BASE, lang, path.dirname(relativePath));
@@ -645,7 +654,9 @@ function warnOrphanedIncludeFiles() {
   }
   scanDir(FRAGMENTS_DIR);
   if (orphanedFiles.length > 0) {
-    console.warn(`\n[DevMode] Orphaned include files were found. These files are not referenced by any template (possibly due to 'language' frontmatter restrictions):`);
+    console.warn(
+      `\n[DevMode] Orphaned include files were found. These files are not referenced by any template (possibly due to 'language' frontmatter restrictions):`
+    );
     orphanedFiles.forEach(({ lang, fullPath, relTemplate }) => {
       console.warn(`  - [${lang}] ${fullPath}\n      Template: ${relTemplate}`);
     });
@@ -701,7 +712,7 @@ function writeContentGapsManifest(): void {
     for (const [templatePath, sections] of Object.entries(contentGapsManifest)) {
       markdownContent += `## \`${templatePath}\`\n\n`;
       for (const [sectionName, languages] of Object.entries(sections)) {
-        const langNames = languages.map(lang => LANGUAGE_NAMES[lang]).join(', ');
+        const langNames = languages.map((lang) => LANGUAGE_NAMES[lang]).join(', ');
         markdownContent += `- **\`${sectionName}\`**: Missing in ${langNames}\n`;
       }
       markdownContent += `\n`;
@@ -710,7 +721,7 @@ function writeContentGapsManifest(): void {
 
   markdownContent += `## Summary\n\n`;
   const totalSectionGaps = Object.values(contentGapsManifest)
-    .flatMap(sections => Object.values(sections))
+    .flatMap((sections) => Object.values(sections))
     .reduce((total, langs: Language[]) => total + langs.length, 0);
   markdownContent += `- **${totalGaps}** templates with gaps\n`;
   markdownContent += `- **${totalSectionGaps}** total missing sections\n`;

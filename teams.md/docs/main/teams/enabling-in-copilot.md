@@ -68,11 +68,7 @@ Here's how the `copilotAgents` section fits into the overall manifest structure:
   "bots": [
     {
       "botId": "${{BOT_ID}}",
-      "scopes": [
-        "personal",
-        "team",
-        "groupchat"
-      ],
+      "scopes": ["personal", "team", "groupchat"],
       "supportsFiles": false,
       "isNotificationOnly": false
     }

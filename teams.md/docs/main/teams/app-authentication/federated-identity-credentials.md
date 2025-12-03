@@ -14,6 +14,7 @@ Federated Identity Credentials (FIC) allows you to assign managed identities dir
 ## Prerequisites
 
 Before you begin, ensure you have:
+
 - An Azure subscription
 - Permissions to create App Registrations, Azure Bot Services, and manage identities
 - A compute resource where your bot will be hosted (App Service, Container App, VM, etc.)

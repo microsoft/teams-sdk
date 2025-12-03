@@ -20,7 +20,7 @@ You need an Entra ID App Registration to configure the OAuth Connection in Azure
 
 ![Entra client secret](/screenshots/entra-client-secret.png)
 
-4. Configure the API. From `Expose an API`,  Click `Add` to Application ID URI and accept the default value that will look like `api://<Your-Application-Id>`. Add the scope `access_as_user` and select who can _consent_.
+4. Configure the API. From `Expose an API`, Click `Add` to Application ID URI and accept the default value that will look like `api://<Your-Application-Id>`. Add the scope `access_as_user` and select who can _consent_.
 
 ![Entra oauth scopes](/screenshots/entra-oauth-scopes.png)
 
@@ -64,10 +64,9 @@ az bot authsetting create \
   --parameters "clientId=$appId" "clientSecret=$clientSecret" "tenantId=$tenantId" "tokenExchangeUrl=api://$appId"
 ```
 
-
 ## Configure the App Manifest
 
-The Teams application manifest needs to be updated to reflect the settings configure above, with the `Application Id` and `Application ID URI`, if not using `devtunnels`, replace the valid domain with the domain hosting your application. 
+The Teams application manifest needs to be updated to reflect the settings configure above, with the `Application Id` and `Application ID URI`, if not using `devtunnels`, replace the valid domain with the domain hosting your application.
 
 ```json
 "validDomains": [
@@ -79,4 +78,3 @@ The Teams application manifest needs to be updated to reflect the settings confi
     "resource": "api://<Your-Application-Id>"
   }
 ```
-

@@ -9,7 +9,10 @@ let missingPagesCache: LanguageAvailabilityMap | null = null;
  * @param language - The target language to check
  * @returns Promise<boolean> - true: page available; else false
  */
-export async function isPageAvailableForLanguage(pagePath: string, language: Language): Promise<boolean> {
+export async function isPageAvailableForLanguage(
+  pagePath: string,
+  language: Language
+): Promise<boolean> {
   if (!missingPagesCache) {
     try {
       const response = await fetch('/teams-sdk/missing-pages.json');

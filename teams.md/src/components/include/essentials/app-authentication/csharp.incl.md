@@ -5,11 +5,14 @@ The environment file approach is not yet supported for C#. You need to configure
 :::
 
 In your `Program.cs`, replace the initialization:
+
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 builder.AddTeams();
 ```
+
 with the following code to enable User Assigned Managed Identity authentication:
+
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 

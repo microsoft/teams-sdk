@@ -122,3 +122,33 @@ return InvokeResponse(
                 )
             )
 ```
+
+<!-- embedded-web-content -->
+
+### Setting up Embedded Web Content
+
+To serve web content for dialogs, you can use the `app.page()` method to host static HTML files:
+
+```python
+import os
+from microsoft.teams.apps import App
+# ...
+
+# Serve the static files from the 'views' directory
+# This will make the files available at /tabs/dialog-form
+app.page("customform", os.path.join(os.path.dirname(__file__), "views", "customform"), "/tabs/dialog-form")
+```
+
+Alternatively, you can use the `app.tab()` method for a simpler setup:
+
+```python
+import os
+from microsoft.teams.apps import App
+# ...
+
+# Serve the static files from the 'views/customform' directory
+# This will make the files available at /tabs/customform
+app.tab("customform", os.path.join(os.path.dirname(__file__), "views", "customform"))
+```
+
+This will serve the HTML page to the specified endpoint (e.g., `${BOT_ENDPOINT}/tabs/dialog-form` or `${BOT_ENDPOINT}/tabs/customform`). The webpage must include the [teams-js client library](https://www.npmjs.com/package/@microsoft/teams-js) to properly interact with the Teams client.

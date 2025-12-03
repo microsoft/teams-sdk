@@ -35,7 +35,7 @@ const sendProactiveNotification = async (userId: string) => {
   if (!conversationId) {
     return;
   }
-  const activity = new MessageActivity('Hey! It\'s been a while. How are you?');
+  const activity = new MessageActivity("Hey! It's been a while. How are you?");
   await app.send(conversationId, activity);
 };
 ```

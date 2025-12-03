@@ -11,17 +11,21 @@
 +  from microsoft.teams.apps import ActivityContext
 +  from microsoft.teams.api import MessageActivity
 
-  # highlight-error-start
--  class MyActivityHandler(ActivityHandler):
+# highlight-error-start
+
+- class MyActivityHandler(ActivityHandler):
 -      async def on_message_activity(self, turn_context: TurnContext):
 -          members = await TeamsInfo.get_members(turn_context)
   # highlight-error-end
   # highlight-success-start
-+  @app.on_message
-+  async def on_message(context: ActivityContext[MessageActivity]):
-+      members = await context.api.conversations.members(context.activity.conversation.id).get_all()
+
+* @app.on_message
+* async def on_message(context: ActivityContext[MessageActivity]):
+*      members = await context.api.conversations.members(context.activity.conversation.id).get_all()
+
   # highlight-success-end
-  ```
+
+  ````
   </TabItem>
   <TabItem value="BotBuilder">
     ```python showLineNumbers
@@ -45,13 +49,14 @@
         members = await context.api.conversations.members(context.activity.conversation.id).get()
     ```
   </TabItem>
-</Tabs>
+  </Tabs>
+  ````
 
 <!-- api-table -->
 
-| BotBuilder (TeamsInfo) | Teams SDK (ApiClient) |
-|------------------------|----------------------|
-| `TeamsInfo.getMembers(context, user_id)` | `api.conversations.members.get_by_id(conversation_id, user_id)` |
-| `TeamsInfo.get_team_details(context, team_id)` | `api.teams.get_by_id(team_id)` |
-| `TeamsInfo.get_meeting_info(context, meeting_id)` | `api.meetings.get_by_id(meeting_id)` |
+| BotBuilder (TeamsInfo)                                               | Teams SDK (ApiClient)                                                                              |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `TeamsInfo.getMembers(context, user_id)`                             | `api.conversations.members.get_by_id(conversation_id, user_id)`                                    |
+| `TeamsInfo.get_team_details(context, team_id)`                       | `api.teams.get_by_id(team_id)`                                                                     |
+| `TeamsInfo.get_meeting_info(context, meeting_id)`                    | `api.meetings.get_by_id(meeting_id)`                                                               |
 | `TeamsInfo.send_message_to_teams_channel(context, team_id, message)` | `api.conversations.create()` then `api.conversations.activities.create(conversation_id, activity)` |

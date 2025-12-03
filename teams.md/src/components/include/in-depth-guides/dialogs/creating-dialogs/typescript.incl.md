@@ -145,3 +145,21 @@ return {
   },
 };
 ```
+
+<!-- embedded-web-content -->
+
+### Setting up Embedded Web Content
+
+To serve web content for dialogs, you can use the `app.tab()` method to host static HTML files:
+
+```typescript
+import path from 'path';
+import { App } from '@microsoft/teams.apps';
+// ...
+
+// Serve the static files from the 'views' directory
+// This will make the files available at /tabs/dialog-form
+app.tab('dialog-form', path.join(__dirname, 'views', 'customform'));
+```
+
+This will serve the HTML page to the `${BOT_ENDPOINT}/tabs/dialog-form` endpoint. The webpage must include the [teams-js client library](https://www.npmjs.com/package/@microsoft/teams-js) to properly interact with the Teams client.

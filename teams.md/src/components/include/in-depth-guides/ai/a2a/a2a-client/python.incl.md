@@ -141,7 +141,6 @@ advanced_plugin.on_use_plugin(
 advanced_prompt = ChatPrompt(model=completions_model, plugins=[advanced_plugin])
 ```
 
-
 <!-- sequence-diagram -->
 
 ```mermaid

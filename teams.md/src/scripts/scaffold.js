@@ -15,18 +15,21 @@ function createFileIfNotExists(filePath, content = '') {
   }
 }
 
-
 function scaffold(userInput) {
   // If path starts with src/ but is not a valid base, fail
-  if (/^src\//.test(userInput) &&
-      !/^src\/pages\/templates\//.test(userInput) &&
-      !/^src\/components\/include\//.test(userInput)) {
+  if (
+    /^src\//.test(userInput) &&
+    !/^src\/pages\/templates\//.test(userInput) &&
+    !/^src\/components\/include\//.test(userInput)
+  ) {
     console.error('Error: Path is outside of allowed base directories.');
     process.exit(1);
   }
 
   // Normalize input
-  let relPath = userInput.replace(/^src\/(pages\/templates|components\/include)\/?/, '').replace(/^[/.]+/, '');
+  let relPath = userInput
+    .replace(/^src\/(pages\/templates|components\/include)\/?/, '')
+    .replace(/^[/.]+/, '');
   let isTemplates = false;
   let isInclude = false;
   // Detect if user input is for templates or include
@@ -80,7 +83,7 @@ function scaffold(userInput) {
     const includeTarget = walkAndCreate(includeBase, relPath, (dir) => {
       createFileIfNotExists(path.join(dir, 'typescript.incl.md'), '# Typescript Include\n');
     });
-    return {templatesTarget, includeTarget};
+    return { templatesTarget, includeTarget };
   }
   if (isTemplates) {
     const templatesBase = path.join(__dirname, '../pages/templates');
@@ -88,14 +91,14 @@ function scaffold(userInput) {
       createFileIfNotExists(path.join(dir, '_category.json'), '{\n  "label": "New Category"\n}\n');
       createFileIfNotExists(path.join(dir, 'README.mdx'), '# New Template\n');
     });
-    return {templatesTarget};
+    return { templatesTarget };
   }
   if (isInclude) {
     const includeBase = path.join(__dirname, '../components/include');
     const includeTarget = walkAndCreate(includeBase, relPath, (dir) => {
       createFileIfNotExists(path.join(dir, 'typescript.incl.md'), '# Typescript Include\n');
     });
-    return {includeTarget};
+    return { includeTarget };
   }
 }
 
@@ -107,14 +110,18 @@ function isValidPath(p) {
 }
 
 if (!isValidPath(userPath)) {
-  console.error('Error: Invalid path. Use a relative path like "templates/new/two" or "include/new/two". Do not start with a slash or use "..".');
+  console.error(
+    'Error: Invalid path. Use a relative path like "templates/new/two" or "include/new/two". Do not start with a slash or use "..".'
+  );
   process.exit(1);
 }
 
 const created = scaffold(userPath);
 if (created) {
   if (created.templatesTarget && created.includeTarget) {
-    console.log(`Scaffolded:\n  Template: ${created.templatesTarget}\n  Include:  ${created.includeTarget}`);
+    console.log(
+      `Scaffolded:\n  Template: ${created.templatesTarget}\n  Include:  ${created.includeTarget}`
+    );
   } else if (created.templatesTarget) {
     console.log(`Scaffolded Template: ${created.templatesTarget}`);
   } else if (created.includeTarget) {

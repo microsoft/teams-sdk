@@ -6,21 +6,25 @@
     // highlight-error-start
 -    import { TeamsActivityHandler } from 'botbuilder';
 
--    export class ActivityHandler extends TeamsActivityHandler {
+- export class ActivityHandler extends TeamsActivityHandler {
 -      constructor() {
 -        super();
 -        this.onMessage(async (context) => {
 -          await context.sendActivity({ type: 'typing' });
 -        });
 -      }
--    }
-    // highlight-error-end
-    // highlight-success-start
-+    app.on('message', async ({ send }) => {
-+      await send({ type: 'typing' });
-+    });
-    // highlight-success-end
+- }
+  // highlight-error-end
+  // highlight-success-start
+
+* app.on('message', async ({ send }) => {
+*      await send({ type: 'typing' });
+* });
+  // highlight-success-end
+
+
     ```
+
   </TabItem>
   <TabItem value="BotBuilder">
     ```typescript showLineNumbers
@@ -36,6 +40,7 @@
       }
     }
     ```
+
   </TabItem>
   <TabItem value="Teams SDK">
     ```typescript showLineNumbers
@@ -55,21 +60,25 @@
     // highlight-error-start
 -    import { TeamsActivityHandler } from 'botbuilder';
 
--    export class ActivityHandler extends TeamsActivityHandler {
+- export class ActivityHandler extends TeamsActivityHandler {
 -      constructor() {
 -        super();
 -        this.onMessage(async (context) => {
 -          await context.sendActivity('hello world');
 -        });
 -      }
--    }
-    // highlight-error-end
-    // highlight-success-start
-+    app.on('message', async ({ send }) => {
-+      await send('hello world');
-+    });
-    // highlight-success-end
+- }
+  // highlight-error-end
+  // highlight-success-start
+
+* app.on('message', async ({ send }) => {
+*      await send('hello world');
+* });
+  // highlight-success-end
+
+
     ```
+
   </TabItem>
   <TabItem value="BotBuilder">
     ```typescript showLineNumbers
@@ -85,6 +94,7 @@
       }
     }
     ```
+
   </TabItem>
   <TabItem value="Teams SDK">
     ```typescript showLineNumbers
@@ -107,7 +117,8 @@
 +    import { AdaptiveCard, TextBlock } from '@microsoft/teams.cards';
 
     // highlight-error-start
--    export class ActivityHandler extends TeamsActivityHandler {
+
+- export class ActivityHandler extends TeamsActivityHandler {
 -      constructor() {
 -        super();
 -        this.onMessage(async (context) => {
@@ -127,14 +138,18 @@
 -          });
 -        });
 -      }
--    }
-    // highlight-error-end
-    // highlight-success-start
-+    app.on('message', async ({ send }) => {
-+      await send(new AdaptiveCard(new TextBlock('hello world')));
-+    });
-    // highlight-success-end
+- }
+  // highlight-error-end
+  // highlight-success-start
+
+* app.on('message', async ({ send }) => {
+*      await send(new AdaptiveCard(new TextBlock('hello world')));
+* });
+  // highlight-success-end
+
+
     ```
+
   </TabItem>
   <TabItem value="BotBuilder">
     ```typescript showLineNumbers
@@ -164,6 +179,7 @@
       }
     }
     ```
+
   </TabItem>
   <TabItem value="Teams SDK">
     ```typescript showLineNumbers
@@ -174,6 +190,7 @@
       await send(new AdaptiveCard(new TextBlock('hello world')));
     });
     ```
+
   </TabItem>
 </Tabs>
 
@@ -188,7 +205,8 @@
 +    import { AdaptiveCard, TextBlock } from '@microsoft/teams.cards';
 
     // highlight-error-start
--    export class ActivityHandler extends TeamsActivityHandler {
+
+- export class ActivityHandler extends TeamsActivityHandler {
 -      constructor() {
 -        super();
 -        this.onMessage(async (context) => {
@@ -200,14 +218,18 @@
 -          });
 -        });
 -      }
--    }
-    // highlight-error-end
-    // highlight-success-start
-+    app.on('message', async ({ send }) => {
-+      await send(new MessageActivity().addAttachment(...));
-+    });
-    // highlight-success-end
+- }
+  // highlight-error-end
+  // highlight-success-start
+
+* app.on('message', async ({ send }) => {
+*      await send(new MessageActivity().addAttachment(...));
+* });
+  // highlight-success-end
+
+
     ```
+
   </TabItem>
   <TabItem value="BotBuilder">
     ```typescript showLineNumbers
@@ -229,6 +251,7 @@
       }
     }
     ```
+
   </TabItem>
   <TabItem value="Teams SDK">
     ```typescript showLineNumbers
@@ -238,5 +261,6 @@
       await send(new MessageActivity().addAttachment(...));
     });
     ```
+
   </TabItem>
 </Tabs>

@@ -63,6 +63,7 @@ Shared content for all languages.
 The package name is <LanguageInclude section="package-name" />. <!-- Inline: from include files -->
 
 <!-- NEW: Inline content without separate include files -->
+
 The context type is <LanguageInclude content={{"typescript": "`IContext`", "python": "`Context`"}} />.
 ```
 
@@ -103,15 +104,17 @@ N/A
 For simple, short language-specific text (like API names, method names, or simple phrases), you can use inline content directly in templates without creating separate include files:
 
 ```mdx
-<LanguageInclude content={{"typescript": "`send`", "csharp": "`SendAsync`", "python": "`send`"}} />
+<LanguageInclude content={{ typescript: '`send`', csharp: '`SendAsync`', python: '`send`' }} />
 ```
 
 **When to use inline content:**
+
 - Short text snippets (API names, method names, parameter names)
 - Simple differences between languages
 - Content that's easier to read inline than in separate files
 
 **When to use include files:**
+
 - Code examples
 - Complex or multi-line content
 - Content that benefits from syntax highlighting
