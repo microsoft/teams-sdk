@@ -37,8 +37,8 @@
 * await teams.Send("your-conversation-id", "proactive hello");
   // highlight-success-end
   `   </TabItem>
-  <TabItem value="BotBuilder">
-    `csharp showLineNumbers
+<TabItem value="BotBuilder">
+  `csharp showLineNumbers
   using Microsoft.Bot.Builder;
   using Microsoft.Bot.Builder.Integration.AspNet.Core;
   using Microsoft.Bot.Schema;

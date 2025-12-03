@@ -31,8 +31,8 @@
 * });
   // highlight-success-end
 
-````
-</TabItem>
+  ```
+  </TabItem>
 <TabItem value="BotBuilder">
   ```csharp showLineNumbers
   using Microsoft.Bot.Builder;
@@ -71,4 +71,3 @@
 | `TeamsInfo.GetTeamDetailsAsync(context, teamId)` | `Api.Teams.GetByIdAsync(teamId)` |
 | `TeamsInfo.GetMeetingInfoAsync(context, meetingId)` | `Api.Meetings.GetByIdAsync(meetingId)` |
 | `TeamsInfo.SendMessageToTeamsChannelAsync(context, teamId, message)` | `Api.Conversations.CreateAsync(CreateRequest)` then `Api.Conversations.Activities.CreateAsync(conversationId, activity)` |
-````

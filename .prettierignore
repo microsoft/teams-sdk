@@ -1,3 +1,5 @@
 dist
 node_modules
 coverage
+# These files contain nested code blocks that prettier formats incorrectly
+teams.md/src/components/include/migrations/botbuilder/the-api-client/*.incl.md

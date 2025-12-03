@@ -41,8 +41,8 @@
 
 * await app.send("your-conversation-id", "proactive hello") # highlight-success-end
   `   </TabItem>
-  <TabItem value="BotBuilder">
-    `python showLineNumbers
+<TabItem value="BotBuilder">
+  `python showLineNumbers
   from botbuilder.core import TurnContext
   from botbuilder.integration.aiohttp import CloudAdapter, ConfigurationBotFrameworkAuthentication
   from botbuilder.schema import ChannelAccount, ConversationAccount, ConversationReference

@@ -25,7 +25,7 @@
 
   # highlight-success-end
 
-  ````
+  ```
   </TabItem>
   <TabItem value="BotBuilder">
     ```python showLineNumbers
@@ -50,7 +50,6 @@
     ```
   </TabItem>
   </Tabs>
-  ````
 
 <!-- api-table -->
 

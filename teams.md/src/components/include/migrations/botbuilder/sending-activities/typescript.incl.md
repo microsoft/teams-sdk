@@ -22,35 +22,34 @@
 * });
   // highlight-success-end
 
+      ```
 
-    ```
+    </TabItem>
+    <TabItem value="BotBuilder">
+      ```typescript showLineNumbers
+      import { TeamsActivityHandler } from 'botbuilder';
 
-  </TabItem>
-  <TabItem value="BotBuilder">
-    ```typescript showLineNumbers
-    import { TeamsActivityHandler } from 'botbuilder';
-
-    export class ActivityHandler extends TeamsActivityHandler {
-      constructor() {
-        super();
-        this.onMessage(async (context) => {
-          // highlight-next-line
-          await context.sendActivity({ type: 'typing' });
-        });
+      export class ActivityHandler extends TeamsActivityHandler {
+        constructor() {
+          super();
+          this.onMessage(async (context) => {
+            // highlight-next-line
+            await context.sendActivity({ type: 'typing' });
+          });
+        }
       }
-    }
-    ```
+      ```
 
-  </TabItem>
-  <TabItem value="Teams SDK">
-    ```typescript showLineNumbers
-    app.on('message', async ({ send }) => {
-      // highlight-next-line
-      await send({ type: 'typing' });
-    });
-    ```
-  </TabItem>
-</Tabs>
+    </TabItem>
+    <TabItem value="Teams SDK">
+      ```typescript showLineNumbers
+      app.on('message', async ({ send }) => {
+        // highlight-next-line
+        await send({ type: 'typing' });
+      });
+      ```
+    </TabItem>
+  </Tabs>
 
 ## Strings
 
@@ -76,35 +75,34 @@
 * });
   // highlight-success-end
 
+      ```
 
-    ```
+    </TabItem>
+    <TabItem value="BotBuilder">
+      ```typescript showLineNumbers
+      import { TeamsActivityHandler } from 'botbuilder';
 
-  </TabItem>
-  <TabItem value="BotBuilder">
-    ```typescript showLineNumbers
-    import { TeamsActivityHandler } from 'botbuilder';
-
-    export class ActivityHandler extends TeamsActivityHandler {
-      constructor() {
-        super();
-        this.onMessage(async (context) => {
-          // highlight-next-line
-          await context.sendActivity('hello world');
-        });
+      export class ActivityHandler extends TeamsActivityHandler {
+        constructor() {
+          super();
+          this.onMessage(async (context) => {
+            // highlight-next-line
+            await context.sendActivity('hello world');
+          });
+        }
       }
-    }
-    ```
+      ```
 
-  </TabItem>
-  <TabItem value="Teams SDK">
-    ```typescript showLineNumbers
-    app.on('message', async ({ send }) => {
-      // highlight-next-line
-      await send('hello world');
-    });
-    ```
-  </TabItem>
-</Tabs>
+    </TabItem>
+    <TabItem value="Teams SDK">
+      ```typescript showLineNumbers
+      app.on('message', async ({ send }) => {
+        // highlight-next-line
+        await send('hello world');
+      });
+      ```
+    </TabItem>
+  </Tabs>
 
 ## Adaptive Cards
 
@@ -147,52 +145,51 @@
 * });
   // highlight-success-end
 
+      ```
 
-    ```
+    </TabItem>
+    <TabItem value="BotBuilder">
+      ```typescript showLineNumbers
+      import { TeamsActivityHandler, CardFactory } from 'botbuilder';
 
-  </TabItem>
-  <TabItem value="BotBuilder">
-    ```typescript showLineNumbers
-    import { TeamsActivityHandler, CardFactory } from 'botbuilder';
-
-    export class ActivityHandler extends TeamsActivityHandler {
-      constructor() {
-        super();
-        this.onMessage(async (context) => {
-          // highlight-start
-          await context.sendActivity({
-            type: 'message',
-            attachments: [
-              CardFactory.adaptiveCard({
-                $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-                type: 'AdaptiveCard',
-                version: '1.0',
-                body: [{
-                  type: 'TextBlock',
-                  text: 'hello world'
-                }]
-              })
-            ]
+      export class ActivityHandler extends TeamsActivityHandler {
+        constructor() {
+          super();
+          this.onMessage(async (context) => {
+            // highlight-start
+            await context.sendActivity({
+              type: 'message',
+              attachments: [
+                CardFactory.adaptiveCard({
+                  $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+                  type: 'AdaptiveCard',
+                  version: '1.0',
+                  body: [{
+                    type: 'TextBlock',
+                    text: 'hello world'
+                  }]
+                })
+              ]
+            });
+            // highlight-end
           });
-          // highlight-end
-        });
+        }
       }
-    }
-    ```
+      ```
 
-  </TabItem>
-  <TabItem value="Teams SDK">
-    ```typescript showLineNumbers
-    import { AdaptiveCard, TextBlock } from '@microsoft/teams.cards';
+    </TabItem>
+    <TabItem value="Teams SDK">
+      ```typescript showLineNumbers
+      import { AdaptiveCard, TextBlock } from '@microsoft/teams.cards';
 
-    app.on('message', async ({ send }) => {
-      // highlight-next-line
-      await send(new AdaptiveCard(new TextBlock('hello world')));
-    });
-    ```
+      app.on('message', async ({ send }) => {
+        // highlight-next-line
+        await send(new AdaptiveCard(new TextBlock('hello world')));
+      });
+      ```
 
-  </TabItem>
-</Tabs>
+    </TabItem>
+  </Tabs>
 
 ## Attachments
 
@@ -227,40 +224,39 @@
 * });
   // highlight-success-end
 
+      ```
 
-    ```
+    </TabItem>
+    <TabItem value="BotBuilder">
+      ```typescript showLineNumbers
+      import { TeamsActivityHandler } from 'botbuilder';
 
-  </TabItem>
-  <TabItem value="BotBuilder">
-    ```typescript showLineNumbers
-    import { TeamsActivityHandler } from 'botbuilder';
-
-    export class ActivityHandler extends TeamsActivityHandler {
-      constructor() {
-        super();
-        this.onMessage(async (context) => {
-          // highlight-start
-          await context.sendActivity({
-            type: 'message',
-            attachments: [
-              ...
-            ]
+      export class ActivityHandler extends TeamsActivityHandler {
+        constructor() {
+          super();
+          this.onMessage(async (context) => {
+            // highlight-start
+            await context.sendActivity({
+              type: 'message',
+              attachments: [
+                ...
+              ]
+            });
+            // highlight-end
           });
-          // highlight-end
-        });
+        }
       }
-    }
-    ```
+      ```
 
-  </TabItem>
-  <TabItem value="Teams SDK">
-    ```typescript showLineNumbers
+    </TabItem>
+    <TabItem value="Teams SDK">
+      ```typescript showLineNumbers
 
-    app.on('message', async ({ send }) => {
-      // highlight-next-line
-      await send(new MessageActivity().addAttachment(...));
-    });
-    ```
+      app.on('message', async ({ send }) => {
+        // highlight-next-line
+        await send(new MessageActivity().addAttachment(...));
+      });
+      ```
 
-  </TabItem>
-</Tabs>
+    </TabItem>
+  </Tabs>

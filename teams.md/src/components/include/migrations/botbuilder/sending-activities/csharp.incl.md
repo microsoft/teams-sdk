@@ -36,8 +36,8 @@
 * });
   // highlight-success-end
   `   </TabItem>
-  <TabItem value="BotBuilder">
-    `csharp showLineNumbers
+<TabItem value="BotBuilder">
+  `csharp showLineNumbers
   using Microsoft.Bot.Builder;
   using Microsoft.Bot.Schema;
 
@@ -108,8 +108,8 @@
 * });
   // highlight-success-end
   `   </TabItem>
-  <TabItem value="BotBuilder">
-    `csharp showLineNumbers
+<TabItem value="BotBuilder">
+  `csharp showLineNumbers
   using Microsoft.Bot.Builder;
   using Microsoft.Bot.Schema;
 
@@ -193,8 +193,8 @@
 * });
   // highlight-success-end
   `   </TabItem>
-  <TabItem value="BotBuilder">
-    `csharp showLineNumbers
+<TabItem value="BotBuilder">
+  `csharp showLineNumbers
   using Microsoft.Bot.Builder;
   using Microsoft.Bot.Schema;
 
@@ -283,8 +283,8 @@
 * });
   // highlight-success-end
   `   </TabItem>
-  <TabItem value="BotBuilder">
-    `csharp showLineNumbers
+<TabItem value="BotBuilder">
+  `csharp showLineNumbers
   using Microsoft.Bot.Builder;
   using Microsoft.Bot.Schema;
 

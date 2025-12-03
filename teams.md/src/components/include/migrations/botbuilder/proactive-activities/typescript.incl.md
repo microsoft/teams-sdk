@@ -22,9 +22,8 @@
 
 * const app = new App();
 
-
-    (async () => {
-      // highlight-error-start
+  (async () => {
+  // highlight-error-start
 
 -      const conversationReference: ConversationReference = {
 -        serviceUrl: '...',

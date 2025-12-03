@@ -40,8 +40,8 @@
 * });
   // highlight-success-end
 
-````
-</TabItem>
+  ```
+  </TabItem>
 <TabItem value="BotBuilder">
   ```typescript showLineNumbers
   import {
@@ -86,4 +86,3 @@
 | `TeamsInfo.getTeamDetails(context, teamId)` | `api.teams.getById(teamId)` |
 | `TeamsInfo.getMeetingInfo(context, meetingId)` | `api.meetings.getById(meetingId)` |
 | `TeamsInfo.sendMessageToTeamsChannel(context, teamId, message)` | `api.conversations.create()` then `api.conversations.activities.create(conversationId, activity)` |
-````
