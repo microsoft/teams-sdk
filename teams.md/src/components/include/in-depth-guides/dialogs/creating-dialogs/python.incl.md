@@ -136,7 +136,7 @@ from microsoft.teams.apps import App
 app = App()
 
 # Serve the dialog form from the views directory
-app.page("customform", os.path.join(os.path.dirname(__file__), "views", "customform"), "/tabs/dialog-form")
+app.page("customform", os.path.join(os.path.dirname(__file__), "views", "customform"), "/tabs/dialog-webpage")
 ```
 
-This will make the HTML files in the `views/customform` directory accessible at the `/tabs/dialog-form` endpoint.
+This will make the HTML files in the `views/customform` directory accessible at the `/tabs/dialog-webpage` endpoint.
