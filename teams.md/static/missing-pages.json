@@ -1,17 +1,54 @@
 {
-  "essentials/app-authentication": ["csharp"],
-  "essentials/on-activity/activity-ref": ["csharp", "python"],
-  "in-depth-guides/ai/a2a": ["csharp"],
-  "in-depth-guides/ai/a2a/a2a-client": ["csharp"],
-  "in-depth-guides/ai/a2a/a2a-server": ["csharp"],
-  "in-depth-guides/tabs": ["python"],
-  "in-depth-guides/tabs/app-options": ["csharp", "python"],
-  "in-depth-guides/tabs/functions": ["python"],
-  "in-depth-guides/tabs/functions/function-calling": ["csharp", "python"],
-  "in-depth-guides/tabs/getting-started": ["csharp", "python"],
-  "in-depth-guides/tabs/graph": ["csharp", "python"],
-  "in-depth-guides/tabs/using-the-app": ["csharp", "python"],
-  "migrations": ["csharp"],
-  "migrations/v1": ["csharp"],
-  "migrations/v2-previews": ["csharp", "python"]
+  "essentials/app-authentication": [
+    "csharp"
+  ],
+  "essentials/on-activity/activity-ref": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/ai/a2a": [
+    "csharp"
+  ],
+  "in-depth-guides/ai/a2a/a2a-client": [
+    "csharp"
+  ],
+  "in-depth-guides/ai/a2a/a2a-server": [
+    "csharp"
+  ],
+  "in-depth-guides/tabs": [
+    "python"
+  ],
+  "in-depth-guides/tabs/app-options": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/tabs/functions": [
+    "python"
+  ],
+  "in-depth-guides/tabs/functions/function-calling": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/tabs/getting-started": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/tabs/graph": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/tabs/using-the-app": [
+    "csharp",
+    "python"
+  ],
+  "migrations": [
+    "csharp"
+  ],
+  "migrations/v1": [
+    "csharp"
+  ],
+  "migrations/v2-previews": [
+    "csharp",
+    "python"
+  ]
 }
