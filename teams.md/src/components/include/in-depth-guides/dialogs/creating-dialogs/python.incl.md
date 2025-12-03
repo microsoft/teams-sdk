@@ -122,3 +122,21 @@ return InvokeResponse(
                 )
             )
 ```
+
+<!-- embedded-web-content -->
+
+### Setting up Embedded Web Content
+
+To serve web content for dialogs, you can use the `page` method to serve static files from a directory:
+
+```python
+import os
+from microsoft.teams.apps import App
+
+app = App()
+
+# Serve the dialog form from the views directory
+app.page("customform", os.path.join(os.path.dirname(__file__), "views", "customform"), "/tabs/dialog-form")
+```
+
+This will make the HTML files in the `views/customform` directory accessible at the `/tabs/dialog-form` endpoint.

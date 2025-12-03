@@ -145,3 +145,21 @@ return {
   },
 };
 ```
+
+<!-- embedded-web-content -->
+
+### Setting up Embedded Web Content
+
+To serve web content for dialogs, you can use the `tab` method to serve static files from a directory:
+
+```typescript
+import path from 'path';
+import { App } from '@microsoft/teams.apps';
+
+const app = new App();
+
+// Serve the dialog form from the views directory
+app.tab('dialog-form', path.join(__dirname, 'views', 'customform'));
+```
+
+This will make the HTML files in the `views/customform` directory accessible at the `/tabs/dialog-form` endpoint.
