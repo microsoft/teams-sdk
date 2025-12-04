@@ -145,3 +145,17 @@ return {
   },
 };
 ```
+
+<!-- embedded-web-content -->
+
+### Setting up Embedded Web Content
+
+To serve web content for dialogs, you can use the `tab` method to host static webpages:
+
+```typescript
+import path from 'path';
+import { App } from '@microsoft/teams.apps';
+
+// Hosts a static webpage at /tabs/dialog-form
+app.tab('dialog-form', path.join(__dirname, 'views', 'customform'));
+```
