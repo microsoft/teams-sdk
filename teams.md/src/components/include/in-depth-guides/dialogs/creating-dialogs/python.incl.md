@@ -131,8 +131,8 @@ To serve web content for dialogs, you can use the `page` method to host static w
 
 ```python
 import os
-from microsoft.teams.apps import App
 
+# In your app setup (e.g., main.py)
 # Hosts a static webpage at /tabs/dialog-form
 app.page("customform", os.path.join(os.path.dirname(__file__), "views", "customform"), "/tabs/dialog-form")
 ```

@@ -154,8 +154,8 @@ To serve web content for dialogs, you can use the `tab` method to host static we
 
 ```typescript
 import path from 'path';
-import { App } from '@microsoft/teams.apps';
 
+// In your app setup (e.g., index.ts)
 // Hosts a static webpage at /tabs/dialog-form
 app.tab('dialog-form', path.join(__dirname, 'views', 'customform'));
 ```
