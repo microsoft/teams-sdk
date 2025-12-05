@@ -9,8 +9,8 @@ You are able to convert any `App` into an MCP server by using the `McpPlugin` fr
 Your plugin can be configured as follows:
 
 ```python
-from microsoft.teams.ai import Function
-from microsoft.teams.mcpplugin import McpServerPlugin
+from microsoft_teams.ai import Function
+from microsoft_teams.mcpplugin import McpServerPlugin
 from pydantic import BaseModel
 # ...
 
@@ -47,8 +47,8 @@ By default, the MCP server will be available at `/mcp` on your application. You 
 And included in the app like any other plugin:
 
 ```python
-from microsoft.teams.apps import App
-from microsoft.teams.devtools import DevToolsPlugin
+from microsoft_teams.apps import App
+from microsoft_teams.devtools import DevToolsPlugin
 # ...
 
 app = App(plugins=[mcp_server_plugin, DevToolsPlugin()])
@@ -70,8 +70,8 @@ You may use the [MCP-Inspector](https://modelcontextprotocol.io/legacy/tools/ins
 
 ```python
 from typing import Dict
-from microsoft.teams.ai import Function
-from microsoft.teams.mcpplugin import McpServerPlugin
+from microsoft_teams.ai import Function
+from microsoft_teams.mcpplugin import McpServerPlugin
 from pydantic import BaseModel
 # ...
 
@@ -116,8 +116,8 @@ mcp_server_plugin.use_tool(
 **Store Conversation IDs in Message Handler:**
 
 ```python
-from microsoft.teams.api import MessageActivity
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import MessageActivity
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_message

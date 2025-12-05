@@ -19,9 +19,9 @@ quote-agent/
 <!-- app-class-code -->
 
 ```python title="src/main.py"
-from microsoft.teams.api import MessageActivity, TypingActivityInput
-from microsoft.teams.apps import ActivityContext, App, AppOptions
-from microsoft.teams.devtools import DevToolsPlugin
+from microsoft_teams.api import MessageActivity, TypingActivityInput
+from microsoft_teams.apps import ActivityContext, App, AppOptions
+from microsoft_teams.devtools import DevToolsPlugin
 
 app = App(plugins=[DevToolsPlugin()])
 

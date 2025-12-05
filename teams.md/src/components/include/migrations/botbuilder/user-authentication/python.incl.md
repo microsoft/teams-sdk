@@ -88,8 +88,8 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from microsoft.teams.apps import ActivityContext, App, SignInEvent
-    from microsoft.teams.api import MessageActivity
+    from microsoft_teams.apps import ActivityContext, App, SignInEvent
+    from microsoft_teams.api import MessageActivity
 
     app = App(default_connection_name=connection_name)
 

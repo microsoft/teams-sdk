@@ -6,9 +6,9 @@
     import asyncio
     from adapter import adapter
     from activity_handler import MyActivityHandler
-    from microsoft.teams.api import MessageActivity
-    from microsoft.teams.apps import ActivityContext, App
-    from microsoft.teams.botbuilder import BotBuilderPlugin
+    from microsoft_teams.api import MessageActivity
+    from microsoft_teams.apps import ActivityContext, App
+    from microsoft_teams.botbuilder import BotBuilderPlugin
 
     # highlight-next-line
     app = App(plugins=[BotBuilderPlugin(adapter=adapter, handler=MyActivityHandler())])

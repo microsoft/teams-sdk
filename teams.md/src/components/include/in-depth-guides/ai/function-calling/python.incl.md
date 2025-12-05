@@ -29,10 +29,10 @@ sequenceDiagram
 ```python
 import aiohttp
 import random
-from microsoft.teams.ai import Agent, Function
-from microsoft.teams.api import MessageActivity, MessageActivityInput
-from microsoft.teams.apps import ActivityContext
-from microsoft.teams.openai import OpenAICompletionsAIModel
+from microsoft_teams.ai import Agent, Function
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
+from microsoft_teams.openai import OpenAICompletionsAIModel
 from pydantic import BaseModel
 
 class SearchPokemonParams(BaseModel):
@@ -95,9 +95,9 @@ Additionally, for complex scenarios, you can add multiple functions to the `Chat
 
 ```python
 import random
-from microsoft.teams.ai import Agent, Function
-from microsoft.teams.api import MessageActivity, MessageActivityInput
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.ai import Agent, Function
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
 from pydantic import BaseModel
 # ...
 

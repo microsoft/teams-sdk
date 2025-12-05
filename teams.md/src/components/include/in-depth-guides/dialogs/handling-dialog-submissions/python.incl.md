@@ -6,8 +6,8 @@ Dialogs have a specific `dialog_submit` event to handle submissions. When a user
 
 ```python
 from typing import Optional, Any
-from microsoft.teams.api import TaskSubmitInvokeActivity, TaskModuleResponse, TaskModuleMessageResponse
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import TaskSubmitInvokeActivity, TaskModuleResponse, TaskModuleMessageResponse
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_dialog_submit
@@ -26,8 +26,8 @@ async def handle_dialog_submit(ctx: ActivityContext[TaskSubmitInvokeActivity]):
 
 ```python
 from typing import Optional, Any
-from microsoft.teams.api import TaskSubmitInvokeActivity, InvokeResponse, TaskModuleResponse, TaskModuleMessageResponse
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import TaskSubmitInvokeActivity, InvokeResponse, TaskModuleResponse, TaskModuleMessageResponse
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_dialog_submit
