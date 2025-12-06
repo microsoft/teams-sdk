@@ -65,9 +65,9 @@ uv add microsoft-teams-apps
 +    import asyncio
 +    import logging
 +
-+    from microsoft.teams.api import MessageActivity
-+    from microsoft.teams.apps import ActivityContext, App, ErrorEvent
-+    from microsoft.teams.common import LocalStorage
++    from microsoft_teams.api import MessageActivity
++    from microsoft_teams.apps import ActivityContext, App, ErrorEvent
++    from microsoft_teams.common import LocalStorage
 +
 +    logger = logging.getLogger(__name__)
 +
@@ -101,9 +101,9 @@ uv add microsoft-teams-apps
     import asyncio
     import logging
 
-    from microsoft.teams.api import MessageActivity
-    from microsoft.teams.apps import ActivityContext, App, ErrorEvent
-    from microsoft.teams.common import LocalStorage
+    from microsoft_teams.api import MessageActivity
+    from microsoft_teams.apps import ActivityContext, App, ErrorEvent
+    from microsoft_teams.common import LocalStorage
 
     logger = logging.getLogger(__name__)
 

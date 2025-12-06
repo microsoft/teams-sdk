@@ -8,8 +8,8 @@
 -  from botbuilder.core.teams import TeamsInfo
   # highlight-error-end
   # highlight-success-line
-+  from microsoft.teams.apps import ActivityContext
-+  from microsoft.teams.api import MessageActivity
++  from microsoft_teams.apps import ActivityContext
++  from microsoft_teams.api import MessageActivity
 
   # highlight-error-start
 -  class MyActivityHandler(ActivityHandler):
@@ -36,8 +36,8 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from microsoft.teams.api import MessageActivity
-    from microsoft.teams.apps import ActivityContext
+    from microsoft_teams.api import MessageActivity
+    from microsoft_teams.apps import ActivityContext
 
     @app.on_message
     async def on_message(context: ActivityContext[MessageActivity]):

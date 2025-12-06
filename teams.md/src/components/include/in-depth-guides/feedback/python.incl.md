@@ -11,9 +11,9 @@ For production applications, consider using databases, file systems, or cloud st
 <!-- including-feedback -->
 
 ```python
-from microsoft.teams.ai import Agent
-from microsoft.teams.api import MessageActivityInput
-from microsoft.teams.apps import ActivityContext, MessageActivity
+from microsoft_teams.ai import Agent
+from microsoft_teams.api import MessageActivityInput
+from microsoft_teams.apps import ActivityContext, MessageActivity
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
@@ -37,8 +37,8 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 ```python
 import json
 from typing import Dict, Any
-from microsoft.teams.api import MessageSubmitActionInvokeActivity
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import MessageSubmitActionInvokeActivity
+from microsoft_teams.apps import ActivityContext
 # ...
 
 # Handle feedback submission events

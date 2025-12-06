@@ -1,7 +1,7 @@
 <!-- single-action-example -->
 
 ```python
-from microsoft.teams.cards.core import ExecuteAction
+from microsoft_teams.cards.core import ExecuteAction
 # ...
 
 action = ExecuteAction(title="Submit Feedback")
@@ -12,7 +12,7 @@ action = ExecuteAction(title="Submit Feedback")
 <!-- action-set-example -->
 
 ```python
-from microsoft.teams.cards.core import ActionSet, ExecuteAction, OpenUrlAction
+from microsoft_teams.cards.core import ActionSet, ExecuteAction, OpenUrlAction
 # ...
 
 action_set = ActionSet(
@@ -41,8 +41,8 @@ json = {
 <!-- input-association-example -->
 
 ```python
-from microsoft.teams.cards import AdaptiveCard, ActionSet, ExecuteAction, OpenUrlAction
-from microsoft.teams.cards.core import TextInput, ToggleInput
+from microsoft_teams.cards import AdaptiveCard, ActionSet, ExecuteAction, OpenUrlAction
+from microsoft_teams.cards.core import TextInput, ToggleInput
 # ...
 
 profile_card = AdaptiveCard(
@@ -76,7 +76,7 @@ profile_card = AdaptiveCard(
 <!-- input-validation-example -->
 
 ```python
-from microsoft.teams.cards import AdaptiveCard, ActionSet, ExecuteAction, NumberInput, TextInput
+from microsoft_teams.cards import AdaptiveCard, ActionSet, ExecuteAction, NumberInput, TextInput
 # ...
 
 def create_profile_card_input_validation():
@@ -106,8 +106,8 @@ def create_profile_card_input_validation():
 <!-- server-handler-example -->
 
 ```python
-from microsoft.teams.api import AdaptiveCardInvokeActivity, AdaptiveCardActionErrorResponse, AdaptiveCardActionMessageResponse, HttpError, InnerHttpError, AdaptiveCardInvokeResponse
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import AdaptiveCardInvokeActivity, AdaptiveCardActionErrorResponse, AdaptiveCardActionMessageResponse, HttpError, InnerHttpError, AdaptiveCardInvokeResponse
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_card_action

@@ -15,7 +15,7 @@ This is easy to do by simply using the `addCitations` method on the message. Thi
 <!-- citations-code -->
 
 ```python
-from microsoft.teams.api import MessageActivityInput, CitationAppearance
+from microsoft_teams.api import MessageActivityInput, CitationAppearance
 
 message_activity = MessageActivityInput(text=result.content).add_ai_generated()
 for i, doc in enumerate(cited_docs):
@@ -30,7 +30,7 @@ You can do that by using the `with_suggested_actions` method on the message.
 <!-- suggested-actions-code -->
 
 ```python
-from microsoft.teams.api import CardAction, CardActionType, MessageActivityInput, SuggestedActions
+from microsoft_teams.api import CardAction, CardActionType, MessageActivityInput, SuggestedActions
 
 suggested_actions = SuggestedActions(
     to=[activity.from_.id],

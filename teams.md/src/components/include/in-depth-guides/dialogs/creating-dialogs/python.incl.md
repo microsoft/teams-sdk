@@ -5,9 +5,9 @@ To open a dialog, you need to supply a special type of action as to the Adaptive
 <!-- entry-point-code -->
 
 ```python
-from microsoft.teams.api import MessageActivity, MessageActivityInput, TypingActivityInput
-from microsoft.teams.apps import ActivityContext
-from microsoft.teams.cards import AdaptiveCard, TextBlock, TaskFetchAction
+from microsoft_teams.api import MessageActivity, MessageActivityInput, TypingActivityInput
+from microsoft_teams.apps import ActivityContext
+from microsoft_teams.cards import AdaptiveCard, TextBlock, TaskFetchAction
 # ...
 
 @app.on_message
@@ -63,10 +63,10 @@ async def handle_dialog_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
 <!-- rendering-card-code -->
 
 ```python
-from microsoft.teams.api import AdaptiveCardAttachment, TaskFetchInvokeActivity, InvokeResponse, card_attachment
-from microsoft.teams.api import CardTaskModuleTaskInfo, TaskModuleContinueResponse, TaskModuleResponse
-from microsoft.teams.apps import ActivityContext
-from microsoft.teams.cards import AdaptiveCard, TextBlock, TextInput, SubmitAction, SubmitActionData
+from microsoft_teams.api import AdaptiveCardAttachment, TaskFetchInvokeActivity, InvokeResponse, card_attachment
+from microsoft_teams.api import CardTaskModuleTaskInfo, TaskModuleContinueResponse, TaskModuleResponse
+from microsoft_teams.apps import ActivityContext
+from microsoft_teams.cards import AdaptiveCard, TextBlock, TextInput, SubmitAction, SubmitActionData
 # ...
 
 @app.on_dialog_open
@@ -102,7 +102,7 @@ async def handle_dialog_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
 
 ```python
 import os
-from microsoft.teams.api import InvokeResponse, TaskModuleContinueResponse, TaskModuleResponse, UrlTaskModuleTaskInfo
+from microsoft_teams.api import InvokeResponse, TaskModuleContinueResponse, TaskModuleResponse, UrlTaskModuleTaskInfo
 # ...
 
 return InvokeResponse(

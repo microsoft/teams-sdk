@@ -8,8 +8,8 @@
 -   from botbuilder.schema import Activity
     # highlight-error-end
     # highlight-success-start
-+   from microsoft.teams.api import MessageActivity, TypingActivityInput
-+   from microsoft.teams.apps import ActivityContext, App
++   from microsoft_teams.api import MessageActivity, TypingActivityInput
++   from microsoft_teams.apps import ActivityContext, App
     # highlight-success-end
 
     # highlight-error-start
@@ -37,8 +37,8 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from microsoft.teams.api import MessageActivity, TypingActivityInput
-    from microsoft.teams.apps import ActivityContext, App
+    from microsoft_teams.api import MessageActivity, TypingActivityInput
+    from microsoft_teams.apps import ActivityContext, App
 
     @app.on_message
     async def on_message(context: ActivityContext[MessageActivity]):
@@ -57,8 +57,8 @@
 -   from botbuilder.core import ActivityHandler, TurnContext
     # highlight-error-end
     # highlight-success-start
-+   from microsoft.teams.api import MessageActivity
-+   from microsoft.teams.apps import ActivityContext, App
++   from microsoft_teams.api import MessageActivity
++   from microsoft_teams.apps import ActivityContext, App
     # highlight-success-end
 
     # highlight-error-start
@@ -85,8 +85,8 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from microsoft.teams.api import MessageActivity
-    from microsoft.teams.apps import ActivityContext, App
+    from microsoft_teams.api import MessageActivity
+    from microsoft_teams.apps import ActivityContext, App
 
     @app.on_message
     async def on_message(context: ActivityContext[MessageActivity]):
@@ -106,9 +106,9 @@
 -   from botbuilder.schema import Activity, Attachment
     # highlight-error-end
     # highlight-success-start
-+   from microsoft.teams.api import MessageActivity
-+   from microsoft.teams.apps import ActivityContext, App
-+   from microsoft.teams.cards import AdaptiveCard, TextBlock
++   from microsoft_teams.api import MessageActivity
++   from microsoft_teams.apps import ActivityContext, App
++   from microsoft_teams.cards import AdaptiveCard, TextBlock
     # highlight-success-end
 
     # highlight-error-start
@@ -143,9 +143,9 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from microsoft.teams.api import MessageActivity
-    from microsoft.teams.apps import ActivityContext, App
-    from microsoft.teams.cards import AdaptiveCard, TextBlock
+    from microsoft_teams.api import MessageActivity
+    from microsoft_teams.apps import ActivityContext, App
+    from microsoft_teams.cards import AdaptiveCard, TextBlock
 
     @app.on_message
     async def on_message(context: ActivityContext[MessageActivity]):
@@ -165,8 +165,8 @@
 -   from botbuilder.schema import Activity, Attachment
     # highlight-error-end
     # highlight-success-start
-+   from microsoft.teams.api import Attachment, MessageActivity, MessageActivityInput
-+   from microsoft.teams.apps import ActivityContext, App
++   from microsoft_teams.api import Attachment, MessageActivity, MessageActivityInput
++   from microsoft_teams.apps import ActivityContext, App
     # highlight-success-end
 
     # highlight-error-start
@@ -201,8 +201,8 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from microsoft.teams.api import Attachment, MessageActivity, MessageActivityInput
-    from microsoft.teams.apps import ActivityContext, App
+    from microsoft_teams.api import Attachment, MessageActivity, MessageActivityInput
+    from microsoft_teams.apps import ActivityContext, App
 
     @app.on_message
     async def on_message(context: ActivityContext[MessageActivity]):

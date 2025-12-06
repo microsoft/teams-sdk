@@ -1,8 +1,8 @@
 <!-- state-initialization -->
 
 ```python
-from microsoft.teams.ai import ChatPrompt, ListMemory, AIModel
-from microsoft.teams.openai import OpenAICompletionsAIModel
+from microsoft_teams.ai import ChatPrompt, ListMemory, AIModel
+from microsoft_teams.openai import OpenAICompletionsAIModel
 
 # Simple in-memory store for conversation histories
 # In your application, it may be a good idea to use a more
@@ -29,9 +29,9 @@ async def clear_conversation_memory(conversation_id: str) -> None:
 <!-- usage-example -->
 
 ```python
-from microsoft.teams.ai import ChatPrompt, ListMemory, AIModel
-from microsoft.teams.api import MessageActivity, MessageActivityInput
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.ai import ChatPrompt, ListMemory, AIModel
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
 # ...
 
 async def handle_stateful_conversation(model: AIModel, ctx: ActivityContext[MessageActivity]) -> None:

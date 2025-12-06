@@ -48,9 +48,9 @@ async def _send_message(self) -> None:
 
 ```python
 from os import getenv
-from microsoft.teams.openai.completions_model import OpenAICompletionsAIModel
-from microsoft.teams.a2a import A2AClientPlugin, A2APluginUseParams
-from microsoft.teams.ai import ChatPrompt
+from microsoft_teams.openai.completions_model import OpenAICompletionsAIModel
+from microsoft_teams.a2a import A2AClientPlugin, A2APluginUseParams
+from microsoft_teams.ai import ChatPrompt
 
 PORT = getenv("PORT", "4000")
 

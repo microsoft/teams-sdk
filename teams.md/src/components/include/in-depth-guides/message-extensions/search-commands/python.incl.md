@@ -1,7 +1,7 @@
 <!-- handle-submission-code -->
 
 ```python
-from microsoft.teams.api import AdaptiveCardAttachment, MessageExtensionQueryInvokeActivity, ThumbnailCardAttachment, card_attachment, InvokeResponse, AttachmentLayout, MessagingExtensionAttachment, MessagingExtensionInvokeResponse, MessagingExtensionResult, MessagingExtensionResultType
+from microsoft_teams.api import AdaptiveCardAttachment, MessageExtensionQueryInvokeActivity, ThumbnailCardAttachment, card_attachment, InvokeResponse, AttachmentLayout, MessagingExtensionAttachment, MessagingExtensionInvokeResponse, MessagingExtensionResult, MessagingExtensionResultType
 # ...
 
 @app.on_message_ext_query
@@ -39,7 +39,7 @@ async def handle_message_ext_query(ctx: ActivityContext[MessageExtensionQueryInv
 
 ```python
 from typing import Any, Dict, List
-from microsoft.teams.cards import AdaptiveCard
+from microsoft_teams.cards import AdaptiveCard
 # ...
 
 async def create_dummy_cards(search_query: str) -> List[Dict[str, Any]]:
@@ -88,8 +88,8 @@ async def create_dummy_cards(search_query: str) -> List[Dict[str, Any]]:
 <!-- select-item-code -->
 
 ```python
-from microsoft.teams.api import MessageExtensionSelectItemInvokeActivity, AttachmentLayout, MessagingExtensionInvokeResponse, MessagingExtensionResult, MessagingExtensionResultType
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import MessageExtensionSelectItemInvokeActivity, AttachmentLayout, MessagingExtensionInvokeResponse, MessagingExtensionResult, MessagingExtensionResultType
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_message_ext_select_item

@@ -3,10 +3,10 @@
 Import the relevant objects:
 
 ```python
-from microsoft.teams.ai import ChatPrompt
-from microsoft.teams.api import MessageActivity, MessageActivityInput
-from microsoft.teams.apps import ActivityContext
-from microsoft.teams.openai import OpenAICompletionsAIModel
+from microsoft_teams.ai import ChatPrompt
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
+from microsoft_teams.openai import OpenAICompletionsAIModel
 ```
 
 <!-- simple-chat-code -->
@@ -46,10 +46,10 @@ Instead of `ChatPrompt`, you may also use `Agent`. The `Agent` class is a deriva
 <!-- streaming-code -->
 
 ```python
-from microsoft.teams.ai import ChatPrompt
-from microsoft.teams.api import MessageActivity, MessageActivityInput
-from microsoft.teams.apps import ActivityContext
-from microsoft.teams.openai import OpenAICompletionsAIModel
+from microsoft_teams.ai import ChatPrompt
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
+from microsoft_teams.openai import OpenAICompletionsAIModel
 # ...
 
 @app.on_message

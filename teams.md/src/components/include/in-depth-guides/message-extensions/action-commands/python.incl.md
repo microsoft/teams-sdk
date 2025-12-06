@@ -5,9 +5,9 @@ Handle submission when the `createCard` or `getMessageDetails` actions commands 
 <!-- handle-submission-code -->
 
 ```python
-from microsoft.teams.api import AdaptiveCardAttachment, MessageExtensionSubmitActionInvokeActivity, card_attachment
-from microsoft.teams.api.models import AttachmentLayout, MessagingExtensionActionInvokeResponse, MessagingExtensionAttachment, MessagingExtensionResult, MessagingExtensionResultType
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import AdaptiveCardAttachment, MessageExtensionSubmitActionInvokeActivity, card_attachment
+from microsoft_teams.api.models import AttachmentLayout, MessagingExtensionActionInvokeResponse, MessagingExtensionAttachment, MessagingExtensionResult, MessagingExtensionResultType
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_message_ext_submit
@@ -39,7 +39,7 @@ async def handle_message_ext_submit(ctx: ActivityContext[MessageExtensionSubmitA
 
 ```py
 from typing import Dict
-from microsoft.teams.cards import AdaptiveCard
+from microsoft_teams.cards import AdaptiveCard
 # ...
 
 def create_card(data: Dict[str, str]) -> AdaptiveCard:
@@ -78,8 +78,8 @@ def create_card(data: Dict[str, str]) -> AdaptiveCard:
 
 ```python
 from typing import Dict, List, Union
-from microsoft.teams.api.models.message import Message
-from microsoft.teams.cards import AdaptiveCard
+from microsoft_teams.api.models.message import Message
+from microsoft_teams.cards import AdaptiveCard
 # ...
 
 def create_message_details_card(message_payload: Message) -> AdaptiveCard:
@@ -141,9 +141,9 @@ Handle opening adaptive card dialog when the `fetchConversationMembers` command 
 <!-- handle-dialog-code -->
 
 ```python
-from microsoft.teams.api import AdaptiveCardAttachment, MessageExtensionFetchTaskInvokeActivity, card_attachment
-from microsoft.teams.api.models import CardTaskModuleTaskInfo, MessagingExtensionActionInvokeResponse, TaskModuleContinueResponse
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import AdaptiveCardAttachment, MessageExtensionFetchTaskInvokeActivity, card_attachment
+from microsoft_teams.api.models import CardTaskModuleTaskInfo, MessagingExtensionActionInvokeResponse, TaskModuleContinueResponse
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_message_ext_open
@@ -170,8 +170,8 @@ async def handle_message_ext_open(ctx: ActivityContext[MessageExtensionFetchTask
 
 ```python
 from typing import List
-from microsoft.teams.api import Account
-from microsoft.teams.cards import AdaptiveCard
+from microsoft_teams.api import Account
+from microsoft_teams.cards import AdaptiveCard
 # ...
 
 def create_conversation_members_card(members: List[Account]) -> AdaptiveCard:
