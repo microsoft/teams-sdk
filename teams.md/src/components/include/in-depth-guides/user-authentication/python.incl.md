@@ -97,11 +97,11 @@ To configure a new regional bot in Azure, you must setup your resoures in the de
 1. Deploy a new App Registration in `westeurope`.
 2. Deploy and link a new Enterprise Application (Service Principal) on Microsoft Entra in `westeurope`.
 3. In your App Registration, add a `Redirect URI` for the Platform Type `Web` to your regional endpoint (e.g., `https://europe.token.botframework.com/.auth/web/redirect`)
-4. In your `.env` file, add your `OAUTH_URL`. For example:
+4. In your `.env` file (or wherever you set your environment variables), add your `OAUTH_URL`. For example:
 `OAUTH_URL=https://europe.token.botframework.com`
 
 
-To configure your existing regional bot with ATK, you will need to make a few updates.
+To configure a new regional bot with ATK, you will need to make a few updates. Note that this assumes you have not yet deployed the bot previously.
 
 1. In `azurebot.bicep`, replace all `global` occurrences to `westeurope`
 2. In `manifest.json`, in `validDomains`, `*.botframework.com` should be replaced by `europe.token.botframework.com`
