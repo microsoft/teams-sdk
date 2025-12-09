@@ -91,12 +91,26 @@ app.message('/signout', async ({ send, signout, isSignedIn }) => {
 ## Regional Configs
 You may be building a regional bot that is deployed in a specific Azure region (such as West Europe, East US, etc.) rather than global. This is important for organizations that have data residency requirements or want to reduce latency by keeping data and authentication flows within a specific area.
 
-To properly configure your regional bot with ATK, you will need to make a few updates. This example uses West Europe, but follow the equivalent for other regions.
+These examples use West Europe, but follow the equivalent for other regions.
+
+To configure a new regional bot in Azure, you must setup your resoures in the desired region. Your resource group must also be in the same region. 
+
+1. Deploy a new App Registration in `westeurope`.
+2. Deploy and link a new Enterprise Application (Service Principal) on Microsoft Entra in `westeurope`.
+3. In your App Registration, add a `Redirect URI` for the Platform Type `Web` to your regional endpoint (e.g., `https://europe.token.botframework.com/.auth/web/redirect`)
+4. In your `.env` file, add your `OAUTH_URL`. For example:
+`OAUTH_URL=https://europe.token.botframework.com`
+5. You will also need to update the setup of your App instance to use your Oauth URL. See below for the example snippet.
+
+
+To configure your existing regional bot with ATK, you will need to make a few updates.
 
 1. In `azurebot.bicep`, replace all `global` occurrences to `westeurope`
 2. In `manifest.json`, in `validDomains`, `*.botframework.com` should be replaced by `europe.token.botframework.com`
 3. In `aad.manifest.json`, replace `https://token.botframework.com/.auth/web/redirect` with `https://europe.token.botframework.com/.auth/web/redirect`
-4. You will also need to update the setup of your App instance to add in your Oauth URL.
+4. In your `.env` file, add your `OAUTH_URL`. For example:
+`OAUTH_URL=https://europe.token.botframework.com`
+5. You will also need to update the setup of your App instance to use your Oauth URL.
 
 ```ts
 const app = new App({
@@ -104,7 +118,7 @@ const app = new App({
     defaultConnectionName: 'graph'
   },
   apiClientSettings: {
-      oauthUrl: env.OAUTH_URL // Value would be 'https://europe.token.botframework.com',
+      oauthUrl: env.OAUTH_URL
     }
 });
 ```
