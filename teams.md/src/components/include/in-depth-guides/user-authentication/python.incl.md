@@ -99,7 +99,6 @@ To configure a new regional bot in Azure, you must setup your resoures in the de
 3. In your App Registration, add a `Redirect URI` for the Platform Type `Web` to your regional endpoint (e.g., `https://europe.token.botframework.com/.auth/web/redirect`)
 4. In your `.env` file, add your `OAUTH_URL`. For example:
 `OAUTH_URL=https://europe.token.botframework.com`
-5. You will also need to update the setup of your App instance to use your Oauth URL. See below for the example snippet.
 
 
 To configure your existing regional bot with ATK, you will need to make a few updates.
@@ -108,14 +107,4 @@ To configure your existing regional bot with ATK, you will need to make a few up
 2. In `manifest.json`, in `validDomains`, `*.botframework.com` should be replaced by `europe.token.botframework.com`
 3. In `aad.manifest.json`, replace `https://token.botframework.com/.auth/web/redirect` with `https://europe.token.botframework.com/.auth/web/redirect`
 4. In your `.env` file, add your `OAUTH_URL`. For example:
-`OAUTH_URL=https://europe.token.botframework.com`
-5. You will also need to update the setup of your App instance to use your Oauth URL.
-
-```python
-app = App(
-    default_connection_name='graph',
-    api_client_settings=ApiClientSettings(
-        oauth_url=os.environ.get("OAUTH_URL")
-    )
-)
-```
+`OAUTH_URL=https://europe.token.botframework.com`.
