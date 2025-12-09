@@ -1,7 +1,7 @@
 <!-- handle-link-unfurling-code -->
 
 ```python
-from microsoft.teams.api import (
+from microsoft_teams.api import (
     AdaptiveCardAttachment,
     MessageExtensionQueryLinkInvokeActivity,
     ThumbnailCardAttachment,
@@ -13,7 +13,7 @@ from microsoft.teams.api import (
     MessagingExtensionResult,
     MessagingExtensionResultType,
 )
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_message_ext_query_link
@@ -48,7 +48,7 @@ async def handle_message_ext_query_link(ctx: ActivityContext[MessageExtensionQue
 
 ```python
 from typing import Any, Dict
-from microsoft.teams.cards import AdaptiveCard
+from microsoft_teams.cards import AdaptiveCard
 # ...
 
 def create_link_unfurl_card(url: str) -> Dict[str, Any]:

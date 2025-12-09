@@ -5,8 +5,8 @@
 <!-- install-handler-example -->
 
 ```python
-from microsoft.teams.api import InstalledActivity, MessageActivityInput
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.api import InstalledActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
 # ...
 
 # This would be some persistent storage
@@ -25,7 +25,7 @@ async def handle_install_add(ctx: ActivityContext[InstalledActivity]):
 <!-- send-proactive-example -->
 
 ```python
-from microsoft.teams.api import MessageActivityInput
+from microsoft_teams.api import MessageActivityInput
 # ...
 
 async def send_proactive_notification(user_id: str):

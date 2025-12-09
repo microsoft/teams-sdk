@@ -31,9 +31,9 @@ as a plugin
 <!-- basic-example -->
 
 ```python
-from microsoft.teams.ai import ChatPrompt
-from microsoft.teams.mcpplugin import McpClientPlugin
-from microsoft.teams.openai import OpenAICompletionsAIModel
+from microsoft_teams.ai import ChatPrompt
+from microsoft_teams.mcpplugin import McpClientPlugin
+from microsoft_teams.openai import OpenAICompletionsAIModel
 # ...
 
 # Set up AI model
@@ -64,7 +64,7 @@ Many MCP servers require authentication via headers (such as API keys or Bearer 
 
 ```python
 from os import getenv
-from microsoft.teams.mcpplugin import McpClientPlugin, McpClientPluginParams
+from microsoft_teams.mcpplugin import McpClientPlugin, McpClientPluginParams
 # ...
 
 # This example uses a PersonalAccessToken, but you may get
@@ -96,9 +96,9 @@ Headers are passed with every request to the MCP server, enabling secure access 
 ## Using MCP Client in Message Handlers
 
 ```python
-from microsoft.teams.ai import ChatPrompt
-from microsoft.teams.api import MessageActivity, MessageActivityInput
-from microsoft.teams.apps import ActivityContext
+from microsoft_teams.ai import ChatPrompt
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
 # ...
 
 @app.on_message

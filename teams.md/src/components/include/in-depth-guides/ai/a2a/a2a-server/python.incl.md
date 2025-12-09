@@ -7,8 +7,8 @@
 ```python
 from os import getenv
 from a2a.types import AgentCard, AgentCapabilities, AgentSkill
-from microsoft.teams.a2a import A2APlugin, A2APluginOptions
-from microsoft.teams.apps import App, PluginBase
+from microsoft_teams.a2a import A2APlugin, A2APluginOptions
+from microsoft_teams.apps import App, PluginBase
 
 PORT = getenv("PORT", "4000")
 
@@ -46,7 +46,7 @@ app = App(logger=logger, plugins=plugins)
 <!-- event-handler -->
 
 ```python
-from microsoft.teams.a2a import A2AMessageEvent, A2AMessageEventKey
+from microsoft_teams.a2a import A2AMessageEvent, A2AMessageEventKey
 from a2a.types import TextPart
 
 @app.event(A2AMessageEventKey)

@@ -9,7 +9,7 @@
 -   from botbuilder.schema import ChannelAccount, ConversationAccount, ConversationReference
     # highlight-error-end
     # highlight-success-line
-+   from microsoft.teams.apps import App
++   from microsoft_teams.apps import App
 
     # highlight-error-start
 -   adapter = CloudAdapter(ConfigurationBotFrameworkAuthentication(config))
@@ -68,7 +68,7 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```python showLineNumbers
-    from microsoft.teams.apps import App
+    from microsoft_teams.apps import App
 
     app = App()
 
