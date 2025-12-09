@@ -122,3 +122,17 @@ return InvokeResponse(
                 )
             )
 ```
+
+<!-- embedded-web-content -->
+
+### Setting up Embedded Web Content
+
+To serve web content for dialogs, you can use the `page` method to host static webpages:
+
+```python
+import os
+
+# In your app setup (e.g., main.py)
+# Hosts a static webpage at /tabs/dialog-form
+app.page("customform", os.path.join(os.path.dirname(__file__), "views", "customform"), "/tabs/dialog-form")
+```

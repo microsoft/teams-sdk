@@ -1,9 +1,6 @@
-<!-- content -->
+<!-- example -->
 
-BotBuilder exposes a static class `TeamsInfo` that allows you to query the api. In Teams SDK
-we pass an instance of our `ApiClient` into all our activity handlers.
-
-<Tabs groupId="sending-activities">
+<Tabs groupId="api-client">
   <TabItem value="Diff" default>
   ```typescript
   // highlight-error-start
@@ -75,3 +72,12 @@ we pass an instance of our `ApiClient` into all our activity handlers.
     ```
   </TabItem>
 </Tabs>
+
+<!-- api-table -->
+
+| BotBuilder (TeamsInfo) | Teams SDK (ApiClient) |
+|------------------------|----------------------|
+| `TeamsInfo.getMember(context, userId)` | `api.conversations.members.getById(conversationId, userId)` |
+| `TeamsInfo.getTeamDetails(context, teamId)` | `api.teams.getById(teamId)` |
+| `TeamsInfo.getMeetingInfo(context, meetingId)` | `api.meetings.getById(meetingId)` |
+| `TeamsInfo.sendMessageToTeamsChannel(context, teamId, message)` | `api.conversations.create()` then `api.conversations.activities.create(conversationId, activity)` |
