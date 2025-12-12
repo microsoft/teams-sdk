@@ -1,7 +1,7 @@
 ---
 sidebar_position: 5
 title: App Authentication
-summary: Configure app authentication in your Teams SDK application using client secrets, user managed identities, or federated identity credentials
+summary: Configure app authentication in your Teams SDK application using client secrets, user assigned managed identities, or federated identity credentials
 languages: ['typescript','python']
 ---
 
@@ -18,7 +18,7 @@ Before configuring your application, you must first set up authentication in Azu
 There are 3 main ways of authenticating:
 
 1. **Client Secret** - Simple password-based authentication using a client secret
-2. **User Managed Identity** - Passwordless authentication using Azure managed identities
+2. **User Assigned Managed Identity** - Passwordless authentication using Azure managed identities
 3. **Federated Identity Credentials** - Advanced identity federation using managed identities
 
 ## Configuration Reference
@@ -29,8 +29,8 @@ The Teams SDK automatically detects which authentication method to use based on 
 |-|-|-|-|
 | not_set | | | No-Auth (local development only) |
 | set | set | | Client Secret |
-| set | not_set | | User Managed Identity |
-| set | not_set | set (same as CLIENT_ID) | User Managed Identity |
+| set | not_set | | User Assigned Managed Identity |
+| set | not_set | set (same as CLIENT_ID) | User Assigned Managed Identity |
 | set | not_set | set (different from CLIENT_ID) | Federated Identity Credentials (UMI) |
 | set | not_set | "system" | Federated Identity Credentials (System Identity) |
 
@@ -58,13 +58,13 @@ TENANT_ID=your-tenant-id
 
 The SDK will automatically use Client Secret authentication when both `CLIENT_ID` and `CLIENT_SECRET` are provided.
 
-## User Managed Identity
+## User Assigned Managed Identity
 
 Passwordless authentication using Azure managed identities - no secrets to rotate or manage.
 
 ### Setup
 
-First, complete the [User Managed Identity Setup](/teams/app-authentication/user-managed-identity) in Azure Portal or Azure CLI.
+First, complete the [User Assigned Managed Identity Setup](/teams/app-authentication/user-managed-identity) in Azure Portal or Azure CLI.
 
 ### Configuration
 
@@ -84,11 +84,11 @@ First, complete the [Federated Identity Credentials Setup](/teams/app-authentica
 
 Depending on the type of managed identity you select, set the environment variables accordingly.
 
-**For User Managed Identity:**
+**For User Assigned Managed Identity:**
 
 Set the following environment variables:
 - `CLIENT_ID`: Your Application (client) ID
-- `MANAGED_IDENTITY_CLIENT_ID`: The Client ID for the User Managed Identity resource
+- `MANAGED_IDENTITY_CLIENT_ID`: The Client ID for the User Assigned Managed Identity resource
 - **Do not set** `CLIENT_SECRET`
 - `TENANT_ID`: The tenant id where your bot is registered
 
