@@ -1,15 +1,15 @@
 ---
 sidebar_position: 2
-title: User Managed Identity Setup
-summary: Set up User Managed Identity authentication for your Teams bot in Azure Portal or Azure CLI
+title: User Assigned Managed Identity Setup
+summary: Set up User Assigned Managed Identity authentication for your Teams bot in Azure Portal or Azure CLI
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# User Managed Identity Authentication Setup
+# User Assigned Managed Identity Authentication Setup
 
-User Managed Identity authentication eliminates the need for secrets or passwords. A managed identity is created alongside your bot and assigned to your compute resource (App Service, Container App, VM, etc.).
+User Assigned Managed Identity authentication eliminates the need for secrets or passwords. A managed identity is created alongside your bot and assigned to your compute resource (App Service, Container App, VM, etc.).
 
 ## Prerequisites
 
@@ -20,17 +20,17 @@ Before you begin, ensure you have:
 
 ## Setup Steps
 
-### Step 1: Create Azure Bot with User Managed Identity
+### Step 1: Create Azure Bot with User Assigned Managed Identity
 
-When creating your Azure Bot Service, select `User Managed Identity` for the `Type of App`.
+When creating your Azure Bot Service, select `User Assigned Managed Identity` for the `Type of App`.
 
-![User Managed Identity](/screenshots/umi-auth.png)
+![User Assigned Managed Identity](/screenshots/umi-auth.png)
 
-This will automatically create a User Managed Identity resource alongside your bot.
+This will automatically create a User Assigned Managed Identity resource alongside your bot.
 
 ### Step 2: Assign the Managed Identity to Your Compute Resource
 
-The User Managed Identity created with your bot must be assigned to the service running your application.
+The User Assigned Managed Identity created with your bot must be assigned to the service running your application.
 
 <Tabs>
 <TabItem value="portal" label="Azure Portal">
@@ -39,7 +39,7 @@ The User Managed Identity created with your bot must be assigned to the service 
 2. Go to **Identity** section in the left menu
 3. Select the **User assigned** tab
 4. Click **Add**
-5. Select the User Managed Identity that was created with your Azure Bot
+5. Select the User Assigned Managed Identity that was created with your Azure Bot
 6. Click **Add** to confirm
 
 </TabItem>
