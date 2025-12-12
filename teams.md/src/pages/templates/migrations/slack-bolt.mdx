@@ -1,0 +1,90 @@
+---
+sidebar_position: 2
+title: Porting your Slack Bolt bot
+languages: ['typescript']
+summary: Migration & port guide from Slack Bolt to Teams SDK, highlighting the key changes and upgrade steps.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Porting your Slack Bolt bot
+
+This guide will help you migrate or port your existing Slack Bolt application to the Teams SDK. We'll cover the key conceptual similarities and differences between Slack and Teams APIs, and provide code examples to help you port things over in no time. Let's get started!
+
+## Introduction
+
+Similar to Slack Bolt, the Teams SDK is designed to interface with the Teams backend APIs for building conversational applications. Both SDKs provide abstractions for handling incoming events, messages, and interactions, as well as sending responses back to users. If you already have a Slack bot, the concepts should feel familiar.
+
+However, there are some key differences, such as with app installation. In Slack, apps are installed to workspaces via OAuth, whereas in Teams they are installed via the Teams App Store. Additionally, Teams apps can be installed personally by individual users, or to collaborative scopes like group chats, channels, and meetings.
+
+Let's take a look at some similiarities and differences between Slack and Teams concepts:
+
+| Concept      | Teams      | Slack      |
+| ------------- | ------------- | ------------- |
+| **Installation** | Installed via app store on per-scope basis | Installed via OAuth to Workspace |
+| **Quickstart** | New projects created via Agent Toolkit CLI, Visual Studio extension, or VS Code extension. | New projects created via Slack CLI. |
+| **App manifest** | Authored via JSON, Agent Toolkit, and/or via Teams Developer Portal. Must also setup Azure Bot and Azure App Registration resources, which can be done via Azure Portal or Agent Toolkit. | Authored via JSON, YAML, or app management page. |
+| **Messaging endpoint** | Set in Azure Bot resource. | Set in Slack app manifest. |
+| **App authentication** | Entra App Registration is authorized during Teams app installation. Teams SDK fetches Entra app token internally when sending messages. Core app features like messaging use this auth type internally within the SDK. | App stores Slack bot token after user authorizes application-delegated scopes (e.g.,`incoming-webhook,commands`). Core app features like messaging use this auth type internally within the SDK. |
+| **User authentication for REST APIs** | User Entra tokens can be obtained using Teams SSO. Graph REST APIs are integrated into the Teams SDK. Tokens are stored and refreshed by Azure Bot Token service. | User Slack tokens can be optained using OAuth 2.0. Slack REST APIs are integrated into Slack Bolt. Tokens must be stored and refreshed by application. |
+| **Authentication with external services** | Obtain user access tokens for external services using OAuth 2.0. Tokens are stored and refreshed by Azure Bot Token service. | Users authenticate to external services using OAuth 2.0, perhaps initiated via account binding (see below). Tokens must be stored and refreshed by application. |
+| **Account linking** | `Activity` events include `Activity.from.id`, which is the user's AAD object ID. If you authenticate your external service with OAuth 2.0, these accounts are implicitly bound via the Azure Token Service, but you can also follow a similar flow as what Slack recommends. | Slack recommends following their [Binding accounts accross services](https://docs.slack.dev/authentication/binding-accounts-across-services) guide. |
+| **Cards** | Rich UI elements in messages using Adaptive Cards. | Rich UI elements in messages using Block Kit. |
+| **Files** | Files can be attached or downloaded using SharePoint / OneDrive Graph APIs. | Files can be attached or downloaded via Slack's files APIs. |
+| **Targeted messages** | Teams does not currently support targeted messages. | Slack supports targeted ephemeral messages. |
+| **Workflows** | Teams Workflows is not integrated with the Teams SDK. To integrate with Teams Workflows, you must create a [custom Power Platform Connector](https://learn.microsoft.com/connectors/custom-connectors/). | Slack Workflows are integrated with Slack Bolt. |
+
+## Configuring your application
+
+First, setup a new Teams application, as shown in [Teams Integration](../../../../docs/main/teams/README.md).
+
+## Installing Teams SDK
+
+<LanguageInclude section="installation" />
+
+## Configure application
+
+<LanguageInclude section="application" />
+
+## Migrate message handlers
+
+In Slack, there are message handlers for events with different subtypes (e.g., undefined subtype is a regular message, `event.subtype == 'file_share'` is a file share message, etc.). In Teams, there are different `Activity` handers for different types of events that are enumerated via the `ActivityTypes` enum (e.g., `app.activity(ActivityTypes.Message)`), with some `Activity` types having tailored APIs within the SDK (e.g., `app.message`). These concepts are roughly similar, though the naming conventions and syntax differ.
+
+### Message handlers
+
+<LanguageInclude section="message-handlers" />
+
+## BlockKit -> Adaptive Cards
+
+To include Rich UI in messages sent by your bot, Slack's Block Kit is equivalent to Teams's Adaptive Cards.
+
+<LanguageInclude section="adaptive-cards" />
+
+Learn more in the [Adaptive Cards guide](../in-depth-guides/adaptive-cards).
+
+## User authentication
+
+There are two primary types of user authentication for Teams and Slack: authentication for Slack & Graph REST APIs, and authentication for external services. Let's take a look at each of these in turn.
+
+### User-delegated REST APIs
+
+In Slack, if you want to use Slack REST APIs that require user-delegated scopes, you need to implement an OAuth 2.0 installation flow in your application to obtain and store Slack user tokens, even if the app was already installed by another user. In Teams, you can leverage Teams SSO to obtain user Entra tokens for calling Graph REST APIs. The Teams SDK integrates with Teams SSO and Azure Bot Token Service to handle token acquisition, storage, and refresh automatically for you.
+
+First, follow the instructions in the [Teams SSO guide](../../../../docs/main/teams/user-authentication/sso-setup.md).
+
+Then, configure the authentication in your code.
+
+<LanguageInclude section="graph" />
+
+### User authentication for external services
+
+In Slack, you can access external services by implementing an account binding flow using OAuth 2.0 as documented [here](https://docs.slack.dev/authentication/binding-accounts-across-services). In Teams, you can access external services by implementing an OAuth 2.0 flow, with the Azure Bot Token Service handling token acquisition, storage, and refresh for you.
+
+First, setup your OAuth 2.0 connection settings in the [Azure Portal](https://portal.azure.com/) for your Azure Bot resource.
+
+![Screenshot showing Azure Bot custom OAuth connection settings.](/screenshots/abs-custom-oauth-connection.png)
+
+Then, add the authentication code to your application to get the relevant user token and call your external service.
+
+<LanguageInclude section="3p-auth" />
