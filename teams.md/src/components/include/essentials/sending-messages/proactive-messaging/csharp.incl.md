@@ -50,3 +50,25 @@ public static class Notifications
     }
 }
 ```
+
+<!-- targeted-proactive-example -->
+
+```csharp
+public static class Notifications
+{
+    public static async Task SendProactiveTargeted(string userId)
+    {
+        var conversationId = (string?)storage.Get(userId);
+
+        if (conversationId is null) return;
+
+        // Set Recipient to specify who should receive the private message
+        var targetedMessage = new MessageActivity("Hey! This is a private message just for you!")
+        {
+            Recipient = new ChannelAccount { Id = userId }
+        };
+
+        await app.Send(conversationId, targetedMessage, isTargeted: true);
+    }
+}
+```

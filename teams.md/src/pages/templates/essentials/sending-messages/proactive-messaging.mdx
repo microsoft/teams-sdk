@@ -5,6 +5,8 @@ title: 'Proactive Messaging'
 summary: Learn how to send proactive messages to users without waiting for them to initiate the conversation, including storing conversation IDs and sending notifications.
 ---
 
+import Language from '@site/src/components/Language';
+
 # Proactive Messaging
 
 In [Sending Messages](./), you were shown how to respond to an event when it happens. However, there are times when you want to send a message to the user without them sending a message first. This is called proactive messaging. You can do this by using the `send` method in the `app` instance. This approach is useful for sending notifications or reminders to the user.
@@ -20,3 +22,21 @@ Then, when you want to send a proactive message, you can retrieve the <LanguageI
 :::tip
 In this example, you see how to get the <LanguageInclude section="conversation-id-field" /> using one of the activity handlers. This is a good place to store the conversation id, but you can also do this in other places like when the user installs the app or when they sign in. The important thing is that you have the conversation id stored somewhere so you can use it later.
 :::
+
+<Language language="csharp">
+
+## Targeted Proactive Messages
+
+:::info Preview Feature
+Targeted proactive messages are currently in preview and only available in C#.
+:::
+
+You can also send [targeted messages](./#targeted-messages-preview) proactively to deliver private message to specific user in a conversation.
+
+:::info Requirements
+- Recipient property must be set on the activity when using targeted messages
+:::
+
+<LanguageInclude section="targeted-proactive-example" />
+
+</Language>

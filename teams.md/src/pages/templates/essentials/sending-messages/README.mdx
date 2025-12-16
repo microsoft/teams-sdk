@@ -4,6 +4,8 @@ summary: Guide to sending messages from your Teams SDK agent, including replies,
 title: Sending Messages
 ---
 
+import Language from '@site/src/components/Language';
+
 # Sending Messages
 
 Sending messages is a core part of an agent's functionality. With all activity handlers, a `send` method is provided which allows your handlers to send a message back to the user to the relevant conversation.
@@ -37,3 +39,28 @@ Streaming is currently only supported in 1:1 conversations, not group chats or c
 Sending a message at `@mentions` a user is as simple including the details of the user using the <LanguageInclude section="mention-method-name" /> method
 
 <LanguageInclude section="mention-example" />
+
+<Language language="csharp">
+
+## Targeted Messages
+
+:::info Preview Feature
+Targeted messages are currently in preview and only available in C#.
+:::
+
+Targeted messages allow you to send messages privately to a specific recipient in a conversation
+To send a targeted message, use the `isTargeted` parameter in your `send` method:
+
+<LanguageInclude section="targeted-message-example" />
+
+## Errors
+
+The following table lists errors that may be returned when sending messages.
+
+| Error | Description |
+|-------|-------------|
+| `InvalidOperationException`<br/>`app not started` | The app has not been started. Call `await app.Start()` before sending messages or using proactive messaging. |
+| `ArgumentException`<br/>`activity.Recipient is required for targeted messages` | When using `isTargeted: true`, the `Recipient` property must be set on the activity to specify who should receive the private message. |
+| `Exception`<br/>`no plugin that can send activities was found` | No sender plugin is configured. Ensure a sender plugin (like AspNetCorePlugin) is added to the app. |
+
+</Language>
