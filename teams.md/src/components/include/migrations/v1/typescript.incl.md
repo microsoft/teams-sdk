@@ -1,6 +1,6 @@
 <!-- botbuilder-adapter-note -->
 
-We'll also discuss how you can migrate features over incrementally via the [botbuilder adapter](./botbuilder).
+We'll also discuss how you can migrate features over incrementally via the [botbuilder plugin](./botbuilder).
 
 <!-- installation -->
 
@@ -204,6 +204,8 @@ npm install @microsoft/teams.apps
 
 <!-- activity-handlers-intro -->
 
+Activity handlers in Teams SDK v2 work slightly differently than in v1, with a more streamlined event-based approach.
+
 <!-- message-handlers -->
 
 <Tabs>
@@ -282,6 +284,8 @@ npm install @microsoft/teams.apps
 </Tabs>
 
 <!-- task-modules-note -->
+
+Note that on Microsoft Teams, task modules have been renamed to dialogs.
 
 <!-- task-modules -->
 

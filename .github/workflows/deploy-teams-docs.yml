@@ -37,6 +37,8 @@ jobs:
 
       - name: Generate language docs
         working-directory: teams.md
+        env:
+          NODE_ENV: production
         run: npm run generate:docs
 
       - name: Generate llms.txt files

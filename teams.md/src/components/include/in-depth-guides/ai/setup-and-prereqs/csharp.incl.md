@@ -82,3 +82,7 @@ var aiModel = new OpenAIChatModel(openAIModel, openAIKey);
 :::tip
 Use `appsettings.Development.json` for local development and keep it in `.gitignore`. For production, use environment variables or Azure Key Vault.
 :::
+
+<!-- additional-notes -->
+
+N/A

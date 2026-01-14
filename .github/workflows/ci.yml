@@ -31,5 +31,7 @@ jobs:
         run: npm run clear
 
       - name: Build (teams.md)
+        env:
+          NODE_ENV: production
         run: npm run build
         working-directory: teams.md

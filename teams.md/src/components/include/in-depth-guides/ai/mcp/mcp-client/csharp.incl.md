@@ -161,4 +161,8 @@ new McpClientPlugin()
 
 <!-- example-gif -->
 
+![Animated image of user typing a prompt ('Tell me about Charizard') to DevTools Chat window and multiple paragraphs of information being returned.](/screenshots/mcp-client-pokemon.gif)
+
 <!-- pokemon-example -->
+
+In this example, our MCP server is a Pokemon API and our client knows how to call it. The LLM is able to call the `getPokemon` function exposed by the server and return the result back to the user.

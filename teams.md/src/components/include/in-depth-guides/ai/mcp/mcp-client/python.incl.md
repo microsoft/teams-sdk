@@ -4,6 +4,12 @@ SSE protocol
 
 <!-- install -->
 
+Install it to your application:
+
+```bash
+uv add microsoft-teams-mcpplugin
+```
+
 <!-- remote-protocol -->
 
 StreamableHttp/SSE
@@ -58,21 +64,20 @@ chat_prompt = ChatPrompt(
 
 In this example, we augment the `ChatPrompt` with multiple remote MCP Servers.
 
-## Authentication with Headers
+<!-- custom-headers -->
 
-Many MCP servers require authentication via headers (such as API keys or Bearer tokens). You can pass these headers when configuring your MCP server:
+### Customize Headers
+
+Some MCP servers may require custom headers to be sent as part of the request. You can customize the headers when calling the `use_mcp_server` function:
 
 ```python
 from os import getenv
 from microsoft_teams.mcpplugin import McpClientPlugin, McpClientPluginParams
 # ...
 
-# This example uses a PersonalAccessToken, but you may get
-# the user's oauth token as well by getting them to sign in
-# and then using app.sign_in to get their token.
+# Example with Bearer token authentication
 GITHUB_PAT = getenv("GITHUB_PAT")
 
-# MCP server with authentication headers
 if GITHUB_PAT:
     mcp_plugin.use_mcp_server(
         "https://api.githubcopilot.com/mcp/",
@@ -81,7 +86,7 @@ if GITHUB_PAT:
         })
     )
 
-# Other authentication examples:
+# Example with API key
 mcp_plugin.use_mcp_server(
     "https://example.com/api/mcp",
     McpClientPluginParams(headers={
@@ -90,32 +95,6 @@ mcp_plugin.use_mcp_server(
     })
 )
 ```
-
-Headers are passed with every request to the MCP server, enabling secure access to authenticated APIs.
-
-## Using MCP Client in Message Handlers
-
-```python
-from microsoft_teams.ai import ChatPrompt
-from microsoft_teams.api import MessageActivity, MessageActivityInput
-from microsoft_teams.apps import ActivityContext
-# ...
-
-@app.on_message
-async def handle_message(ctx: ActivityContext[MessageActivity]):
-    """Handle messages using ChatPrompt with MCP tools"""
-
-    result = await chat_prompt.send(
-        input=ctx.activity.text,
-        instructions="You are a helpful assistant with access to remote MCP tools."
-    )
-
-    if result.response.content:
-        message = MessageActivityInput(text=result.response.content).add_ai_generated()
-        await ctx.send(message)
-```
-
-<!-- custom-headers -->
 
 <!-- example-gif -->
 

@@ -33,20 +33,24 @@ export function shouldIgnoreFileBySection(filePath: string): boolean {
     // Get the directory path
     let currentDir = path.dirname(filePath);
 
-    // Walk up the directory tree looking for README.md files
+    // Walk up the directory tree looking for README.md or index.mdx files
     while (currentDir && currentDir !== path.dirname(currentDir)) {
         const readmePath = path.join(currentDir, 'README.md');
+        const indexPath = path.join(currentDir, 'index.mdx');
 
-        if (fs.existsSync(readmePath)) {
+        // Check README.md first, then index.mdx
+        const indexFilePath = fs.existsSync(readmePath) ? readmePath : (fs.existsSync(indexPath) ? indexPath : null);
+
+        if (indexFilePath) {
             try {
-                const readmeContent = readFileUtf8Normalized(readmePath);
-                const readmeFrontmatter = FrontmatterParser.extract(readmeContent).frontmatter;
-                // Only ignore entire section if README has 'llms: ignore' (not 'ignore-file')
-                if (readmeFrontmatter.llms === 'ignore' || readmeFrontmatter.llms === false) {
+                const indexContent = readFileUtf8Normalized(indexFilePath);
+                const indexFrontmatter = FrontmatterParser.extract(indexContent).frontmatter;
+                // Only ignore entire section if index file has 'llms: ignore' (not 'ignore-file')
+                if (indexFrontmatter.llms === 'ignore' || indexFrontmatter.llms === false) {
                     return true;
                 }
             } catch (error) {
-                // Ignore errors reading README
+                // Ignore errors reading index file
             }
         }
 
@@ -86,6 +90,17 @@ export async function processContent(
         // Check if this file should be excluded from LLM output
         if (FrontmatterParser.shouldIgnore(rawContent)) {
             return null; // Return null to indicate this file should be skipped
+        }
+
+        // Check if language filtering is enabled and if this file is for a different language
+        const { frontmatter: earlyFrontmatter } = FrontmatterParser.extract(rawContent);
+        if (language && earlyFrontmatter.languages) {
+            const fileLanguages = Array.isArray(earlyFrontmatter.languages)
+                ? earlyFrontmatter.languages
+                : [earlyFrontmatter.languages];
+            if (!fileLanguages.includes(language)) {
+                return null; // Skip this file as it's not for the current language
+            }
         }
 
         const { title, content, frontmatter } = await parseMarkdownContent(rawContent, baseDir, includeCodeBlocks, filePath, fileMapping, config, language);
@@ -239,6 +254,9 @@ function parseAttributes(attributeString: string): { [key: string]: string } {
  */
 function cleanMdxSyntax(content: string): string {
     let cleaned = content;
+
+    // Remove HTML comments (including AUTO-GENERATED FILE comments)
+    cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
 
     // Remove JSX components (except code blocks which are handled separately)
     cleaned = cleaned.replace(/<\/?[A-Z][^>]*>/g, '');

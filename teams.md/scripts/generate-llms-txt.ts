@@ -145,7 +145,8 @@ async function generateLanguageFiles(language: Language, baseDir: string, output
     // Process all files to get metadata and file mapping
     const { processedFiles, fileMapping } = await processAllFiles(
         [...mainFiles, ...langFiles],
-        baseDir
+        baseDir,
+        language
     );
 
     // Generate individual TXT files for each doc
@@ -185,16 +186,17 @@ async function generateLanguageFiles(language: Language, baseDir: string, output
  * Processes all files and returns structured data
  * @param allFiles - All file paths to process
  * @param baseDir - Base directory path
+ * @param language - Language identifier for filtering language-specific files
  * @returns Object with processedFiles array and fileMapping Map
  */
-async function processAllFiles(allFiles: string[], baseDir: string): Promise<{ processedFiles: ProcessedFile[]; fileMapping: Map<string, string> }> {
+async function processAllFiles(allFiles: string[], baseDir: string, language: Language): Promise<{ processedFiles: ProcessedFile[]; fileMapping: Map<string, string> }> {
     const processedFiles: ProcessedFile[] = [];
 
     // First pass: build file mapping
     const fileMapping = new Map<string, string>();
     for (const file of allFiles) {
         // Generate the same filename logic as used in generateIndividualTxtFiles
-        const tempProcessed = await processContent(file, baseDir, false); // Quick pass for title
+        const tempProcessed = await processContent(file, baseDir, false, null, null, language); // Quick pass for title with language filtering
         if (tempProcessed) {
             // Only process files that aren't marked to ignore
             let fileName: string;
@@ -210,7 +212,7 @@ async function processAllFiles(allFiles: string[], baseDir: string): Promise<{ p
 
     // Second pass: process files with mapping for link resolution
     for (const file of allFiles) {
-        const processed = await processContent(file, baseDir, true, fileMapping);
+        const processed = await processContent(file, baseDir, true, fileMapping, null, language);
         if (processed && (processed.title || processed.content)) {
             processedFiles.push(processed);
         }
@@ -250,10 +252,11 @@ async function generateIndividualTxtFiles(
 ): Promise<void> {
     const docsDir = path.join(outputDir, `docs_${language}`);
 
-    // Create docs directory
-    if (!fs.existsSync(docsDir)) {
-        fs.mkdirSync(docsDir, { recursive: true });
+    // Clean and recreate docs directory to remove old files
+    if (fs.existsSync(docsDir)) {
+        fs.rmSync(docsDir, { recursive: true });
     }
+    fs.mkdirSync(docsDir, { recursive: true });
 
     for (const file of processedFiles) {
         if (!file.content) continue;
@@ -467,8 +470,11 @@ function extractSummaryFromFile(filePath: string): string {
             return summary;
         }
 
+        // Remove HTML comments from content before extracting summary
+        const cleanContent = content.replace(/<!--[\s\S]*?-->/g, '');
+
         // Fallback to extracting first meaningful paragraph if no summary in frontmatter
-        const paragraphs = content.split('\n\n');
+        const paragraphs = cleanContent.split('\n\n');
         for (const paragraph of paragraphs) {
             const clean = paragraph
                 .replace(/#+\s*/g, '') // Remove headers
