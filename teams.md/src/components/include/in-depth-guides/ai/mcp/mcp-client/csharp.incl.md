@@ -142,6 +142,12 @@ import TabItem from '@theme/TabItem';
 
 In this example, we augment the `ChatPrompt` with a remote MCP Server.
 
+<!-- mcp-server-note -->
+
+:::note
+You can quickly set up an MCP server using [Azure Functions](https://techcommunity.microsoft.com/blog/appsonazureblog/build-ai-agent-tools-using-remote-mcp-with-azure-functions/4401059).
+:::
+
 <!-- custom-headers -->
 
 ### Custom Headers

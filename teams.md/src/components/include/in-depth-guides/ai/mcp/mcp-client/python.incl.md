@@ -86,6 +86,12 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         await ctx.send(message)
 ```
 
+<!-- mcp-server-note -->
+
+:::note
+Feel free to build an MCP Server in a different agent using the [MCP Server Guide](./mcp-server). Or you can quickly set up an MCP server using [Azure Functions](https://techcommunity.microsoft.com/blog/appsonazureblog/build-ai-agent-tools-using-remote-mcp-with-azure-functions/4401059).
+:::
+
 <!-- custom-headers -->
 
 ### Customize Headers

@@ -112,5 +112,5 @@ async def handle_message_ext_setting(ctx: ActivityContext[MessageExtensionSettin
 <!-- tabs-note -->
 
 :::note
-This will serve the HTML page to the `${BOT_ENDPOINT}/tabs/settings` endpoint as a tab. See [Tabs Guide](../tabs) to learn more.
+This will serve the HTML page to the `${BOT_ENDPOINT}/tabs/settings` endpoint as a tab.
 :::
