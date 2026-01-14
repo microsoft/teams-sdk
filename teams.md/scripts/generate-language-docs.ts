@@ -723,11 +723,16 @@ function writeContentGapsManifest(): void {
   console.log(`Generated readable report: ${path.relative(process.cwd(), readmePath)}`);
 }
 
+interface GenerationResult {
+  templatesGenerated: number;
+  contentGapsFound: number;
+}
+
 /**
  * Generate all docs
- * @returns The number of templates with content gaps
+ * @returns Generation result with template count and content gaps found
  */
-function generateAll(): number {
+function generateAll(): GenerationResult {
   console.log('generate-language-docs.ts: Generating language-specific documentation...\n');
 
   // Clean up stale files first
@@ -741,7 +746,7 @@ function generateAll(): number {
 
   if (templates.length === 0) {
     console.log('No template files found in src/pages/templates/');
-    return 0;
+    return { templatesGenerated: 0, contentGapsFound: 0 };
   }
 
   templates.forEach(generateDocsForTemplate);
@@ -765,8 +770,10 @@ function generateAll(): number {
 
   console.log(`\nGenerated ${templates.length} template(s) for ${LANGUAGES.length} languages\n`);
 
-  // Return the number of templates with gaps
-  return Object.keys(contentGapsManifest).length;
+  return {
+    templatesGenerated: templates.length,
+    contentGapsFound: Object.keys(contentGapsManifest).length,
+  };
 }
 
 /**
@@ -860,11 +867,11 @@ if (require.main === module) {
     generateAll();
     watch();
   } else {
-    const gapsCount = generateAll();
+    const result = generateAll();
 
     // In production mode, fail the build if there are content gaps
-    if (isProduction && gapsCount > 0) {
-      console.error(`\n❌ Build failed: Found ${gapsCount} template(s) with content gaps in production mode.`);
+    if (isProduction && result.contentGapsFound > 0) {
+      console.error(`\n❌ Build failed: Found ${result.contentGapsFound} template(s) with content gaps in production mode.`);
       console.error('Please fill in all missing sections or mark them as N/A before deploying.\n');
       process.exit(1);
     }
