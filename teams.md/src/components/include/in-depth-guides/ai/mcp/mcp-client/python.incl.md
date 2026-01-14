@@ -64,6 +64,28 @@ chat_prompt = ChatPrompt(
 
 In this example, we augment the `ChatPrompt` with multiple remote MCP Servers.
 
+## Using MCP Client in Message Handlers
+
+```python
+from microsoft_teams.ai import ChatPrompt
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
+# ...
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    """Handle messages using ChatPrompt with MCP tools"""
+
+    result = await chat_prompt.send(
+        input=ctx.activity.text,
+        instructions="You are a helpful assistant with access to remote MCP tools."
+    )
+
+    if result.response.content:
+        message = MessageActivityInput(text=result.response.content).add_ai_generated()
+        await ctx.send(message)
+```
+
 <!-- custom-headers -->
 
 ### Customize Headers
