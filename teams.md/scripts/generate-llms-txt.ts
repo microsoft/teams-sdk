@@ -470,7 +470,8 @@ function extractSummaryFromFile(filePath: string): string {
             return summary;
         }
 
-        // Remove HTML comments from content before extracting summary
+        // Remove HTML comments before extracting summary
+        // Generated .mdx files contain AUTO-GENERATED warnings that shouldn't appear in summaries
         const cleanContent = content.replace(/<!--[\s\S]*?-->/g, '');
 
         // Fallback to extracting first meaningful paragraph if no summary in frontmatter

@@ -255,7 +255,11 @@ function parseAttributes(attributeString: string): { [key: string]: string } {
 function cleanMdxSyntax(content: string): string {
     let cleaned = content;
 
-    // Remove HTML comments (including AUTO-GENERATED FILE comments)
+    // Remove HTML comments from llms.txt output
+    // Generated .mdx files contain AUTO-GENERATED warnings as HTML comments for developers,
+    // but these developer notes don't belong in AI-friendly documentation files.
+    // Note: Section markers (<!-- section-name -->) in .incl.md source files are processed
+    // earlier by generate-language-docs.ts and never appear in generated .mdx files.
     cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
 
     // Remove JSX components (except code blocks which are handled separately)
