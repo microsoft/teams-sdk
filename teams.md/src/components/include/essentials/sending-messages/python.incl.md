@@ -46,3 +46,12 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 async def handle_message(ctx: ActivityContext[MessageActivity]):
   await ctx.send(MessageActivityInput(text='hi!').add_mention(account=ctx.activity.from_))
 ```
+
+<!-- targeted-message-example -->
+
+```python
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    # Send a targeted message that only the sender can see
+    await ctx.send('This message is only visible to you!', is_targeted=True)
+```

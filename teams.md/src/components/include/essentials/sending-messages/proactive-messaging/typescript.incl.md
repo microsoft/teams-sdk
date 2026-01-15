@@ -39,3 +39,23 @@ const sendProactiveNotification = async (userId: string) => {
   await app.send(conversationId, activity);
 };
 ```
+
+<!-- targeted-proactive-example -->
+
+```typescript
+import { MessageActivity, Account } from '@microsoft/teams.api';
+import { App } from '@microsoft/teams.apps';
+// ...
+
+const sendTargetedProactiveNotification = async (userId: string, recipientId: string) => {
+  const conversationId = myConversationIdStorage.get(userId);
+  if (!conversationId) {
+    return;
+  }
+  
+  const activity = new MessageActivity('This is a private reminder just for you!');
+  activity.recipient = { id: recipientId, role: 'user' } as Account;
+  
+  await app.send(conversationId, activity, true);
+};
+```

@@ -35,3 +35,20 @@ async def send_proactive_notification(user_id: str):
     activity = MessageActivityInput(text="Hey! It's been a while. How are you?")
     await app.send(conversation_id, activity)
 ```
+
+<!-- targeted-proactive-example -->
+
+```python
+from microsoft_teams.api import MessageActivityInput, Account
+# ...
+
+async def send_targeted_proactive_notification(user_id: str, recipient_id: str):
+    conversation_id = storage.get(user_id, "")
+    if not conversation_id:
+        return
+    
+    activity = MessageActivityInput(text="This is a private reminder just for you!")
+    activity.recipient = Account(id=recipient_id, role="user")
+    
+    await app.send(conversation_id, activity, is_targeted=True)
+```

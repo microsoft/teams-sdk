@@ -41,3 +41,12 @@ app.on('message', async ({ send, activity }) => {
   await send(new MessageActivity('hi!').addMention(activity.from));
 });
 ```
+
+<!-- targeted-message-example -->
+
+```typescript
+app.on('message', async ({ send, activity }) => {
+  // Send a targeted message that only the sender can see
+  await send('This message is only visible to you!', undefined, true);
+});
+```

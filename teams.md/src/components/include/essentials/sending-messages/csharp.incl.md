@@ -103,3 +103,27 @@ import TabItem from '@theme/TabItem';
     ```
   </TabItem>
 </Tabs>
+
+<!-- targeted-message-example -->
+
+<Tabs>
+  <TabItem label="Controller" value="controller" default>
+    ```csharp
+    [Message]
+    public async Task OnMessage([Context] IContext.Client client)
+    {
+        // Send a private reply visible only to the sender
+        await client.Send("Hey! This is a private message just for you!", isTargeted: true);
+    }
+    ```
+  </TabItem>
+  <TabItem label="Minimal" value="minimal">
+    ```csharp
+    app.OnMessage(async context =>
+    {
+        // Send a targeted message visible only to the sender
+        await context.Send("Hey! This is a private message just for you!", isTargeted: true);
+    });
+    ```
+  </TabItem>
+</Tabs>
