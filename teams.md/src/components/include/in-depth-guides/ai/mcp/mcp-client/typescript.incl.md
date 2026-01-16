@@ -96,6 +96,12 @@ import { McpClientPlugin } from '@microsoft/teams.mcpclient';
 });
 ```
 
+<!-- mcp-server-note -->
+
+:::note
+Feel free to build an MCP Server in a different agent using the [MCP Server Guide](./mcp-server). Or you can quickly set up an MCP server using [Azure Functions](https://techcommunity.microsoft.com/blog/appsonazureblog/build-ai-agent-tools-using-remote-mcp-with-azure-functions/4401059).
+:::
+
 <!-- example-gif -->
 
 ![Animated image of user typing a prompt ('Tell me about Charizard') to DevTools Chat window and multiple paragraphs of information being returned.](/screenshots/mcp-client-pokemon.gif)

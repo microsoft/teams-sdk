@@ -377,3 +377,6 @@ When you register multiple functions:
 :::tip
 The LLM can call functions sequentially - using the output of one function as input to another - without any additional configuration. This makes it powerful for complex, multi-step workflows.
 :::
+
+<!-- advanced-features -->
+N/A

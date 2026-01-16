@@ -1,5 +1,7 @@
 <!-- botbuilder-adapter-note -->
 
+We'll also discuss how you can migrate features over incrementally via the [botbuilder plugin](./botbuilder).
+
 <!-- installation -->
 
 First, let's install Teams SDK into your project. Notably, this won't replace any existing installation of Teams SDK. When you've completed your migration, you can safely remove the `teams-ai` dependency from your `pyproject.toml` file.
@@ -695,6 +697,287 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
 
 <!-- ai-content -->
 
+### Action planner
+
+When we created Teams SDK, LLM's didn't natively support tool calling or orchestration. A lot has changed since then, which is why we decided to deprecate `ActionPlanner` from Teams SDK, and replace it with something a bit more lightweight. Notably, Teams SDK had two similar concepts: functions and actions. In Teams SDK, these are consolidated into functions.
+
+<Tabs>
+  <TabItem value="Diff" default>
+    ```python
+    # highlight-error-start
+-    # Create AI components
+-    model = OpenAIModel(
+-        OpenAIModelOptions(api_key=config.OPENAI_KEY, default_model="gpt-4o")
+-    )
+-
+-    prompts = PromptManager(
+-        PromptManagerOptions(prompts_folder=f"{os.path.dirname(__file__)}/prompts")
+-    )
+-
+-    # Define a prompt function for getting the current status of the lights
+-    @prompts.function("get_light_status")
+-    async def on_get_light_status(context, state, functions, tokenizer, args):
+-        return "on" if state.get("conversation.lightsOn") else "off"
+-
+-    planner = ActionPlanner(
+-        ActionPlannerOptions(model=model, prompts=prompts, default_prompt="tools")
+-    )
+-
+-    # Define storage and application
+-    storage = MemoryStorage()
+-    app = Application[AppTurnState](
+-        ApplicationOptions(
+-            bot_app_id=config.APP_ID,
+-            storage=storage,
+-            adapter=TeamsAdapter(config),
+-            ai=AIOptions(planner=planner),
+-        )
+-    )
+-
+-    # Register action handlers
+-    @app.ai.action("LightsOn")
+-    async def on_lights_on(context: ActionTurnContext, state: AppTurnState):
+-        state.conversation.lights_on = True
+-        return "the lights are now on"
+-
+-    @app.ai.action("LightsOff")
+-    async def on_lights_off(context: ActionTurnContext, state: AppTurnState):
+-        state.conversation.lights_on = False
+-        return "the lights are now off"
+-
+-    @app.ai.action("Pause")
+-    async def on_pause(context: ActionTurnContext, state: AppTurnState):
+-        time_ms = int(context.data["time"]) if context.data["time"] else 1000
+-        time.sleep(time_ms / 1000)
+-        return "done pausing"
+    # highlight-error-end
+    # highlight-success-start
++    import asyncio
++    from microsoft_teams.ai import ChatPrompt
++    from microsoft_teams.api import MessageActivity
++    from microsoft_teams.apps import ActivityContext, App
++    from microsoft_teams.common import LocalStorage
++    from microsoft_teams.openai import OpenAICompletionsAIModel
++
++    storage = LocalStorage()
++    app = App()
++
++    @app.on_message
++    async def handle_message(ctx: ActivityContext[MessageActivity]):
++        state = storage.get(ctx.activity.from_.id) or {"lights_on": False}
++
++        prompt = ChatPrompt(
++            instructions="You are a helpful assistant that can control lights.",
++            model=OpenAICompletionsAIModel(model="gpt-4o"),
++        )
++
++        # Define functions inline
++        prompt.function(
++            "get_light_status",
++            "Gets the current status of the lights",
++            lambda: "on" if state["lights_on"] else "off"
++        )
++
++        prompt.function(
++            "lights_on",
++            "Turns the lights on",
++            lambda: (state.update({"lights_on": True}), "the lights are now on")[1]
++        )
++
++        prompt.function(
++            "lights_off",
++            "Turns the lights off",
++            lambda: (state.update({"lights_on": False}), "the lights are now off")[1]
++        )
++
++        async def pause(time: int):
++            await asyncio.sleep(time / 1000)
++            return "done pausing"
++
++        prompt.function(
++            "pause",
++            "Delays for a period of time",
++            {
++                "type": "object",
++                "properties": {
++                    "time": {
++                        "type": "number",
++                        "description": "The amount of time to delay in milliseconds"
++                    }
++                },
++                "required": ["time"]
++            },
++            pause
++        )
++
++        result = await prompt.send(ctx.activity.text)
++        storage.set(ctx.activity.from_.id, state)
++
++        if result.response.content:
++            await ctx.send(result.response.content)
+    # highlight-success-end
+    ```
+
+  </TabItem>
+  <TabItem value="v2" label="Teams SDK v2">
+    In Teams SDK, there is no `actions.json` file. Instead, function prompts, parameters, etc. are declared in your code.
+
+    ```python
+    import asyncio
+    from microsoft_teams.ai import ChatPrompt
+    from microsoft_teams.api import MessageActivity
+    from microsoft_teams.apps import ActivityContext, App
+    from microsoft_teams.common import LocalStorage
+    from microsoft_teams.openai import OpenAICompletionsAIModel
+
+    storage = LocalStorage()
+    app = App()
+
+    @app.on_message
+    async def handle_message(ctx: ActivityContext[MessageActivity]):
+        state = storage.get(ctx.activity.from_.id) or {"lights_on": False}
+
+        prompt = ChatPrompt(
+            instructions="You are a helpful assistant that can control lights.",
+            model=OpenAICompletionsAIModel(model="gpt-4o"),
+        )
+
+        # Define functions inline - no separate actions.json needed
+        prompt.function(
+            "get_light_status",
+            "Gets the current status of the lights",
+            lambda: "on" if state["lights_on"] else "off"
+        )
+
+        prompt.function(
+            "lights_on",
+            "Turns the lights on",
+            lambda: (state.update({"lights_on": True}), "the lights are now on")[1]
+        )
+
+        prompt.function(
+            "lights_off",
+            "Turns the lights off",
+            lambda: (state.update({"lights_on": False}), "the lights are now off")[1]
+        )
+
+        async def pause(time: int):
+            await asyncio.sleep(time / 1000)
+            return "done pausing"
+
+        prompt.function(
+            "pause",
+            "Delays for a period of time",
+            {
+                "type": "object",
+                "properties": {
+                    "time": {
+                        "type": "number",
+                        "description": "The amount of time to delay in milliseconds"
+                    }
+                },
+                "required": ["time"]
+            },
+            pause
+        )
+
+        result = await prompt.send(ctx.activity.text)
+        storage.set(ctx.activity.from_.id, state)
+
+        if result.response.content:
+            await ctx.send(result.response.content)
+    ```
+
+  </TabItem>
+  <TabItem value="v1" label="Teams SDK v1">
+    ```python
+    # Create AI components
+    model = OpenAIModel(
+        OpenAIModelOptions(api_key=config.OPENAI_KEY, default_model="gpt-4o")
+    )
+
+    prompts = PromptManager(
+        PromptManagerOptions(prompts_folder=f"{os.path.dirname(__file__)}/prompts")
+    )
+
+    # Define a prompt function for getting the current status of the lights
+    @prompts.function("get_light_status")
+    async def on_get_light_status(context, state, functions, tokenizer, args):
+        return "on" if state.get("conversation.lightsOn") else "off"
+
+    planner = ActionPlanner(
+        ActionPlannerOptions(model=model, prompts=prompts, default_prompt="tools")
+    )
+
+    # Define storage and application
+    storage = MemoryStorage()
+    app = Application[AppTurnState](
+        ApplicationOptions(
+            bot_app_id=config.APP_ID,
+            storage=storage,
+            adapter=TeamsAdapter(config),
+            ai=AIOptions(planner=planner),
+        )
+    )
+
+    # Register action handlers
+    @app.ai.action("LightsOn")
+    async def on_lights_on(context: ActionTurnContext, state: AppTurnState):
+        state.conversation.lights_on = True
+        return "the lights are now on"
+
+    @app.ai.action("LightsOff")
+    async def on_lights_off(context: ActionTurnContext, state: AppTurnState):
+        state.conversation.lights_on = False
+        return "the lights are now off"
+
+    @app.ai.action("Pause")
+    async def on_pause(context: ActionTurnContext, state: AppTurnState):
+        time_ms = int(context.data["time"]) if context.data["time"] else 1000
+        time.sleep(time_ms / 1000)
+        return "done pausing"
+
+    @app.ai.action("LightStatus")
+    async def on_lights_status(context: ActionTurnContext, state: AppTurnState):
+        return "the lights are on" if state.conversation.lights_on else "the lights are off"
+    ```
+
+    And the corresponding `actions.json` file:
+
+    ```json
+    [
+        {
+            "name": "LightsOn",
+            "description": "Turns on the lights"
+        },
+        {
+            "name": "LightsOff",
+            "description": "Turns off the lights"
+        },
+        {
+            "name": "Pause",
+            "description": "Delays for a period of time",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "time": {
+                        "type": "number",
+                        "description": "The amount of time to delay in milliseconds"
+                    }
+                },
+                "required": ["time"]
+            }
+        },
+        {
+            "name": "LightStatus",
+            "description": "Gets the lights status"
+        }
+    ]
+    ```
+
+  </TabItem>
+</Tabs>
+
 <!-- feedback -->
 
 <Tabs>
@@ -770,3 +1053,11 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
 </Tabs>
 
 <!-- botbuilder-plugin -->
+
+## Incrementally migrating code via botbuilder plugin
+
+:::info
+Comparison code coming soon!
+:::
+
+If you aren't ready to migrate all of your code, you can run your existing Teams SDK code in parallel with Teams SDK. Learn more [here](./botbuilder/integration).

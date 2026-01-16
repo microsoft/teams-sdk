@@ -133,22 +133,26 @@ export function buildHierarchicalStructure(rootPath: string): { [key: string]: F
 
             if (item.isDirectory() && !shouldSkipDirectory(item.name)) {
                 // Process subdirectory
+                // Check for both README.md and index.mdx
                 const readmePath = path.join(fullPath, 'README.md');
+                const indexPath = path.join(fullPath, 'index.mdx');
                 let folderOrder = 999;
                 let folderTitle = item.name;
 
-                // Get folder ordering from README.md
-                if (fs.existsSync(readmePath)) {
-                    try {
-                        const readmeContent = readFileUtf8Normalized(readmePath);
-                        const { frontmatter, content } = FrontmatterParser.extract(readmeContent);
+                // Get folder ordering from README.md or index.mdx
+                const indexFilePath = fs.existsSync(readmePath) ? readmePath : (fs.existsSync(indexPath) ? indexPath : null);
 
-                        // Skip this entire folder if README is marked to ignore
+                if (indexFilePath) {
+                    try {
+                        const indexContent = readFileUtf8Normalized(indexFilePath);
+                        const { frontmatter, content } = FrontmatterParser.extract(indexContent);
+
+                        // Skip this entire folder if index file is marked to ignore
                         if (frontmatter.llms === 'ignore' || frontmatter.llms === false) {
                             continue; // Skip this folder entirely
                         }
 
-                        // If README is marked ignore-file, skip just the README but process folder
+                        // If index file is marked ignore-file, skip just the file but process folder
                         // (folderOrder and folderTitle will use defaults)
 
                         folderOrder = (frontmatter.sidebar_position as number) || 999;
@@ -164,7 +168,7 @@ export function buildHierarchicalStructure(rootPath: string): { [key: string]: F
                             }
                         }
                     } catch (error) {
-                        // Ignore errors reading README
+                        // Ignore errors reading index file
                     }
                 }
 

@@ -160,3 +160,6 @@ async def handle_multiple_functions(ctx: ActivityContext[MessageActivity]):
     else:
         await ctx.reply("Sorry I could not figure it out")
 ```
+
+<!-- advanced-features -->
+N/A

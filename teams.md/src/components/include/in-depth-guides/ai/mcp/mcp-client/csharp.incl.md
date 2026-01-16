@@ -142,6 +142,12 @@ import TabItem from '@theme/TabItem';
 
 In this example, we augment the `ChatPrompt` with a remote MCP Server.
 
+<!-- mcp-server-note -->
+
+:::note
+You can quickly set up an MCP server using [Azure Functions](https://techcommunity.microsoft.com/blog/appsonazureblog/build-ai-agent-tools-using-remote-mcp-with-azure-functions/4401059).
+:::
+
 <!-- custom-headers -->
 
 ### Custom Headers
@@ -161,4 +167,8 @@ new McpClientPlugin()
 
 <!-- example-gif -->
 
+![Animated image of user typing a prompt ('Tell me about Charizard') to DevTools Chat window and multiple paragraphs of information being returned.](/screenshots/mcp-client-pokemon.gif)
+
 <!-- pokemon-example -->
+
+In this example, our MCP server is a Pokemon API and our client knows how to call it. The LLM is able to call the `getPokemon` function exposed by the server and return the result back to the user.
