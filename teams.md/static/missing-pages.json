@@ -47,6 +47,10 @@
   "migrations": [
     "csharp"
   ],
+  "migrations/slack-bolt": [
+    "csharp",
+    "python"
+  ],
   "migrations/v1": [
     "csharp"
   ],
