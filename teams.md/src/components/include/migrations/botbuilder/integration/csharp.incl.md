@@ -16,7 +16,6 @@
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.AddTransient<Controller>();
             builder
                 .AddTeams()
                 // highlight-next-line
