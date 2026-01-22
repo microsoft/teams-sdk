@@ -39,20 +39,18 @@ To access the graph using the user's token, you need to do this as part of a mes
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-<Tabs>
-  <TabItem label="Minimal" value="minimal">
-    ```csharp
-    app.OnMessage(async context =>
-    {
-        var user = await context.UserGraph.Me.GetAsync();
-        Console.WriteLine($"User ID: {user.id}");
-        Console.WriteLine($"User Display Name: {user.displayName}");
-        Console.WriteLine($"User Email: {user.mail}");
-        Console.WriteLine($"User Job Title: {user.jobTitle}");
-    });
-    ```
-  </TabItem>
-</Tabs>
+
+```csharp
+app.OnMessage(async context =>
+{
+    var user = await context.UserGraph.Me.GetAsync();
+    Console.WriteLine($"User ID: {user.id}");
+    Console.WriteLine($"User Display Name: {user.displayName}");
+    Console.WriteLine($"User Email: {user.mail}");
+    Console.WriteLine($"User Job Title: {user.jobTitle}");
+});
+```
+
 
 <!-- user-graph-object -->
 

@@ -203,31 +203,30 @@ using Microsoft.Teams.Common.Logging;
 
 //...
 
-[Microsoft.Teams.Apps.Activities.Invokes.AdaptiveCard.Action]
-public async Task<ActionResponse> OnCardAction([Context] ActionActivity activity, [Context] IContext.Client client, [Context] ILogger log)
+teams.OnAdaptiveCardAction(async context =>
 {
-    log.Info("[CARD_ACTION] Card action received");
+    var activity = context.Activity;
+    context.Log.Info("[CARD_ACTION] Card action received");
 
     var data = activity.Value?.Action?.Data;
 
+    context.Log.Info($"[CARD_ACTION] Raw data: {JsonSerializer.Serialize(data)}");
+
     if (data == null)
     {
-        log.Error("[CARD_ACTION] No data in card action");
+        context.Log.Error("[CARD_ACTION] No data in card action");
         return new ActionResponse.Message("No data specified") { StatusCode = 400 };
     }
 
-    // Extract action from the Value property
     string? action = data.TryGetValue("action", out var actionObj) ? actionObj?.ToString() : null;
 
     if (string.IsNullOrEmpty(action))
     {
-        log.Error("[CARD_ACTION] No action specified in card data");
+        context.Log.Error("[CARD_ACTION] No action specified in card data");
         return new ActionResponse.Message("No action specified") { StatusCode = 400 };
     }
+    context.Log.Info($"[CARD_ACTION] Processing action: {action}");
 
-    log.Info($"[CARD_ACTION] Processing action: {action}");
-
-    // Helper method to extract form field values
     string? GetFormValue(string key)
     {
         if (data.TryGetValue(key, out var val))
@@ -241,32 +240,50 @@ public async Task<ActionResponse> OnCardAction([Context] ActionActivity activity
 
     switch (action)
     {
-        case "submit_feedback":
-            var feedbackText = GetFormValue("feedback") ?? "No feedback provided";
-            await client.Send($"Feedback received: {feedbackText}");
+        case "submit_basic":
+            var notifyValue = GetFormValue("notify") ?? "false";
+            await context.Send($"Basic card submitted! Notify setting: {notifyValue}");
             break;
 
-        case "save_profile":
-            var name = GetFormValue("name") ?? "Unknown";
-            var email = GetFormValue("email") ?? "No email";
-            var subscribe = GetFormValue("subscribe") ?? "false";
-            await client.Send($"Profile saved!\nName: {name}\nEmail: {email}\nSubscribed: {subscribe}");
+        case "submit_feedback":
+            var feedbackText = GetFormValue("feedback") ?? "No feedback provided";
+            await context.Send($"Feedback received: {feedbackText}");
             break;
 
         case "create_task":
             var title = GetFormValue("title") ?? "Untitled";
             var priority = GetFormValue("priority") ?? "medium";
             var dueDate = GetFormValue("due_date") ?? "No date";
-            await client.Send($"Task created!\nTitle: {title}\nPriority: {priority}\nDue: {dueDate}");
+            await context.Send($"Task created!\nTitle: {title}\nPriority: {priority}\nDue: {dueDate}");
+            break;
+
+        case "save_profile":
+            var name = GetFormValue("name") ?? "Unknown";
+            var email = GetFormValue("email") ?? "No email";
+            var subscribe = GetFormValue("subscribe") ?? "false";
+            var age = GetFormValue("age");
+            var location = GetFormValue("location") ?? "Not specified";
+
+            var response = $"Profile saved!\nName: {name}\nEmail: {email}\nSubscribed: {subscribe}";
+            if (!string.IsNullOrEmpty(age))
+                response += $"\nAge: {age}";
+            if (location != "Not specified")
+                response += $"\nLocation: {location}";
+
+            await context.Send(response);
+            break;
+
+        case "test_json":
+            await context.Send("JSON deserialization test successful!");
             break;
 
         default:
-            log.Error($"[CARD_ACTION] Unknown action: {action}");
+            context.Log.Error($"[CARD_ACTION] Unknown action: {action}");
             return new ActionResponse.Message("Unknown action") { StatusCode = 400 };
     }
 
     return new ActionResponse.Message("Action processed successfully") { StatusCode = 200 };
-}
+});
 ```
 
 <!-- data-typing-note -->

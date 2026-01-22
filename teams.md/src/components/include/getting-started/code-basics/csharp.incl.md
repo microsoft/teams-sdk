@@ -1,7 +1,6 @@
 <!-- imports -->
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+N/A
 
 <!-- project-structure -->
 
@@ -9,7 +8,6 @@ import TabItem from '@theme/TabItem';
 Quote.Agent/
 |── appPackage/       # Teams app package files
 ├── Program.cs        # Main application startup code
-├── MainController.cs # Main activity handling code
 ```
 
 <!-- project-structure-description -->
@@ -19,18 +17,21 @@ Quote.Agent/
 <!-- app-class-code -->
 
 ```csharp title="Program.cs"
-using Microsoft.Teams.Plugins.AspNetCore.DevTools.Extensions;
+using Microsoft.Teams.Apps.Activities;
+using Microsoft.Teams.Apps.Extensions;
 using Microsoft.Teams.Plugins.AspNetCore.Extensions;
 
-using Quote.Agent;
-
 var builder = WebApplication.CreateBuilder(args);
-builder.AddTeams();
-builder.AddTeamsDevTools();
-builder.Services.AddTransient<MainController>();
-
+builder.AddTeams().AddTeamsDevTools();
 var app = builder.Build();
-app.UseTeams();
+var teams = app.UseTeams();
+
+teams.OnMessage(async context =>
+{
+    await context.Typing();
+    await context.Send($"you said '{context.Activity.Text}'");
+});
+
 app.Run();
 ```
 
@@ -40,21 +41,18 @@ app.Run();
 
 <!-- message-handling-code -->
 
-<Tabs>
-  <TabItem label="Minimal" value="minimal">
-    ```csharp title="Program.cs"
-    app.OnMessage(async context =>
-    {
-        await context.Typing();
-        await context.Send($"you said \"{context.activity.Text}\"");
-    });
-    ```
-  </TabItem>
-</Tabs>
+```csharp title="Program.cs"
+teams.OnMessage(async context =>
+{
+    await context.Typing();
+    await context.Send($"you said \"{context.activity.Text}\"");
+});
+```
+
 
 <!-- message-handling-step1 -->
 
-Listens for all incoming messages using `[Message]` attribute.
+Listens for all incoming messages using `onMessage` handler.
 
 <!-- message-handling-step3 -->
 

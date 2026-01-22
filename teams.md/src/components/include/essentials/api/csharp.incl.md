@@ -19,16 +19,14 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-<Tabs>
-  <TabItem label="Minimal" value="minimal">
-    ```csharp
-    app.OnMessage(async context =>
-    {
-        var members = await context.Api.Conversations.Members.Get(context.Conversation.Id);
-    });
-    ```
-  </TabItem>
-</Tabs>
+
+```csharp
+app.OnMessage(async context =>
+{
+    var members = await context.Api.Conversations.Members.Get(context.Conversation.Id);
+});
+```
+
 
 <!-- proactive-example -->
 

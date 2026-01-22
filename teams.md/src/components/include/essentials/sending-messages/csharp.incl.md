@@ -1,31 +1,20 @@
 <!-- basic-message-example -->
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-<Tabs>
-  <TabItem label="Minimal" value="minimal">
-    ```csharp
-    app.OnMessage(async context =>
-    {
-        await context.Send($"you said: {context.activity.Text}");
-    });
-    ```
-  </TabItem>
-</Tabs>
+```csharp
+app.OnMessage(async context =>
+{
+    await context.Send($"you said: {context.activity.Text}");
+});
+```
 
 <!-- signin-example -->
 
-<Tabs>
-  <TabItem label="Minimal" value="minimal">
-    ```csharp
-    app.OnVerifyState(async context =>
-    {
-        await context.Send("You have successfully signed in!");
-    });
-    ```
-  </TabItem>
-</Tabs>
+  ```csharp
+  app.OnVerifyState(async context =>
+  {
+      await context.Send("You have successfully signed in!");
+  });
+  ```
 
 <!-- signin-event-name -->
 
@@ -33,20 +22,16 @@ import TabItem from '@theme/TabItem';
 
 <!-- streaming-example -->
 
-<Tabs>
-  <TabItem label="Minimal" value="minimal">
-    ```csharp
-    app.OnMessage(async context =>
-    {
-        context.Stream.Emit("hello");
-        context.Stream.Emit(", ");
-        context.Stream.Emit("world!");
-        // result message: "hello, world!"
-        return Task.CompletedTask;
-    });
-    ```
-  </TabItem>
-</Tabs>
+```csharp
+app.OnMessage(async context =>
+{
+    context.Stream.Emit("hello");
+    context.Stream.Emit(", ");
+    context.Stream.Emit("world!");
+    // result message: "hello, world!"
+    return Task.CompletedTask;
+});
+```
 
 <!-- mention-method-name -->
 
@@ -54,22 +39,9 @@ import TabItem from '@theme/TabItem';
 
 <!-- mention-example -->
 
-<Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [Message]
-    public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
-    {
-        await client.Send(new MessageActivity("hi!").AddMention(activity.From));
-    }
-    ```
-  </TabItem>
-  <TabItem label="Minimal" value="minimal">
-    ```csharp
-    app.OnMessage(async context =>
-    {
-        await context.Send(new MessageActivity("hi!").AddMention(activity.From));
-    });
-    ```
-  </TabItem>
-</Tabs>
+```csharp
+app.OnMessage(async context =>
+{
+    await context.Send(new MessageActivity("hi!").AddMention(activity.From));
+});
+```
