@@ -40,19 +40,6 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [Message]
-    public async Task OnMessage([Context] MessageActivity activity, [Context] GraphClient userGraph)
-    {
-        var user = await userGraph.Me.GetAsync();
-        Console.WriteLine($"User ID: {user.id}");
-        Console.WriteLine($"User Display Name: {user.displayName}");
-        Console.WriteLine($"User Email: {user.mail}");
-        Console.WriteLine($"User Job Title: {user.jobTitle}");
-    }
-    ```
-  </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
     app.OnMessage(async context =>

@@ -4,15 +4,6 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [Message]
-    public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
-    {
-        await client.Send($"you said: {activity.Text}");
-    }
-    ```
-  </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
     app.OnMessage(async context =>
@@ -26,15 +17,6 @@ import TabItem from '@theme/TabItem';
 <!-- signin-example -->
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [SignIn.VerifyState]
-    public async Task OnVerifyState([Context] SignIn.VerifyStateActivity activity, [Context] IContext.Client client)
-    {
-        await client.Send("You have successfully signed in!");
-    }
-    ```
-  </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
     app.OnVerifyState(async context =>
@@ -52,18 +34,6 @@ import TabItem from '@theme/TabItem';
 <!-- streaming-example -->
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [Message]
-    public void OnMessage([Context] MessageActivity activity, [Context] IStreamer stream)
-    {
-        stream.Emit("hello");
-        stream.Emit(", ");
-        stream.Emit("world!");
-        // result message: "hello, world!"
-    }
-    ```
-  </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
     app.OnMessage(async context =>

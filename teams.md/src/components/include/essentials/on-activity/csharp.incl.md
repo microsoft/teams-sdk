@@ -8,19 +8,6 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [TeamsController]
-    public class MainController
-    {
-        [Message]
-        public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
-        {
-            await client.Send($"you said: {activity.Text}");
-        }
-    }
-    ```
-  </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
     app.OnMessage(async context =>
@@ -41,16 +28,6 @@ The `OnActivity` activity handlers (and attributes) follow a [middleware](https:
 
 <!-- middleware-examples -->
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [Message]
-    public void OnMessage([Context] MessageActivity activity, [Context] ILogger logger, [Context] IContext.Next next)
-    {
-        Console.WriteLine("global logger");
-        next(); // pass control onward
-    }
-    ```
-  </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
     app.OnMessage(async context =>
@@ -64,23 +41,7 @@ The `OnActivity` activity handlers (and attributes) follow a [middleware](https:
 </Tabs>
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [Message]
-    public async Task OnMessage(IContext<MessageActivity> context)
-    {
-        if (context.Activity.Text == "/help")
-        {
-            await context.Send("Here are all the ways I can help you...");
-        }
-
-        // Conditionally pass control to the next handler
-        context.Next();
-    }
-    ```
-
-  </TabItem>
-  <TabItem label="Minimal" value="minimal">
+    <TabItem label="Minimal" value="minimal">
     ```csharp
     app.OnMessage(async context =>
     {
@@ -98,17 +59,7 @@ The `OnActivity` activity handlers (and attributes) follow a [middleware](https:
 </Tabs>
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [Message]
-    public async Task OnMessage(IContext<MessageActivity> context)
-    {
-        // Fallthrough to the final handler
-        await context.Send($"Hello! you said {context.Activity.Text}");
-    }
-    ```
-  </TabItem>
-  <TabItem label="Minimal" value="minimal">
+   <TabItem label="Minimal" value="minimal">
     ```csharp
     app.OnMessage(async context =>
     {

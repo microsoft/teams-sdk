@@ -41,20 +41,6 @@ app.Run();
 <!-- message-handling-code -->
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp title="MainController.cs"
-    [TeamsController("main")]
-    public class MainController
-    {
-        [Message]
-        public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
-        {
-            await client.Typing();
-            await client.Send($"you said \"{activity.Text}\"");
-        }
-    }
-    ```
-  </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp title="Program.cs"
     app.OnMessage(async context =>

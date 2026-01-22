@@ -146,23 +146,6 @@ await client.Send(card);
 <!-- example-intro -->
 
 <Tabs>
-  <TabItem label="Controller" value="controller" default>
-    ```csharp
-    [Message]
-    public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
-    {
-        var text = activity.Text?.ToLowerInvariant() ?? "";
-
-        if (text.Contains("form"))
-        {
-            await client.Typing();
-            var card = CreateTaskFormCard();
-            await client.Send(card);
-        }
-    }
-    ```
-
-  </TabItem>
   <TabItem label="Minimal" value="minimal">
     ```csharp
     teams.OnMessage(async context =>
