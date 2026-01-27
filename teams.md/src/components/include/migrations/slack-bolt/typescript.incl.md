@@ -1,6 +1,6 @@
 <!-- installation -->
 
-First, let's install Teams SDK into your project. Notably, this won't replace any existing installation of Teams SDK. When you've completed your migration, you can safely remove the `@microsoft/teams-ai` dependency from your `package.json` file.
+First, let's install the Teams SDK into your project. This will install the Teams SDK alongside any existing packages. After you've completed your migration, you can safely remove the `@microsoft/teams-ai` dependency from your `package.json` file.
 
 ```sh
 npm install @microsoft/teams.apps
