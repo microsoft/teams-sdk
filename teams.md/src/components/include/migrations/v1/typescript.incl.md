@@ -584,32 +584,31 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
 +      logger: new ConsoleLogger('@tests/auth', { level: 'debug' }),
 +    });
 +
-+    app.message('/signout', async (client) => {
-+      if (!client.isSignedIn) return;
-+      await client.signout();
-+      await client.send('you have been signed out!');
++    app.message('/signout', async ({ isSignedIn, signout, send }) => {
++      if (!isSignedIn) return;
++      await signout();
++      await send('you have been signed out!');
 +    });
 +
-+    app.message('/help', async (client) => {
-+      await client.send('your help text');
++    app.message('/help', async ({ send }) => {
++      await send('your help text');
 +    });
 +
-+    app.on('message', async (client) => {
-+      if (!client.isSignedIn) {
-+        await client.signin({
-+          oauthCardText: 'Sign in to your account',
-+          signInButtonText: 'Sign in',
-+        });
++    app.on('message', async ({ signin, userGraph, log }) => {
++      if (!await signin({
++        oauthCardText: 'Sign in to your account',
++        signInButtonText: 'Sign in',
++      })) {
 +        return;
 +      }
-+      const me = await client.userGraph.me.get();
++      const me = await userGraph.me.get();
 +      log.info(`user "${me.displayName}" already signed in!`);
 +    });
 +
-+    app.event('signin', async (client) => {
-+      const me = await client.userGraph.me.get();
-+      await client.send(`user "${me.displayName}" signed in.`);
-+      await client.send(`Token string length: ${client.token.token.length}`);
++    app.event('signin', async ({ userGraph, send, token }) => {
++      const me = await userGraph.me.get();
++      await send(`user "${me.displayName}" signed in.`);
++      await send(`Token string length: ${token.token.length}`);
 +    });
     // highlight-success-end
     ```
@@ -629,34 +628,33 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
       logger: new ConsoleLogger('@tests/auth', { level: 'debug' }),
     });
 
-    app.message('/signout', async (client) => {
-      if (!client.isSignedIn) return;
-      await client.signout(); // call signout for your auth connection...
-      await client.send('you have been signed out!');
+    app.message('/signout', async ({ isSignedIn, signout, send }) => {
+      if (!isSignedIn) return;
+      await signout(); // call signout for your auth connection...
+      await send('you have been signed out!');
     });
 
-    app.message('/help', async (client) => {
-      await client.send('your help text');
+    app.message('/help', async ({ send }) => {
+      await send('your help text');
     });
 
-    app.on('message', async (client) => {
-      if (!client.isSignedIn) {
-        await client.signin({
-          // Customize the OAuth card text (only renders in OAuth flow, not SSO)
-          oauthCardText: 'Sign in to your account',
-          signInButtonText: 'Sign in',
-        }); // call signin for your auth connection...
+    app.on('message', async ({ signin, userGraph, log }) => {
+      if (!await signin({
+        // Customize the OAuth card text (only renders in OAuth flow, not SSO)
+        oauthCardText: 'Sign in to your account',
+        signInButtonText: 'Sign in',
+      })) { // call signin for your auth connection...
         return;
       }
 
-      const me = await client.userGraph.me.get();
+      const me = await userGraph.me.get();
       log.info(`user "${me.displayName}" already signed in!`);
     });
 
-    app.event('signin', async (client) => {
-      const me = await client.userGraph.me.get();
-      await client.send(`user "${me.displayName}" signed in.`);
-      await client.send(`Token string length: ${client.token.token.length}`);
+    app.event('signin', async ({ userGraph, send, token }) => {
+      const me = await userGraph.me.get();
+      await send(`user "${me.displayName}" signed in.`);
+      await send(`Token string length: ${token.token.length}`);
     });
     ```
 

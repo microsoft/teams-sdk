@@ -193,8 +193,8 @@ First, let's configure the `App` class in Teams JS. This is equivalent to Slack 
     });
     // highlight-error-end
     // highlight-success-start
-    app.message("hi", async (client) => {
-      await client.send(`Hello, ${client.from.name}!`);
+    app.message("hi", async ({ send, activity }) => {
+      await send(`Hello, ${activity.from.name}!`);
     });
     // highlight-success-end
     // listen for ANY message to be received
@@ -207,11 +207,9 @@ First, let's configure the `App` class in Teams JS. This is equivalent to Slack 
     });
     // highlight-error-end
     // highlight-success-start
-    app.on('message', async (client) => {
+    app.on('message', async ({ send, activity }) => {
         // echo back users request
-        await client.send(
-            `you said: ${client.activity.text}`
-        );
+        await send(`you said: ${activity.text}`);
     });
     // highlight-success-end
     ```
@@ -238,15 +236,13 @@ First, let's configure the `App` class in Teams JS. This is equivalent to Slack 
 
     ```ts
     // triggers when user sends "hi" or "@bot hi"
-    app.message("hi", async (client) => {
-      await client.send(`Hello, ${client.from.name}!`);
+    app.message("hi", async ({ send, activity }) => {
+      await send(`Hello, ${activity.from.name}!`);
     });
     // listen for ANY message to be received
-    app.on('message', async (client) => {
+    app.on('message', async ({ send, activity }) => {
         // echo back users request
-        await client.send(
-            `you said: ${client.activity.text}`
-        );
+        await send(`you said: ${activity.text}`);
     });
     ```
   </TabItem>
@@ -274,10 +270,10 @@ First, let's configure the `App` class in Teams JS. This is equivalent to Slack 
     });
     // highlight-error-end
     // highlight-success-start
-    import { Card, TextBlock } from '@microsoft/teams.cards';      
+    import { Card, TextBlock } from '@microsoft/teams.cards';
 
-    app.message('/card', async (client) => {
-        await client.send(
+    app.message('/card', async ({ send }) => {
+        await send(
             new Card(new TextBlock('Hello, world!', { wrap: true, isSubtle: false }))
                 .withOptions({
                     width: 'Full',
@@ -313,8 +309,8 @@ First, let's configure the `App` class in Teams JS. This is equivalent to Slack 
     ```ts
     import { Card, TextBlock } from '@microsoft/teams.cards';
 
-    app.message('/card', async (client) => {
-      await client.send(
+    app.message('/card', async ({ send }) => {
+      await send(
         new Card(new TextBlock('Hello, world!', { wrap: true, isSubtle: false })).withOptions({
           width: 'Full',
         })
@@ -352,13 +348,12 @@ First, let's configure the `App` class in Teams JS. This is equivalent to Slack 
         },
     });
 
-    app.message('me', async (client) => {
-        if (!client.isSignedIn) {
-            // Sign in if not already
-            return await client.signin();
+    app.message('me', async ({ signin, userGraph, send }) => {
+        if (!await signin()) {
+            return;
         }
-        const me = await client.userGraph.call(endpoints.me.get);
-        await client.send(JSON.stringify(me));
+        const me = await userGraph.call(endpoints.me.get);
+        await send(JSON.stringify(me));
     });
     // highlight-success-end
     ```
@@ -391,13 +386,12 @@ First, let's configure the `App` class in Teams JS. This is equivalent to Slack 
         },
     });
 
-    app.message('me', async (client) => {
-        if (!client.isSignedIn) {
-            // Sign in if not already
-            return await client.signin();
+    app.message('me', async ({ signin, userGraph, send }) => {
+        if (!await signin()) {
+            return;
         }
-        const me = await client.userGraph.call(endpoints.me.get);
-        await client.send(JSON.stringify(me));
+        const me = await userGraph.call(endpoints.me.get);
+        await send(JSON.stringify(me));
     });
     ```
 
@@ -418,20 +412,22 @@ const app = new App({
     },
 });
 
-app.message('me', async (client) => {
+app.message('me', async ({ activity, signin, token, send }) => {
     // In production, it is probably better to implement a local cache.
-    // (e.g. \`client.activity.from.id\` <-> token).
+    // (e.g. \`activity.from.id\` <-> token).
     // Otherwise this triggers an API call to Azure Token Service on every inbound message.
-    const token = await client.signin();
-    
+    if (!await signin()) {
+        return;
+    }
+
     // Call external API
     const response = await fetch('https://example.com/api/helloworld', {
         method: 'POST',
         headers: {
-            "Authorization": client.token,
+            "Authorization": token,
         },
     });
-    const result = await res.json();
-    await client.send(JSON.stringify(result));
+    const result = await response.json();
+    await send(JSON.stringify(result));
 });
 ```

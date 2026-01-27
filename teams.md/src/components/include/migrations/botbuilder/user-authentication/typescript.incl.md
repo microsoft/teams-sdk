@@ -154,9 +154,9 @@
         await send('You have been signed out.');
       });
 
-      app.on('message', async ({ send, signin, isSignedIn }) => {
-        if (!isSignedIn) {
-          return await signin();
+      app.on('message', async ({ send, signin }) => {
+        if (!await signin()) {
+          return;
         }
       });
 

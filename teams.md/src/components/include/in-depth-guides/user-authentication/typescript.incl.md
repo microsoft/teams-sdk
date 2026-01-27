@@ -28,11 +28,9 @@ const app = new App({
 <!-- signing-in -->
 
 ```ts
-app.message('/signin', async ({ send, signin, isSignedIn }) => {
-  if (isSignedIn) {
-    send('you are already signed in!');
-  } else {
-    await signin();
+app.message('/signin', async ({ signin, send }) => {
+  if (await signin()) {
+    await send('you are already signed in!');
   }
 });
 ```
@@ -52,9 +50,8 @@ app.event('signin', async ({ send, token }) => {
 ```ts
 import * as endpoints from '@microsoft/teams.graph-endpoints';
 
-app.message('/whoami', async ({ send, userGraph, isSignedIn }) => {
-  if (!isSignedIn) {
-    await send('you are not signed in! please type **/signin** to sign in.');
+app.message('/whoami', async ({ send, userGraph, signin }) => {
+  if (!await signin()) {
     return;
   }
   const me = await userGraph.call(endpoints.me.get);
@@ -63,8 +60,8 @@ app.message('/whoami', async ({ send, userGraph, isSignedIn }) => {
   );
 });
 
-app.on('message', async ({ send, activity, isSignedIn }) => {
-  if (isSignedIn) {
+app.on('message', async ({ send, activity, signin }) => {
+  if (await signin()) {
     await send(
       `You said: "${activity.text}". Please type **/whoami** to see your profile or **/signout** to sign out.`
     );
@@ -78,11 +75,8 @@ app.on('message', async ({ send, activity, isSignedIn }) => {
 
 ```ts
 app.message('/signout', async ({ send, signout, isSignedIn }) => {
-  if (!isSignedIn) {
-    await send('you are not signed in! please type **/signin** to sign in.');
-    return;
-  }
-  await signout(); // call signout for your auth connection...
+  if (!isSignedIn) return;
+  await signout();
   await send('you have been signed out!');
 });
 ```
