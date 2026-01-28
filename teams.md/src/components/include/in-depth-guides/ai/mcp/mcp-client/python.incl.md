@@ -7,7 +7,7 @@ SSE protocol
 Install it to your application:
 
 ```bash
-uv add microsoft-teams-mcpplugin
+pip install microsoft-teams-mcpplugin
 ```
 
 <!-- remote-protocol -->

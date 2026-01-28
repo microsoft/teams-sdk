@@ -7,7 +7,7 @@ You are able to convert any `App` into an MCP server by using the `McpPlugin` fr
 Install it to your application:
 
 ```bash
-uv add microsoft-teams-mcpplugin
+pip install microsoft-teams-mcpplugin
 ```
 
 <!-- configuration -->

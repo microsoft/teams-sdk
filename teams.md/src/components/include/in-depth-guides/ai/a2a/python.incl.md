@@ -9,5 +9,5 @@ This package wraps the official [A2A SDK](https://github.com/a2aproject/a2a-pyth
 Install the package:
 
 ```bash
-uv add microsoft-teams-a2a
+pip install microsoft-teams-a2a
 ```

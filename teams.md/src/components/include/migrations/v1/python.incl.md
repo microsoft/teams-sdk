@@ -7,7 +7,7 @@ We'll also discuss how you can migrate features over incrementally via the [botb
 First, let's install Teams SDK into your project. Notably, this won't replace any existing installation of Teams SDK. When you've completed your migration, you can safely remove the `teams-ai` dependency from your `pyproject.toml` file.
 
 ```sh
-uv add microsoft-teams-apps
+pip install microsoft-teams-apps
 ```
 
 <!-- app-migration -->

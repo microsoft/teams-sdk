@@ -15,7 +15,7 @@ const LANGUAGE_SPECIFIC_TIPS: Record<Language, string[]> = {
         "The SDK uses typescript to help you make the right decisions when using the APIs. You may check type definitions and type checkers to make sure your code is correct."
     ],
     python: [
-        "It's a good idea to run `uv run typecheck` to make sure the code is correctly typed and fix any type errors.",
+        "It's a good idea to run `pyright` to make sure the code is correctly typed and fix any type errors.",
     ],
     csharp: [
         "It's a good idea to build the application and fix compile time errors to help ensure the app works as expected.",
