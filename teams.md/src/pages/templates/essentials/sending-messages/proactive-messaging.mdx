@@ -20,3 +20,15 @@ Then, when you want to send a proactive message, you can retrieve the <LanguageI
 :::tip
 In this example, you see how to get the <LanguageInclude section="conversation-id-field" /> using one of the activity handlers. This is a good place to store the conversation id, but you can also do this in other places like when the user installs the app or when they sign in. The important thing is that you have the conversation id stored somewhere so you can use it later.
 :::
+
+## Targeted Proactive Messages
+
+:::info[Preview]
+Targeted messages are currently in preview.
+:::
+
+Targeted messages, also known as ephemeral messages, are delivered to a specific user in a shared conversation. From a single user's perspective, it appears as regular inline messages in a conversation. Other participants won't see these messages.
+
+When sending targeted messages proactively, you must explicitly specify the recipient's user ID.
+
+<LanguageInclude section="targeted-proactive-example" />

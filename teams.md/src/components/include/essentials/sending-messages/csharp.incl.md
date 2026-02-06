@@ -45,3 +45,20 @@ app.OnMessage(async context =>
     await context.Send(new MessageActivity("hi!").AddMention(activity.From));
 });
 ```
+
+<!-- targeted-method-name -->
+
+`WithTargetedRecipient`
+
+<!-- targeted-send-example -->
+
+```csharp
+app.OnMessage(async context =>
+{
+    // Using WithTargetedRecipient(true) automatically targets the sender of the incoming message
+    await context.Send(
+        new MessageActivity("This message is only visible to you!")
+            .WithTargetedRecipient(true)
+    );
+});
+```

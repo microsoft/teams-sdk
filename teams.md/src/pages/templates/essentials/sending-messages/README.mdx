@@ -37,3 +37,15 @@ Streaming is currently only supported in 1:1 conversations, not group chats or c
 Sending a message at `@mentions` a user is as simple including the details of the user using the <LanguageInclude section="mention-method-name" /> method
 
 <LanguageInclude section="mention-example" />
+
+## Targeted Messages
+
+:::info[Preview]
+Targeted messages are currently in preview.
+:::
+
+Targeted messages, also known as ephemeral messages, are delivered to a specific user in a shared conversation. From a single user's perspective, it appears as regular inline messages in a conversation. Other participants won't see these messages, making them useful for authentication flows, help or error responses, personal reminders, or sharing contextual information without cluttering the group conversation.
+
+To send a targeted message when responding to an incoming activity, use the <LanguageInclude section="targeted-method-name" /> method. The recipient will automatically be set to the user who sent the incoming message.
+
+<LanguageInclude section="targeted-send-example" />

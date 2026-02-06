@@ -36,3 +36,18 @@ public static class Notifications
     }
 }
 ```
+
+<!-- targeted-proactive-example -->
+
+```csharp
+// When sending proactively, you must provide the explicit user ID
+public static async Task SendTargetedNotification(string conversationId, string userId)
+{
+    var teams = app.UseTeams();
+    await teams.Send(
+        conversationId,
+        new MessageActivity("This is a private notification just for you!")
+            .WithTargetedRecipient(userId)
+    );
+}
+```
