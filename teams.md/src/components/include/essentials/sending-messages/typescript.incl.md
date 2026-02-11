@@ -44,18 +44,18 @@ app.on('message', async ({ send, activity }) => {
 
 <!-- targeted-method-name -->
 
-`withTargetedRecipient`
+`withRecipient`
 
 <!-- targeted-send-example -->
 
 ```typescript
 import { MessageActivity } from '@microsoft/teams.api';
 
-app.on('message', async ({ send }) => {
-  // Using withTargetedRecipient(true) automatically targets the sender of the incoming message
+app.on('message', async ({ send, activity }) => {
+  // Using withRecipient with isTargeted=true explicitly targets the specified recipient
   await send(
     new MessageActivity('This message is only visible to you!')
-      .withTargetedRecipient(true)
+      .withRecipient(activity.from, true)
   );
 });
 ```

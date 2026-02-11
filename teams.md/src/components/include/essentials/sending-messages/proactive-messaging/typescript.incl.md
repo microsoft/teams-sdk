@@ -43,14 +43,14 @@ const sendProactiveNotification = async (userId: string) => {
 <!-- targeted-proactive-example -->
 
 ```typescript
-import { MessageActivity } from '@microsoft/teams.api';
+import { MessageActivity, Account } from '@microsoft/teams.api';
 
-// When sending proactively, you must provide the explicit user ID
-const sendTargetedNotification = async (conversationId: string, userId: string) => {
+// When sending proactively, you must provide an explicit recipient account
+const sendTargetedNotification = async (conversationId: string, recipient: Account) => {
   await app.send(
     conversationId,
     new MessageActivity('This is a private notification just for you!')
-      .withTargetedRecipient(userId)
+      .withRecipient(recipient, true)
   );
 };
 ```

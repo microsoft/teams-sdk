@@ -40,14 +40,14 @@ public static class Notifications
 <!-- targeted-proactive-example -->
 
 ```csharp
-// When sending proactively, you must provide the explicit user ID
-public static async Task SendTargetedNotification(string conversationId, string userId)
+// When sending proactively, you must provide an explicit recipient account
+public static async Task SendTargetedNotification(string conversationId, Account recipient)
 {
     var teams = app.UseTeams();
     await teams.Send(
         conversationId,
         new MessageActivity("This is a private notification just for you!")
-            .WithTargetedRecipient(userId)
+            .WithRecipient(recipient, isTargeted: true)
     );
 }
 ```

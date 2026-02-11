@@ -49,7 +49,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 <!-- targeted-method-name -->
 
-`with_targeted_recipient`
+`with_recipient`
 
 <!-- targeted-send-example -->
 
@@ -59,9 +59,9 @@ from microsoft_teams.apps import ActivityContext
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
-    # Using with_targeted_recipient(True) automatically targets the sender of the incoming message
+    # Using with_recipient with is_targeted=True explicitly targets the specified recipient
     await ctx.send(
         MessageActivityInput(text="This message is only visible to you!")
-            .with_targeted_recipient(True)
+            .with_recipient(ctx.activity.from_, is_targeted=True)
     )
 ```

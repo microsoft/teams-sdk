@@ -48,17 +48,17 @@ app.OnMessage(async context =>
 
 <!-- targeted-method-name -->
 
-`WithTargetedRecipient`
+`WithRecipient`
 
 <!-- targeted-send-example -->
 
 ```csharp
 app.OnMessage(async context =>
 {
-    // Using WithTargetedRecipient(true) automatically targets the sender of the incoming message
+    // Using WithRecipient with isTargeted=true explicitly targets the specified recipient
     await context.Send(
         new MessageActivity("This message is only visible to you!")
-            .WithTargetedRecipient(true)
+            .WithRecipient(context.Activity.From, isTargeted: true)
     );
 });
 ```
