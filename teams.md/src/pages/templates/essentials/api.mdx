@@ -28,6 +28,13 @@ It's also possible to access the API client from outside a handler via the app i
 
 ## Meetings Example
 
-In this example, we use the API client to get a meeting participant's details. The `meetingId` and `tenantId` are available from the activity's channel data, and the `participantId` is the user's AAD Object ID.
+In this example, we use the API client to get a specific meeting participant's details, such as their role (e.g. Organizer) and whether they are currently in the meeting. Provide the user's AAD Object ID to specify which participant to look up. The `meetingId` and `tenantId` are available from the activity's channel data.
+
+:::note
+To retrieve **all** members of a meeting, use the conversations API as shown in the [example above](#example), since meetings are also conversations.
+:::
 
 <LanguageInclude section="meetings-example" />
+
+Visit [Meeting Events](../in-depth-guides/meeting-events) to learn more about meeting events.
+
