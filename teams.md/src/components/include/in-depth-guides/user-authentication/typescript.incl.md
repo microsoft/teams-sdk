@@ -51,7 +51,7 @@ app.event('signin', async ({ send, token }) => {
 import * as endpoints from '@microsoft/teams.graph-endpoints';
 
 app.message('/whoami', async ({ send, userGraph, signin }) => {
-  if (!(await signin())) {
+  if (!await signin()) {
     return;
   }
   const me = await userGraph.call(endpoints.me.get);
@@ -82,19 +82,17 @@ app.message('/signout', async ({ send, signout, isSignedIn }) => {
 ```
 
 <!-- regional-bot -->
-
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 ## Regional Configs
-
 You may be building a regional bot that is deployed in a specific Azure region (such as West Europe, East US, etc.) rather than global. This is important for organizations that have data residency requirements or want to reduce latency by keeping data and authentication flows within a specific area.
 
 These examples use West Europe, but follow the equivalent for other regions.
 
 <Tabs>
 <TabItem value="portal" label="Azure Portal">
-To configure a new regional bot in Azure, you must setup your resoures in the desired region. Your resource group must also be in the same region.
+To configure a new regional bot in Azure, you must setup your resoures in the desired region. Your resource group must also be in the same region. 
 
 1. Deploy a new App Registration in `westeurope`.
 2. Deploy and link a new Enterprise Application (Service Principal) on Microsoft Entra in `westeurope`.
@@ -104,8 +102,8 @@ To configure a new regional bot in Azure, you must setup your resoures in the de
 ![Authentication Tab](/screenshots/regional-auth.png)
 
 5. In your `.env` file (or wherever you set your environment variables), add your `OAUTH_URL`. For example:
-   `OAUTH_URL=https://europe.token.botframework.com`
-   </TabItem>
+`OAUTH_URL=https://europe.token.botframework.com`
+</TabItem>
 
 <TabItem value="atk" label="Agents Toolkit">
 To configure a new regional bot with ATK, you will need to make a few updates. Note that this assumes you have not yet deployed the bot previously.
@@ -114,6 +112,6 @@ To configure a new regional bot with ATK, you will need to make a few updates. N
 2. In `manifest.json`, in `validDomains`, `*.botframework.com` should be replaced by `europe.token.botframework.com`
 3. In `aad.manifest.json`, replace `https://token.botframework.com/.auth/web/redirect` with `https://europe.token.botframework.com/.auth/web/redirect`
 4. In your `.env` file, add your `OAUTH_URL`. For example:
-   `OAUTH_URL=https://europe.token.botframework.com`
-   </TabItem>
-   </Tabs>
+`OAUTH_URL=https://europe.token.botframework.com`
+</TabItem>
+</Tabs>
