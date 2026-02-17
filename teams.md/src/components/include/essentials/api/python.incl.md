@@ -6,7 +6,7 @@
 
 | Area            | Description                                                                                                                                                          |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `conversations` | Gives your application the ability to perform activities on conversations (send, update, delete messages, etc.), or create conversations (like 1:1 chat with a user) |
+| `conversations` | Gives your application the ability to perform activities on conversations (send, update, delete messages, etc.), or create conversations (like 1:1 chat with a user). Also includes `reactions` for adding/removing emoji reactions to messages |
 | `meetings`      | Gives your application access to meeting details and participant information via `get_by_id` and `get_participant`                                                    |
 | `teams`         | Gives your application access to team or channel details                                                                                                             |
 
