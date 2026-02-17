@@ -49,7 +49,6 @@ teams.OnMessage(async context =>
 });
 ```
 
-
 <!-- message-handling-step1 -->
 
 Listens for all incoming messages using `onMessage` handler.

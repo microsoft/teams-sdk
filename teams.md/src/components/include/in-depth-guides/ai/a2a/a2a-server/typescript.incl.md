@@ -59,4 +59,3 @@ app.event('a2a:message', async ({ respond, requestContext }) => {
   await respond(result);
 });
 ```
-

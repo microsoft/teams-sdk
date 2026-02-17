@@ -35,7 +35,7 @@ const sendProactiveNotification = async (userId: string) => {
   if (!conversationId) {
     return;
   }
-  const activity = new MessageActivity('Hey! It\'s been a while. How are you?');
+  const activity = new MessageActivity("Hey! It's been a while. How are you?");
   await app.send(conversationId, activity);
 };
 ```
@@ -49,8 +49,10 @@ import { MessageActivity, Account } from '@microsoft/teams.api';
 const sendTargetedNotification = async (conversationId: string, recipient: Account) => {
   await app.send(
     conversationId,
-    new MessageActivity('This is a private notification just for you!')
-      .withRecipient(recipient, true)
+    new MessageActivity('This is a private notification just for you!').withRecipient(
+      recipient,
+      true
+    )
   );
 };
 ```

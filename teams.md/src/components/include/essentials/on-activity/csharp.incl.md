@@ -20,14 +20,15 @@ In the above example, the `context.activity` parameter is of type `MessageActivi
 The `OnActivity` activity handlers (and attributes) follow a [middleware](https://www.patterns.dev/vanilla/mediator-pattern/) pattern similar to how `dotnet` middlewares work. This means that for each activity handler, a `Next` function is passed in which can be called to pass control to the next handler. This allows you to build a chain of handlers that can process the same activity in different ways.
 
 <!-- middleware-examples -->
-  ```csharp
-  app.OnMessage(async context =>
-  {
-      Console.WriteLine("global logger");
-      context.Next(); // pass control onward
-      return Task.CompletedTask;
-  });
-  ```
+
+```csharp
+app.OnMessage(async context =>
+{
+    Console.WriteLine("global logger");
+    context.Next(); // pass control onward
+    return Task.CompletedTask;
+});
+```
 
 ```csharp
 app.OnMessage(async context =>
@@ -40,14 +41,13 @@ app.OnMessage(async context =>
     // Conditionally pass control to the next handler
     context.Next();
 });
-    
+
   app.OnMessage(async context =>
   {
       // Fallthrough to the final handler
       await context.Send($"Hello! you said {context.Activity.Text}");
   });
-  ```
-
+```
 
 <!-- activity-reference-footer -->
 

@@ -14,6 +14,7 @@ Client Secret authentication is the simplest method, using a password-like secre
 ## Prerequisites
 
 Before you begin, ensure you have:
+
 - An Azure subscription
 - Permissions to create App Registrations and Azure Bot Services
 

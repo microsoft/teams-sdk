@@ -9,12 +9,12 @@ app.OnMessage(async context =>
 
 <!-- signin-example -->
 
-  ```csharp
-  app.OnVerifyState(async context =>
-  {
-      await context.Send("You have successfully signed in!");
-  });
-  ```
+```csharp
+app.OnVerifyState(async context =>
+{
+    await context.Send("You have successfully signed in!");
+});
+```
 
 <!-- signin-event-name -->
 

@@ -66,15 +66,16 @@ const model = new OpenAIChatModel({
 const model = new OpenAIChatModel({
   apiKey: 'your-api-key',
   model: 'gpt-4o',
-  endpoint: 'your-endpoint',      // Azure only
+  endpoint: 'your-endpoint', // Azure only
   apiVersion: 'your-api-version', // Azure only
-  baseUrl: 'your-base-url',       // Custom base URL
-  organization: 'your-org-id',    // Optional
-  project: 'your-project-id',     // Optional
+  baseUrl: 'your-base-url', // Custom base URL
+  organization: 'your-org-id', // Optional
+  project: 'your-project-id', // Optional
 });
 ```
 
 **Environment variables automatically loaded:**
+
 - `OPENAI_API_KEY` or `AZURE_OPENAI_API_KEY`
 - `AZURE_OPENAI_ENDPOINT` (Azure only)
 - `OPENAI_API_VERSION` (Azure only)

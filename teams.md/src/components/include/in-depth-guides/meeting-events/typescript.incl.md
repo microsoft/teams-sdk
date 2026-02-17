@@ -13,11 +13,9 @@ app.on('meetingStart', async ({ activity, send }) => {
   const card = new AdaptiveCard(
     new TextBlock(`'${meetingData.Title}' has started at ${startTime}.`, {
       wrap: true,
-      weight: 'Bolder'
+      weight: 'Bolder',
     }),
-    new ActionSet(
-      new OpenUrlAction(meetingData.JoinUrl).withTitle('Join the meeting')
-    )
+    new ActionSet(new OpenUrlAction(meetingData.JoinUrl).withTitle('Join the meeting'))
   );
 
   await send(card);
@@ -39,7 +37,7 @@ app.on('meetingEnd', async ({ activity, send }) => {
   const card = new AdaptiveCard(
     new TextBlock(`'${meetingData.Title}' has ended at ${endTime}.`, {
       wrap: true,
-      weight: 'Bolder'
+      weight: 'Bolder',
     })
   );
 
@@ -63,7 +61,7 @@ app.on('meetingParticipantJoin', async ({ activity, send }) => {
   const card = new AdaptiveCard(
     new TextBlock(`${member} has joined the meeting as ${role}.`, {
       wrap: true,
-      weight: 'Bolder'
+      weight: 'Bolder',
     })
   );
 
@@ -86,7 +84,7 @@ app.on('meetingParticipantLeave', async ({ activity, send }) => {
   const card = new AdaptiveCard(
     new TextBlock(`${member} has left the meeting.`, {
       wrap: true,
-      weight: 'Bolder'
+      weight: 'Bolder',
     })
   );
 

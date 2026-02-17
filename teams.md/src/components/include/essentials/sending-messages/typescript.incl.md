@@ -54,8 +54,7 @@ import { MessageActivity } from '@microsoft/teams.api';
 app.on('message', async ({ send, activity }) => {
   // Using withRecipient with isTargeted=true explicitly targets the specified recipient
   await send(
-    new MessageActivity('This message is only visible to you!')
-      .withRecipient(activity.from, true)
+    new MessageActivity('This message is only visible to you!').withRecipient(activity.from, true)
   );
 });
 ```

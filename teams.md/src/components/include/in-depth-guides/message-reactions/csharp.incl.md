@@ -4,7 +4,7 @@
 app.OnMessage(async context =>
 {
     await context.Send("Hello! I'll react to this message.");
-    
+
     // Add a reaction to the incoming message
     await context.Api.Conversations.Reactions.AddAsync(
         context.Activity.Conversation.Id,
@@ -25,7 +25,7 @@ app.OnMessage(async context =>
         context.Activity.Id,
         ReactionType.Heart
     );
-    
+
     // Wait a bit, then remove it
     await Task.Delay(2000);
     await context.Api.Conversations.Reactions.DeleteAsync(

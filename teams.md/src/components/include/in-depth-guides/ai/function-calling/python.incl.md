@@ -162,4 +162,5 @@ async def handle_multiple_functions(ctx: ActivityContext[MessageActivity]):
 ```
 
 <!-- advanced-features -->
+
 N/A

@@ -3,13 +3,9 @@
 ```typescript
 app.on('message', async ({ activity, api, send }) => {
   await send("Hello! I'll react to this message.");
-  
+
   // Add a reaction to the incoming message
-  await api.conversations.reactions.add(
-    activity.conversation.id,
-    activity.id,
-    'like'
-  );
+  await api.conversations.reactions.add(activity.conversation.id, activity.id, 'like');
 });
 ```
 
@@ -18,19 +14,11 @@ app.on('message', async ({ activity, api, send }) => {
 ```typescript
 app.on('message', async ({ activity, api }) => {
   // First, add a reaction
-  await api.conversations.reactions.add(
-    activity.conversation.id,
-    activity.id,
-    'heart'
-  );
-  
+  await api.conversations.reactions.add(activity.conversation.id, activity.id, 'heart');
+
   // Wait a bit, then remove it
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  await api.conversations.reactions.delete(
-    activity.conversation.id,
-    activity.id,
-    'heart'
-  );
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await api.conversations.reactions.delete(activity.conversation.id, activity.id, 'heart');
 });
 ```
 
@@ -69,9 +57,5 @@ For advanced scenarios, you can access the underlying HTTP client or create a cu
 const { api } = context;
 
 // Use reactions API
-await api.conversations.reactions.add(
-  conversationId,
-  activityId,
-  'like'
-);
+await api.conversations.reactions.add(conversationId, activityId, 'like');
 ```

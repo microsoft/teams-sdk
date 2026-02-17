@@ -39,7 +39,6 @@ To access the graph using the user's token, you need to do this as part of a mes
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-
 ```csharp
 app.OnMessage(async context =>
 {
@@ -50,7 +49,6 @@ app.OnMessage(async context =>
     Console.WriteLine($"User Job Title: {user.jobTitle}");
 });
 ```
-
 
 <!-- user-graph-object -->
 
