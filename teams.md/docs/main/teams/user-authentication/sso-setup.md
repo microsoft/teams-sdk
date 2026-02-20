@@ -35,8 +35,45 @@ You need an Entra ID App Registration to configure the OAuth Connection in Azure
 
 az ad app update --id $appId --web-redirect-uris "https://token.botframework.com/.auth/web/redirect"
 az ad app update --id $appId --identifier-uris "api://$appId"
-# TODO: add oauthpermission settings and client applications.
+
+# Add the access_as_user OAuth2 permission scope
+az ad app update --id $appId --set api='{
+  "oauth2PermissionScopes": [{
+    "adminConsentDescription": "Allow the application to access the bot on behalf of the signed-in user.",
+    "adminConsentDisplayName": "Access as user",
+    "id": "'$(uuidgen)'",
+    "isEnabled": true,
+    "type": "User",
+    "userConsentDescription": "Allow the application to access the bot on your behalf.",
+    "userConsentDisplayName": "Access as user",
+    "value": "access_as_user"
+  }]
+}'
+
+# Authorize Teams client applications for SSO
+# Teams Desktop: 1fec8e78-bce4-4aaf-ab1b-5451cc387264
+# Teams Web: 5e3ce6c0-2b1f-4285-8d4b-75ee78787346
+az ad app update --id $appId --set api='{
+  "preAuthorizedApplications": [
+    {
+      "appId": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
+      "delegatedPermissionIds": ["'$scopeId'"]
+    },
+    {
+      "appId": "5e3ce6c0-2b1f-4285-8d4b-75ee78787346",
+      "delegatedPermissionIds": ["'$scopeId'"]
+    }
+  ]
+}'
 ```
+
+:::tip
+After creating the OAuth2 permission scope, retrieve its ID with:
+```bash
+scopeId=$(az ad app show --id $appId --query "api.oauth2PermissionScopes[0].id" -o tsv)
+```
+Then use this `$scopeId` when authorizing the Teams client applications.
+:::
 
 ## Create the OAuth connection in Azure Bot Service
 
