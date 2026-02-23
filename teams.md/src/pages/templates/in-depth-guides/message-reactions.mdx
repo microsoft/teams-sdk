@@ -1,0 +1,52 @@
+---
+sidebar_position: 8
+title: Message Reactions
+sidebar_label: Message Reactions
+summary: Guide to adding and removing message reactions in Teams applications, including available reaction types and best practices for implementing reaction functionality.
+---
+
+# Message Reactions
+
+Message reactions allow your bot to add emoji reactions to messages in Teams conversations. This feature enables your bot to provide quick, non-verbal feedback to user messages, enhancing the interactive experience.
+
+## Adding a Reaction
+
+To add a reaction to a message, use the `Reactions` API available through the conversations client:
+
+<LanguageInclude section="adding-reaction" />
+
+## Removing a Reaction
+
+You can also remove reactions that your bot has added:
+
+<LanguageInclude section="removing-reaction" />
+
+## Available Reaction Types
+
+<LanguageInclude section="reaction-types" />
+
+:::info Custom Reactions
+In addition to the standard reaction types listed above, you can use any valid Teams emoji reaction code. Teams supports a wide variety of emoji reactions beyond the standard set.
+:::
+
+## Advanced Usage
+
+<LanguageInclude section="advanced-usage" />
+
+## Best Practices
+
+When working with message reactions, consider the following:
+
+- **Use reactions sparingly**: Reactions work best when used to provide meaningful feedback rather than reacting to every message.
+- **Consider the context**: Different reaction types convey different meanings. Choose reactions that align with your bot's purpose and the conversation context.
+- **Handle errors gracefully**: Reaction operations may fail (e.g., if the message no longer exists). Always handle potential errors appropriately.
+- **Be aware of rate limits**: Like other bot operations, reaction operations are subject to Teams API rate limits.
+
+## Differences from Feedback
+
+Message reactions are different from the [feedback](./feedback) feature:
+
+- **Reactions** are quick emoji responses that your bot adds to messages programmatically
+- **Feedback** are interactive UI components (like/dislike buttons) that users can click to provide structured feedback on bot responses
+
+Use reactions when your bot wants to acknowledge or respond to messages with emoji. Use feedback when you want to collect user opinions about your bot's responses.
