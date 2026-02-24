@@ -97,7 +97,7 @@ async def handle_signin_failure(ctx):
 ```
 
 :::note
-In Python, registering a custom handler does **not** replace the built-in default handler. Both will run as part of the middleware chain. If you have a catch-all `@app.on_invoke()` handler, it must call `await ctx.next()` for the `signin/failure` handler to execute.
+In Python, registering a custom handler does **not** replace the built-in default handler. Both will run as part of the middleware chain.
 :::
 
 <!-- regional-bot -->
