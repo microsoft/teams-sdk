@@ -86,6 +86,20 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
     await ctx.send("You have been signed out!")
 ```
 
+<!-- signin-failure -->
+
+```python
+@app.on_signin_failure()
+async def handle_signin_failure(ctx):
+    failure = ctx.activity.value
+    print(f"Sign-in failed: {failure.code} - {failure.message}")
+    await ctx.send("Sign-in failed. Please contact your admin.")
+```
+
+:::note
+In Python, registering a custom handler does **not** replace the built-in default handler. Both will run as part of the middleware chain. If you have a catch-all `@app.on_invoke()` handler, it must call `await ctx.next()` for the `signin/failure` handler to execute.
+:::
+
 <!-- regional-bot -->
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

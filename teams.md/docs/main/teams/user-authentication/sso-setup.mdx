@@ -3,6 +3,8 @@ sidebar_position: 1
 summary: Describes how to configure SSO in Teams
 ---
 
+import LangLink from '@site/src/components/LangLink';
+
 # SSO Setup
 
 This section describes how to configure the Azure Bot Service (ABS), the Entra App Registration and the Teams manifest to enable Single-Sign-On (SSO) for your Teams app.
@@ -79,4 +81,25 @@ The Teams application manifest needs to be updated to reflect the settings confi
     "resource": "api://<Your-Application-Id>"
   }
 ```
+
+## Troubleshooting SSO
+
+### `signin/failure` with `resourcematchfailed`
+
+If you see a warning in your app logs like:
+
+> Sign-in failed for user "..." in conversation "...": resourcematchfailed -- Resource match failed
+
+This means Teams attempted the SSO token exchange but failed because the token exchange resource URI does not match your Entra app registration. To fix this:
+
+1. **Verify "Expose an API"** in your Entra app registration: the Application ID URI must be set (typically `api://<Your-Application-Id>`)
+2. **Verify the `access_as_user` scope** is defined under "Expose an API"
+3. **Verify pre-authorized client applications** include the Teams Desktop (`1fec8e78-bce4-4aaf-ab1b-5451cc387264`) and Teams Web (`5e3ce6c0-2b1f-4285-8d4b-75ee78787346`) client IDs
+4. **Verify the Token Exchange URL** in your Azure Bot OAuth connection matches the Application ID URI exactly
+
+:::tip
+If you don't need SSO and only want standard OAuth (sign-in button), leave the **Token Exchange URL** blank in your OAuth connection settings.
+:::
+
+To handle `signin/failure` programmatically in your app, see <LangLink to="in-depth-guides/user-authentication#handling-sign-in-failures">Handling Sign-In Failures</LangLink> in the User Authentication guide.
 

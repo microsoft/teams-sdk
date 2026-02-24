@@ -88,6 +88,17 @@ teams.OnMessage("/signout", async context =>
     await context.Send("you have been signed out!");
 });
 ```
+<!-- signin-failure -->
+
+```cs
+teams.OnFailure(async (context, cancellationToken) =>
+{
+    var failure = context.Activity.Value;
+    Console.WriteLine($"Sign-in failed: {failure?.Code} - {failure?.Message}");
+    await context.Send("Sign-in failed. Please contact your admin.", cancellationToken);
+});
+```
+
 <!-- regional-bot -->
 
 N/A

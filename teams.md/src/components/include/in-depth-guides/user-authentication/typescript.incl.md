@@ -81,6 +81,16 @@ app.message('/signout', async ({ send, signout, isSignedIn }) => {
 });
 ```
 
+<!-- signin-failure -->
+
+```ts
+app.on('signin.failure', async ({ activity, send }) => {
+  const { code, message } = activity.value;
+  console.log(`Sign-in failed: ${code} - ${message}`);
+  await send('Sign-in failed. Please contact your admin.');
+});
+```
+
 <!-- regional-bot -->
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
