@@ -84,7 +84,27 @@ The Teams application manifest needs to be updated to reflect the settings confi
 
 ## Troubleshooting SSO
 
-### `signin/failure` with `resourcematchfailed`
+When SSO fails, Teams sends a `signin/failure` invoke activity to your bot with a `code` and `message` describing the error. The SDK's default handler logs a warning with these details.
+
+### Failure codes
+
+| Code | Silent | Description |
+|------|--------|-------------|
+| `installappfailed` | No | Failed to install the app in the user's personal scope (group chat SSO flow). |
+| `authrequestfailed` | No | The SSO auth request failed after app installation. |
+| `installedappnotfound` | Yes | The bot app is not installed for the user or group chat. *(most common)* |
+| `invokeerror` | Yes | A generic error occurred during the SSO invoke flow. |
+| `resourcematchfailed` | Yes | The token exchange resource URI on the OAuthCard does not match the Application ID URI in the Entra app registration's "Expose an API" section. *(common)* |
+| `oauthcardnotvalid` | Yes | The bot's OAuthCard could not be parsed. |
+| `tokenmissing` | Yes | AAD token acquisition failed. |
+
+"Silent" failures produce no user-facing feedback in the Teams client — the user sees nothing and sign-in simply doesn't complete. "Non-silent" failures occur during the group chat SSO flow where the user is shown an install/auth card.
+
+:::note
+The `userconsentrequired` and `interactionrequired` codes are handled by the Teams client via the OAuth card fallback flow and do not typically reach the bot.
+:::
+
+### `resourcematchfailed`
 
 If you see a warning in your app logs like:
 

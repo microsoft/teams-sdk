@@ -103,7 +103,7 @@ When using SSO, if the token exchange fails Teams sends a `signin/failure` invok
 <LanguageInclude section="signin-failure" />
 
 :::tip
-The most common failure code is `resourcematchfailed`, which means the Token Exchange URL in your OAuth connection does not match the Application ID URI in your Entra app registration's "Expose an API" configuration. See [SSO Setup - Troubleshooting](/teams/user-authentication/sso-setup#troubleshooting-sso) for details.
+The most common failure codes are `installedappnotfound` (bot app not installed for the user) and `resourcematchfailed` (Token Exchange URL doesn't match the Application ID URI). See [SSO Setup - Troubleshooting](/teams/user-authentication/sso-setup#troubleshooting-sso) for a full list of failure codes and troubleshooting steps.
 :::
 
 <LanguageInclude section="regional-bot" />
