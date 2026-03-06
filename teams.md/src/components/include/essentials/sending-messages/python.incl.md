@@ -65,3 +65,29 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
             .with_recipient(ctx.activity.from_, is_targeted=True)
     )
 ```
+
+<!-- targeted-preview-note -->
+
+:::tip[Python]
+Preview APIs emit an `ExperimentalWarning` at runtime. To suppress it:
+
+```python
+import warnings
+from microsoft_teams.common.experimental import ExperimentalWarning
+
+warnings.filterwarnings("ignore", category=ExperimentalWarning)
+```
+:::
+
+<!-- reactions-preview-note -->
+
+:::tip[Python]
+Preview APIs emit an `ExperimentalWarning` at runtime. To suppress it:
+
+```python
+import warnings
+from microsoft_teams.common.experimental import ExperimentalWarning
+
+warnings.filterwarnings("ignore", category=ExperimentalWarning)
+```
+:::

@@ -62,3 +62,27 @@ app.OnMessage(async context =>
     );
 });
 ```
+
+<!-- targeted-preview-note -->
+
+:::tip[.NET]
+In .NET, targeted message APIs are marked with `[Experimental("TEAMS0002")]` and will produce a compiler error until you opt in. Suppress the diagnostic inline with `#pragma warning disable TEAMS0002` or project-wide in your `.csproj`:
+
+```xml
+<PropertyGroup>
+  <NoWarn>$(NoWarn);TEAMS0002</NoWarn>
+</PropertyGroup>
+```
+:::
+
+<!-- reactions-preview-note -->
+
+:::tip[.NET]
+In .NET, reaction APIs are marked with `[Experimental("TEAMS0001")]` and will produce a compiler error until you opt in. Suppress the diagnostic inline with `#pragma warning disable TEAMS0001` or project-wide in your `.csproj`:
+
+```xml
+<PropertyGroup>
+  <NoWarn>$(NoWarn);TEAMS0001</NoWarn>
+</PropertyGroup>
+```
+:::

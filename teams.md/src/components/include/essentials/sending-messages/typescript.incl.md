@@ -59,3 +59,11 @@ app.on('message', async ({ send, activity }) => {
   );
 });
 ```
+
+<!-- targeted-preview-note -->
+
+In TypeScript, preview features are indicated in documentation and do not need any sort of suppression. No opt-in is required.
+
+<!-- reactions-preview-note -->
+
+In TypeScript, preview features are indicated in documentation and do not need any sort of suppression. No opt-in is required.
