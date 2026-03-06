@@ -40,6 +40,7 @@ This means Teams attempted the SSO token exchange but failed because the token e
 2. **Verify the `access_as_user` scope** is defined under "Expose an API"
 3. **Verify pre-authorized client applications** include the Teams Desktop (`1fec8e78-bce4-4aaf-ab1b-5451cc387264`) and Teams Web (`5e3ce6c0-2b1f-4285-8d4b-75ee78787346`) client IDs
 4. **Verify the Token Exchange URL** in your Azure Bot OAuth connection matches the Application ID URI exactly
+5. **Verify the `webApplicationInfo.resource`** in your Teams app manifest matches the Application ID URI
 
 :::tip
 If you don't need SSO and only want standard OAuth (sign-in button), leave the **Token Exchange URL** blank in your OAuth connection settings.
