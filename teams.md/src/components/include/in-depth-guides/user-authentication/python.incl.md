@@ -93,7 +93,7 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
 async def handle_signin_failure(ctx):
     failure = ctx.activity.value
     print(f"Sign-in failed: {failure.code} - {failure.message}")
-    await ctx.send("Sign-in failed. Please contact your admin.")
+    await ctx.send("Sign-in failed.")
 ```
 
 :::note
