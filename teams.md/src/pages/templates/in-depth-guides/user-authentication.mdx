@@ -96,6 +96,16 @@ You can signout by calling the `signout` method, this will remove the token from
 
 <LanguageInclude section="signing-out" />
 
+## Handling Sign-In Failures
+
+When using SSO, if the token exchange fails Teams sends a `signin/failure` invoke activity to your app. The SDK includes a built-in default handler that logs a warning with actionable troubleshooting guidance. You can optionally register your own handler to customize the behavior:
+
+<LanguageInclude section="signin-failure" />
+
+:::tip
+The most common failure codes are `installedappnotfound` (bot app not installed for the user) and `resourcematchfailed` (Token Exchange URL doesn't match the Application ID URI). See [SSO Setup - Troubleshooting](/teams/user-authentication/sso-setup#troubleshooting-sso) for a full list of failure codes and troubleshooting steps.
+:::
+
 <LanguageInclude section="regional-bot" />
 
 ## Resources
