@@ -91,7 +91,7 @@ teams.OnMessage("/signout", async context =>
 <!-- signin-failure -->
 
 ```cs
-teams.OnSigninFailure(async (context, cancellationToken) =>
+teams.OnSignInFailure(async (context, cancellationToken) =>
 {
     var failure = context.Activity.Value;
     Console.WriteLine($"Sign-in failed: {failure?.Code} - {failure?.Message}");
