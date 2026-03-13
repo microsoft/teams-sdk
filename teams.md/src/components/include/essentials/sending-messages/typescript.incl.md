@@ -59,3 +59,7 @@ app.on('message', async ({ send, activity }) => {
   );
 });
 ```
+
+<!-- targeted-preview-note -->
+
+<!-- reactions-preview-note -->

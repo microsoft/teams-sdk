@@ -65,3 +65,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
             .with_recipient(ctx.activity.from_, is_targeted=True)
     )
 ```
+
+<!-- targeted-preview-note -->
+
+<!-- reactions-preview-note -->
