@@ -154,16 +154,26 @@ var msg = new MessageActivity()
 await app.Send(conversationId, msg);
 
 // Multiple quotes with interleaved responses
-var msg = new MessageActivity()
+msg = new MessageActivity()
     .AddQuotedReply("msg-1", "response to first")
     .AddQuotedReply("msg-2", "response to second");
 await app.Send(conversationId, msg);
 
 // Grouped quotes — omit response to group quotes together
-var msg = new MessageActivity("see below for previous messages")
+msg = new MessageActivity("see below for previous messages")
     .AddQuotedReply("msg-1")
     .AddQuotedReply("msg-2", "response to both");
 await app.Send(conversationId, msg);
 ```
 
 <!-- quoted-replies-preview-note -->
+
+:::tip[.NET]
+In .NET, quoted reply APIs are marked with `[Experimental("ExperimentalTeamsQuotedReplies")]` and will produce a compiler error until you opt in. Suppress the diagnostic inline with `#pragma warning disable ExperimentalTeamsQuotedReplies` or project-wide in your `.csproj`:
+
+```xml
+<PropertyGroup>
+  <NoWarn>$(NoWarn);ExperimentalTeamsQuotedReplies</NoWarn>
+</PropertyGroup>
+```
+:::

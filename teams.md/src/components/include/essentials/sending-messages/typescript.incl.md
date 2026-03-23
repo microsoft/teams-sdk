@@ -126,18 +126,18 @@ app.on('message', async ({ quoteReply }) => {
 import { MessageActivity } from '@microsoft/teams.api';
 
 // Single quote with response below it
-const msg = new MessageActivity()
+let msg = new MessageActivity()
   .addQuotedReply('1772050244572', 'Here is my response');
 await app.send(conversationId, msg);
 
 // Multiple quotes with interleaved responses
-const msg = new MessageActivity()
+msg = new MessageActivity()
   .addQuotedReply('msg-1', 'response to first')
   .addQuotedReply('msg-2', 'response to second');
 await app.send(conversationId, msg);
 
 // Grouped quotes — omit response to group quotes together
-const msg = new MessageActivity('see below for previous messages')
+msg = new MessageActivity('see below for previous messages')
   .addQuotedReply('msg-1')
   .addQuotedReply('msg-2', 'response to both');
 await app.send(conversationId, msg);
