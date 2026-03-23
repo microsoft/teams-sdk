@@ -61,6 +61,20 @@ Now, navigate to the devtools server by opening your browser and navigating to [
 
 ![Screenshot of DevTools showing user prompt 'hello!' and agent response 'you said hello!'.](/screenshots/devtools-echo-chat.png)
 
+## Add to an Existing Project
+
+If you already have a project and want to add Teams support, install the SDK directly:
+
+<LanguageInclude section="manual-install" />
+
+Then initialize the Teams app with your existing server:
+
+<LanguageInclude section="manual-code" />
+
+`app.initialize()` registers the Teams endpoint on your server without starting a new one — you keep full control of your server lifecycle.
+
+<LanguageInclude section="manual-more" />
+
 ## Next steps
 
 After creating and running your first agent, read about [the code basics](code-basics) to better understand its components and structure.
