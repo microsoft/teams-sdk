@@ -6,5 +6,5 @@ This SDK does not offer features for implementing Tab apps in C#. It does howeve
 
 ### Additional resources
 
-- [Hosting Apps/Static Pages](../../essentials/hosting-static-pages)
+- [Static Pages](../server/static-pages)
 - [TypeScript Tabs in-depth guide](../../../typescript/in-depth-guides/tabs)
