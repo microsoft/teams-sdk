@@ -48,7 +48,7 @@ await app.initialize();
 httpServer.listen(3978, () => console.log('Server ready on http://localhost:3978'));
 ```
 
-> See the full example: [Express adapter example](https://github.com/microsoft/teams.ts/tree/main/examples/http-adapters/express)
+> See the full [Express adapter example](https://github.com/microsoft/teams.ts/tree/main/examples/http-adapters/express)
 
 <!-- custom-adapter -->
 
