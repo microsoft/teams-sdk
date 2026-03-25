@@ -51,3 +51,42 @@ npm run dev
 [INFO] @teams/app/http listening on port 3978 🚀
 [INFO] @teams/app/devtools available at http://localhost:3979/devtools
 ```
+
+<!-- manual-install -->
+
+```sh
+npm i @microsoft/teams.apps
+```
+
+<!-- manual-code -->
+
+```typescript
+import http from 'http';
+import express from 'express';
+// highlight-next-line
+import { App, ExpressAdapter } from '@microsoft/teams.apps';
+
+// Your existing Express server
+const expressApp = express();
+const server = http.createServer(expressApp);
+
+// highlight-start
+// Wrap your server in an adapter and create the Teams app
+const adapter = new ExpressAdapter(server);
+const app = new App({ httpServerAdapter: adapter });
+
+app.on('message', async ({ send, activity }) => {
+  await send(`You said: ${activity.text}`);
+});
+
+// Register the Teams endpoint on your server (does not start it)
+await app.initialize();
+// highlight-end
+
+// Start your server as usual
+server.listen(3978);
+```
+
+<!-- manual-more -->
+
+See the [HTTP Server guide](../in-depth-guides/server/http-server) for full details on adapters and custom server setups.

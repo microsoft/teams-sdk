@@ -45,3 +45,47 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete..
 INFO:     Uvicorn running on http://0.0.0.0:3979 (Press CTRL+C to quit)
 ```
+
+<!-- manual-install -->
+
+```sh
+pip install microsoft-teams-apps
+```
+
+<!-- manual-code -->
+
+```python
+import asyncio
+import uvicorn
+from fastapi import FastAPI
+# highlight-next-line
+from microsoft_teams.apps import App, FastAPIAdapter
+
+# Your existing FastAPI app
+my_fastapi = FastAPI()
+
+# highlight-start
+# Wrap your app in an adapter and create the Teams app
+adapter = FastAPIAdapter(app=my_fastapi)
+app = App(http_server_adapter=adapter)
+
+@app.on_message
+async def handle_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
+# highlight-end
+
+async def main():
+    # highlight-next-line
+    await app.initialize()  # Register the Teams endpoint (does not start a server)
+
+    # Start your server as usual
+    config = uvicorn.Config(app=my_fastapi, host="0.0.0.0", port=3978)
+    server = uvicorn.Server(config)
+    await server.serve()
+
+asyncio.run(main())
+```
+
+<!-- manual-more -->
+
+See the [HTTP Server guide](../in-depth-guides/server/http-server) for full details on adapters and custom server setups.

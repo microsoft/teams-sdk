@@ -45,3 +45,15 @@ dotnet run
 [INFO] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
 [INFO] Microsoft.Hosting.Lifetime Hosting environment: Development
 ```
+
+<!-- manual-install -->
+
+N/A
+
+<!-- manual-code -->
+
+N/A
+
+<!-- manual-more -->
+
+N/A
