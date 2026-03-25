@@ -70,6 +70,7 @@ class StarletteAdapter:
         self._app = app
 
     def register_route(self, method: HttpMethod, path: str, handler: HttpRouteHandler) -> None:
+        # Teams only sends POST requests to your bot endpoint
         async def starlette_handler(request: Request) -> Response:
             body = await request.json()
             headers = dict(request.headers)

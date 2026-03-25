@@ -64,6 +64,7 @@ class RestifyAdapter implements IHttpServerAdapter {
   }
 
   registerRoute(method: HttpMethod, path: string, handler: HttpRouteHandler): void {
+    // Teams only sends POST requests to your bot endpoint
     assert(method === 'POST', `Unsupported method: ${method}`);
     this.server.post(path, async (req: restify.Request, res: restify.Response) => {
       const response = await handler({
