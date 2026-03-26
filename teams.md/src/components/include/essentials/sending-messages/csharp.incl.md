@@ -98,7 +98,7 @@ In .NET, reaction APIs are marked with `[Experimental("ExperimentalTeamsReaction
 
 <!-- quote-reply-method-name -->
 
-`QuoteReply()`
+`Quote()`
 
 <!-- app-send-method-name -->
 
@@ -106,7 +106,7 @@ In .NET, reaction APIs are marked with `[Experimental("ExperimentalTeamsReaction
 
 <!-- add-quoted-reply-method-name -->
 
-`AddQuotedReply()`
+`AddQuote()`
 
 <!-- quoted-replies-receive-example -->
 
@@ -140,7 +140,7 @@ app.OnMessage(async context =>
 app.OnMessage(async context =>
 {
     // Quote a specific message by its ID
-    await context.QuoteReply("1772050244572", "Referencing an earlier message");
+    await context.Quote("1772050244572", "Referencing an earlier message");
 });
 ```
 
@@ -149,19 +149,19 @@ app.OnMessage(async context =>
 ```csharp
 // Single quote with response below it
 var msg = new MessageActivity()
-    .AddQuotedReply("1772050244572", "Here is my response");
+    .AddQuote("1772050244572", "Here is my response");
 await app.Send(conversationId, msg);
 
 // Multiple quotes with interleaved responses
 msg = new MessageActivity()
-    .AddQuotedReply("msg-1", "response to first")
-    .AddQuotedReply("msg-2", "response to second");
+    .AddQuote("msg-1", "response to first")
+    .AddQuote("msg-2", "response to second");
 await app.Send(conversationId, msg);
 
 // Grouped quotes — omit response to group quotes together
 msg = new MessageActivity("see below for previous messages")
-    .AddQuotedReply("msg-1")
-    .AddQuotedReply("msg-2", "response to both");
+    .AddQuote("msg-1")
+    .AddQuote("msg-2", "response to both");
 await app.Send(conversationId, msg);
 ```
 
