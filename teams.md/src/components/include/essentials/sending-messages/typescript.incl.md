@@ -77,7 +77,7 @@ N/A
 
 <!-- quote-reply-method-name -->
 
-`quoteReply()`
+`quote()`
 
 <!-- app-send-method-name -->
 
@@ -85,7 +85,7 @@ N/A
 
 <!-- add-quoted-reply-method-name -->
 
-`addQuotedReply()`
+`addQuote()`
 
 <!-- quoted-replies-receive-example -->
 
@@ -114,9 +114,9 @@ app.on('message', async ({ reply }) => {
 <!-- quoted-replies-quote-reply-example -->
 
 ```typescript
-app.on('message', async ({ quoteReply }) => {
+app.on('message', async ({ quote }) => {
   // Quote a specific message by its ID
-  await quoteReply('1772050244572', 'Referencing an earlier message');
+  await quote('1772050244572', 'Referencing an earlier message');
 });
 ```
 
@@ -127,19 +127,19 @@ import { MessageActivity } from '@microsoft/teams.api';
 
 // Single quote with response below it
 let msg = new MessageActivity()
-  .addQuotedReply('1772050244572', 'Here is my response');
+  .addQuote('1772050244572', 'Here is my response');
 await app.send(conversationId, msg);
 
 // Multiple quotes with interleaved responses
 msg = new MessageActivity()
-  .addQuotedReply('msg-1', 'response to first')
-  .addQuotedReply('msg-2', 'response to second');
+  .addQuote('msg-1', 'response to first')
+  .addQuote('msg-2', 'response to second');
 await app.send(conversationId, msg);
 
 // Grouped quotes — omit response to group quotes together
 msg = new MessageActivity('see below for previous messages')
-  .addQuotedReply('msg-1')
-  .addQuotedReply('msg-2', 'response to both');
+  .addQuote('msg-1')
+  .addQuote('msg-2', 'response to both');
 await app.send(conversationId, msg);
 ```
 
