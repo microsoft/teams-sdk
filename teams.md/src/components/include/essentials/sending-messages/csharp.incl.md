@@ -86,3 +86,93 @@ In .NET, reaction APIs are marked with `[Experimental("ExperimentalTeamsReaction
 </PropertyGroup>
 ```
 :::
+
+
+<!-- get-quoted-messages-method-name -->
+
+`GetQuotedMessages()`
+
+<!-- reply-method-name -->
+
+`Reply()`
+
+<!-- quote-reply-method-name -->
+
+`Quote()`
+
+<!-- app-send-method-name -->
+
+`app.Send()`
+
+<!-- add-quoted-reply-method-name -->
+
+`AddQuote()`
+
+<!-- quoted-replies-receive-example -->
+
+```csharp
+app.OnMessage(async context =>
+{
+    var quotes = context.Activity.GetQuotedMessages();
+
+    if (quotes.Count > 0)
+    {
+        var quote = quotes[0].QuotedReply;
+        await context.Reply(
+            $"You quoted message {quote.MessageId} from {quote.SenderName}: \"{quote.Preview}\"");
+    }
+});
+```
+
+<!-- quoted-replies-reply-example -->
+
+```csharp
+app.OnMessage(async context =>
+{
+    // Reply() automatically quotes the inbound message
+    await context.Reply("Got it!");
+});
+```
+
+<!-- quoted-replies-quote-reply-example -->
+
+```csharp
+app.OnMessage(async context =>
+{
+    // Quote a specific message by its ID
+    await context.Quote("1772050244572", "Referencing an earlier message");
+});
+```
+
+<!-- quoted-replies-builder-example -->
+
+```csharp
+// Single quote with response below it
+var msg = new MessageActivity()
+    .AddQuote("1772050244572", "Here is my response");
+await app.Send(conversationId, msg);
+
+// Multiple quotes with interleaved responses
+msg = new MessageActivity()
+    .AddQuote("msg-1", "response to first")
+    .AddQuote("msg-2", "response to second");
+await app.Send(conversationId, msg);
+
+// Grouped quotes — omit response to group quotes together
+msg = new MessageActivity("see below for previous messages")
+    .AddQuote("msg-1")
+    .AddQuote("msg-2", "response to both");
+await app.Send(conversationId, msg);
+```
+
+<!-- quoted-replies-preview-note -->
+
+:::tip[.NET]
+In .NET, quoted reply APIs are marked with `[Experimental("ExperimentalTeamsQuotedReplies")]` and will produce a compiler error until you opt in. Suppress the diagnostic inline with `#pragma warning disable ExperimentalTeamsQuotedReplies` or project-wide in your `.csproj`:
+
+```xml
+<PropertyGroup>
+  <NoWarn>$(NoWarn);ExperimentalTeamsQuotedReplies</NoWarn>
+</PropertyGroup>
+```
+:::
