@@ -67,5 +67,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 ```
 
 <!-- targeted-preview-note -->
+N/A
 
 <!-- reactions-preview-note -->
+N/A
