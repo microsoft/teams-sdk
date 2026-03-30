@@ -75,6 +75,20 @@ app.on('message', async ({ activity, api }) => {
 });
 ```
 
+<!-- reactions-event-example -->
+
+```typescript
+app.on('messageReaction', async ({ activity, send }) => {
+  for (const reaction of activity.reactionsAdded ?? []) {
+    await send(`${reaction.user?.displayName ?? 'Someone'} added a ${reaction.type} reaction!`);
+  }
+
+  for (const reaction of activity.reactionsRemoved ?? []) {
+    await send(`${reaction.user?.displayName ?? 'Someone'} removed a ${reaction.type} reaction.`);
+  }
+});
+```
+
 <!-- reactions-preview-note -->
 N/A
 
