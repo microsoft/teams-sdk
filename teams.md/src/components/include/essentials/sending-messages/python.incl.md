@@ -88,4 +88,21 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     )
 ```
 
+<!-- reactions-event-example -->
+
+```python
+from microsoft_teams.api import MessageReactionActivity
+from microsoft_teams.apps import ActivityContext
+
+@app.on_message_reaction
+async def handle_message_reaction(ctx: ActivityContext[MessageReactionActivity]):
+    for reaction in ctx.activity.reactions_added or []:
+        name = reaction.user.display_name if reaction.user else 'Someone'
+        await ctx.send(f"{name} added a {reaction.type} reaction!")
+
+    for reaction in ctx.activity.reactions_removed or []:
+        name = reaction.user.display_name if reaction.user else 'Someone'
+        await ctx.send(f"{name} removed a {reaction.type} reaction.")
+```
+
 <!-- reactions-preview-note -->

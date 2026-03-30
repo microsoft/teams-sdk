@@ -88,6 +88,23 @@ app.OnMessage(async context =>
 });
 ```
 
+<!-- reactions-event-example -->
+
+```csharp
+app.OnMessageReaction(async context =>
+{
+    foreach (var reaction in context.Activity.ReactionsAdded ?? [])
+    {
+        await context.Send($"{reaction.User?.DisplayName ?? "Someone"} added a {reaction.Type} reaction!");
+    }
+
+    foreach (var reaction in context.Activity.ReactionsRemoved ?? [])
+    {
+        await context.Send($"{reaction.User?.DisplayName ?? "Someone"} removed a {reaction.Type} reaction.");
+    }
+});
+```
+
 <!-- reactions-preview-note -->
 
 :::tip[.NET]
