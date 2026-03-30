@@ -75,6 +75,19 @@ In .NET, targeted message APIs are marked with `[Experimental("ExperimentalTeams
 ```
 :::
 
+<!-- reactions-example -->
+
+```csharp
+app.OnMessage(async context =>
+{
+    // Add a reaction to the message
+    await context.Api.Reactions.Add(context.Activity.Conversation.Id, context.Activity.Id, "like");
+
+    // Remove a reaction from the message
+    await context.Api.Reactions.Remove(context.Activity.Conversation.Id, context.Activity.Id, "like");
+});
+```
+
 <!-- reactions-preview-note -->
 
 :::tip[.NET]

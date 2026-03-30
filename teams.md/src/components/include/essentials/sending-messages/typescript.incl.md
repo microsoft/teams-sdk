@@ -62,4 +62,16 @@ app.on('message', async ({ send, activity }) => {
 
 <!-- targeted-preview-note -->
 
+<!-- reactions-example -->
+
+```typescript
+app.on('message', async ({ activity, api }) => {
+  // Add a reaction to the message
+  await api.reactions.add(activity.conversation.id, activity.id, 'like');
+
+  // Remove a reaction from the message
+  await api.reactions.remove(activity.conversation.id, activity.id, 'like');
+});
+```
+
 <!-- reactions-preview-note -->
