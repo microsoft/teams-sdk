@@ -114,6 +114,20 @@ MANAGED_IDENTITY_CLIENT_ID=system
 TENANT_ID=your-tenant-id
 ```
 
+## Sovereign Cloud
+
+If your bot runs in a US Government (GCC-High, DoD) or China (21Vianet) cloud environment, add the `CLOUD` environment variable to your configuration:
+
+```env
+CLOUD=USGov
+```
+
+Valid values: `Public` (default), `USGov`, `USGovDoD`, `China`
+
+The SDK automatically configures all authentication endpoints for the specified cloud. No other changes are needed. See the [Sovereign Cloud](/teams/app-authentication/sovereign-cloud) guide for details and programmatic configuration options.
+
+<LanguageInclude section="sovereign-cloud-overrides" />
+
 ## Troubleshooting
 
 If you encounter authentication errors, see the [Authentication Troubleshooting](/teams/app-authentication/troubleshooting) guide for common issues and solutions.
