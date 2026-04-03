@@ -26,10 +26,10 @@ builder.AddTeams().AddTeamsDevTools();
 var app = builder.Build();
 var teams = app.UseTeams();
 
-teams.OnMessage(async context =>
+teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing();
-    await context.Send($"you said '{context.Activity.Text}'");
+    await context.Typing(cancellationToken);
+    await context.Send($"you said '{context.Activity.Text}'", cancellationToken);
 });
 
 app.Run();
@@ -42,10 +42,10 @@ app.Run();
 <!-- message-handling-code -->
 
 ```csharp title="Program.cs"
-teams.OnMessage(async context =>
+teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing();
-    await context.Send($"you said \"{context.activity.Text}\"");
+    await context.Typing(cancellationToken);
+    await context.Send($"you said \"{context.activity.Text}\"", cancellationToken);
 });
 ```
 

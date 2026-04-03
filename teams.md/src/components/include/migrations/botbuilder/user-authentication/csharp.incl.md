@@ -92,25 +92,25 @@
     var app = builder.Build();
     var teams = app.UseTeams();
 
-    teams.OnMessage("/signout", async (context) =>
+    teams.OnMessage("/signout", async (context, cancellationToken) =>
     {
         if (!context.IsSignedIn) return;
-        await context.SignOut();
-        await context.Send("You have been signed out.");
+        await context.SignOut(cancellationToken);
+        await context.Send("You have been signed out.", cancellationToken);
     });
 
-    teams.OnMessage(async (context) =>
+    teams.OnMessage(async (context, cancellationToken) =>
     {
         if (!context.IsSignedIn)
         {
-            await context.SignIn();
+            await context.SignIn(cancellationToken);
             return;
         }
     });
 
-    teams.OnSignIn(async (_, @event) =>
+    teams.OnSignIn(async (_, @event, cancellationToken) =>
     {
-        await context.Send("You have been signed in.");
+        await context.Send("You have been signed in.", cancellationToken);
     });
 
     app.Run()

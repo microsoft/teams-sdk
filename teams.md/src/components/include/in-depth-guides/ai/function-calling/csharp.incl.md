@@ -176,7 +176,7 @@ import TabItem from '@theme/TabItem';
     var aiModel = new OpenAIChatModel(azureOpenAIModel, azureOpenAI);
 
     // Use the prompt with OpenAIChatPrompt.From()
-    teamsApp.OnMessage(async (context) =>
+    teamsApp.OnMessage(async (context, cancellationToken) =>
     {
         var prompt = OpenAIChatPrompt.From(aiModel, new Samples.AI.Prompts.PokemonPrompt());
 
@@ -184,11 +184,11 @@ import TabItem from '@theme/TabItem';
 
         if (!string.IsNullOrEmpty(result.Content))
         {
-            await context.Send(new MessageActivity { Text = result.Content }.AddAIGenerated());
+            await context.Send(new MessageActivity { Text = result.Content }.AddAIGenerated(), cancellationToken);
         }
         else
         {
-            await context.Reply("Sorry I could not find that pokemon");
+            await context.Reply("Sorry I could not find that pokemon", cancellationToken);
         }
     });
     ```
@@ -343,7 +343,7 @@ Additionally, for complex scenarios, you can add multiple functions to the `Chat
     var aiModel = new OpenAIChatModel(azureOpenAIModel, azureOpenAI);
 
     // Use the prompt with OpenAIChatPrompt.From()
-    teamsApp.OnMessage(async (context) =>
+    teamsApp.OnMessage(async (context, cancellationToken) =>
     {
         var prompt = OpenAIChatPrompt.From(aiModel, new Samples.AI.Prompts.WeatherPrompt());
 
@@ -351,11 +351,11 @@ Additionally, for complex scenarios, you can add multiple functions to the `Chat
 
         if (!string.IsNullOrEmpty(result.Content))
         {
-            await context.Send(new MessageActivity { Text = result.Content }.AddAIGenerated());
+            await context.Send(new MessageActivity { Text = result.Content }.AddAIGenerated(), cancellationToken);
         }
         else
         {
-            await context.Reply("Sorry I could not figure it out");
+            await context.Reply("Sorry I could not figure it out", cancellationToken);
         }
     });
     ```

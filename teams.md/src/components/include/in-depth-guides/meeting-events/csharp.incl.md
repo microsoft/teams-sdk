@@ -7,7 +7,7 @@ using Microsoft.Teams.Apps.Activities.Events;
 using Microsoft.Teams.Cards;
 
 // Register meeting start handler
-teamsApp.OnMeetingStart(async context =>
+teamsApp.OnMeetingStart(async (context, cancellationToken) =>
 {
     var activity = context.Activity.Value;
     var startTime = activity.StartTime.ToLocalTime();
@@ -32,7 +32,7 @@ teamsApp.OnMeetingStart(async context =>
         }
     };
 
-    await context.Send(card);
+    await context.Send(card, cancellationToken);
 });
 ```
 
@@ -45,7 +45,7 @@ using Microsoft.Teams.Apps.Activities.Events;
 using Microsoft.Teams.Cards;
 
 // Register meeting end handler
-teamsApp.OnMeetingEnd(async context =>
+teamsApp.OnMeetingEnd(async (context, cancellationToken) =>
 {
     var activity = context.Activity.Value;
     var endTime = activity.EndTime.ToLocalTime();
@@ -63,7 +63,7 @@ teamsApp.OnMeetingEnd(async context =>
         }
     };
 
-    await context.Send(card);
+    await context.Send(card, cancellationToken);
 });
 ```
 
@@ -76,7 +76,7 @@ using Microsoft.Teams.Apps.Activities.Events;
 using Microsoft.Teams.Cards;
 
 // Register participant join handler
-teamsApp.OnMeetingJoin(async context =>
+teamsApp.OnMeetingJoin(async (context, cancellationToken) =>
 {
     var activity = context.Activity.Value;
     var member = activity.Members[0].User.Name;
@@ -95,7 +95,7 @@ teamsApp.OnMeetingJoin(async context =>
         }
     };
 
-    await context.Send(card);
+    await context.Send(card, cancellationToken);
 });
 ```
 
@@ -108,7 +108,7 @@ using Microsoft.Teams.Apps.Activities.Events;
 using Microsoft.Teams.Cards;
 
 // Register participant leave handler
-teamsApp.OnMeetingLeave(async context =>
+teamsApp.OnMeetingLeave(async (context, cancellationToken) =>
 {
     var activity = context.Activity.Value;
     var member = activity.Members[0].User.Name;
@@ -126,6 +126,6 @@ teamsApp.OnMeetingLeave(async context =>
         }
     };
 
-    await context.Send(card);
+    await context.Send(card, cancellationToken);
 });
 ```
