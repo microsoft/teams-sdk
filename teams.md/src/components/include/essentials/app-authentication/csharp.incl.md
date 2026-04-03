@@ -52,3 +52,18 @@ Set the following environment variable:
 :::note
 Support for C# is coming soon.
 :::
+
+<!-- sovereign-cloud-overrides -->
+
+For scenarios requiring customization of individual cloud endpoints — such as China single-tenant bots that need a tenant-specific login URL — C# supports per-endpoint overrides in `appsettings.json`:
+
+```json
+{
+  "Teams": {
+    "Cloud": "China",
+    "LoginTenant": "your-tenant-id"
+  }
+}
+```
+
+Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `ChannelService`, `OAuthRedirectUrl`
