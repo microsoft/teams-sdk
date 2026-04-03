@@ -28,9 +28,9 @@
     // highlight-error-end
     // highlight-success-start
 +   var teams = app.UseTeams();
-+   teams.OnMessage(async (context) =>
++   teams.OnMessage(async (context, cancellationToken) =>
 +   {
-+       await context.Send(new Activity(type:"typing"));
++       await context.Send(new Activity(type:"typing"), cancellationToken);
 +   });
     // highlight-success-end
     ```
@@ -61,10 +61,10 @@
     using Microsoft.Teams.Api.Activities;
 
     var teams = app.UseTeams();
-    teams.OnMessage(async (context) =>
+    teams.OnMessage(async (context, cancellationToken) =>
     {
         // highlight-next-line
-        await context.Send(new Activity(type:"typing"));
+        await context.Send(new Activity(type:"typing"), cancellationToken);
     });
     ```
   </TabItem>
@@ -97,9 +97,9 @@
     // highlight-error-end
     // highlight-success-start
 +   var teams = app.UseTeams();
-+   teams.OnMessage(async (context) =>
++   teams.OnMessage(async (context, cancellationToken) =>
 +   {
-+       await context.Send("hello world");
++       await context.Send("hello world", cancellationToken);
 +   });
     // highlight-success-end
     ```
@@ -127,10 +127,10 @@
     using Microsoft.Teams.Plugins.AspNetCore.Extensions;
 
     var teams = app.UseTeams();
-    teams.OnMessage(async (context) =>
+    teams.OnMessage(async (context, cancellationToken) =>
     {
         // highlight-next-line
-        await context.Send("hello world");
+        await context.Send("hello world", cancellationToken);
     });
     ```
   </TabItem>
@@ -179,9 +179,9 @@
     // highlight-error-end
     // highlight-success-start
 +   var teams = app.UseTeams();
-+   teams.OnMessage(async (context) =>
++   teams.OnMessage(async (context, cancellationToken) =>
 +   {
-+       await context.Send(new AdaptiveCard(new TextBlock("hello world")));
++       await context.Send(new AdaptiveCard(new TextBlock("hello world")), cancellationToken);
 +   });
     // highlight-success-end
     ```
@@ -226,10 +226,10 @@
     using Microsoft.Teams.Plugins.AspNetCore.Extensions;
 
     var teams = app.UseTeams();
-    teams.OnMessage(async (context) =>
+    teams.OnMessage(async (context, cancellationToken) =>
     {
         // highlight-next-line
-        await context.Send(new AdaptiveCard(new TextBlock("hello world")));
+        await context.Send(new AdaptiveCard(new TextBlock("hello world")), cancellationToken);
     });
     ```
   </TabItem>
@@ -264,11 +264,11 @@
     // highlight-error-end
     // highlight-success-start
 +   var teams = app.UseTeams();
-+   teams.OnMessage(async (context) =>
++   teams.OnMessage(async (context, cancellationToken) =>
 +   {
 +       var activity = new MessageActivity();
 +       activity.AddAttachment(new Attachment { /* ... */ });
-+       await context.SendAsync(activity);
++       await context.SendAsync(activity, cancellationToken);
 +   });
     // highlight-success-end
     ```
@@ -299,12 +299,12 @@
     using Microsoft.Teams.Plugins.AspNetCore.Extensions;
     
     var teams = app.UseTeams();
-    teams.OnMessage(async (context) =>
+    teams.OnMessage(async (context, cancellationToken) =>
     {
         // highlight-start
         var activity = new MessageActivity();
         activity.AddAttachment(new Attachment { /* ... */ });
-        await context.SendAsync(activity);
+        await context.SendAsync(activity, cancellationToken);
         // highlight-end
     });
     ```

@@ -1,18 +1,18 @@
 <!-- basic-message-example -->
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Send($"you said: {context.activity.Text}");
+    await context.Send($"you said: {context.activity.Text}", cancellationToken);
 });
 ```
 
 <!-- signin-example -->
 
   ```csharp
-  app.OnVerifyState(async context =>
+  app.OnVerifyState(async (context, cancellationToken) =>
   {
-      await context.Send("You have successfully signed in!");
+      await context.Send("You have successfully signed in!", cancellationToken);
   });
   ```
 
@@ -23,7 +23,7 @@ app.OnMessage(async context =>
 <!-- streaming-example -->
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
     context.Stream.Emit("hello");
     context.Stream.Emit(", ");
@@ -40,9 +40,9 @@ app.OnMessage(async context =>
 <!-- mention-example -->
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Send(new MessageActivity("hi!").AddMention(activity.From));
+    await context.Send(new MessageActivity("hi!").AddMention(activity.From), cancellationToken);
 });
 ```
 
@@ -53,12 +53,13 @@ app.OnMessage(async context =>
 <!-- targeted-send-example -->
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
     // Using WithRecipient with isTargeted=true explicitly targets the specified recipient
     await context.Send(
         new MessageActivity("This message is only visible to you!")
-            .WithRecipient(context.Activity.From, isTargeted: true)
+            .WithRecipient(context.Activity.From, isTargeted: true),
+        cancellationToken
     );
 });
 ```

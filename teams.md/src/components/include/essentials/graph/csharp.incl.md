@@ -41,7 +41,7 @@ import TabItem from '@theme/TabItem';
 
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
     var user = await context.UserGraph.Me.GetAsync();
     Console.WriteLine($"User ID: {user.id}");

@@ -23,7 +23,7 @@
   // highlight-error-end
   // highlight-success-start
 +  var teams = app.UseTeams();
-+  teams.OnMessage(async (context) =>
++  teams.OnMessage(async (context, cancellationToken) =>
 +  {
 +      var members = await context.Api.Conversations.Members.GetAsync(context.Activity.Conversation.Id);
 +  });
@@ -51,7 +51,7 @@
     ```csharp showLineNumbers
     using Microsoft.Teams.Apps;
     
-    app.OnMessage(async (context) =>
+    app.OnMessage(async (context, cancellationToken) =>
     {
         // highlight-next-line
         var members = await context.Api.Conversations.Members.GetAsync(context.Activity.Conversation.Id);

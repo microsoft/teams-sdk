@@ -148,15 +148,15 @@ await client.Send(card);
 <Tabs>
   <TabItem label="Minimal" value="minimal">
     ```csharp
-    teams.OnMessage(async context =>
+    teams.OnMessage(async (context, cancellationToken) =>
     {
         var text = context.Activity.Text?.ToLowerInvariant() ?? "";
 
         if (text.Contains("form"))
         {
-            await context.Typing();
+            await context.Typing(cancellationToken);
             var card = CreateTaskFormCard();
-            await context.Send(card);
+            await context.Send(card, cancellationToken);
         }
     });
     ```

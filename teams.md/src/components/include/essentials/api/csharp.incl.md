@@ -21,7 +21,7 @@ import TabItem from '@theme/TabItem';
 
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
     var members = await context.Api.Conversations.Members.Get(context.Conversation.Id);
 });
@@ -31,7 +31,7 @@ app.OnMessage(async context =>
 <!-- meetings-example -->
 
 ```csharp
-app.OnMeetingStart(async context =>
+app.OnMeetingStart(async (context, cancellationToken) =>
 {
     var meetingId = context.Activity.Value.Id;
     var tenantId = context.Activity.ChannelData?.Tenant?.Id;

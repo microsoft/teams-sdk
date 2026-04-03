@@ -90,7 +90,7 @@ public static async Task HandleStatefulConversation(OpenAIChatModel model, ICont
 ### Usage in your application
 
 ```csharp
-teamsApp.OnMessage(async (context) =>
+teamsApp.OnMessage(async (context, cancellationToken) =>
 {
     await HandleStatefulConversation(aiModel, context);
 });
