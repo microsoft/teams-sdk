@@ -198,7 +198,7 @@ const config: Config = {
         },
         announcementBar: {
             id: 'teams-sdk-rename',
-            content: 'We have been renamed to Teams SDK! 🎉 🥳',
+            content: 'Our Python SDK is now Generally Available! 🎉 🥳',
             isCloseable: true,
             backgroundColor: '#515cc6',
             textColor: '#fff'
