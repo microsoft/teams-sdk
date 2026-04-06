@@ -6,7 +6,6 @@ summary: Configure your Teams bot for US Government (GCCH/DoD) or China (21Viane
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import SovereignCloudOverrides from '@site/src/components/include/teams/app-authentication/sovereign-cloud-overrides.incl.md';
 
 # Sovereign Cloud Configuration
 
@@ -27,9 +26,8 @@ Sovereign clouds use separate Azure infrastructure with different service endpoi
 
 ## Prerequisites
 
-- An Azure Bot resource registered in the appropriate sovereign cloud portal
-- An app registration in the sovereign cloud's Entra ID
 - A Teams tenant in the corresponding cloud environment
+- An Azure Bot resource and app registration in the sovereign cloud portal
 
 ## Configuration
 
@@ -59,7 +57,7 @@ const app = new App({
 });
 ```
 
-Available presets: `PUBLIC`, `US_GOV`, `US_GOV_DOD`, `CHINA`
+**Available cloud presets:** `PUBLIC`, `US_GOV`, `US_GOV_DOD`, `CHINA`
 
 </TabItem>
 <TabItem value="csharp" label="C#">
@@ -87,6 +85,23 @@ var app = new App(new AppOptions
 });
 ```
 
+**Available cloud presets:** `CloudEnvironment.Public`, `CloudEnvironment.USGov`, `CloudEnvironment.USGovDoD`, `CloudEnvironment.China`
+
+### Per-Endpoint Overrides
+
+For scenarios requiring customization of individual endpoints — such as China single-tenant bots that need a tenant-specific login URL — you can override specific properties in `appsettings.json`:
+
+```json
+{
+  "Teams": {
+    "Cloud": "China",
+    "LoginTenant": "your-tenant-id"
+  }
+}
+```
+
+Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `ChannelService`, `OAuthRedirectUrl`
+
 </TabItem>
 <TabItem value="python" label="Python">
 
@@ -97,7 +112,7 @@ from microsoft_teams.apps import App
 app = App(cloud=US_GOV)
 ```
 
-Available presets: `PUBLIC`, `US_GOV`, `US_GOV_DOD`, `CHINA`
+**Available cloud presets:** `PUBLIC`, `US_GOV`, `US_GOV_DOD`, `CHINA`
 
 </TabItem>
 </Tabs>
@@ -113,8 +128,6 @@ When you set a cloud environment, the SDK automatically uses the correct endpoin
 - **OpenID metadata** — the discovery endpoint for token validation configuration
 
 You do not need to configure these endpoints individually.
-
-<SovereignCloudOverrides />
 
 ## Next Steps
 
