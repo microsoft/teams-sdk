@@ -81,3 +81,7 @@
 
   </TabItem>
 </Tabs>
+
+:::info
+**Dependency Injection:** In the controller pattern, services are injected via the constructor. In the Teams SDK callback pattern, resolve services from `app.Services` after `builder.Build()` and capture them in your handler closures. See [Dependency Injection](/in-depth-guides/dependency-injection) for details and examples.
+:::
