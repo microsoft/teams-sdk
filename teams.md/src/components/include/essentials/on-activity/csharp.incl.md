@@ -5,9 +5,9 @@ The Teams SDK exposes a fluent router so you can subscribe to these activities w
 <!-- basic-example -->
 
     ```csharp
-    app.OnMessage(async context =>
+    app.OnMessage(async (context, cancellationToken) =>
     {
-        await context.Send($"you said: {context.activity.Text}");
+        await context.Send($"you said: {context.activity.Text}", cancellationToken);
     });
     ```
 
@@ -21,7 +21,7 @@ The `OnActivity` activity handlers (and attributes) follow a [middleware](https:
 
 <!-- middleware-examples -->
   ```csharp
-  app.OnMessage(async context =>
+  app.OnMessage(async (context, cancellationToken) =>
   {
       Console.WriteLine("global logger");
       context.Next(); // pass control onward
@@ -30,21 +30,21 @@ The `OnActivity` activity handlers (and attributes) follow a [middleware](https:
   ```
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
     if (context.Activity.Text == "/help")
     {
-        await context.Send("Here are all the ways I can help you...");
+        await context.Send("Here are all the ways I can help you...", cancellationToken);
     }
 
     // Conditionally pass control to the next handler
     context.Next();
 });
-    
-  app.OnMessage(async context =>
+
+  app.OnMessage(async (context, cancellationToken) =>
   {
       // Fallthrough to the final handler
-      await context.Send($"Hello! you said {context.Activity.Text}");
+      await context.Send($"Hello! you said {context.Activity.Text}", cancellationToken);
   });
   ```
 

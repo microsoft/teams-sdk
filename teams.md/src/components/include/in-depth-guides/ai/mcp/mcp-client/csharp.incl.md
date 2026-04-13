@@ -67,11 +67,11 @@ import TabItem from '@theme/TabItem';
     prompt.Plugin(new McpClientPlugin().UseMcpServer("https://learn.microsoft.com/api/mcp"));
 
     App app = webApp.UseTeams();
-    app.OnMessage(async context =>
+    app.OnMessage(async (context, cancellationToken) =>
     {
-        await context.Send(new TypingActivity());
+        await context.Send(new TypingActivity(), cancellationToken);
         var result = await prompt.Send(context.Activity.Text);
-        await context.Send(result.Content);
+        await context.Send(result.Content, cancellationToken);
     });
     webApp.Run();
     ```

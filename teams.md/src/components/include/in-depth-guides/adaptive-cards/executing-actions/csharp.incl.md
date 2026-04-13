@@ -203,7 +203,7 @@ using Microsoft.Teams.Common.Logging;
 
 //...
 
-teams.OnAdaptiveCardAction(async context =>
+teams.OnAdaptiveCardAction(async (context, cancellationToken) =>
 {
     var activity = context.Activity;
     context.Log.Info("[CARD_ACTION] Card action received");
@@ -242,19 +242,19 @@ teams.OnAdaptiveCardAction(async context =>
     {
         case "submit_basic":
             var notifyValue = GetFormValue("notify") ?? "false";
-            await context.Send($"Basic card submitted! Notify setting: {notifyValue}");
+            await context.Send($"Basic card submitted! Notify setting: {notifyValue}", cancellationToken);
             break;
 
         case "submit_feedback":
             var feedbackText = GetFormValue("feedback") ?? "No feedback provided";
-            await context.Send($"Feedback received: {feedbackText}");
+            await context.Send($"Feedback received: {feedbackText}", cancellationToken);
             break;
 
         case "create_task":
             var title = GetFormValue("title") ?? "Untitled";
             var priority = GetFormValue("priority") ?? "medium";
             var dueDate = GetFormValue("due_date") ?? "No date";
-            await context.Send($"Task created!\nTitle: {title}\nPriority: {priority}\nDue: {dueDate}");
+            await context.Send($"Task created!\nTitle: {title}\nPriority: {priority}\nDue: {dueDate}", cancellationToken);
             break;
 
         case "save_profile":
@@ -270,11 +270,11 @@ teams.OnAdaptiveCardAction(async context =>
             if (location != "Not specified")
                 response += $"\nLocation: {location}";
 
-            await context.Send(response);
+            await context.Send(response, cancellationToken);
             break;
 
         case "test_json":
-            await context.Send("JSON deserialization test successful!");
+            await context.Send("JSON deserialization test successful!", cancellationToken);
             break;
 
         default:

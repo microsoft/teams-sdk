@@ -40,7 +40,7 @@ var azureOpenAI = new AzureOpenAIClient(
 var aiModel = new OpenAIChatModel(azureOpenAIModel, azureOpenAI);
 
 // Simple chat handler
-teamsApp.OnMessage(async (context) =>
+teamsApp.OnMessage(async (context, cancellationToken) =>
 {
     var prompt = new OpenAIChatPrompt(aiModel, new ChatPromptOptions
     {
@@ -54,7 +54,7 @@ teamsApp.OnMessage(async (context) =>
         {
             Text = result.Content,
         }.AddAIGenerated();
-        await context.Send(messageActivity);
+        await context.Send(messageActivity, cancellationToken);
         // Ahoy, matey! 🏴‍☠️ How be ye doin' this fine day on th' high seas? What can this ol' salty sea dog help ye with? 🚢☠️
     }
 });
@@ -91,7 +91,7 @@ using Microsoft.Teams.Api.Activities;
 var aiModel = new OpenAIChatModel(azureOpenAIModel, azureOpenAI);
 
 // Use the prompt with OpenAIChatPrompt.From()
-teamsApp.OnMessage(async (context) =>
+teamsApp.OnMessage(async (context, cancellationToken) =>
 {
     var prompt = OpenAIChatPrompt.From(aiModel, new Samples.AI.Prompts.PiratePrompt());
 
@@ -99,7 +99,7 @@ teamsApp.OnMessage(async (context) =>
 
     if (!string.IsNullOrEmpty(result.Content))
     {
-        await context.Send(new MessageActivity { Text = result.Content }.AddAIGenerated());
+        await context.Send(new MessageActivity { Text = result.Content }.AddAIGenerated(), cancellationToken);
         // Ahoy, matey! 🏴‍☠️ How be ye doin' this fine day on th' high seas?
     }
 });
@@ -119,7 +119,7 @@ N/A
 
 ```csharp
 // Streaming handler
-teamsApp.OnMessage(async (context) =>
+teamsApp.OnMessage(async (context, cancellationToken) =>
 {
     var match = Regex.Match(context.Activity.Text ?? "", @"^stream\s+(.+)", RegexOptions.IgnoreCase);
     if (match.Success)

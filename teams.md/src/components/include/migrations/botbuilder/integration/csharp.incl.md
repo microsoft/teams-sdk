@@ -27,10 +27,10 @@
             app.Run();
         }
 
-        teams.OnMessage(async context =>
+        teams.OnMessage(async (context, cancellationToken) =>
         {
-            await context.Client.Typing();
-            await context.Client.Send($"hi from teams...");
+            await context.Client.Typing(cancellationToken);
+            await context.Client.Send($"hi from teams...", cancellationToken);
         });
     }
     ```

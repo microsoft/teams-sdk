@@ -10,11 +10,11 @@ import TabItem from '@theme/TabItem';
 <Tabs>
   <TabItem label="Minimal" value="minimal">
     ```csharp 
-    app.OnInstall(async context =>
+    app.OnInstall(async (context, cancellationToken) =>
     {
-        // Save the conversation id in 
+        // Save the conversation id in
         context.Storage.Set(activity.From.AadObjectId!, activity.Conversation.Id);
-        await context.Send("Hi! I am going to remind you to say something to me soon!");
+        await context.Send("Hi! I am going to remind you to say something to me soon!", cancellationToken);
         notificationQueue.AddReminder(activity.From.AadObjectId!, Notifications.SendProactive, 10_000);
     });
     ```
