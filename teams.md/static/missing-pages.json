@@ -3,17 +3,45 @@
     "csharp",
     "python"
   ],
+  "in-depth-guides/ai": [
+    "python"
+  ],
   "in-depth-guides/ai/a2a": [
-    "csharp"
+    "csharp",
+    "python"
   ],
   "in-depth-guides/ai/a2a/a2a-client": [
-    "csharp"
+    "csharp",
+    "python"
   ],
   "in-depth-guides/ai/a2a/a2a-server": [
-    "csharp"
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/ai/best-practices": [
+    "python"
+  ],
+  "in-depth-guides/ai/chat": [
+    "python"
+  ],
+  "in-depth-guides/ai/function-calling": [
+    "python"
+  ],
+  "in-depth-guides/ai/keeping-state": [
+    "python"
+  ],
+  "in-depth-guides/ai/mcp": [
+    "python"
+  ],
+  "in-depth-guides/ai/mcp/mcp-client": [
+    "python"
   ],
   "in-depth-guides/ai/mcp/mcp-server": [
-    "csharp"
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/ai/setup-and-prereqs": [
+    "python"
   ],
   "in-depth-guides/server/http-server": [
     "csharp"

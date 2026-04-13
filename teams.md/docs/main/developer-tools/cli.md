@@ -29,15 +29,6 @@ The `new` token will create a brand new agent with `app-name` applied as the dir
 The name you choose may have case changes when applied; for example, "My App" would become "my-app' due to the requirements for `package.json` files.
 :::
 
-:::warning
-Our Python SDK is currently in Public Preview. As a result, we have the CLI under a feature flag.
-Please run the below command to enable this language.
-:::
-
-```sh
-$env:ENABLE_EXPERIMENTAL_PYTHON_OPTIONS = 1
-```
-
 ### Optional parameters
 
 :::tip
