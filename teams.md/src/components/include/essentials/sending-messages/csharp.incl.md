@@ -87,3 +87,24 @@ In .NET, reaction APIs are marked with `[Experimental("ExperimentalTeamsReaction
 </PropertyGroup>
 ```
 :::
+
+<!-- context-send-method-name -->
+
+`Send()`
+
+<!-- context-reply-method-name -->
+
+`Reply()`
+
+<!-- threading-reactive-example -->
+
+```csharp
+app.OnMessage(async context =>
+{
+    // Send in the same thread, no quote
+    await context.Send("Acknowledged");
+
+    // Send in the same thread with a visual quote of the inbound message
+    await context.Reply("Got it!");
+});
+```

@@ -51,3 +51,34 @@ public static async Task SendTargetedNotification(string conversationId, Account
     );
 }
 ```
+
+<!-- app-reply-method-name -->
+
+`app.Reply()`
+
+<!-- to-thread-id-method-name -->
+
+`Conversation.ToThreadId()`
+
+<!-- app-send-method-name -->
+
+`app.Send()`
+
+<!-- threading-proactive-example -->
+
+```csharp
+// Send to a specific thread proactively
+await app.Reply(conversationId, messageId, "Thread update!");
+
+// Send to a flat conversation (1:1, group chat)
+await app.Reply(conversationId, "Hello!");
+```
+
+<!-- threading-helper-example -->
+
+```csharp
+using Microsoft.Teams.Api;
+
+var threadId = Conversation.ToThreadId(conversationId, messageId);
+await app.Send(threadId, "Sent via helper");
+```
