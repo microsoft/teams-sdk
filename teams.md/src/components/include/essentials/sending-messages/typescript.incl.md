@@ -65,3 +65,23 @@ N/A
 
 <!-- reactions-preview-note -->
 N/A
+
+<!-- context-send-method-name -->
+
+`send()`
+
+<!-- context-reply-method-name -->
+
+`reply()`
+
+<!-- threading-reactive-example -->
+
+```typescript
+app.on('message', async ({ send, reply }) => {
+  // Send in the same thread, no quote
+  await send('Acknowledged');
+
+  // Send in the same thread with a visual quote of the inbound message
+  await reply('Got it!');
+});
+```
