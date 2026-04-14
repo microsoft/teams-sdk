@@ -1,0 +1,49 @@
+---
+sidebar_position: 6
+title: Service URL Validation
+summary: How the Teams SDK validates service URLs to prevent outbound requests to unauthorized endpoints
+languages: ['typescript','python','csharp']
+---
+
+# Service URL Validation
+
+The Teams SDK validates that incoming `serviceUrl` values belong to known domains before using them for outbound API calls. This prevents the bot's credentials from being sent to unauthorized endpoints.
+
+## How it works
+
+When your bot receives an activity from the Bot Framework Channel Service, the activity includes a `serviceUrl` field that tells the SDK where to send responses. The SDK validates this URL against a built-in allowlist of known domains before making any outbound requests.
+
+### Default allowed domains
+
+| Domain | Environment |
+|---|---|
+| `*.botframework.com` | Public cloud (all channels: DirectLine, WebChat, SMS, Slack, etc.) |
+| `smba*.trafficmanager.net` | Teams public cloud |
+| `*.botframework.azure.us` | US Government channels |
+| `*.teams.microsoft.com` | Government Community Cloud (GCC) |
+| `*.teams.microsoft.us` | GCC-High / DoD |
+| `*.botframework.azure.cn` | China (21Vianet) channels |
+| `*.teams.microsoftonline.cn` | China Teams |
+| `localhost` / `127.0.0.1` | Local development |
+
+## Adding custom domains
+
+If your bot receives activities from a channel with a service URL outside the default allowlist, you can add additional domain suffixes:
+
+<LanguageInclude section="adding-custom-domains" />
+
+## Disabling validation
+
+:::warning
+Disabling service URL validation removes a security protection that prevents your bot's credentials from being sent to unauthorized endpoints. Only disable this if you understand the security implications.
+:::
+
+If you have a non-standard setup where domain-based validation does not work, you can disable it by passing `*` as an additional domain:
+
+<LanguageInclude section="disabling-validation" />
+
+## Proactive messaging
+
+:::info
+Service URL validation runs on incoming activities. If you store a `ConversationReference` for proactive messaging, the `serviceUrl` was validated when the original activity was received. Only store conversation references from validated inbound activities -- never from untrusted external sources.
+:::
