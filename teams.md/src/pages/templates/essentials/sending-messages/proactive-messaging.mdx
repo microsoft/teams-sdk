@@ -32,3 +32,19 @@ Targeted messages, also known as ephemeral messages, are delivered to a specific
 When sending targeted messages proactively, you must explicitly specify the recipient account.
 
 <LanguageInclude section="targeted-proactive-example" />
+
+## Proactive Threading
+
+To send a message to a thread outside of a handler, use <LanguageInclude section="app-reply-method-name" /> with the conversation ID and thread root message ID. The SDK constructs the threaded conversation ID for you.
+
+<LanguageInclude section="threading-proactive-example" />
+
+You can also pass just a conversation ID to <LanguageInclude section="app-reply-method-name" /> for flat contexts (1:1, group chat, meetings).
+
+For reactive threading (within a handler), see [Threading](./#threading).
+
+### Thread ID Helper
+
+For advanced scenarios, the <LanguageInclude section="to-thread-id-method-name" /> helper constructs the threaded conversation ID directly. Use it with <LanguageInclude section="app-send-method-name" /> when you need full control. Note that <LanguageInclude section="to-thread-id-method-name" /> is only valid for conversations that support threading (channels and some 1:1 chats) — group chats and meetings do not support threading at this time.
+
+<LanguageInclude section="threading-helper-example" />

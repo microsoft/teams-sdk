@@ -49,3 +49,34 @@ async def send_targeted_notification(conversation_id: str, recipient: Account):
             .with_recipient(recipient, is_targeted=True)
     )
 ```
+
+<!-- app-reply-method-name -->
+
+`app.reply()`
+
+<!-- to-thread-id-method-name -->
+
+`to_thread_id()`
+
+<!-- app-send-method-name -->
+
+`app.send()`
+
+<!-- threading-proactive-example -->
+
+```python
+# Send to a specific thread proactively
+await app.reply(conversation_id, message_id, "Thread update!")
+
+# Send to a flat conversation (1:1, group chat)
+await app.reply(conversation_id, "Hello!")
+```
+
+<!-- threading-helper-example -->
+
+```python
+from microsoft_teams.apps import to_thread_id
+
+thread_id = to_thread_id(conversation_id, message_id)
+await app.send(thread_id, "Sent via helper")
+```
