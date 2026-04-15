@@ -1,34 +1,15 @@
-name: CI
+name: CI - Docs
 
 on:
   pull_request:
-      branches:
-        - main
+    branches:
+      - main
+    paths:
+      - 'teams.md/**'
+      - 'packages/cli/src/commands/**'
+      - 'packages/cli/scripts/generate-command-docs.ts'
 
 jobs:
-  build-cli:
-    name: Build & Test CLI
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build CLI
-        run: npx turbo build --filter=@microsoft/teams.cli
-
-      - name: Test CLI
-        run: npx turbo test --filter=@microsoft/teams.cli
-
   build-teams-md:
     name: Build teams.md
     runs-on: ubuntu-latest
