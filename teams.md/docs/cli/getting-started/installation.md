@@ -11,7 +11,7 @@
 Install `teams` globally from npm:
 
 ```bash
-npm install -g @microsoft/teams.cli
+npm install -g @microsoft/teams.cli@preview
 ```
 
 ## Verify

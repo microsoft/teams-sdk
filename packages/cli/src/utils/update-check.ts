@@ -9,7 +9,7 @@ import { logger } from './logger.js';
 const STATE_FILE = join(paths.cache, 'update-check.json');
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 let alreadyChecked = false;
-const REGISTRY_API = 'https://registry.npmjs.org/@microsoft/teams.cli/latest';
+const REGISTRY_API = 'https://registry.npmjs.org/@microsoft/teams.cli/preview';
 
 interface UpdateState {
   lastCheck: number;

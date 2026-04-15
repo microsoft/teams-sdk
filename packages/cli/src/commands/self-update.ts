@@ -16,7 +16,7 @@ export async function runSelfUpdate(): Promise<boolean> {
   const spinner = createSilentSpinner('Updating teams...').start();
 
   try {
-    await execAsync(`npm install -g ${PACKAGE_NAME}@latest`);
+    await execAsync(`npm install -g ${PACKAGE_NAME}@preview`);
     spinner.success({ text: 'Updated to the latest version' });
 
     try {
@@ -29,7 +29,7 @@ export async function runSelfUpdate(): Promise<boolean> {
   } catch (error) {
     spinner.error({ text: 'Update failed' });
     logger.error(pc.red(error instanceof Error ? error.message : 'Unknown error'));
-    logger.info(`\nTry manually: ${pc.cyan(`npm install -g ${PACKAGE_NAME}@latest`)}`);
+    logger.info(`\nTry manually: ${pc.cyan(`npm install -g ${PACKAGE_NAME}@preview`)}`);
     return false;
   }
 }

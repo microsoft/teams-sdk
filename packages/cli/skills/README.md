@@ -79,7 +79,7 @@ skills/
 ## Requirements
 
 These skills require:
-- **Teams CLI** - Install via: `npm install -g @microsoft/teams.cli`
+- **Teams CLI** - Install via: `npm install -g @microsoft/teams.cli@preview`
 - **Node.js** - Required for Teams CLI
 - **Microsoft account** - For Teams authentication
 

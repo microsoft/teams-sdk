@@ -5,7 +5,7 @@ CLI for managing Microsoft Teams apps.
 ## Install
 
 ```bash
-npm install -g @microsoft/teams.cli
+npm install -g @microsoft/teams.cli@preview
 ```
 
 ## Usage
