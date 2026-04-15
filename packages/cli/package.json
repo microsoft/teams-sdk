@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/teams.cli",
-  "version": "3.0.0",
+  "version": "2.1.0",
   "description": "CLI for scaffolding Teams applications",
   "type": "module",
   "main": "dist/index.js",

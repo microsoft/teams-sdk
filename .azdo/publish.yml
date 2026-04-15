@@ -129,8 +129,14 @@ extends:
             Write-Host "Version from nbgv: $version"
             Write-Host "##vso[task.setvariable variable=VersionNumber]$version"
 
-            # If version contains '-' it's a prerelease, use 'next' tag; otherwise 'latest'
-            if ($version -match '-') {
+            # Determine npm tag from version prerelease suffix
+            if ($version -match '-beta') {
+              Write-Host "Beta version detected - using 'beta' npm tag"
+              Write-Host "##vso[task.setvariable variable=NpmTag]beta"
+            } elseif ($version -match '-preview') {
+              Write-Host "Preview version detected - using 'preview' npm tag"
+              Write-Host "##vso[task.setvariable variable=NpmTag]preview"
+            } elseif ($version -match '-') {
               Write-Host "Prerelease version detected - using 'next' npm tag"
               Write-Host "##vso[task.setvariable variable=NpmTag]next"
             } else {

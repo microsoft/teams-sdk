@@ -2,6 +2,12 @@
 
 This project uses [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) for automatic version management.
 
+## How Versioning Works
+
+- Versions are computed automatically from git history based on `version.json`
+- **Main branch**: `2.1.X-beta` (early development, published with `beta` npm tag)
+- **Release branch**: `2.1.X-preview` (vetted releases, published with `preview` npm tag)
+
 ## Creating a Release
 
 1. **Create a branch from `release`** and merge `main` into it:
@@ -9,25 +15,25 @@ This project uses [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.Gi
    git checkout -b prep-release/<next-version> release
    git merge origin/main
    ```
-   - Set `version.json` to the stable version being released (e.g. remove the `-preview.{height}` suffix)
+   - Set `version.json` to `"2.1-preview.{height}"` (change `-beta` to `-preview`)
    - Commit and push
 
 2. **Create a PR to `release`** (base: `release`, compare: `prep-release/<next-version>`):
-   - The PR will include all changes from main plus the version bump
+   - The PR will include all changes from main plus the version suffix change
    - Get teammate approval and merge
 
 3. **Trigger the release pipeline** for the `release` branch with **Public** publish type
 
-4. **Bump the version on main** for the next release cycle:
+4. **Bump the version on main** for the next release cycle (if needed):
    - Edit `version.json` on main
-   - Increment the patch version (e.g. `"3.0-preview.{height}"` → `"3.1-preview.{height}"`)
+   - Increment the minor version (e.g. `"2.1-beta.{height}"` → `"2.2-beta.{height}"`)
    - Commit and push (or PR)
 
 ## Hotfixes
 
-To fix a bug in a released version without including new preview changes:
+To fix a bug in a released version without including new beta changes:
 
-1. **Consider if a normal release would work instead** - merging main to release includes all updates and is simpler. Only use a hotfix if you need to exclude preview changes from main.
+1. **Consider if a normal release would work instead** - merging main to release includes all updates and is simpler. Only use a hotfix if you need to exclude beta changes from main.
 
 2. **Create a branch from `release`**:
    ```bash
@@ -48,12 +54,6 @@ To fix a bug in a released version without including new preview changes:
    git push origin main
    ```
 
-## How Versioning Works
-
-- Versions are computed automatically from git history based on `version.json`
-- **Main branch**: `3.0.X-preview` (prerelease, published with `next` npm tag)
-- **Release branch**: `3.0.X` (stable, published with `latest` npm tag)
-
 ## Publishing
 
 The publish pipeline (`.azdo/publish.yml`) is manually triggered and requires selecting a **Publish Type**: `Internal` or `Public`.
@@ -70,8 +70,8 @@ The pipeline packs all non-private packages from `packages/`. Packages with `"pr
 
 ## Bumping Major/Minor Version
 
-To bump from `3.0.x` to `3.1.x` or `4.0.x`:
+To bump from `2.1.x` to `2.2.x` or `3.0.x`:
 
 1. Edit `version.json` on main branch
-2. Update the version (e.g. `"3.0-preview.{height}"` → `"3.1-preview.{height}"`)
+2. Update the version (e.g. `"2.1-beta.{height}"` → `"2.2-beta.{height}"`)
 3. Commit and push
