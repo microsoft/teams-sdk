@@ -36,6 +36,22 @@ Common errors and solutions for Teams bot infrastructure.
 
 ---
 
+## Transient Installation Error After Creation
+
+**Symptom:** Install link fails immediately after creating the app, but works after waiting a few minutes
+
+**Cause:** App registration is still propagating through Microsoft's backend systems
+
+**Solution:**
+
+1. Wait 1-2 minutes after app creation
+2. Retry the install link
+3. The app should install successfully once propagation completes
+
+**Note:** This is a known transient issue that resolves itself. If the issue persists beyond 5 minutes, check for other causes above.
+
+---
+
 ## AUTH_REQUIRED Error
 
 **Symptom:** Command fails with "Not logged in", "AUTH_REQUIRED", or "authentication required" message

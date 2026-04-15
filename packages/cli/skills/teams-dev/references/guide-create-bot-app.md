@@ -2,7 +2,7 @@
 
 This guide walks through creating a new Microsoft Teams bot application using the `teams project new` command. This scaffolds the actual bot code (TypeScript, C#, or Python) that handles messages and interactions.
 
-**Note:** This guide covers bot application code. For bot infrastructure setup (registration, credentials, AAD app), see the [Bot Infrastructure Setup guide](guide-bot-infra-creation.md).
+**Note:** This guide covers bot application code. For bot infrastructure setup (registration, credentials, AAD app), see the [Bot Infrastructure Setup guide](guide-create-bot-infra.md).
 
 ---
 
@@ -16,7 +16,7 @@ teams --version
 
 **Expected:** Version number displayed (e.g., `1.0.0` or similar)
 
-**If not installed:** See [Bot Infrastructure Setup guide](guide-bot-infra-creation.md) for installation instructions.
+**If not installed:** See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) for installation instructions.
 
 ### Step 2: (Optional) Set Up Bot Infrastructure First
 
@@ -28,10 +28,10 @@ You can create the bot application code before or after setting up infrastructur
 
 **If you haven't created infrastructure yet:**
 - You can scaffold the bot code now and add credentials later
-- See [Bot Infrastructure Setup guide](guide-bot-infra-creation.md) when ready to create bot registration
+- See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) when ready to create bot registration
 
 **If you already have infrastructure:**
-- Have your `.env` file or credentials ready from [Bot Infrastructure Setup guide](guide-bot-infra-creation.md)
+- Have your `.env` file or credentials ready from [Bot Infrastructure Setup guide](guide-create-bot-infra.md)
 - You'll connect them in Step 4 below
 
 ---
@@ -101,7 +101,7 @@ This creates the project with placeholder credentials. You'll add real credentia
 
 ### Option B: Create With Existing Infrastructure
 
-If you already ran [Bot Infrastructure Setup guide](guide-bot-infra-creation.md) and have `CLIENT_ID` and `CLIENT_SECRET`:
+If you already ran [Bot Infrastructure Setup guide](guide-create-bot-infra.md) and have `CLIENT_ID` and `CLIENT_SECRET`:
 
 ```bash
 teams project new typescript MyBot \
@@ -136,7 +136,7 @@ If you created the project without credentials, connect it to your bot infrastru
 
 ### Locate Your Credentials
 
-From [Bot Infrastructure Setup guide](guide-bot-infra-creation.md), you should have a `.env` file with:
+From [Bot Infrastructure Setup guide](guide-create-bot-infra.md), you should have a `.env` file with:
 ```
 CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 CLIENT_SECRET=your-secret-value
@@ -240,23 +240,15 @@ Bot endpoint: http://localhost:3978/api/messages
 
 Your bot needs to be accessible from the internet for Teams to send messages to it.
 
-**Recommended: Microsoft devtunnels**
-```bash
-devtunnel create
-devtunnel port create 3978 --protocol auto
-devtunnel host --anonymous
-```
-
-**Important:** Use port `3978` (default Teams SDK port), protocol `auto`, and `--anonymous` flag for proper bot communication.
-
-This gives you a public URL like: `https://your-tunnel.devtunnels.ms`
+**For tunnel setup instructions**, see the [Bot Infrastructure Setup guide - Step 3: Set Up Bot Endpoint](guide-create-bot-infra.md#step-3-set-up-bot-endpoint). This covers:
+- Creating a persistent devtunnel (recommended)
+- Alternative options (ngrok, existing endpoints)
+- Proper configuration (port 3978, protocol auto, anonymous access)
 
 **Update your bot endpoint** (if you already created infrastructure):
 ```bash
-teams app update <teamsAppId> --endpoint "https://your-tunnel.devtunnels.ms/api/messages"
+teams app update <teamsAppId> --endpoint "https://<tunnel-id>.devtunnels.ms/api/messages"
 ```
-
-**Alternative:** Use ngrok (`ngrok http 3978`)
 
 ---
 
@@ -264,7 +256,7 @@ teams app update <teamsAppId> --endpoint "https://your-tunnel.devtunnels.ms/api/
 
 ### Install in Teams
 
-If you completed [Bot Infrastructure Setup guide](guide-bot-infra-creation.md), you have an install link.
+If you completed [Bot Infrastructure Setup guide](guide-create-bot-infra.md), you have an install link.
 
 **Get the install link:**
 ```bash
@@ -325,7 +317,7 @@ After modifying code:
 ## Next Steps
 
 **Set up SSO (Single Sign-On):**
-- See the [SSO Setup guide](guide-sso-setup.md) to enable silent authentication
+- See the [SSO Setup guide](guide-setup-sso.md) to enable silent authentication
 - Users won't need to log in separately
 
 **Add advanced features:**
