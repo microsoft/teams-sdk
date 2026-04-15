@@ -93,7 +93,7 @@ const config: Config = {
             {
                 hashed: true,
                 language: ['en'],
-                docsRouteBasePath: ['/', '/typescript', '/csharp', '/python', '/cli'],
+                docsRouteBasePath: ['/', '/typescript', '/csharp', '/python'],
                 indexDocs: true,
                 indexPages: true,
                 highlightSearchTermsOnTargetPage: true,
@@ -112,13 +112,6 @@ const config: Config = {
                 src: 'img/teams.png',
             },
             items: [
-                {
-                    type: 'doc',
-                    docId: 'index',
-                    docsPluginId: 'cli',
-                    position: 'left',
-                    label: 'CLI',
-                },
                 {
                     href: 'https://github.com/microsoft/teams-sdk/tree/main',
                     position: 'right',
@@ -147,10 +140,6 @@ const config: Config = {
                         {
                             label: 'Python',
                             to: '/python/getting-started',
-                        },
-                        {
-                            label: 'CLI',
-                            to: '/cli',
                         },
                         {
                             label: 'Privacy policy',
