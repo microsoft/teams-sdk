@@ -4,10 +4,31 @@ on:
   pull_request:
       branches:
         - main
-      paths:
-        - 'teams.md/**'
 
 jobs:
+  build-cli:
+    name: Build & Test CLI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CLI
+        run: npx turbo build --filter=@microsoft/teams.cli
+
+      - name: Test CLI
+        run: npx turbo test --filter=@microsoft/teams.cli
+
   build-teams-md:
     name: Build teams.md
     runs-on: ubuntu-latest
@@ -22,9 +43,15 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies (teams.md)
+      - name: Install dependencies
         run: npm ci
-        working-directory: teams.md
+
+      - name: Build CLI (for docs generation)
+        run: npx turbo build --filter=@microsoft/teams.cli
+
+      - name: Generate CLI command docs
+        working-directory: packages/cli
+        run: npm run docs:generate
 
       - name: Clear build artifacts
         working-directory: teams.md

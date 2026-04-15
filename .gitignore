@@ -32,6 +32,10 @@ teams.md/docs/main/typescript/
 teams.md/docs/main/csharp/
 teams.md/docs/main/python/
 
+# CLI test artifacts
+packages/cli/test-results/
+packages/cli/.testenv
+
 
 # Debug
 npm-debug.log*
