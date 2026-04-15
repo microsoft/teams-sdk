@@ -1,0 +1,204 @@
+# =============================================================================
+# This pipeline publishes npm packages. Manually triggered only.
+# - Internal: publishes unsigned packages to the internal TeamsSDKPreviews feed.
+# - Public: publishes signed packages to npm via ESRP (requires approval).
+# =============================================================================
+
+trigger: none
+
+pr: none
+
+parameters:
+- name: publishType
+  displayName: 'Publish Type'
+  type: string
+  default: 'Internal'
+  values:
+  - Internal
+  - Public
+
+variables:
+- group: TeamsSDK-Release
+
+resources:
+  repositories:
+  - repository: 1esPipelines
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
+extends:
+  template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
+  parameters:
+    pool:
+      name: 1ES-Teams-Windows-2022-DomoreexpGithub
+      os: windows
+    stages:
+    - stage: build
+      displayName: Build and Test
+      jobs:
+      - job: build_test
+        pool:
+          name: 1ES-Teams-Windows-2022-DomoreexpGithub
+          os: windows
+        templateContext:
+          isReleaseJob: true
+        variables:
+          ob_outputDirectory: '$(Build.SourcesDirectory)/out'
+          ob_git_fetchTags: true
+          ob_sdl_binskim_break: true
+          ob_git_fetchDepth: -1
+
+        steps:
+        - checkout: self
+          displayName: 'Checkout'
+          fetchDepth: 0
+          target:
+            container: host
+
+        - task: NodeTool@0
+          displayName: 'Use Node 24.x'
+          inputs:
+            versionSpec: '24.x'
+            checkLatest: true
+          target:
+            container: host
+
+        - task: UseDotNet@2
+          displayName: 'Use .NET SDK'
+          inputs:
+            packageType: 'sdk'
+            version: '8.x'
+          target:
+            container: host
+
+        - powershell: |
+            # Install nbgv
+            dotnet tool install -g nbgv
+            Write-Host "##vso[task.prependpath]$env:USERPROFILE\.dotnet\tools"
+            nbgv --version
+
+            # Set cloud build number and variables (resolves detached HEAD in ADO)
+            nbgv cloud
+          displayName: 'Install nbgv and set cloud build version'
+          target:
+            container: host
+
+        # Always use internal feed for dependency resolution (avoids firewall issues on 1ES pool)
+        - task: CmdLine@2
+          displayName: 'Configure npm registry'
+          inputs:
+            script: |
+              echo always-auth=true >> .npmrc
+              echo registry=https://pkgs.dev.azure.com/DomoreexpGithub/Github_Pipelines/_packaging/TeamsSDKPreviews/npm/registry/ >> .npmrc
+          target:
+            container: host
+
+        - task: NpmAuthenticate@0
+          displayName: 'Authenticate npm registry'
+          inputs:
+            workingFile: .npmrc
+          target:
+            container: host
+
+        - task: Npm@1
+          displayName: 'npm ci'
+          inputs:
+            command: ci
+            verbose: true
+          target:
+            container: host
+
+        - script: npm run build
+          displayName: 'npm build'
+          target:
+            container: host
+
+        - script: npm test
+          displayName: 'npm test'
+          continueOnError: false
+          target:
+            container: host
+
+        - powershell: |
+            Write-Host "Stamping package versions from nbgv..."
+            npm run version:stamp
+
+            # Get version from nbgv and set NpmTag
+            $version = (npm run version:get --silent).Trim()
+            Write-Host "Version from nbgv: $version"
+            Write-Host "##vso[task.setvariable variable=VersionNumber]$version"
+
+            # If version contains '-' it's a prerelease, use 'next' tag; otherwise 'latest'
+            if ($version -match '-') {
+              Write-Host "Prerelease version detected - using 'next' npm tag"
+              Write-Host "##vso[task.setvariable variable=NpmTag]next"
+            } else {
+              Write-Host "Stable version detected - using 'latest' npm tag"
+              Write-Host "##vso[task.setvariable variable=NpmTag]latest"
+            }
+          displayName: 'Stamp package versions (nbgv)'
+          env:
+            PublicRelease: 'true'
+          target:
+            container: host
+
+        - powershell: |
+            New-Item -ItemType Directory -Force -Path ./out
+
+            Get-ChildItem -Path packages -Directory | ForEach-Object {
+              $packageJsonPath = "$($_.FullName)/package.json"
+              if (Test-Path $packageJsonPath) {
+                $packageJson = Get-Content $packageJsonPath | ConvertFrom-Json
+                if ($packageJson.private -eq $true) {
+                  Write-Host "Skipping $($_.Name) (marked as private)"
+                } else {
+                  Write-Host "Packing $($_.Name)..."
+                  Set-Location $_.FullName
+                  npm pack --pack-destination ../../out
+                  Set-Location ../..
+                }
+              }
+            }
+
+            Write-Host "`nFiles to publish:"
+            Get-ChildItem ./out
+          displayName: 'npm pack (excluding private packages)'
+          target:
+            container: host
+
+        # Publish to internal npm feed (Azure Artifacts)
+        - powershell: |
+            Get-ChildItem ./out -Filter *.tgz | ForEach-Object {
+              Write-Host "Publishing $($_.Name) to internal feed..."
+              npm publish $_.FullName --tag $(NpmTag)
+            }
+          displayName: 'Publish packages to internal npm feed'
+          condition: and(succeeded(), eq('${{ parameters.publishType }}', 'Internal'))
+          target:
+            container: host
+
+        # Publish to npm via ESRP
+        - task: EsrpRelease@10
+          displayName: 'Publish packages to npm via ESRP'
+          condition: and(succeeded(), eq('${{ parameters.publishType }}', 'Public'))
+          inputs:
+            connectedservicename: 'TeamsESRP-Release-Npm'
+            usemanagedidentity: true
+            keyvaultname: 'esrp-teams'
+            signcertname: '37a342c7-607b-474f-a41f-b772450e461d'
+            clientid: '37a342c7-607b-474f-a41f-b772450e461d'
+            intent: 'packagedistribution'
+            contenttype: 'npm'
+            contentsource: 'Folder'
+            folderlocation: '$(Build.SourcesDirectory)/out'
+            waitforreleasecompletion: true
+            serviceendpointurl: 'https://api.esrp.microsoft.com'
+            owners: $(Release.Owners)
+            approvers: $(Release.Approvers)
+            mainpublisher: 'ESRPRELPACMAN'
+            domaintenantid: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+            productState: $(NpmTag)
+            releasetitle: 'Teams SDK $(VersionNumber)'
+          target:
+            container: host
