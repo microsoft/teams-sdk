@@ -1,72 +1,62 @@
 # Agent Skills
 
-Agent skills are specialized assistants in Claude Code that help with specific workflows. Invoke them using slash commands (e.g., `/teams-dev`) or by describing your task in natural language.
+The Teams CLI ships with an agent skill that lets AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) manage your Teams bot infrastructure on your behalf. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
 
----
+## Install the `teams-dev` skill
 
-## teams-dev
+```bash
+npx skills add microsoft/teams-sdk --skill teams-dev
+```
 
-Create and manage Microsoft Teams bots using guided workflows for development, infrastructure setup, SSO configuration, and troubleshooting.
+To install all Teams CLI skills at once:
 
-### How to use
+```bash
+npx skills add microsoft/teams-sdk
+```
 
-**Slash command:**
+## What the skill covers
+
+The `teams-dev` skill guides your AI assistant through:
+
+| Task | What it does |
+|---|---|
+| **Create bot infrastructure** | Runs `teams app create`, saves credentials to `.env` |
+| **Scaffold bot code** | Runs `teams project new` for TypeScript, C#, or Python |
+| **Integrate existing server** | Adds Teams to Express, Flask, or FastAPI apps |
+| **Set up SSO** | Configures AAD app, OAuth connection, and manifest |
+| **Troubleshoot** | Diagnoses sideload, auth, and SSO errors |
+| **Update endpoint** | Runs `teams app update` when your tunnel URL changes |
+
+The skill does **not** cover hosting, deployment, or bot application logic — only infrastructure management.
+
+## Invoke the skill
+
+**Claude Code:**
 ```
 /teams-dev
 ```
 
-**Natural language:**
-- "Help me create a new Teams bot"
-- "Set up SSO for my bot"
-- "Integrate Teams into my Express server"
-- "My bot won't sideload in Teams"
+**Other agents:** Ask naturally — "create a Teams bot", "set up Teams bot infrastructure", or "configure Teams bot credentials". The skill loads automatically when the agent detects a relevant request.
 
-### What it does
-
-**Bot Development**
-- Scaffold new bot projects (TypeScript, C#, Python)
-- Choose templates: echo bot, AI bot, Graph bot
-- Integrate Teams into existing Express/Flask/FastAPI servers
-
-**Infrastructure**
-- Create Teams-managed bots
-- Register bots with Azure
-- Generate and save credentials securely
-- Update bot endpoints (for ngrok/devtunnels changes)
-
-**SSO & Authentication**
-- Migrate bots to Azure (when needed)
-- Configure AAD app registration
-- Set up OAuth connections
-- Update Teams manifests
-
-**Troubleshooting**
-- Diagnose sideloading issues
-- Fix authentication errors
-- Resolve SSO configuration problems
-- Debug bot migration issues
-
-### Prerequisites
-
-- **Teams CLI** - Install and authenticate with `teams login`
-- **Azure CLI** - Required for SSO setup, authenticate with `az login`
-- **Development tunnel** - ngrok or devtunnels for local testing
-
-### Example workflow
+## Example session
 
 ```
-User: /teams-dev create a new TypeScript AI bot
+You: Create a Teams bot called echo-agent with endpoint https://abc123.ngrok.io/api/messages
 
-Claude: I'll help you create a new Teams AI bot. Let me guide you through
-the bot application development process.
-
-First, I'll check that you have the Teams CLI installed and you're
-authenticated...
+Agent: [runs teams login → teams app create → saves .env → verifies credentials]
+       Done. Your bot is registered. Credentials written to .env:
+       CLIENT_ID=...
+       CLIENT_SECRET=...
+       TENANT_ID=...
 ```
 
-### Additional resources
+## Requirements
 
-- [Teams CLI Documentation](../index.md)
-- [Teams SDK Documentation](https://microsoft.github.io/teams-sdk/welcome)
-- [Microsoft Teams Platform](https://learn.microsoft.com/en-us/microsoftteams/platform/)
-- [Dev Tunnels Setup](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/get-started)
+- Teams CLI installed (`npm install -g @microsoft/teams.cli`)
+- Node.js 20 or later
+- Microsoft 365 account with sideloading enabled
+
+## Resources
+
+- [Quickstart: Register your app](/get-started/quickstart-register) — the manual version of what the skill automates
+- [Agent Skills standard](https://agentskill.sh/) — how skills work across different AI coding assistants
