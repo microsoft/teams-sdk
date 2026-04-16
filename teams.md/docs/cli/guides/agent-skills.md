@@ -1,6 +1,6 @@
 # Agent Skills
 
-The Teams CLI ships with an agent skill that lets AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) manage your Teams bot infrastructure on your behalf. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
+The Teams CLI is a command-line tool for managing Microsoft Teams bots. The `teams-dev` skill is the go-to agent skill for Teams bot development — it lets AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) use the Teams CLI on your behalf. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
 
 ## Install the `teams-dev` skill
 
