@@ -30,9 +30,10 @@ The skill does **not** cover hosting or deployment — it focuses on bot registr
 ## Invoke the skill
 
 **Using natural language** (all agents including Claude Code):
-- "Create a Teams bot"
-- "Set up Teams bot infrastructure"
-- "Configure Teams bot credentials"
+- "I need a chatbot for my team's standup meetings"
+- "Help me build a bot that can answer FAQs"
+- "My bot won't load in Teams, can you help?"
+- "Add SSO to my existing bot"
 
 The skill loads automatically when your agent detects a relevant request.
 
