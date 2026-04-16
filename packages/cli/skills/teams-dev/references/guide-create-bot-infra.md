@@ -21,7 +21,7 @@ teams --version
 Install the Teams CLI using npm:
 
 ```bash
-npm install -g @microsoft/teams.cli@2.1.0-preview.3
+npm install -g @microsoft/teams.cli@preview
 ```
 
 **After installation:**
