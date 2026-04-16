@@ -120,8 +120,6 @@ the bot application development process.
 
 First, I'll check that you have the Teams CLI installed and you're
 authenticated...
-
-[Follows guide-create-bot-app.md workflow]
 ```
 
 ### Example 2: Fix sideloading issue
@@ -129,10 +127,8 @@ authenticated...
 ```
 User: My bot won't sideload in Teams, getting an error
 
-Claude: I'll help troubleshoot your sideloading issue. Let me check the
-troubleshooting guide for common solutions.
-
-[Follows troubleshooting.md to diagnose the issue]
+Claude: I'll help troubleshoot your sideloading issue. Let me check for
+common solutions and diagnose the problem.
 ```
 
 ## Important notes
@@ -144,31 +140,20 @@ Before using the teams-dev skill, ensure you have:
 - **Azure CLI** (for SSO setup) authenticated (`az login`)
 - **Development tunnel** (ngrok or devtunnels) for local testing
 
-### Structured guidance
-
-The skill uses reference guides that provide step-by-step workflows. These guides are:
-- `guide-create-bot-app.md` — Bot application development
-- `guide-create-bot-infra.md` — Infrastructure setup
-- `guide-integrate-existing-server.md` — Existing server integration
-- `guide-setup-sso.md` — SSO configuration
-- `troubleshooting.md` — Common issues and solutions
-
-The skill follows these guides to ensure consistent, validated workflows.
-
 ### Skill limitations
 
 The teams-dev skill:
-- Uses only information from its reference guides and linked documentation
-- Does not perform arbitrary web searches
+- Provides step-by-step guided workflows for common tasks
 - Validates prerequisites before starting complex workflows
 - May prompt for required information (app IDs, resource groups, etc.)
+- Uses trusted documentation sources for accurate guidance
 
 ## Getting help
 
 If you encounter issues or have questions:
 - Ask the skill for help: "How do I troubleshoot X?"
 - Use `teams app doctor` to validate your bot configuration
-- Check the [troubleshooting guide](../concepts/troubleshooting.md) for common issues
+- Consult the Teams CLI documentation for additional guidance
 
 ## Additional resources
 
