@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -73,10 +74,11 @@ describe('--json validation (offline)', () => {
     ]);
 
     it('rejects non-PNG file with INVALID_ICON error', () => {
-      writeFileSync('/tmp/vitest-icon-fake.txt', 'not a png');
+      const fakePath = join(tmpdir(), 'vitest-icon-fake.txt');
+      writeFileSync(fakePath, 'not a png');
 
       const { data, exitCode } = runJson(
-        `${CLI} app update some-app-id --color-icon /tmp/vitest-icon-fake.txt --json`
+        `${CLI} app update some-app-id --color-icon "${fakePath}" --json`
       );
       expect(exitCode).toBe(1);
       expect((data as Record<string, unknown>).error).toBeDefined();
@@ -86,10 +88,11 @@ describe('--json validation (offline)', () => {
     });
 
     it('rejects PNG with wrong dimensions', () => {
-      writeFileSync('/tmp/vitest-icon-1x1.png', PNG_1X1);
+      const pngPath = join(tmpdir(), 'vitest-icon-1x1.png');
+      writeFileSync(pngPath, PNG_1X1);
 
       const { data, exitCode } = runJson(
-        `${CLI} app update some-app-id --color-icon /tmp/vitest-icon-1x1.png --json`
+        `${CLI} app update some-app-id --color-icon "${pngPath}" --json`
       );
       expect(exitCode).toBe(1);
       const error = (data as Record<string, { code: string; message: string }>).error;
@@ -98,8 +101,9 @@ describe('--json validation (offline)', () => {
     });
 
     it('rejects missing icon file', () => {
+      const missingPath = join(tmpdir(), 'vitest-nonexistent-icon.png');
       const { data, exitCode } = runJson(
-        `${CLI} app update some-app-id --color-icon /tmp/vitest-nonexistent-icon.png --json`
+        `${CLI} app update some-app-id --color-icon "${missingPath}" --json`
       );
       expect(exitCode).toBe(1);
       const error = (data as Record<string, { code: string; message: string }>).error;
@@ -108,10 +112,11 @@ describe('--json validation (offline)', () => {
     });
 
     it('rejects wrong dimensions for outline icon (expects 32x32)', () => {
-      writeFileSync('/tmp/vitest-icon-1x1-outline.png', PNG_1X1);
+      const outlinePath = join(tmpdir(), 'vitest-icon-1x1-outline.png');
+      writeFileSync(outlinePath, PNG_1X1);
 
       const { data, exitCode } = runJson(
-        `${CLI} app update some-app-id --outline-icon /tmp/vitest-icon-1x1-outline.png --json`
+        `${CLI} app update some-app-id --outline-icon "${outlinePath}" --json`
       );
       expect(exitCode).toBe(1);
       const error = (data as Record<string, { code: string; message: string }>).error;
