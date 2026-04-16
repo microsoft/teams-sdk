@@ -1,0 +1,56 @@
+import { ChatPrompt } from '@microsoft/teams.ai';
+import { App } from '@microsoft/teams.apps';
+import { DevtoolsPlugin } from '@microsoft/teams.dev';
+import { McpClientPlugin } from "@microsoft/teams.mcpclient";
+import { OpenAIChatModel } from '@microsoft/teams.openai';
+import { ConsoleLogger } from '@microsoft/teams.common';
+
+const logger = new ConsoleLogger('mcp-client', { level: 'debug' });
+const app = new App({
+  plugins: [
+    new DevtoolsPlugin(),
+  ],
+  logger,
+});
+
+const prompt = new ChatPrompt(
+  {
+    instructions:
+      "You are a helpful assistant. You MUST use tool calls to do all your work.",
+    model: new OpenAIChatModel({
+      apiKey: process.env.AZURE_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
+      endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+      apiVersion: process.env.AZURE_OPENAI_API_VERSION,
+      model: process.env.AZURE_OPENAI_MODEL_DEPLOYMENT_NAME!,
+    }),
+    logger
+  },
+  // Tell the prompt that the plugin needs to be used
+  // Here you may also pass in additional configurations such as
+  // a tool-cache, which can be used to limit the tools that are used
+  // or improve performance
+  [new McpClientPlugin({ logger })],
+)
+  .usePlugin("mcpClient", {
+    url: "http://my-remote-mcp-server.com/mcp/sse",
+    // Optional parameters to pass in
+    params: {
+      headers: {
+        // If your server requires authentication, you can pass in Bearer or other
+        // authentication headers here
+        "special-auth-token": 'Bearer 123',
+      },
+    },
+  });
+
+app.on('message', async ({ send, activity }) => {
+  await send({ type: 'typing' });
+  const result = await prompt.send(activity.text);
+  if (result.content) {
+    await send(result.content);
+  }
+});
+
+(async () => {
+  await app.start();
+})();

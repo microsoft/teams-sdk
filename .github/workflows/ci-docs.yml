@@ -1,11 +1,13 @@
-name: CI
+name: CI - Docs
 
 on:
   pull_request:
-      branches:
-        - main
-      paths:
-        - 'teams.md/**'
+    branches:
+      - main
+    paths:
+      - 'teams.md/**'
+      - 'packages/cli/src/commands/**'
+      - 'packages/cli/scripts/generate-command-docs.ts'
 
 jobs:
   build-teams-md:
@@ -22,9 +24,15 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies (teams.md)
+      - name: Install dependencies
         run: npm ci
-        working-directory: teams.md
+
+      - name: Build CLI (for docs generation)
+        run: npx turbo build --filter=@microsoft/teams.cli
+
+      - name: Generate CLI command docs
+        working-directory: packages/cli
+        run: npm run docs:generate
 
       - name: Clear build artifacts
         working-directory: teams.md

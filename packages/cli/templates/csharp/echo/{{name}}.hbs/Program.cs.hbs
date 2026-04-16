@@ -1,0 +1,17 @@
+using Microsoft.Teams.Apps.Activities;
+using Microsoft.Teams.Apps.Extensions;
+using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+using Microsoft.Teams.Plugins.AspNetCore.DevTools.Extensions;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.AddTeams().AddTeamsDevTools();
+var app = builder.Build();
+var teams = app.UseTeams();
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    await context.Typing(cancellationToken);
+    await context.Send($"you said '{context.Activity.Text}'", cancellationToken);
+});
+
+app.Run();

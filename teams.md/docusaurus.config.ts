@@ -47,6 +47,20 @@ const config: Config = {
     ],
     scripts: [path.join(baseUrl, '/scripts/clarity.js')],
 
+    plugins: [
+        [
+            '@docusaurus/plugin-content-docs',
+            {
+                id: 'cli',
+                path: 'docs/cli',
+                routeBasePath: 'cli',
+                sidebarPath: './sidebars-cli.ts',
+                sidebarCollapsed: false,
+                editUrl: 'https://github.com/microsoft/teams-sdk/tree/main/teams.md/',
+            },
+        ],
+    ],
+
     presets: [
         [
             'classic',
