@@ -3,6 +3,6 @@
   "version": "2.1-beta.{height}",
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release$"
+    "^refs/heads/preview$"
   ]
 }

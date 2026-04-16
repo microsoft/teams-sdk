@@ -6,23 +6,23 @@ This project uses [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.Gi
 
 - Versions are computed automatically from git history based on `version.json`
 - **Main branch**: `2.1.X-beta` (early development, published with `beta` npm tag)
-- **Release branch**: `2.1.X-preview` (vetted releases, published with `preview` npm tag)
+- **Preview branch**: `2.1.X-preview` (vetted previews, published with `preview` npm tag)
 
 ## Creating a Release
 
-1. **Create a branch from `release`** and merge `main` into it:
+1. **Create a branch from `preview`** and merge `main` into it:
    ```bash
-   git checkout -b prep-release/<next-version> release
+   git checkout -b prep-preview/<next-version> preview
    git merge origin/main
    ```
    - Set `version.json` to `"2.1-preview.{height}"` (change `-beta` to `-preview`)
    - Commit and push
 
-2. **Create a PR to `release`** (base: `release`, compare: `prep-release/<next-version>`):
+2. **Create a PR to `preview`** (base: `preview`, compare: `prep-preview/<next-version>`):
    - The PR will include all changes from main plus the version suffix change
    - Get teammate approval and merge
 
-3. **Trigger the release pipeline** for the `release` branch with **Public** publish type
+3. **Trigger the publish pipeline** for the `preview` branch with **Public** publish type
 
 4. **Bump the version on main** for the next release cycle (if needed):
    - Edit `version.json` on main
@@ -33,19 +33,19 @@ This project uses [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.Gi
 
 To fix a bug in a released version without including new beta changes:
 
-1. **Consider if a normal release would work instead** - merging main to release includes all updates and is simpler. Only use a hotfix if you need to exclude beta changes from main.
+1. **Consider if a normal preview would work instead** - merging main to preview includes all updates and is simpler. Only use a hotfix if you need to exclude beta changes from main.
 
-2. **Create a branch from `release`**:
+2. **Create a branch from `preview`**:
    ```bash
-   git checkout release
+   git checkout preview
    git checkout -b hotfix/fix-description
    ```
 
 3. **Make your fix and commit**
 
-4. **Create a PR to `release`**, get approval, and merge
+4. **Create a PR to `preview`**, get approval, and merge
 
-5. **Trigger the release pipeline**
+5. **Trigger the publish pipeline**
 
 6. **Cherry-pick the fix back to main**:
    ```bash
