@@ -2,6 +2,38 @@ import type * as Preset from '@docusaurus/preset-classic';
 import type { Config } from '@docusaurus/types';
 import path from 'node:path';
 import { themes as prismThemes } from 'prism-react-renderer';
+import { toString } from 'mdast-util-to-string';
+
+// Remark plugin: exports cleaned text content from each blog post MDX as `rawContent`
+function remarkBlogRawContent() {
+    return (tree: any) => {
+        const text = toString(tree);
+        tree.children.push({
+            type: 'mdxjsEsm',
+            value: '',
+            data: {
+                estree: {
+                    type: 'Program',
+                    sourceType: 'module',
+                    body: [{
+                        type: 'ExportNamedDeclaration',
+                        specifiers: [],
+                        source: null,
+                        declaration: {
+                            type: 'VariableDeclaration',
+                            kind: 'const',
+                            declarations: [{
+                                type: 'VariableDeclarator',
+                                id: { type: 'Identifier', name: 'rawContent' },
+                                init: { type: 'Literal', value: text, raw: JSON.stringify(text) },
+                            }],
+                        },
+                    }],
+                },
+            },
+        });
+    };
+}
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 const baseUrl = '/teams-sdk/';
@@ -65,7 +97,18 @@ const config: Config = {
         [
             'classic',
             {
-                blog: false,
+                blog: {
+                    routeBasePath: 'blog',
+                    blogTitle: 'Teams SDK Blog',
+                    blogDescription: 'Updates, announcements, and guides from the Teams SDK team',
+                    blogSidebarTitle: 'Recent posts',
+                    blogSidebarCount: 'ALL',
+                    showReadingTime: true,
+                    editUrl: 'https://github.com/microsoft/teams-sdk/tree/main/teams.md/',
+                    onInlineAuthors: 'ignore',
+                    onUntruncatedBlogPosts: 'ignore',
+                    remarkPlugins: [remarkBlogRawContent],
+                },
                 docs: {
                     routeBasePath: '/',
                     path: 'docs/main',
@@ -112,6 +155,11 @@ const config: Config = {
                 src: 'img/teams.png',
             },
             items: [
+                {
+                    to: '/blog',
+                    label: 'Blog',
+                    position: 'left',
+                },
                 {
                     href: 'https://github.com/microsoft/teams-sdk/tree/main',
                     position: 'right',
@@ -160,7 +208,7 @@ const config: Config = {
                         },
                         {
                             label: 'Blog',
-                            href: 'https://devblogs.microsoft.com/microsoft365dev/announcing-the-updated-teams-ai-library-and-mcp-support/',
+                            to: '/blog',
                         },
                         {
                             label: 'Teams agent accelerator templates',
