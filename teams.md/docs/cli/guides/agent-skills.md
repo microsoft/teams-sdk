@@ -17,8 +17,10 @@ Add the marketplace (first time only):
 
 Install the skill:
 ```
-/plugin install teams-dev@teams-sdk
+/plugin install teams-sdk@teams-skills
 ```
+
+After installing, restart GitHub Copilot for the skills to load.
 
 </TabItem>
 <TabItem value="claude" label="Claude Code">
@@ -30,8 +32,10 @@ Add the marketplace (first time only):
 
 Install the skill:
 ```
-/plugin install teams-dev@teams-sdk
+/plugin install teams-sdk@teams-skills
 ```
+
+After installing, restart Claude Code for the skills to load.
 
 </TabItem>
 <TabItem value="vscode" label="VS Code">
