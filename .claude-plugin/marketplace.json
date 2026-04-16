@@ -9,7 +9,7 @@
       "name": "teams-sdk",
       "description": "Create and manage Microsoft Teams bots using the Teams CLI. Covers bot application development (scaffolding bot code), infrastructure setup (bot registration, credentials), SSO configuration, and troubleshooting.",
       "category": "development",
-      "source": "./packages/cli/plugins/teams-sdk",
+      "source": "./plugins/teams-sdk",
       "homepage": "https://github.com/microsoft/teams-sdk"
     }
   ]
