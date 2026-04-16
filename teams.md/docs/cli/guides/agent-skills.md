@@ -34,17 +34,16 @@ Install the skill:
 ```
 
 </TabItem>
-<TabItem value="cursor" label="Cursor">
+<TabItem value="other" label="Other Agents">
 
-Add the marketplace (first time only):
-```
-/plugin marketplace add microsoft/teams-sdk
+Clone the repository and copy the skill to your agent's skills directory:
+
+```bash
+git clone https://github.com/microsoft/teams-sdk.git
+cp -r teams-sdk/packages/cli/skills/teams-dev ~/.your-agent/skills/
 ```
 
-Install the skill:
-```
-/plugin install teams-dev@teams-sdk
-```
+Refer to your agent's documentation for specific installation instructions.
 
 </TabItem>
 </Tabs>
