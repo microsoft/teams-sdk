@@ -109,13 +109,13 @@ extends:
           target:
             container: host
 
-        - script: npm run build
-          displayName: 'npm build'
+        - powershell: npx turbo build --filter="./packages/*" --force
+          displayName: 'Build packages'
           target:
             container: host
 
-        - script: npm test
-          displayName: 'npm test'
+        - powershell: npx turbo test --filter="./packages/*"
+          displayName: 'Test packages'
           continueOnError: false
           target:
             container: host
