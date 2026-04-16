@@ -62,4 +62,4 @@ Agent: [runs teams login → teams app create → saves .env → verifies creden
 ## Resources
 
 - [Quickstart: Register your app](/get-started/quickstart-register) — the manual version of what the skill automates
-- [Agent Skills standard](https://agentskill.sh/) — how skills work across different AI coding assistants
+- [Agent Skills standard](https://agentskills.io/what-are-skills) — how skills work across different AI coding assistants
