@@ -29,12 +29,17 @@ The skill does **not** cover hosting or deployment — it focuses on bot registr
 
 ## Invoke the skill
 
-**Claude Code:**
+**Using natural language** (all agents including Claude Code):
+- "Create a Teams bot"
+- "Set up Teams bot infrastructure"
+- "Configure Teams bot credentials"
+
+The skill loads automatically when your agent detects a relevant request.
+
+**Claude Code shortcut:**
 ```
 /teams-dev
 ```
-
-**Other agents:** Ask naturally — "create a Teams bot", "set up Teams bot infrastructure", or "configure Teams bot credentials". The skill loads automatically when the agent detects a relevant request.
 
 ## Example session
 
