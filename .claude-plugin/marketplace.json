@@ -1,14 +1,15 @@
 {
-  "name": "teams-sdk",
+  "name": "teams",
   "owner": {
     "name": "Microsoft",
     "url": "https://github.com/microsoft"
   },
   "plugins": [
     {
-      "name": "teams-dev",
+      "name": "teams-sdk",
       "description": "Create and manage Microsoft Teams bots using the Teams CLI. Covers bot application development (scaffolding bot code), infrastructure setup (bot registration, credentials), SSO configuration, and troubleshooting.",
-      "source": "packages/cli/skills/teams-dev",
+      "category": "development",
+      "source": "./packages/cli/plugins/teams-sdk",
       "homepage": "https://github.com/microsoft/teams-sdk"
     }
   ]
