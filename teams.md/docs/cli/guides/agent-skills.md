@@ -1,6 +1,6 @@
 # Agent Skills
 
-The `teams-dev` skill is the go-to agent skill for Teams bot development. It lets AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
+The `teams-dev` skill is the go-to [agent skill](https://agentskills.io/what-are-skills) for Teams bot development. It lets AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
 
 ## Install the `teams-dev` skill
 
@@ -105,6 +105,3 @@ Agent: I'll create an echo bot for you.
 - Node.js 20 or later
 - Microsoft 365 account with sideloading enabled
 
-## Resources
-
-- [Agent Skills standard](https://agentskills.io/what-are-skills) — how skills work across different AI coding assistants
