@@ -46,26 +46,21 @@ The skill loads automatically when your agent detects a relevant request.
 ```
 You: Help me create a Teams bot that echoes what I'm saying back to me
 
-Agent: I'll help you create an echo bot. Let me set up the infrastructure,
-       create the bot code, and get your development environment running.
+Agent: I'll create an echo bot for you.
 
-       Step 1: Creating bot infrastructure
-       [runs teams login → teams app create]
-       ✓ Bot registered. Credentials saved to .env
+       [checks teams CLI installation and authentication]
+       [creates development tunnel: https://abc123.ngrok.io]
+       [runs teams app create with endpoint]
+       ✓ Bot registered, credentials saved to .env
 
-       Step 2: Setting up bot code
-       [runs teams project new typescript echo-bot --template echo]
-       ✓ Created echo-bot/ with TypeScript starter code
+       [runs teams project new typescript echo-bot -t echo]
+       ✓ Bot code created in ./echo-bot
 
-       Step 3: Setting up local dev environment
-       [runs npm install → starts dev server]
-       ✓ Bot running on http://localhost:3978
-       ✓ Tunnel created: https://abc123.ngrok.io
+       [installs dependencies and starts bot server]
+       ✓ Bot running at http://localhost:3978
 
-       Step 4: Install in Teams
-       ✓ Ready to install: https://teams.microsoft.com/l/app/[app-id]
-
-       Your echo bot is ready! Click the link above to add it to Teams.
+       Your bot is ready! Install it in Teams:
+       https://teams.microsoft.com/l/app/[app-id]
 ```
 
 ## Requirements
