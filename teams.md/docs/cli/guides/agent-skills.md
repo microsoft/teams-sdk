@@ -4,14 +4,24 @@ The `teams-dev` skill is the go-to agent skill for Teams bot development. It let
 
 ## Install the `teams-dev` skill
 
-```bash
-npx skills add microsoft/teams-sdk --skill teams-dev
+The skill is located in the `packages/cli/skills/teams-dev` folder of this repository.
+
+### Claude Code
+
+```
+/plugin microsoft/teams-sdk/packages/cli/skills/teams-dev
 ```
 
-To install all Teams CLI skills at once:
+### GitHub Copilot
 
-```bash
-npx skills add microsoft/teams-sdk
+```
+/plugin microsoft/teams-sdk/packages/cli/skills/teams-dev
+```
+
+### Cursor
+
+```
+/plugin microsoft/teams-sdk/packages/cli/skills/teams-dev
 ```
 
 ## What the skill covers
