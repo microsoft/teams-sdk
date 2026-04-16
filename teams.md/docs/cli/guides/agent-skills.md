@@ -71,36 +71,9 @@ The skill loads automatically when your agent detects a relevant request.
 
 **Direct invocation:**
 
-<Tabs>
-<TabItem value="copilot" label="GitHub Copilot CLI">
-
-```
-/plugin teams-dev@teams-sdk
-```
-
-</TabItem>
-<TabItem value="claude" label="Claude Code">
-
 ```
 /teams-dev
 ```
-
-</TabItem>
-<TabItem value="vscode" label="VS Code">
-
-```
-@teams-dev
-```
-
-</TabItem>
-<TabItem value="cursor" label="Cursor">
-
-```
-@teams-dev
-```
-
-</TabItem>
-</Tabs>
 
 ## Example session
 
