@@ -61,7 +61,7 @@ const sendTargetedNotification = async (conversationId: string, recipient: Accou
 
 <!-- to-thread-id-method-name -->
 
-`toThreadId()`
+`toThreadedConversationId()`
 
 <!-- app-send-method-name -->
 
@@ -80,8 +80,8 @@ await app.reply(conversationId, 'Hello!');
 <!-- threading-helper-example -->
 
 ```typescript
-import { toThreadId } from '@microsoft/teams.apps';
+import { toThreadedConversationId } from '@microsoft/teams.apps';
 
-const threadId = toThreadId(conversationId, messageId);
+const threadId = toThreadedConversationId(conversationId, messageId);
 await app.send(threadId, 'Sent via helper');
 ```

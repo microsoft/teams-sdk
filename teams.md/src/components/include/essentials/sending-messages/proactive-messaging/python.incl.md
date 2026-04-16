@@ -56,7 +56,7 @@ async def send_targeted_notification(conversation_id: str, recipient: Account):
 
 <!-- to-thread-id-method-name -->
 
-`to_thread_id()`
+`to_threaded_conversation_id()`
 
 <!-- app-send-method-name -->
 
@@ -75,8 +75,8 @@ await app.reply(conversation_id, "Hello!")
 <!-- threading-helper-example -->
 
 ```python
-from microsoft_teams.apps import to_thread_id
+from microsoft_teams.apps import to_threaded_conversation_id
 
-thread_id = to_thread_id(conversation_id, message_id)
+thread_id = to_threaded_conversation_id(conversation_id, message_id)
 await app.send(thread_id, "Sent via helper")
 ```

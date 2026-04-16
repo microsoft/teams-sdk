@@ -58,7 +58,7 @@ public static async Task SendTargetedNotification(string conversationId, Account
 
 <!-- to-thread-id-method-name -->
 
-`Conversation.ToThreadId()`
+`Conversation.ToThreadedConversationId()`
 
 <!-- app-send-method-name -->
 
@@ -79,6 +79,6 @@ await app.Reply(conversationId, "Hello!");
 ```csharp
 using Microsoft.Teams.Api;
 
-var threadId = Conversation.ToThreadId(conversationId, messageId);
+var threadId = Conversation.ToThreadedConversationId(conversationId, messageId);
 await app.Send(threadId, "Sent via helper");
 ```
