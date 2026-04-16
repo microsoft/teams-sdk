@@ -1,15 +1,20 @@
 ---
-sidebar_position: 2
-summary: Describe how to deploy the Azure Bot Service resource required for Teams bot apps
+sidebar_position: 3
+summary: Set up an Entra App Registration and Azure Bot Service resource for production Teams bot apps.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Manual Configuration
+# Azure Configuration
 
-If you prefer manually configuring the resources on Azure, and do not want to follow the automated process, you can follow the following guide.
+For production and enterprise setups, you may need full control over your Azure resources rather than using the Teams CLI's automated path. This guide walks through creating an Entra App Registration and Azure Bot Service resource manually.
+
 As described in the [Core Concepts](../core-concepts) article, the main things required are an App Registration and an Azure Bot.
+
+:::tip Using the Teams CLI instead?
+For local development and prototyping, `teams app create --azure` handles this automatically. See [Quickstart: Register your app](../get-started/quickstart-register.md).
+:::
 
 ## Requirements
 

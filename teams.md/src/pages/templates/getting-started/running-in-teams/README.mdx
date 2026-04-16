@@ -1,13 +1,23 @@
 ---
 sidebar_position: 3
 title: 'Running in Teams'
-summary: Guide to deploying and testing your locally running agent in Microsoft Teams using the Microsoft 365 Agents Toolkit.
+summary: Guide to deploying and testing your locally running agent in Microsoft Teams using the Teams CLI or Microsoft 365 Agents Toolkit.
 llms: ignore
 ---
 
 # Running In Teams
 
-Now that you completed [the quickstart](../quickstart) and your agent is running locally, let's deploy it to Microsoft Teams for testing. This guide will walk you through the process.
+Now that you completed [Local Setup](../quickstart) and your agent is running locally, let's deploy it to Microsoft Teams for testing.
+
+There are two ways to get your agent into Teams:
+
+| | [Teams CLI](/get-started/quickstart-register) | Microsoft 365 Agents Toolkit |
+|---|---|---|
+| **Best for** | Quick sideload, CI/CD, no IDE required | VS Code debugging with full provisioning |
+| **How it works** | `teams app create` + `teams app manifest upload` | VS Code extension handles tunnel, manifest, and sideload |
+| **Azure required** | No (Teams-managed) or Yes (Azure bot) | No (local dev uses devtunnel + M365) |
+
+The rest of this guide covers the **Agents Toolkit** path. For the CLI path, see [Quickstart: Register your app](/get-started/quickstart-register).
 
 ## Microsoft 365 Agents Toolkit
 
@@ -96,7 +106,7 @@ If you want to monitor the activities and events in your app, you can still use 
 
 For deployment and resource management we recommend the Microsoft 365 Agents Toolkit. For authentication-related issues, refer to our [Authentication Troubleshooting](/teams/app-authentication/troubleshooting) guide.
 
-If you prefer to set everything up by hand, follow our [Manual Configuration](/teams/configuration/manual-configuration) guide. The Teams SDK itself doesn't handle deployment or Azure resources, so you'll need to rely on the general [Microsoft Teams deployment documentation](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview) for in-depth help.
+If you need full control over your Azure resources, follow our [Azure Configuration](/teams/azure-configuration) guide. The Teams SDK itself doesn't handle deployment or Azure resources, so you'll need to rely on the general [Microsoft Teams deployment documentation](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview) for in-depth help.
 
 ## Next steps
 

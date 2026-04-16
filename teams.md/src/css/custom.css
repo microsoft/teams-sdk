@@ -304,6 +304,54 @@
   }
 }
 
+/* ==========================================================================
+   COPY FOR LLM BUTTON
+   ========================================================================== */
+
+.llm-copy-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.llm-copy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-family: var(--ifm-font-family-base);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-button-border-radius);
+  background: transparent;
+  color: var(--ifm-color-emphasis-600);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+
+.llm-copy-button:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.llm-copy-button:focus {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.llm-copy-button--copied {
+  border-color: var(--ifm-color-success, #00a86b);
+  color: var(--ifm-color-success, #00a86b);
+}
+
+.llm-copy-button--copied:hover {
+  border-color: var(--ifm-color-success, #00a86b);
+  color: var(--ifm-color-success, #00a86b);
+  background: transparent;
+}
+
 /* Mobile responsiveness for LanguageDropdown */
 @media (max-width: 768px) {
   .language-dropdown .navbar__link {

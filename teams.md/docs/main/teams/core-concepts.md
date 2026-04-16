@@ -5,7 +5,7 @@ summary: Understand Teams app architecture including app registration, Azure Bot
 
 # Teams Core Concepts
 
-When you run your agent on Teams using Microsoft 365 Agents Toolkit, several Teams-specific processes happen behind the scenes. Understanding these components will help you better debug and deploy your agents. Obviously, all these processes can be done manually, but Agents Toolkit automates them for you.
+When you run your agent on Teams, several platform-specific processes happen behind the scenes. Understanding these components will help you better debug and deploy your agents.
 
 ## Basic Flow
 
@@ -97,7 +97,7 @@ Before your agent can interact with Teams, it needs to be properly registered an
 
 - Creates an App ID (i.e. Client ID) in the Teams platform
 - Sets up a bot registration with the Bot Framework
-- Creates a client secret that your agent can use to authenticate to be able to send and receive messages. Agents Toolkit will automatically get this value and store it in the `.env` file for you.
+- Creates a client secret that your agent can use to authenticate to send and receive messages — written to `.env` automatically when using the Teams CLI (`teams app create`)
 
 ### Azure Bot
 
@@ -115,4 +115,4 @@ Sideloading needs to be enabled in your tenant. If this is not the case, then yo
 
 ## Provisioning and Deployment
 
-To test your app in Teams, you will at minimum need to have a provisioned Azure bot. You are likely to have other provisionied resources such as storage. Please see the Microsoft Learn [Provision cloud resources](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/provision) documentation for provisioning and deployment using Visual Studio Code and to a container service.
+To test your app in Teams, you will at minimum need to have a provisioned Azure bot. The Teams CLI handles this in a single command — see [Quickstart: Register your app](../get-started/quickstart-register) for the full walkthrough. For production Azure setups with full resource control, see [Azure Configuration](azure-configuration).

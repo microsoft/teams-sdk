@@ -17,4 +17,8 @@ preventing you from needing to deploy/register the app or expose a public endpoi
 - **Inspect**: Inspect incoming and outgoing activities on DevTools' Activity page. All activity on your agent logged here, including messages, reactions, and more.
 - **Cards**: Use the Cards page to visually design and test your cards.
 
-Continue on to the next pages to learn more about the features available in DevTools.
+## What's in this section
+
+- [Chat](chat) — interact with your agent locally without sideloading into Teams
+- [Inspect](inspect) — view and filter all incoming and outgoing activity payloads
+- [Cards](cards) — design and test Adaptive Cards with a live card designer

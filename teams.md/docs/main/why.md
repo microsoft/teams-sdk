@@ -137,3 +137,10 @@ block-beta
 ```
 
 As you can see, there are a lot of moving parts to building a Teams agent application. This is where the SDK comes in. The SDK abstracts away all of the boilerplate code and provides you with a simple interface to work with. It handles all the authentication, routing, and event handling for you, so you can focus on building your application.
+
+---
+
+## Ready to build?
+
+- [Quickstart: Register your app](get-started/quickstart-register) — set up your bot infrastructure with the Teams CLI
+- [Quickstart: Build your first bot](get-started/quickstart-build) — write your first message handler in TypeScript, C#, or Python
