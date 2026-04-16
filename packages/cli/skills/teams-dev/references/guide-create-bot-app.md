@@ -14,7 +14,7 @@ This guide walks through creating a new Microsoft Teams bot application using th
 teams --version
 ```
 
-**Expected:** Version number displayed (e.g., `1.0.0` or similar)
+**Expected:** Version number displayed (e.g., `2.1.0-preview.3` or similar)
 
 **If not installed:** See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) for installation instructions.
 
