@@ -113,6 +113,13 @@ const config: Config = {
             },
             items: [
                 {
+                    type: 'doc',
+                    docId: 'index',
+                    docsPluginId: 'cli',
+                    position: 'left',
+                    label: 'CLI',
+                },
+                {
                     href: 'https://github.com/microsoft/teams-sdk/tree/main',
                     position: 'right',
                     className: 'header-github-link',

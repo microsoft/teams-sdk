@@ -4,54 +4,16 @@ summary: Welcome guide to Teams SDK, covering the quickstart process and how to 
 llms: ignore
 ---
 
-import LangLink from '@site/src/components/LangLink';
-
 # 👋 Welcome
 
-Teams SDK is a suite of packages used to develop on Microsoft Teams. Rebuilt from the ground up with improved developer experience in mind, it's never been easier to build powerful agents and applications for the hundreds of millions Microsoft Teams users.
+Teams SDK is a suite of packages for building agents and applications on Microsoft Teams. Rebuilt from the ground up with developer experience in mind, it handles authentication, event routing, and Teams-specific plumbing so you can focus on your app’s logic.
 
-## Quickstart
+## What you can build
 
-The Teams CLI makes it easy to bootstrap your first agent. Using `npx @microsoft/teams.cli` you can get started using these commands:
+Whether you are building AI-powered agents, message extensions, embedded web applications, or Graph integrations, Teams SDK has you covered across TypeScript, C#, and Python.
 
-**TypeScript:**
+## Get started
 
-```bash
-npx @microsoft/teams.cli@latest new typescript quote-agent --template echo
-```
-
-**C#:**
-
-```bash
-npx @microsoft/teams.cli@latest new csharp quote-agent --template echo
-```
-
-**Python:**
-
-```bash
-npx @microsoft/teams.cli@latest new python quote-agent --template echo
-```
-
-## Overview
-
-Microsoft Teams has a robust developer ecosystem with a broad suite of capabilities, now unified via Teams SDK. Whether you are building <LangLink to="in-depth-guides/ai">AI-powered agents</LangLink>, <LangLink to="in-depth-guides/message-extensions">message extensions</LangLink>, embedded web applications, or Graph, Teams SDK has you covered.
-
-## ⭐ What's new?
-
-### Streamlined Developer Experience
-
-We’ve refined the developer experience so you can concentrate on building your app’s logic — not wrestling with integrations.
-
-### Effortless Integration
-
-We’ve simplified complex integration workflows to help you deliver a richer, more seamless user experience.
-
-### Accelerate Your Workflow
-
-Get your application up and running in under 30 seconds with our lightning-fast CLI—so you can spend more time on what really matters.
-
-## 🔎 Navigation Tips
-
-We encourage you to use the left sidebar to navigate to your desired section.
-
-Can't find what you're searching for? Use the search button above.
+- [Quickstart: Register your app](get-started/quickstart-register) — set up bot infrastructure with the Teams CLI
+- [Quickstart: Build your first bot](get-started/quickstart-build) — write your first message handler in TypeScript, C#, or Python
+- [Why an SDK?](why) — understand what the SDK handles for you

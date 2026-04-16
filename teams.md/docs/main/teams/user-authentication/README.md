@@ -78,3 +78,10 @@ The following table provides a clear comparison between OAuth and SSO authentica
 | User Experience                                        | Requires explicit signin, and consent to scopes                                    | Re-use existing Teams credential. Only requires consent to scopes                                                                                                        |
 | Conversation scopes (`personal`, `groupChat`, `teams`) | `personal` scope only                                                              | `personal` scope only                                                                                                                                                    |
 | Azure Configuration differences                        | Same configuration except `Token Exchange URL` is blank                            | Same configuration except `Token Exchange URL` is set                                                                                                                    |
+
+---
+
+## What's next
+
+- [SSO Setup](sso-setup) — step-by-step guide to configuring Single Sign-On for your Teams app
+- [Troubleshooting SSO](troubleshooting-sso) — common issues and solutions

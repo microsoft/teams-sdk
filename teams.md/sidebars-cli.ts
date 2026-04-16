@@ -14,6 +14,7 @@ export default {
         'getting-started/installation',
         'getting-started/authentication',
         'getting-started/quickstart',
+        'getting-started/skills',
       ],
     },
     {
