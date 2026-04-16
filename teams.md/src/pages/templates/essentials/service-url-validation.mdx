@@ -11,24 +11,33 @@ The Teams SDK validates that incoming `serviceUrl` values belong to known domain
 
 ## How it works
 
-When your bot receives an activity from the Bot Framework Channel Service, the activity includes a `serviceUrl` field that tells the SDK where to send responses. The SDK validates this URL against a built-in allowlist of known domains before making any outbound requests.
+When your bot receives an activity from the Bot Framework Channel Service, the activity includes a `serviceUrl` field that tells the SDK where to send responses. The SDK validates this URL against allowed hostnames from the configured cloud environment before making any outbound requests.
 
-### Default allowed domains
+### Allowed hostnames by cloud
 
-| Domain | Environment |
+Each cloud environment preset includes the allowed service URL hostnames for that cloud:
+
+| Cloud | Allowed hostnames |
 |---|---|
-| `*.botframework.com` | Public cloud (all channels: DirectLine, WebChat, SMS, Slack, etc.) |
-| `smba*.trafficmanager.net` | Teams public cloud |
-| `*.botframework.azure.us` | US Government channels |
-| `*.teams.microsoft.com` | Government Community Cloud (GCC) |
-| `*.teams.microsoft.us` | GCC-High / DoD |
-| `*.botframework.azure.cn` | China (21Vianet) channels |
-| `*.teams.microsoftonline.cn` | China Teams |
-| `localhost` / `127.0.0.1` | Local development |
+| Public (default) | `smba.trafficmanager.net`, `smba.onyx.prod.teams.trafficmanager.net`, `smba.infra.gcc.teams.microsoft.com` |
+| US Gov (GCCH) | `smba.infra.gov.teams.microsoft.us` |
+| US Gov DoD | `smba.infra.dod.teams.microsoft.us` |
+| China (21Vianet) | `frontend.botapi.msg.infra.teams.microsoftonline.cn` |
+| `localhost` / `127.0.0.1` | Always allowed for local development |
+
+If your bot is configured for a sovereign cloud, only that cloud's hostnames are allowed by default.
 
 ## Adding custom domains
 
-If your bot receives activities from a channel with a service URL outside the default allowlist, you can add additional domain suffixes:
+If your bot receives activities from a service URL outside the cloud preset's allowlist (e.g., sovereign clouds without presets, non-Teams channels, or custom environments), you can add additional domains.
+
+Sovereign cloud FQDNs that require `additionalAllowedDomains`:
+
+| Environment | FQDN |
+|---|---|
+| France (Bleu) | `smba.teams.sovcloud-core.fr` |
+| EagleX | `frontend.botapi.msg.infra.teams.eaglex.ic.gov` |
+| SCloud | `frontend.botapi.msg.infra.teams.microsoft.scloud` |
 
 <LanguageInclude section="adding-custom-domains" />
 
