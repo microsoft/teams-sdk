@@ -20,12 +20,10 @@ The `teams-dev` skill guides your AI assistant through:
 
 | Task | What it does |
 |---|---|
-| **Create bot infrastructure** | Register your bot with Teams, generate and save authentication credentials |
-| **Create bot application** | Set up a new bot project with starter code in TypeScript, C#, or Python |
-| **Integrate existing server** | Add Teams bot capabilities to your existing Express, Flask, or FastAPI application |
+| **Manage bot infrastructure** | Register your bot with Teams, manage credentials, and update configuration |
+| **Develop Teams bot** | Build bot applications from scratch or add Teams capabilities to existing servers |
 | **Set up SSO** | Enable Single Sign-On so users can authenticate seamlessly without login prompts |
 | **Troubleshoot** | Diagnose and resolve common bot setup and configuration issues |
-| **Update endpoint** | Change your bot's messaging endpoint when your development tunnel URL changes |
 
 The skill does **not** cover hosting, deployment, or bot application logic — only infrastructure management.
 
