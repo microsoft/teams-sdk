@@ -25,7 +25,7 @@ The `teams-dev` skill guides your AI assistant through:
 | **Set up SSO** | Enable Single Sign-On so users can authenticate seamlessly without login prompts |
 | **Troubleshoot** | Diagnose and resolve common bot setup and configuration issues |
 
-The skill does **not** cover hosting, deployment, or bot application logic — only infrastructure management.
+The skill does **not** cover hosting or deployment — it focuses on bot registration, development setup, and configuration.
 
 ## Invoke the skill
 
