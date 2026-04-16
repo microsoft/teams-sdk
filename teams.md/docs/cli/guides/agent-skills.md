@@ -1,0 +1,105 @@
+# [Agent Skills](https://agentskills.io/what-are-skills)
+
+The `teams-dev` skill is the go-to agent skill for Teams bot development. It gives AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) relevant context to assist in developing Teams bots and use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
+
+## Install the `teams-dev` skill
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+<TabItem value="copilot" label="GitHub Copilot CLI">
+
+Add the marketplace (first time only):
+```
+/plugin marketplace add microsoft/teams-sdk
+```
+
+Install the skill:
+```
+/plugin install teams-dev@teams-sdk
+```
+
+</TabItem>
+<TabItem value="claude" label="Claude Code">
+
+Add the marketplace (first time only):
+```
+/plugin marketplace add microsoft/teams-sdk
+```
+
+Install the skill:
+```
+/plugin install teams-dev@teams-sdk
+```
+
+</TabItem>
+<TabItem value="vscode" label="VS Code">
+
+See [VS Code Agent Skills documentation](https://code.visualstudio.com/docs/copilot/customization/agent-skills#_use-shared-skills) for installation instructions.
+
+</TabItem>
+<TabItem value="cursor" label="Cursor">
+
+See [Cursor Skills documentation](https://cursor.com/docs/skills#installing-skills-from-github) for installation instructions.
+
+</TabItem>
+</Tabs>
+
+## What the skill covers
+
+The `teams-dev` skill guides your AI assistant through:
+
+| Task | What it does |
+|---|---|
+| **Manage bot infrastructure** | Register your bot with Teams, manage credentials, and update configuration |
+| **Develop Teams bot** | Build bot applications from scratch or add Teams capabilities to existing servers |
+| **Set up SSO** | Enable Single Sign-On so users can authenticate seamlessly without login prompts |
+| **Troubleshoot** | Diagnose and resolve common bot setup and configuration issues |
+
+The skill does **not** cover hosting or deployment — it focuses on bot registration, development, and configuration.
+
+## Invoke the skill
+
+**Using natural language:**
+- "I need a chatbot for my team's standup meetings"
+- "Help me build a Teams bot that can answer FAQs"
+- "My bot won't load in Teams, can you help?"
+- "Add the ability to get user profile information to my bot"
+
+The skill loads automatically when your agent detects a relevant request.
+
+**Direct invocation:**
+
+```
+/teams-dev
+```
+
+## Example session
+
+```
+You: Help me create a Teams bot that echoes what I'm saying back to me
+
+Agent: I'll create an echo bot for you.
+
+       [checks teams CLI installation and authentication]
+       [creates development tunnel: https://abc123.ngrok.io]
+       [runs teams app create with endpoint]
+       ✓ Bot registered, credentials saved to .env
+
+       [runs teams project new typescript echo-bot -t echo]
+       ✓ Bot code created in ./echo-bot
+
+       [installs dependencies and starts bot server]
+       ✓ Bot running at http://localhost:3978
+
+       Your bot is ready! Install it in Teams:
+       https://teams.microsoft.com/l/app/[app-id]
+```
+
+## Requirements
+
+- Teams CLI installed (`npm install -g @microsoft/teams.cli@preview`)
+- Node.js 20 or later
+- Microsoft 365 account with sideloading enabled
+
