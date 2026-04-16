@@ -109,12 +109,12 @@ extends:
           target:
             container: host
 
-        - script: npx turbo build --filter='./packages/*'
+        - powershell: npx turbo build --filter="./packages/*" --force
           displayName: 'Build packages'
           target:
             container: host
 
-        - script: npx turbo test --filter='./packages/*'
+        - powershell: npx turbo test --filter="./packages/*"
           displayName: 'Test packages'
           continueOnError: false
           target:
