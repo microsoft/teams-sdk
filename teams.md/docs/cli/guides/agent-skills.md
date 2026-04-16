@@ -34,7 +34,7 @@ Install the skill:
 ```
 
 </TabItem>
-<TabItem value="cursor" label="Cursor">
+<TabItem value="codex" label="Codex">
 
 Add the marketplace (first time only):
 ```
