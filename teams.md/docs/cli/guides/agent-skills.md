@@ -44,7 +44,7 @@ The skill loads automatically when your agent detects a relevant request.
 ## Example session
 
 ```
-You: Create a Teams bot called echo-agent with endpoint https://abc123.ngrok.io/api/messages
+You: Help me create a Teams bot that echoes what I'm saying back to me
 
 Agent: [runs teams login → teams app create → saves .env → verifies credentials]
        Done. Your bot is registered. Credentials written to .env:
