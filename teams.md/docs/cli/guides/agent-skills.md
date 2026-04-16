@@ -4,30 +4,46 @@ The `teams-dev` skill is the go-to agent skill for Teams bot development. It let
 
 ## Install the `teams-dev` skill
 
-The skill is located in the `packages/cli/skills/teams-dev` folder of this repository.
-
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs>
 <TabItem value="claude" label="Claude Code">
 
+Add the marketplace (first time only):
 ```
-/plugin microsoft/teams-sdk/packages/cli/skills/teams-dev
+/plugin marketplace add microsoft/teams-sdk
+```
+
+Install the skill:
+```
+/plugin install teams-dev@teams-sdk
 ```
 
 </TabItem>
-<TabItem value="copilot" label="GitHub Copilot">
+<TabItem value="copilot" label="GitHub Copilot CLI">
 
+Add the marketplace (first time only):
 ```
-/plugin microsoft/teams-sdk/packages/cli/skills/teams-dev
+/plugin marketplace add microsoft/teams-sdk
+```
+
+Install the skill:
+```
+/plugin install teams-dev@teams-sdk
 ```
 
 </TabItem>
 <TabItem value="cursor" label="Cursor">
 
+Add the marketplace (first time only):
 ```
-/plugin microsoft/teams-sdk/packages/cli/skills/teams-dev
+/plugin marketplace add microsoft/teams-sdk
+```
+
+Install the skill:
+```
+/plugin install teams-dev@teams-sdk
 ```
 
 </TabItem>
