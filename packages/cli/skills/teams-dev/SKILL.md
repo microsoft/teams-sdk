@@ -1,7 +1,7 @@
 ---
 name: teams-dev
 description: Create and manage Microsoft Teams bots using the Teams CLI. Covers bot application development (scaffolding bot code), infrastructure setup (bot registration, credentials), SSO configuration, and troubleshooting.
-teams_cli_version: 1.0.62
+teams_cli_version: 2.1.0-preview.3
 ---
 
 # Teams Bot Development & Infrastructure
