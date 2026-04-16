@@ -1,6 +1,6 @@
-# Agent Skills
+# [Agent Skills](https://agentskills.io/what-are-skills)
 
-The `teams-dev` skill is the go-to [agent skill](https://agentskills.io/what-are-skills) for Teams bot development. It lets AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
+The `teams-dev` skill is the go-to agent skill for Teams bot development. It lets AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
 
 ## Install the `teams-dev` skill
 
@@ -8,19 +8,6 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs>
-<TabItem value="claude" label="Claude Code">
-
-Add the marketplace (first time only):
-```
-/plugin marketplace add microsoft/teams-sdk
-```
-
-Install the skill:
-```
-/plugin install teams-dev@teams-sdk
-```
-
-</TabItem>
 <TabItem value="copilot" label="GitHub Copilot CLI">
 
 Add the marketplace (first time only):
@@ -34,7 +21,7 @@ Install the skill:
 ```
 
 </TabItem>
-<TabItem value="codex" label="Codex">
+<TabItem value="claude" label="Claude Code">
 
 Add the marketplace (first time only):
 ```
@@ -45,6 +32,16 @@ Install the skill:
 ```
 /plugin install teams-dev@teams-sdk
 ```
+
+</TabItem>
+<TabItem value="vscode" label="VS Code">
+
+See [VS Code Agent Skills documentation](https://code.visualstudio.com/docs/copilot/customization/agent-skills#_use-shared-skills) for installation instructions.
+
+</TabItem>
+<TabItem value="cursor" label="Cursor">
+
+See [Cursor Skills documentation](https://cursor.com/docs/skills#installing-skills-from-github) for installation instructions.
 
 </TabItem>
 </Tabs>
