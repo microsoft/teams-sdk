@@ -61,18 +61,46 @@ The skill does **not** cover hosting or deployment — it focuses on bot registr
 
 ## Invoke the skill
 
-**Using natural language** (all agents including Claude Code):
+**Using natural language:**
 - "I need a chatbot for my team's standup meetings"
-- "Help me build a bot that can answer FAQs"
+- "Help me build a Teams bot that can answer FAQs"
 - "My bot won't load in Teams, can you help?"
-- "Add SSO to my existing bot"
+- "Add the ability to get user profile information to my bot"
 
 The skill loads automatically when your agent detects a relevant request.
 
-**Claude Code shortcut:**
+**Direct invocation:**
+
+<Tabs>
+<TabItem value="copilot" label="GitHub Copilot CLI">
+
+```
+/plugin teams-dev@teams-sdk
+```
+
+</TabItem>
+<TabItem value="claude" label="Claude Code">
+
 ```
 /teams-dev
 ```
+
+</TabItem>
+<TabItem value="vscode" label="VS Code">
+
+```
+@teams-dev
+```
+
+</TabItem>
+<TabItem value="cursor" label="Cursor">
+
+```
+@teams-dev
+```
+
+</TabItem>
+</Tabs>
 
 ## Example session
 
