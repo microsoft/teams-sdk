@@ -17,7 +17,7 @@ Add the marketplace (first time only):
 
 Install the skill:
 ```
-/plugin install teams-sdk@teams
+/plugin install teams-sdk@teams-skills
 ```
 
 </TabItem>
@@ -30,7 +30,7 @@ Add the marketplace (first time only):
 
 Install the skill:
 ```
-/plugin install teams-sdk@teams
+/plugin install teams-sdk@teams-skills
 ```
 
 </TabItem>
