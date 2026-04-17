@@ -15,7 +15,7 @@ tags: [teams-sdk, agents, langchain, azure-ai, byo-agent]
 description: Your agent is already built. Here's how to surface it in Teams in under 50 lines, without rewriting anything.
 ---
 
-You've already built the agent. It lives somewhere: a LangChain chain, an Azure Foundry deployment, a Slack bot, a Next.js app. Your users live in Teams. This post shows you how to close that gap in under 50 lines.
+You've already built the agent. It lives somewhere: a LangChain chain, an Azure Foundry deployment, a Slack bot, a Next.js app. Your users live in Teams. Here's how to close that gap in under 50 lines.
 
 It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You plug it into your existing Express app, it registers a `POST /api/messages` route by default, and your existing server keeps running as-is. Nothing about your agent changes.
 
@@ -94,7 +94,7 @@ teamsApp.on('message', async ({ send, activity }) => {
 export { expressApp, teamsApp };
 ```
 
-One process, two platforms. Slack hits `/slack/events`, Teams hits `/api/messages`. Any shared agent logic (LLM calls, database lookups, business rules) lives in plain functions that both handlers call.
+Both platforms run in the same process. Slack hits `/slack/events`, Teams hits `/api/messages`, and any shared agent logic (LLM calls, database lookups, business rules) lives in plain functions that both handlers call.
 
 ---
 
@@ -240,7 +240,7 @@ export { expressApp, teamsApp };
 
 You have a Next.js app and want a Teams bot alongside it (same deployment, same codebase). The App Router owns routing, so `ExpressAdapter` won't work. Instead, implement the `IHttpServerAdapter` interface to dispatch into a handler map that the Teams SDK populates.
 
-The `registerRoute` stores the SDK's handler references when the app initializes; `dispatch` pulls the body and headers from the incoming request, looks up the right handler, and returns the response. That's the entire contract.
+The `registerRoute` stores the SDK's handler references when the app initializes; `dispatch` pulls the body and headers from the incoming request, looks up the right handler, and returns the response.
 
 <details>
 <summary><code>lib/nextjs-adapter.ts</code></summary>
@@ -345,4 +345,4 @@ const teamsApp = new App({ httpServerAdapter: adapter });
 teamsApp.on('message', async ({ send, activity }) => { /* your agent */ });
 ```
 
-If you're already running a bot somewhere, the path to Teams is shorter than you think. Full docs at [microsoft.github.io/teams-sdk](https://microsoft.github.io/teams-sdk/python/in-depth-guides/server/http-server/).
+If you're already running a bot somewhere, wiring it into Teams is a few lines of glue code. Full docs at [Self-Managing Your Server](https://microsoft.github.io/teams-sdk/python/in-depth-guides/server/http-server/).
