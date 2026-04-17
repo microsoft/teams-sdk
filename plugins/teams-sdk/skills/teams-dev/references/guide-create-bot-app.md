@@ -91,21 +91,11 @@ All languages support the same template options via `-t, --template <template>`:
 
 ## Step 3: Create the Bot Project
 
-Using the credentials from the [Bot Infrastructure Setup guide](guide-create-bot-infra.md):
-
 ```bash
-teams project new typescript MyBot \
-  -t ai \
-  --client-id "<CLIENT_ID>" \
-  --client-secret "<CLIENT_SECRET>"
+teams project new typescript MyBot -t echo
 ```
 
-**Parameters:**
-- `<name>` - Your bot project name
-- `-t, --template` - Template choice (ai, echo, graph)
-- `--client-id` - Your bot's CLIENT_ID from infrastructure setup
-- `--client-secret` - Your bot's CLIENT_SECRET from infrastructure setup
-- `--json` - **[OPTIONAL]** Output as JSON
+Copy the `.env` file from the [Bot Infrastructure Setup guide](guide-create-bot-infra.md) into the project root.
 
 ---
 
@@ -163,7 +153,7 @@ For code patterns, API reference, and advanced features (adaptive cards, AI inte
 
 **Important:** This SDK is NOT Bot Framework. Do not use `TurnContext`, `context.sendActivity()`, or other Bot Framework patterns. The SDK uses its own event-driven API — see the docs above for correct patterns.
 
-**Tip:** Use compile-time checks to catch mistakes early. For TypeScript, run `npm run build` (tsc). For Python, run `pyright`. Both SDKs are strongly typed — the compiler will flag incorrect API usage before you even run the bot.
+**Tip:** Use compile-time checks to catch mistakes early — both SDKs are strongly typed. For TypeScript, run `tsc --noEmit` to type-check without emitting files. For Python, run `pyright` or a similar type checker. The compiler will flag incorrect API usage before you even run the bot.
 
 ---
 

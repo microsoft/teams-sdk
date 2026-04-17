@@ -2,6 +2,8 @@
 
 This guide walks through setting up the infrastructure for a Microsoft Teams bot: Teams-managed bot, AAD app creation, credentials, and Teams app manifest. **Note:** This creates a Teams-managed bot, not an Azure Bot Service registration. For SSO, you'll need to migrate to Azure-managed later. This creates the bot identity and authentication, but not the bot application code itself (see the [Bot Application Development guide](guide-create-bot-app.md) for that).
 
+**Tip:** Run `teams --help --json` to get the full CLI command tree and discover all available options.
+
 ## 1. Prerequisites Verification
 
 Before creating a Teams bot, verify these prerequisites:
@@ -113,15 +115,10 @@ Now create the Teams-managed bot with infrastructure.
 Execute the following command (replace placeholders):
 
 ```bash
-teams app create --name "YourBotName" --endpoint "https://your-endpoint/api/messages" --json
+teams app create --name "YourBotName" --endpoint "https://your-endpoint/api/messages" --env .env --json
 ```
 
-**Parameters:**
-- `--name`: Your bot's display name (e.g., "Notification Bot", "MyBot")
-- `--endpoint`: The bot messaging endpoint URL
-- `--json`: Output structured JSON (required for parsing)
-
-**Expected:** Command completes successfully and returns JSON output.
+**Expected:** Command completes successfully, writes credentials to `.env`, and returns JSON output.
 
 ### Step 2: Parse JSON Output
 
@@ -143,37 +140,7 @@ The command returns JSON with these fields:
 }
 ```
 
-### Step 3: Save Credentials to .env File
-
-Ask the user: **"Do you already have a .env file for this project?"**
-
-**If YES:**
-- Prompt: "What is the path to your .env file?"
-- Default suggestion: `.env` (current directory)
-- Example paths: `.env`, `./bot/.env`, `../config/.env`
-
-**If NO:**
-- Prompt: "Where should I create the .env file?"
-- Default: `.env` (current directory)
-- Inform: "I'll create a new .env file at this location"
-
-**After getting the path:**
-
-Write the credentials to the .env file using the values from JSON output:
-
-```
-CLIENT_ID=<value-from-json>
-CLIENT_SECRET=<value-from-json>
-TENANT_ID=<value-from-json>
-```
-
-**Instruct the user:**
-
-"Credentials saved to [path]. Your bot application code will use these values to authenticate with Microsoft Teams."
-
-**Important:** If the .env file already exists, replace any existing `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` entries in place with the new values. Append only the keys that are missing. Do not create duplicate entries for these keys, and do not overwrite any other existing values in the file.
-
-### Step 4: Display Install Link
+### Step 3: Display Install Link
 
 Show the install link from the JSON output:
 
