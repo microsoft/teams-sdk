@@ -19,7 +19,7 @@ You've already built the agent. It lives somewhere: a LangChain chain, an Azure 
 
 The unlock is a single pattern from the Teams TypeScript SDK: the **HTTP server adapter**. Instead of running a separate Teams bot server, you plug the Teams SDK into your existing Express app (or any HTTP server) and it registers its own route. Your agent doesn't change. You just add a new listener.
 
-The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically. A Python SDK is also available if that's your stack; the pattern is the same.
+The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically.
 
 <!-- truncate -->
 
@@ -42,158 +42,13 @@ await teamsApp.initialize();   // registers POST /api/messages on your server
 
 The SDK injects a `POST /api/messages` route into your existing Express app. Your server stays yours. The Teams SDK just adds one endpoint.
 
----
-
-## Scenario 1: LangChain
-
-You have a LangChain chain. You want Teams users to talk to it.
-
-**`chain.ts`** (your existing LangChain logic, untouched):
-
-```typescript
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { StringOutputParser } from '@langchain/core/output_parsers';
-
-let _chain: ReturnType<typeof buildChain> | null = null;
-
-function buildChain() {
-  const prompt = ChatPromptTemplate.fromMessages([
-    ['system', 'You are a helpful assistant embedded in Microsoft Teams. Be concise.'],
-    ['human', '{input}'],
-  ]);
-  return prompt.pipe(new ChatOpenAI({ model: 'gpt-4o-mini' })).pipe(new StringOutputParser());
-}
-
-export function getChain() {
-  if (!_chain) _chain = buildChain();
-  return _chain;
-}
-```
-
-**`teams-app.ts`** (the bridge):
-
-```typescript
-import express from 'express';
-import { App, ExpressAdapter } from '@microsoft/teams.apps';
-import { getChain } from './chain';
-
-const expressApp = express();
-const adapter = new ExpressAdapter(expressApp);
-const teamsApp = new App({ httpServerAdapter: adapter });
-
-teamsApp.on('message', async ({ send, activity }) => {
-  await send({ type: 'typing' });
-  const reply = await getChain().invoke({ input: activity.text ?? '' });
-  await send(reply);
-});
-
-export { expressApp, teamsApp };
-```
-
-**`index.ts`** (start it):
-
-```typescript
-import 'dotenv/config';
-import http from 'http';
-import { expressApp, teamsApp } from './teams-app';
-
-await teamsApp.initialize();
-http.createServer(expressApp).listen(3978);
-```
-
-**`.env`:**
-```
-CLIENT_ID=your-teams-bot-client-id
-CLIENT_SECRET=your-teams-bot-client-secret
-TENANT_ID=your-tenant-id
-OPENAI_API_KEY=sk-...
-```
-
-That's the full integration. Your chain runs on every message. The typing indicator fires before the LLM responds so users know something's happening.
+:::tip Python SDK
+A Python SDK is also available. The same adapter pattern applies — pick your stack and follow the same three steps.
+:::
 
 ---
 
-## Scenario 2: Azure AI Foundry
-
-You have an agent deployed in Azure AI Foundry. The Teams SDK gives you the message; you forward it to Foundry and relay the reply.
-
-**`foundry-agent.ts`:**
-
-```typescript
-import { AIProjectClient } from '@azure/ai-projects';
-import { DefaultAzureCredential } from '@azure/identity';
-
-let _client: AIProjectClient | null = null;
-
-function getClient() {
-  if (!_client) {
-    _client = AIProjectClient.fromEndpoint(
-      process.env.AZURE_AI_FOUNDRY_ENDPOINT!,
-      new DefaultAzureCredential(),
-    );
-  }
-  return _client;
-}
-
-export async function askFoundryAgent(userMessage: string): Promise<string> {
-  const client = getClient();
-  const thread = await client.agents.threads.create();
-  await client.agents.messages.create(thread.id, 'user', userMessage);
-
-  const run = await client.agents.runs.createAndPoll(
-    thread.id,
-    process.env.AZURE_AGENT_ID!,
-  );
-
-  if (run.status !== 'completed') throw new Error(`Run ended: ${run.status}`);
-
-  const messages = client.agents.messages.list(thread.id);
-  for await (const msg of messages) {
-    if (msg.role === 'assistant') {
-      return msg.content
-        .filter((c): c is { type: 'text'; text: { value: string } } => c.type === 'text')
-        .map((c) => c.text.value)
-        .join('');
-    }
-  }
-  return 'No response from agent.';
-}
-```
-
-**`teams-app.ts`:**
-
-```typescript
-import express from 'express';
-import { App, ExpressAdapter } from '@microsoft/teams.apps';
-import { askFoundryAgent } from './foundry-agent';
-
-const expressApp = express();
-const adapter = new ExpressAdapter(expressApp);
-const teamsApp = new App({ httpServerAdapter: adapter });
-
-teamsApp.on('message', async ({ send, activity }) => {
-  const reply = await askFoundryAgent(activity.text ?? '');
-  await send(reply);
-});
-
-export { expressApp, teamsApp };
-```
-
-**`.env`:**
-```
-CLIENT_ID=your-teams-bot-client-id
-CLIENT_SECRET=your-teams-bot-client-secret
-TENANT_ID=your-tenant-id
-AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
-AZURE_AGENT_ID=asst_...
-```
-
-`DefaultAzureCredential` resolves credentials from your environment automatically: managed identity on Azure, and environment variables, VS Code, or Azure CLI credentials locally. No single path is required; use whatever fits your setup.
-
----
-
-## Scenario 3: Slack Bot
+## Scenario 1: Slack Bot
 
 You have a Slack bot built with Bolt. Your team uses both Slack and Teams. Rather than maintaining two codebases, run both on the same Express server.
 
@@ -250,13 +105,167 @@ One process, two platforms. Slack hits `/slack/events`, Teams hits `/api/message
 
 ---
 
+## Scenario 2: LangChain
+
+You have a LangChain chain. You want Teams users to talk to it.
+
+<details>
+<summary><code>chain.ts</code> — existing LangChain logic, untouched</summary>
+
+```typescript
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+
+let _chain: ReturnType<typeof buildChain> | null = null;
+
+function buildChain() {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ['system', 'You are a helpful assistant embedded in Microsoft Teams. Be concise.'],
+    ['human', '{input}'],
+  ]);
+  return prompt.pipe(new ChatOpenAI({ model: 'gpt-4o-mini' })).pipe(new StringOutputParser());
+}
+
+export function getChain() {
+  if (!_chain) _chain = buildChain();
+  return _chain;
+}
+```
+
+</details>
+
+**`teams-app.ts`** (the bridge):
+
+```typescript
+import express from 'express';
+import { App, ExpressAdapter } from '@microsoft/teams.apps';
+import { getChain } from './chain';
+
+const expressApp = express();
+const adapter = new ExpressAdapter(expressApp);
+const teamsApp = new App({ httpServerAdapter: adapter });
+
+teamsApp.on('message', async ({ send, activity }) => {
+  await send({ type: 'typing' });
+  const reply = await getChain().invoke({ input: activity.text ?? '' });
+  await send(reply);
+});
+
+export { expressApp, teamsApp };
+```
+
+**`index.ts`** (start it):
+
+```typescript
+import 'dotenv/config';
+import http from 'http';
+import { expressApp, teamsApp } from './teams-app';
+
+await teamsApp.initialize();
+http.createServer(expressApp).listen(3978);
+```
+
+**`.env`:**
+```
+CLIENT_ID=your-teams-bot-client-id
+CLIENT_SECRET=your-teams-bot-client-secret
+TENANT_ID=your-tenant-id
+OPENAI_API_KEY=sk-...
+```
+
+That's the full integration. Your chain runs on every message. The typing indicator fires before the LLM responds so users know something's happening.
+
+---
+
+## Scenario 3: Azure AI Foundry
+
+You have an agent deployed in Azure AI Foundry. The Teams SDK gives you the message; you forward it to Foundry and relay the reply.
+
+<details>
+<summary><code>foundry-agent.ts</code></summary>
+
+```typescript
+import { AIProjectClient } from '@azure/ai-projects';
+import { DefaultAzureCredential } from '@azure/identity';
+
+let _client: AIProjectClient | null = null;
+
+function getClient() {
+  if (!_client) {
+    _client = AIProjectClient.fromEndpoint(
+      process.env.AZURE_AI_FOUNDRY_ENDPOINT!,
+      new DefaultAzureCredential(),
+    );
+  }
+  return _client;
+}
+
+export async function askFoundryAgent(userMessage: string): Promise<string> {
+  const client = getClient();
+  const thread = await client.agents.threads.create();
+  await client.agents.messages.create(thread.id, 'user', userMessage);
+
+  const run = await client.agents.runs.createAndPoll(
+    thread.id,
+    process.env.AZURE_AGENT_ID!,
+  );
+
+  if (run.status !== 'completed') throw new Error(`Run ended: ${run.status}`);
+
+  const messages = client.agents.messages.list(thread.id);
+  for await (const msg of messages) {
+    if (msg.role === 'assistant') {
+      return msg.content
+        .filter((c): c is { type: 'text'; text: { value: string } } => c.type === 'text')
+        .map((c) => c.text.value)
+        .join('');
+    }
+  }
+  return 'No response from agent.';
+}
+```
+
+</details>
+
+**`teams-app.ts`:**
+
+```typescript
+import express from 'express';
+import { App, ExpressAdapter } from '@microsoft/teams.apps';
+import { askFoundryAgent } from './foundry-agent';
+
+const expressApp = express();
+const adapter = new ExpressAdapter(expressApp);
+const teamsApp = new App({ httpServerAdapter: adapter });
+
+teamsApp.on('message', async ({ send, activity }) => {
+  const reply = await askFoundryAgent(activity.text ?? '');
+  await send(reply);
+});
+
+export { expressApp, teamsApp };
+```
+
+**`.env`:**
+```
+CLIENT_ID=your-teams-bot-client-id
+CLIENT_SECRET=your-teams-bot-client-secret
+TENANT_ID=your-tenant-id
+AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
+AZURE_AGENT_ID=asst_...
+```
+
+---
+
 ## Scenario 4: Next.js App
 
 You have a Next.js app and want a Teams bot alongside it (same deployment, same codebase). The App Router owns routing, so `ExpressAdapter` won't work. Instead, implement the `IHttpServerAdapter` interface to dispatch into a handler map that the Teams SDK populates.
 
 The adapter is ~10 lines: `registerRoute` stores the SDK's handler references when the app initializes; `dispatch` pulls the body and headers from the incoming request, looks up the right handler, and returns the response. That's the entire contract.
 
-**`lib/nextjs-adapter.ts`:**
+<details>
+<summary><code>lib/nextjs-adapter.ts</code></summary>
 
 ```typescript
 import type { HttpMethod, IHttpServerAdapter, IHttpServerResponse, HttpRouteHandler } from '@microsoft/teams.apps';
@@ -275,6 +284,8 @@ export class NextjsAdapter implements IHttpServerAdapter {
   }
 }
 ```
+
+</details>
 
 **`lib/teams-app.ts`:**
 
@@ -301,7 +312,8 @@ export async function getAdapter(): Promise<NextjsAdapter> {
 }
 ```
 
-**`app/api/messages/route.ts`:**
+<details>
+<summary><code>app/api/messages/route.ts</code></summary>
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
@@ -323,6 +335,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 ```
 
+</details>
+
 **`.env.local`:**
 ```
 CLIENT_ID=your-teams-bot-client-id
@@ -330,7 +344,7 @@ CLIENT_SECRET=your-teams-bot-client-secret
 TENANT_ID=your-tenant-id
 ```
 
-The `NextjsAdapter` is the custom layer, but everything else is identical to the other scenarios. The Teams SDK doesn't care what's underneath. It just needs something that implements `registerRoute` and handles dispatch.
+The Teams SDK doesn't care what's underneath. It just needs something that implements `registerRoute` and handles dispatch.
 
 ---
 
