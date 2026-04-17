@@ -29,7 +29,6 @@ The SDK docs cover everything: the adapter interface/protocol, step-by-step inte
 **Read the full guide before implementing:**
 - TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/docs_typescript/self-managing-your-server.txt
 - Python: https://microsoft.github.io/teams-sdk/llms_docs/docs_python/self-managing-your-server.txt
-- C#: https://microsoft.github.io/teams-sdk/llms_docs/docs_csharp/self-managing-your-server.txt
 
 ## After Integration
 
