@@ -189,7 +189,7 @@ AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/
 AZURE_AGENT_ID=asst_...
 ```
 
-`DefaultAzureCredential` picks up managed identity automatically when deployed to Azure. In development, you'll need the Azure CLI installed and authenticated (`az login`). No secrets to manage in either environment.
+`DefaultAzureCredential` resolves credentials from your environment automatically — managed identity on Azure, and environment variables, VS Code, or Azure CLI credentials locally. No single path is required; use whatever fits your setup.
 
 ---
 
