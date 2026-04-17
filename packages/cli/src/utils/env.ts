@@ -41,14 +41,41 @@ export function writeEnvFile(filePath: string, values: EnvValues): void {
   fs.writeFileSync(resolvedPath, lines.join('\n').trim() + '\n');
 }
 
+export function writeJsonCredentials(filePath: string, values: EnvValues): void {
+  const resolvedPath = path.resolve(filePath);
+
+  let json: Record<string, unknown> = {};
+  if (fs.existsSync(resolvedPath)) {
+    json = JSON.parse(fs.readFileSync(resolvedPath, 'utf-8'));
+  }
+
+  const existing = (json.Teams as Record<string, unknown>) ?? {};
+  json.Teams = {
+    ...existing,
+    ClientId: values.CLIENT_ID,
+    ClientSecret: values.CLIENT_SECRET,
+    TenantId: values.TENANT_ID,
+  };
+
+  fs.writeFileSync(resolvedPath, JSON.stringify(json, null, 2) + '\n');
+}
+
+export function isJsonFile(filePath: string): boolean {
+  return path.extname(filePath).toLowerCase() === '.json';
+}
+
 export function outputCredentials(
   envPath: string | undefined,
   values: EnvValues,
   successMessage: string
 ): void {
   if (envPath) {
-    const spinner = createSpinner('Writing .env file...').start();
-    writeEnvFile(envPath, values);
+    const spinner = createSpinner('Writing credentials...').start();
+    if (isJsonFile(envPath)) {
+      writeJsonCredentials(envPath, values);
+    } else {
+      writeEnvFile(envPath, values);
+    }
     spinner.success({ text: `Credentials written to ${envPath}` });
 
     logger.info(pc.bold(pc.green(`\n${successMessage}`)));

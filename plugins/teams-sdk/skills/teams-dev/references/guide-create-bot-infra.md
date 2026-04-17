@@ -118,7 +118,9 @@ Execute the following command (replace placeholders):
 teams app create --name "YourBotName" --endpoint "https://your-endpoint/api/messages" --env .env --json
 ```
 
-**Expected:** Command completes successfully, writes credentials to `.env`, and returns JSON output.
+For C# projects, use `--env appsettings.json` instead of `--env .env`. This writes credentials under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
+
+**Expected:** Command completes successfully, writes credentials to the specified file, and returns JSON output.
 
 ### Step 2: Parse JSON Output
 

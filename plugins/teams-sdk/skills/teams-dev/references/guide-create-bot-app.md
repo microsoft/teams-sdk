@@ -37,7 +37,7 @@ Before creating bot code, set up your bot registration and credentials by follow
 - **CLIENT_SECRET** - Bot's authentication secret
 - **TENANT_ID** - Your Microsoft 365 tenant ID
 
-Have your `.env` file or credentials ready before proceeding.
+Have your credentials ready before proceeding (`.env` for TypeScript/Python, `appsettings.json` for C#).
 
 ---
 
@@ -89,7 +89,9 @@ All languages support the same template options via `-t, --template <template>`:
 teams project new typescript MyBot -t echo
 ```
 
-Copy the `.env` file from the [Bot Infrastructure Setup guide](guide-create-bot-infra.md) into the project root.
+Copy credentials from the [Bot Infrastructure Setup guide](guide-create-bot-infra.md) into the project:
+- **TypeScript / Python:** Copy the `.env` file into the project root
+- **C#:** Add a `Teams` section to `appsettings.json` with `ClientId`, `ClientSecret`, and `TenantId` (the `--env appsettings.json` flag does this automatically during infrastructure setup)
 
 ---
 
