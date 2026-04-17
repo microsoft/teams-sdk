@@ -207,30 +207,15 @@ Expected: Connection returned with `properties.parameters` containing `tokenExch
 
 ---
 
-## Step 8: Update the Teams Manifest
+## Step 8: Set webApplicationInfo
 
-Download the current manifest, add the SSO fields, and re-upload.
-
-**Download:**
 ```bash
-teams app manifest download <teamsAppId> manifest.json
+teams app update <teamsAppId> \
+  --web-app-info-id "<botId>" \
+  --web-app-info-resource "api://botid-<botId>"
 ```
 
-**Edit `manifest.json`** — add `webApplicationInfo` at the top level:
-
-```json
-"webApplicationInfo": {
-  "id": "<botId>",
-  "resource": "api://botid-<botId>"
-}
-```
-
-> **Note:** Ensure `*.botframework.com` is in `validDomains` (included by default for CLI-generated manifests, but may be missing in older/manual apps).
-
-**Upload:**
-```bash
-teams app manifest upload manifest.json <teamsAppId>
-```
+This sets the SSO identity fields directly via the API — no manifest download/edit/upload needed, and no app reinstall required.
 
 ---
 
