@@ -23,6 +23,10 @@ The SDK also handles the parts you don't want to think about: it verifies every 
 
 <!-- truncate -->
 
+:::tip Python SDK
+A Python SDK is also available. The same adapter pattern applies with FastAPI and other ASGI frameworks. See [Self-Managing Your Server](/python/in-depth-guides/server/http-server) in the Python docs.
+:::
+
 ## The Pattern
 
 Every example in this post uses the same three-step shape:
@@ -42,8 +46,8 @@ await teamsApp.initialize();   // registers POST /api/messages on your server
 
 The SDK injects a `POST /api/messages` route into your existing Express app. Your server stays yours. The Teams SDK just adds one endpoint.
 
-:::tip Python SDK
-A Python SDK is also available. The same adapter pattern applies with FastAPI and other ASGI frameworks. See [Self-Managing Your Server](/python/in-depth-guides/server/http-server) in the Python docs.
+:::tip Customizable endpoint
+`/api/messages` is the default but not a requirement. You can configure the SDK to register any path as your messaging endpoint.
 :::
 
 ---
