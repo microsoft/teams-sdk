@@ -92,12 +92,6 @@ teamsApp.on('message', async ({ send, activity }) => {
 export { expressApp, teamsApp };
 ```
 
-**`.env`:**
-```
-SLACK_BOT_TOKEN=xoxb-...
-SLACK_SIGNING_SECRET=...
-```
-
 One process, two platforms. Slack hits `/slack/events`, Teams hits `/api/messages`. Any shared agent logic (LLM calls, database lookups, business rules) lives in plain functions that both handlers call.
 
 ---
@@ -161,11 +155,6 @@ import { expressApp, teamsApp } from './teams-app';
 
 await teamsApp.initialize();
 http.createServer(expressApp).listen(3978);
-```
-
-**`.env`:**
-```
-OPENAI_API_KEY=sk-...
 ```
 
 Your chain runs on every message. The typing indicator fires before the LLM responds so users know something's happening.
@@ -239,12 +228,6 @@ teamsApp.on('message', async ({ send, activity }) => {
 });
 
 export { expressApp, teamsApp };
-```
-
-**`.env`:**
-```
-AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
-AZURE_AGENT_ID=asst_...
 ```
 
 ---
