@@ -42,7 +42,7 @@ export const configSetCommand = new Command('set')
         throw new CliError('VALIDATION_FORMAT', `Unknown config key: ${key}. Known keys: ${known}`);
       }
 
-      if (!value && isInteractive()) {
+      if (!value && !options.json && isInteractive()) {
         const current = await getConfig(key);
         const choices = CHOICES[key];
         if (choices) {
@@ -66,7 +66,8 @@ export const configSetCommand = new Command('set')
 
       const error = validateConfig(key, value);
       if (error) {
-        throw new CliError('VALIDATION_FORMAT', error);
+        const friendly = KNOWN_KEYS[key].values.map((v) => displayValue(key, v)).join(', ');
+        throw new CliError('VALIDATION_FORMAT', `Invalid value for ${key}. Must be one of: ${friendly}`);
       }
 
       const current = await getConfig(key);

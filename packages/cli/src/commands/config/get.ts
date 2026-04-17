@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
 import { getConfig, KNOWN_KEYS } from '../../utils/config.js';
-import { wrapAction } from '../../utils/errors.js';
+import { CliError, wrapAction } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
 import { outputJson } from '../../utils/json-output.js';
 import { displayValue } from './display.js';
@@ -23,10 +23,7 @@ export const configGetCommand = new Command('get')
       if (key) {
         if (!KNOWN_KEYS[key]) {
           const known = Object.keys(KNOWN_KEYS).join(', ');
-          throw new (await import('../../utils/errors.js')).CliError(
-            'VALIDATION_FORMAT',
-            `Unknown config key: ${key}. Known keys: ${known}`
-          );
+          throw new CliError('VALIDATION_FORMAT', `Unknown config key: ${key}. Known keys: ${known}`);
         }
 
         const raw = await getConfig(key);
