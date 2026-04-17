@@ -60,9 +60,13 @@ vi.mock('../src/project/paths.js', () => ({
 
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
+  const { join } = await import('node:path');
+  const mockStaticsDir = '/mock/statics';
+  const mockColorPath = join(mockStaticsDir, 'color.png');
+  const mockOutlinePath = join(mockStaticsDir, 'outline.png');
   const mockedReadFileSync = vi.fn((...args: Parameters<typeof actual.readFileSync>) => {
     const filePath = args[0];
-    if (typeof filePath === 'string' && filePath.startsWith('/mock/statics')) {
+    if (typeof filePath === 'string' && (filePath === mockColorPath || filePath === mockOutlinePath)) {
       return Buffer.from('default-icon');
     }
     return actual.readFileSync(...args);
