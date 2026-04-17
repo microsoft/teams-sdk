@@ -714,6 +714,7 @@ button.sdev-blog__plus {
     font-family: 'SFMono-Regular', 'Consolas', monospace;
     white-space: nowrap;
     padding-top: 0.15rem;
+    text-align: right;
 }
 
 .sdev-blog__panel-summary {
