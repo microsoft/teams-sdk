@@ -43,7 +43,7 @@ await teamsApp.initialize();   // registers POST /api/messages on your server
 The SDK injects a `POST /api/messages` route into your existing Express app. Your server stays yours. The Teams SDK just adds one endpoint.
 
 :::tip Python SDK
-A Python SDK is also available. The same adapter pattern applies — pick your stack and follow the same three steps.
+A Python SDK is also available. The same adapter pattern applies; pick your stack and follow the same three steps.
 :::
 
 ---
@@ -107,7 +107,7 @@ One process, two platforms. Slack hits `/slack/events`, Teams hits `/api/message
 You have a LangChain chain. You want Teams users to talk to it.
 
 <details>
-<summary><code>chain.ts</code> — existing LangChain logic, untouched</summary>
+<summary><code>chain.ts</code>: existing LangChain logic, untouched</summary>
 
 ```typescript
 import { ChatOpenAI } from '@langchain/openai';
@@ -334,7 +334,7 @@ The Teams SDK doesn't care what's underneath. It just needs something that imple
 
 ## Registering Your Bot
 
-All four scenarios share the same registration step. First, get a public URL for your local server — [dev tunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) is the recommended option, or [ngrok](https://ngrok.com) works too.
+All four scenarios share the same registration step. First, get a public URL for your local server. [Dev tunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) is the recommended option, or [ngrok](https://ngrok.com) works too.
 
 Then use the Teams SDK CLI to register your bot and write the credentials directly to your `.env`:
 
