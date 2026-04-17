@@ -1,6 +1,11 @@
+import AdmZip from 'adm-zip';
+import fs from 'node:fs';
+import path from 'node:path';
 import type { AppSummary, AppDetails, AppBot } from './types.js';
+import { importAppPackage } from './tdp.js';
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
+import { staticsDir } from '../project/paths.js';
 
 /**
  * Teams app manifest.json structure (subset of fields we care about)
@@ -187,66 +192,6 @@ export async function updateAppDetails(
 }
 
 /**
- * Transform a Teams manifest.json to AppDetails format for API upload.
- */
-function manifestToAppDetails(manifest: TeamsManifest): Partial<AppDetails> {
-  const details: Partial<AppDetails> = {
-    appId: manifest.id,
-    manifestVersion: manifest.manifestVersion,
-    version: manifest.version,
-    shortName: manifest.name.short,
-    longName: manifest.name.full ?? manifest.name.short,
-    shortDescription: manifest.description.short,
-    longDescription: manifest.description.full ?? manifest.description.short,
-    developerName: manifest.developer.name,
-    websiteUrl: manifest.developer.websiteUrl,
-    privacyUrl: manifest.developer.privacyUrl,
-    termsOfUseUrl: manifest.developer.termsOfUseUrl,
-  };
-
-  if (manifest.developer.mpnId) {
-    details.mpnId = manifest.developer.mpnId;
-  }
-
-  if (manifest.accentColor) {
-    details.accentColor = manifest.accentColor;
-  }
-
-  if (manifest.bots) {
-    details.bots = manifest.bots.map((bot) => ({
-      botId: bot.botId,
-      scopes: bot.scopes,
-    }));
-  }
-
-  if (manifest.webApplicationInfo?.id) {
-    details.webApplicationInfoId = manifest.webApplicationInfo.id;
-  }
-
-  // Pass through other manifest fields that map directly
-  const passthroughFields = [
-    'staticTabs',
-    'configurableTabs',
-    'composeExtensions',
-    'permissions',
-    'validDomains',
-    'devicePermissions',
-    'activities',
-    'meetingExtensionDefinition',
-    'authorization',
-    'localizationInfo',
-  ];
-
-  for (const field of passthroughFields) {
-    if (manifest[field] !== undefined) {
-      details[field] = manifest[field];
-    }
-  }
-
-  return details;
-}
-
-/**
  * Upload an icon to a Teams app via TDP.
  * Two-step process: upload bytes, then write the returned URL back to the app definition.
  */
@@ -292,39 +237,47 @@ export async function uploadIcon(
 }
 
 /**
+ * Create a default app package zip with the given manifest and placeholder icons.
+ */
+function createDefaultZip(manifestJson: string): Buffer {
+  const zip = new AdmZip();
+  zip.addFile('manifest.json', Buffer.from(manifestJson, 'utf-8'));
+  zip.addFile('color.png', fs.readFileSync(path.join(staticsDir, 'color.png')));
+  zip.addFile('outline.png', fs.readFileSync(path.join(staticsDir, 'outline.png')));
+  return zip.toBuffer();
+}
+
+/**
  * Upload a manifest.json to update an existing app.
- * Uses read-modify-write pattern to preserve server-side fields.
+ * Downloads the current app package (preserving icons), replaces manifest.json,
+ * and re-imports via TDP's import endpoint with overwrite.
  */
 export async function uploadManifest(
   token: string,
   teamsAppId: string,
-  manifest: TeamsManifest
-): Promise<AppDetails> {
-  // 1. Fetch current app details to preserve server-only fields (icons, etc.)
-  const currentDetails = await fetchAppDetailsV2(token, teamsAppId);
+  manifestJson: string
+): Promise<void> {
+  let zipBuffer: Buffer;
 
-  // 2. Transform manifest to AppDetails format
-  const manifestDetails = manifestToAppDetails(manifest);
-
-  // 3. Merge: manifest fields override, but preserve server-only fields
-  const updatedDetails = { ...currentDetails, ...manifestDetails };
-
-  // 4. POST full object back
-  const response = await apiFetch(`${TDP_BASE_URL}/appdefinitions/v2/${teamsAppId}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(updatedDetails),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Failed to upload manifest: ${response.status} ${response.statusText}\n${errorText}`
-    );
+  try {
+    // Download existing package to preserve icons
+    zipBuffer = await downloadAppPackage(token, teamsAppId);
+  } catch {
+    // No existing package — create fresh zip with default icons
+    await importAppPackage(token, createDefaultZip(manifestJson), true);
+    return;
   }
 
-  return response.json();
+  // Build new zip: copy all entries except manifest.json, then add updated manifest
+  const oldZip = new AdmZip(zipBuffer);
+  const newZip = new AdmZip();
+
+  for (const entry of oldZip.getEntries()) {
+    if (entry.entryName === 'manifest.json') continue;
+    newZip.addFile(entry.entryName, entry.getData(), entry.comment, entry.attr);
+  }
+
+  newZip.addFile('manifest.json', Buffer.from(manifestJson, 'utf-8'));
+
+  await importAppPackage(token, newZip.toBuffer(), true);
 }
