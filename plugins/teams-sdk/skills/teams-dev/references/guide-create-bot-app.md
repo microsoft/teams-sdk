@@ -157,9 +157,9 @@ Look for `installLink` in the output and open it in your browser.
 The scaffolded project's entry point (`src/index.ts` for TypeScript, `src/main.py` for Python) contains inline message handlers. Customize your bot by editing these handlers directly.
 
 For code patterns, API reference, and advanced features (adaptive cards, AI integration, dialogs, proactive messaging, etc.), refer to the SDK docs:
-- TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/docs_typescript/in-depth-guides.txt
-- Python: https://microsoft.github.io/teams-sdk/llms_docs/docs_python/in-depth-guides.txt
-- C#: https://microsoft.github.io/teams-sdk/llms_docs/docs_csharp/in-depth-guides.txt
+- TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript.txt
+- Python: https://microsoft.github.io/teams-sdk/llms_docs/llms_python.txt
+- C#: https://microsoft.github.io/teams-sdk/llms_docs/llms_csharp.txt
 
 **Important:** This SDK is NOT Bot Framework. Do not use `TurnContext`, `context.sendActivity()`, or other Bot Framework patterns. The SDK uses its own event-driven API — see the docs above for correct patterns.
 

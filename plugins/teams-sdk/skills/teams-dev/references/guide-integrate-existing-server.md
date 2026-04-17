@@ -27,8 +27,9 @@ The SDK ships with built-in adapters for common frameworks, but building a custo
 The SDK docs cover everything: the adapter interface/protocol, step-by-step integration, and examples of building custom adapters for other frameworks (Restify for TypeScript, Starlette for Python).
 
 **Read the full guide before implementing:**
-- TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/docs_typescript/self-managing-your-server.txt
-- Python: https://microsoft.github.io/teams-sdk/llms_docs/docs_python/self-managing-your-server.txt
+- TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript.txt
+- Python: https://microsoft.github.io/teams-sdk/llms_docs/llms_python.txt
+- C#: https://microsoft.github.io/teams-sdk/llms_docs/llms_csharp.txt
 
 ## After Integration
 
