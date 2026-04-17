@@ -337,7 +337,7 @@ One command handles AAD app registration, client secret generation, manifest cre
 
 ## The same three lines, every time
 
-Every scenario in this post follows the same shape because the SDK is built around one idea: your server is yours. The adapter is the seam between your existing infrastructure and Teams. Whether you're running Express, a custom Next.js route, or your own adapter, the SDK doesn't care what's underneath — it just needs something that can register a route and handle a request.
+Every scenario in this post follows the same shape because the SDK is built around one idea: your server is yours. The adapter is the seam between your existing infrastructure and Teams. Whether you're running Express, a custom Next.js route, or your own adapter, the SDK doesn't care what's underneath. It just needs something that can register a route and handle a request.
 
 ```typescript
 const adapter = new <YourAdapter>(yourServer); // ExpressAdapter, NextjsAdapter, or your own
