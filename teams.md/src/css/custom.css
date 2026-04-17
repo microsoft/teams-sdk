@@ -706,6 +706,7 @@ button.sdev-blog__plus {
     line-height: 1.6;
     color: var(--ifm-color-emphasis-700);
     margin: 0;
+    text-align: justify;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
