@@ -19,7 +19,7 @@ You've already built the agent. It lives somewhere: a LangChain chain, an Azure 
 
 The unlock is a single pattern from the Teams TypeScript SDK: the **HTTP server adapter**. Instead of running a separate Teams bot server, you plug the Teams SDK into your existing Express app (or any HTTP server) and it registers its own route. Your agent doesn't change. You just add a new listener.
 
-The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically. A Python SDK is also available if that's your stack — the pattern is the same.
+The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically. A Python SDK is also available if that's your stack; the pattern is the same.
 
 <!-- truncate -->
 
@@ -189,7 +189,7 @@ AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/
 AZURE_AGENT_ID=asst_...
 ```
 
-`DefaultAzureCredential` resolves credentials from your environment automatically — managed identity on Azure, and environment variables, VS Code, or Azure CLI credentials locally. No single path is required; use whatever fits your setup.
+`DefaultAzureCredential` resolves credentials from your environment automatically: managed identity on Azure, and environment variables, VS Code, or Azure CLI credentials locally. No single path is required; use whatever fits your setup.
 
 ---
 
@@ -246,13 +246,13 @@ SLACK_BOT_TOKEN=xoxb-...
 SLACK_SIGNING_SECRET=...
 ```
 
-One process, two platforms. Slack hits `/slack/events`, Teams hits `/api/messages`. Any shared agent logic — LLM calls, database lookups, business rules — lives in plain functions that both handlers call.
+One process, two platforms. Slack hits `/slack/events`, Teams hits `/api/messages`. Any shared agent logic (LLM calls, database lookups, business rules) lives in plain functions that both handlers call.
 
 ---
 
 ## Scenario 4: Next.js App
 
-You have a Next.js app and want a Teams bot alongside it — same deployment, same codebase. The App Router owns routing, so `ExpressAdapter` won't work. Instead, implement the `IHttpServerAdapter` interface to dispatch into a handler map that the Teams SDK populates.
+You have a Next.js app and want a Teams bot alongside it (same deployment, same codebase). The App Router owns routing, so `ExpressAdapter` won't work. Instead, implement the `IHttpServerAdapter` interface to dispatch into a handler map that the Teams SDK populates.
 
 The adapter is ~10 lines: `registerRoute` stores the SDK's handler references when the app initializes; `dispatch` pulls the body and headers from the incoming request, looks up the right handler, and returns the response. That's the entire contract.
 
@@ -330,7 +330,7 @@ CLIENT_SECRET=your-teams-bot-client-secret
 TENANT_ID=your-tenant-id
 ```
 
-The `NextjsAdapter` is the custom layer, but everything else is identical to the other scenarios. The Teams SDK doesn't care what's underneath — it just needs something that implements `registerRoute` and handles dispatch.
+The `NextjsAdapter` is the custom layer, but everything else is identical to the other scenarios. The Teams SDK doesn't care what's underneath. It just needs something that implements `registerRoute` and handles dispatch.
 
 ---
 
