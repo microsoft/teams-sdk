@@ -222,6 +222,7 @@ const adapter = new ExpressAdapter(expressApp);
 const teamsApp = new App({ httpServerAdapter: adapter });
 
 teamsApp.on('message', async ({ send, activity }) => {
+  // pass the Teams message to Foundry
   const reply = await askFoundryAgent(activity.text ?? '');
   await send(reply);
 });
