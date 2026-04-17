@@ -337,12 +337,12 @@ One command handles AAD app registration, client secret generation, manifest cre
 
 ## The same three lines, every time
 
-Regardless of which scenario fits your stack, the Teams integration is always:
+Every scenario in this post follows the same shape because the SDK is built around one idea: your server is yours. The adapter is the seam between your existing infrastructure and Teams. Whether you're running Express, a custom Next.js route, or your own adapter, the SDK doesn't care what's underneath — it just needs something that can register a route and handle a request.
 
 ```typescript
-const adapter = new ExpressAdapter(expressApp);
+const adapter = new <YourAdapter>(yourServer); // ExpressAdapter, NextjsAdapter, or your own
 const teamsApp = new App({ httpServerAdapter: adapter });
 teamsApp.on('message', async ({ send, activity }) => { /* your agent */ });
 ```
 
-Nothing about your agent or server changes. You add one listener and Teams users can reach it. The full SDK docs are at [microsoft.github.io/teams-sdk](https://microsoft.github.io/teams-sdk).
+If you're already running a bot somewhere, the path to Teams is shorter than you think. Full docs at [microsoft.github.io/teams-sdk](https://microsoft.github.io/teams-sdk).
