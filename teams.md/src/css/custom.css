@@ -312,16 +312,30 @@
     display: grid;
     grid-template-columns: 260px 1fr;
     min-height: calc(100vh - var(--ifm-navbar-height));
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 2rem;
     gap: 3rem;
 }
 
 /* ── Sidebar ── */
+.sdev-blog {
+    position: relative;
+}
+
+.sdev-blog::before {
+    content: '';
+    position: absolute;
+    left: 260px;
+    top: -200px;
+    bottom: 0;
+    width: 1px;
+    background: var(--ifm-color-emphasis-200);
+    pointer-events: none;
+}
+
 .sdev-blog__sidebar {
     padding: 3rem 0 3rem;
-    border-right: 1px solid var(--ifm-color-emphasis-200);
     padding-right: 2rem;
 }
 
@@ -431,6 +445,7 @@
     height: 1px;
     background: var(--ifm-color-emphasis-200);
     margin-bottom: 1.25rem;
+    margin-right: 1.5rem;
 }
 
 .sdev-blog__filter-group {
@@ -806,8 +821,8 @@ button.sdev-blog__plus {
 }
 
 /* Dark mode tweaks */
-[data-theme='dark'] .sdev-blog__sidebar {
-    border-right-color: var(--ifm-color-emphasis-300);
+[data-theme='dark'] .sdev-blog::before {
+    background: var(--ifm-color-emphasis-300);
 }
 
 [data-theme='dark'] .sdev-blog__divider {
@@ -829,17 +844,18 @@ button.sdev-blog__plus {
 /* Blog post page layout — anchored to .sdev-sidebar__aside so rules apply
    immediately without waiting for the html.blog-post-page class injection */
 
-/* Full-width container */
 .container:has(.sdev-sidebar__aside) {
-    max-width: 100% !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    max-width: 1400px !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
 }
 
 .container:has(.sdev-sidebar__aside) > .row {
     min-height: calc(100vh - var(--ifm-navbar-height) - 4rem);
     align-items: stretch;
     flex-wrap: nowrap !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 /* Main content fills all remaining space */
@@ -857,8 +873,8 @@ button.sdev-blog__plus {
 
 .sdev-sidebar__aside {
     position: relative;
-    flex: 0 0 220px !important;
-    max-width: 220px !important;
+    flex: 0 0 260px !important;
+    max-width: 260px !important;
 }
 
 .sdev-sidebar__aside::after {
@@ -875,7 +891,7 @@ button.sdev-blog__plus {
 .sdev-sidebar {
     position: sticky;
     top: calc(var(--ifm-navbar-height) + 1.5rem);
-    padding: 0 1.5rem 2rem 0;
+    padding: 1rem 1.5rem 2rem 0;
 }
 
 .sdev-sidebar__header {
