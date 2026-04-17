@@ -236,7 +236,7 @@ export { expressApp, teamsApp };
 
 You have a Next.js app and want a Teams bot alongside it (same deployment, same codebase). The App Router owns routing, so `ExpressAdapter` won't work. Instead, implement the `IHttpServerAdapter` interface to dispatch into a handler map that the Teams SDK populates.
 
-The adapter is ~10 lines: `registerRoute` stores the SDK's handler references when the app initializes; `dispatch` pulls the body and headers from the incoming request, looks up the right handler, and returns the response. That's the entire contract.
+`registerRoute` stores the SDK's handler references when the app initializes; `dispatch` pulls the body and headers from the incoming request, looks up the right handler, and returns the response. That's the entire contract.
 
 <details>
 <summary><code>lib/nextjs-adapter.ts</code></summary>
