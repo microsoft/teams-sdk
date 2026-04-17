@@ -8,6 +8,12 @@ import { CliError } from '../../../utils/errors.js';
 import { isAutoConfirm } from '../../../utils/interactive.js';
 import { logger } from '../../../utils/logger.js';
 import { createSilentSpinner } from '../../../utils/spinner.js';
+import { bumpPatchVersion, compareVersions } from '../../../utils/version.js';
+
+export interface UploadResult {
+  version?: string;
+  versionBumped: boolean;
+}
 
 /**
  * Download manifest from an app package. Saves to file or prints to stdout.
@@ -49,15 +55,17 @@ export async function downloadManifest(
 
 /**
  * Upload a local manifest.json to update an existing app.
- * Reads the file, validates it's a Teams manifest, and uploads via TDP API.
- * Throws on failure.
+ * Reads the file, validates it's a Teams manifest, and uploads via TDP import.
+ * Optionally auto-bumps the version if content changed but version didn't.
+ * Returns upload result, or undefined if the user cancelled.
  */
 export async function uploadManifestFromFile(
   token: string,
   teamsAppId: string,
   filePath: string,
-  silent = false
-): Promise<void> {
+  silent = false,
+  autoBumpVersion = true
+): Promise<UploadResult | undefined> {
   const resolved = path.resolve(filePath);
 
   let raw: string;
@@ -105,13 +113,50 @@ export async function uploadManifestFromFile(
     logger.warn(pc.yellow(`Manifest is missing fields: ${missing.join(', ')}`));
     if (!isAutoConfirm()) {
       const proceed = await confirm({ message: 'Upload anyway?', default: false });
-      if (!proceed) return;
+      if (!proceed) return undefined;
+    }
+  }
+
+  // Auto-bump version if enabled and version is parseable
+  let versionBumped = false;
+  if (autoBumpVersion && manifest.version) {
+    try {
+      const packageBuffer = await downloadAppPackage(token, teamsAppId);
+      const zip = new AdmZip(packageBuffer);
+      const serverEntry = zip.getEntry('manifest.json');
+
+      if (serverEntry) {
+        const serverManifest = JSON.parse(serverEntry.getData().toString('utf-8'));
+        const serverVersion: string = serverManifest.version ?? '';
+        const cmp = compareVersions(manifest.version, serverVersion);
+
+        if (cmp === 0) {
+          // Same version — bump if content actually changed
+          const { version: _sv, ...serverCopy } = serverManifest;
+          const { version: _lv, ...localCopy } = manifest;
+          const stableStringify = (obj: unknown) => JSON.stringify(obj, Object.keys(obj as object).sort());
+          const contentChanged = stableStringify(serverCopy) !== stableStringify(localCopy);
+
+          if (contentChanged) {
+            const bumped = bumpPatchVersion(manifest.version);
+            if (bumped) {
+              if (!silent) {
+                logger.info(pc.dim(`Version auto-bumped: ${manifest.version} → ${bumped}`));
+              }
+              manifest = { ...manifest, version: bumped };
+              versionBumped = true;
+            }
+          }
+        }
+      }
+    } catch {
+      // Failed to download/compare (e.g. first upload) — skip auto-bumping
     }
   }
 
   const spinner = createSilentSpinner('Uploading manifest...', silent).start();
   try {
-    await uploadManifest(token, teamsAppId, manifest);
+    await uploadManifest(token, teamsAppId, JSON.stringify(manifest, null, 2));
   } catch (error) {
     spinner.error({ text: 'Upload failed' });
     throw error;
@@ -123,4 +168,6 @@ export async function uploadManifestFromFile(
       pc.green(`Manifest from ${pc.bold(resolved)} applied to app ${pc.bold(teamsAppId)}`)
     );
   }
+
+  return { version: manifest.version, versionBumped };
 }

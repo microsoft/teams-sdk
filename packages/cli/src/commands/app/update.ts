@@ -40,6 +40,8 @@ interface UpdateOptions {
   termsUrl?: string;
   colorIcon?: string;
   outlineIcon?: string;
+  webAppInfoId?: string;
+  webAppInfoResource?: string;
   json?: boolean;
 }
 
@@ -60,6 +62,8 @@ interface AppUpdateOutput {
     termsOfUseUrl?: string;
     colorIcon?: boolean;
     outlineIcon?: boolean;
+    webApplicationInfoId?: string;
+    webApplicationInfoResource?: string;
   };
 }
 
@@ -245,6 +249,8 @@ export const appUpdateCommand = new Command('update')
   .option('--terms-url <url>', '[OPTIONAL] Set the terms of use URL (HTTPS required)')
   .option('--color-icon <path>', '[OPTIONAL] Set the color icon (192x192 PNG)')
   .option('--outline-icon <path>', '[OPTIONAL] Set the outline icon (32x32 PNG)')
+  .option('--web-app-info-id <id>', '[OPTIONAL] Set the webApplicationInfo client ID')
+  .option('--web-app-info-resource <uri>', '[OPTIONAL] Set the webApplicationInfo resource URI (max 100 chars)')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (appIdArg: string | undefined, options: UpdateOptions) => {
@@ -263,7 +269,9 @@ export const appUpdateCommand = new Command('update')
         options.privacyUrl !== undefined ||
         options.termsUrl !== undefined ||
         options.colorIcon !== undefined ||
-        options.outlineIcon !== undefined;
+        options.outlineIcon !== undefined ||
+        options.webAppInfoId !== undefined ||
+        options.webAppInfoResource !== undefined;
 
       // --json requires mutation flags
       if (options.json && !hasMutationFlags) {
@@ -273,13 +281,27 @@ export const appUpdateCommand = new Command('update')
         );
       }
 
-      // Validate icons upfront (before auth/API calls)
+      // Validate inputs upfront (before auth/API calls)
       const colorIconData = options.colorIcon
         ? readAndValidateIcon(options.colorIcon, 192)
         : undefined;
       const outlineIconData = options.outlineIcon
         ? readAndValidateIcon(options.outlineIcon, 32)
         : undefined;
+      if (options.webAppInfoResource !== undefined) {
+        if (options.webAppInfoResource.length > 100) {
+          throw new CliError(
+            'VALIDATION_FORMAT',
+            'webApplicationInfo resource URI must be 100 characters or less.'
+          );
+        }
+        if (!options.webAppInfoResource.startsWith('api://')) {
+          throw new CliError(
+            'VALIDATION_FORMAT',
+            'webApplicationInfo resource URI must start with "api://" (e.g., api://botid-<your-bot-id>).'
+          );
+        }
+      }
 
       // Interactive mode (no appId, no mutation flags): picker loop
       if (!appIdArg && !hasMutationFlags) {
@@ -462,6 +484,14 @@ export const appUpdateCommand = new Command('update')
           );
         }
         allUpdates.termsOfUseUrl = options.termsUrl;
+      }
+
+      if (options.webAppInfoId !== undefined) {
+        allUpdates.webApplicationInfoId = options.webAppInfoId;
+      }
+
+      if (options.webAppInfoResource !== undefined) {
+        allUpdates.webApplicationInfoResource = options.webAppInfoResource;
       }
 
       // Apply basic info updates (endpoint and icons use separate API calls)
