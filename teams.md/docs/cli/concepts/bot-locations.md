@@ -55,7 +55,7 @@ teams app create --name "My Bot" --teams-managed
 Or set a persistent default:
 
 ```bash
-teams config default-bot-location azure
+teams config set default-bot-location azure
 ```
 
 **Precedence:** explicit flag (`--azure`/`--teams-managed`) > saved config > Teams-managed default.
