@@ -857,8 +857,8 @@ button.sdev-blog__plus {
 
 .sdev-sidebar__aside {
     position: relative;
-    flex: 0 0 160px !important;
-    max-width: 160px !important;
+    flex: 0 0 220px !important;
+    max-width: 220px !important;
 }
 
 .sdev-sidebar__aside::after {
