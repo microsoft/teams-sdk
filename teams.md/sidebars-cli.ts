@@ -72,8 +72,8 @@ export default {
           collapsed: true,
           items: [
             'commands/config/index',
-            'commands/config/default-bot-location',
-            'commands/config/set-lang',
+            'commands/config/get',
+            'commands/config/set',
           ],
         },
         'commands/self-update',
