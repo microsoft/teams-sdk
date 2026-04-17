@@ -288,11 +288,19 @@ export const appUpdateCommand = new Command('update')
       const outlineIconData = options.outlineIcon
         ? readAndValidateIcon(options.outlineIcon, 32)
         : undefined;
-      if (options.webAppInfoResource !== undefined && options.webAppInfoResource.length > 100) {
-        throw new CliError(
-          'VALIDATION_FORMAT',
-          'webApplicationInfo resource URI must be 100 characters or less.'
-        );
+      if (options.webAppInfoResource !== undefined) {
+        if (options.webAppInfoResource.length > 100) {
+          throw new CliError(
+            'VALIDATION_FORMAT',
+            'webApplicationInfo resource URI must be 100 characters or less.'
+          );
+        }
+        if (!options.webAppInfoResource.startsWith('api://')) {
+          throw new CliError(
+            'VALIDATION_FORMAT',
+            'webApplicationInfo resource URI must start with "api://" (e.g., api://botid-<your-bot-id>).'
+          );
+        }
       }
 
       // Interactive mode (no appId, no mutation flags): picker loop

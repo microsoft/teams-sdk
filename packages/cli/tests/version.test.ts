@@ -67,4 +67,12 @@ describe('compareVersions', () => {
   it('returns null for non-numeric version b', () => {
     expect(compareVersions('1.0.0', 'x.y.z')).toBeNull();
   });
+
+  it('returns null for empty segments', () => {
+    expect(compareVersions('1..0', '1.0.0')).toBeNull();
+  });
+
+  it('returns null for trailing dot', () => {
+    expect(compareVersions('1.', '1.0')).toBeNull();
+  });
 });

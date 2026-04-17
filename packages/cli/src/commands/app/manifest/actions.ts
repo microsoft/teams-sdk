@@ -11,7 +11,7 @@ import { createSilentSpinner } from '../../../utils/spinner.js';
 import { bumpPatchVersion, compareVersions } from '../../../utils/version.js';
 
 export interface UploadResult {
-  version: string;
+  version?: string;
   versionBumped: boolean;
 }
 
@@ -132,9 +132,10 @@ export async function uploadManifestFromFile(
 
         if (cmp === 0) {
           // Same version — bump if content actually changed
-          const serverCopy = { ...serverManifest, version: undefined };
-          const localCopy = { ...(manifest as Record<string, unknown>), version: undefined };
-          const contentChanged = JSON.stringify(serverCopy) !== JSON.stringify(localCopy);
+          const { version: _sv, ...serverCopy } = serverManifest;
+          const { version: _lv, ...localCopy } = manifest;
+          const stableStringify = (obj: unknown) => JSON.stringify(obj, Object.keys(obj as object).sort());
+          const contentChanged = stableStringify(serverCopy) !== stableStringify(localCopy);
 
           if (contentChanged) {
             const bumped = bumpPatchVersion(manifest.version);

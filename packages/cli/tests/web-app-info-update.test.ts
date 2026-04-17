@@ -3,6 +3,15 @@ import { execSync } from 'node:child_process';
 
 const CLI = 'node dist/index.js';
 
+interface JsonErrorResponse {
+  ok: false;
+  error: {
+    code: string;
+    message?: string;
+    suggestion?: string;
+  };
+}
+
 function run(command: string): { stdout: string; exitCode: number } {
   try {
     const stdout = execSync(command, { encoding: 'utf-8', stdio: 'pipe' });
@@ -16,9 +25,9 @@ function run(command: string): { stdout: string; exitCode: number } {
   }
 }
 
-function runJson<T = Record<string, unknown>>(command: string): { data: T; exitCode: number } {
+function runJson(command: string): { data: JsonErrorResponse; exitCode: number } {
   const { stdout, exitCode } = run(command);
-  return { data: JSON.parse(stdout) as T, exitCode };
+  return { data: JSON.parse(stdout) as JsonErrorResponse, exitCode };
 }
 
 describe('app update --web-app-info-resource validation (offline)', () => {
@@ -28,9 +37,17 @@ describe('app update --web-app-info-resource validation (offline)', () => {
       `${CLI} app update some-app-id --web-app-info-resource "${longUri}" --json`
     );
     expect(exitCode).toBe(1);
-    const error = (data as Record<string, { code: string; message: string }>).error;
-    expect(error.code).toBe('VALIDATION_FORMAT');
-    expect(error.message).toMatch(/100 characters/);
+    expect(data.error.code).toBe('VALIDATION_FORMAT');
+    expect(data.error.message).toMatch(/100 characters/);
+  });
+
+  it('rejects resource URI without api:// prefix', () => {
+    const { data, exitCode } = runJson(
+      `${CLI} app update some-app-id --web-app-info-resource "https://example.com" --json`
+    );
+    expect(exitCode).toBe(1);
+    expect(data.error.code).toBe('VALIDATION_FORMAT');
+    expect(data.error.message).toMatch(/api:\/\//);
   });
 
   it('accepts resource URI within limit (fails at auth, not validation)', () => {
@@ -40,8 +57,7 @@ describe('app update --web-app-info-resource validation (offline)', () => {
     );
     // Should fail at auth (not logged in), not at validation
     expect(exitCode).toBe(1);
-    const error = (data as Record<string, { code: string }>).error;
-    expect(error.code).not.toBe('VALIDATION_FORMAT');
+    expect(data.error.code).not.toBe('VALIDATION_FORMAT');
   });
 
   it('accepts --web-app-info-id as a mutation flag for --json mode', () => {
@@ -50,7 +66,6 @@ describe('app update --web-app-info-resource validation (offline)', () => {
     );
     // Should fail at auth, not at "no mutation flags" validation
     expect(exitCode).toBe(1);
-    const error = (data as Record<string, { code: string }>).error;
-    expect(error.code).not.toBe('VALIDATION_MISSING');
+    expect(data.error.code).not.toBe('VALIDATION_MISSING');
   });
 });

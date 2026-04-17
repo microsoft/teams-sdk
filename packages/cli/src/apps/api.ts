@@ -135,7 +135,12 @@ export async function downloadAppPackage(token: string, appId: string): Promise<
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to download app package: ${response.status} ${response.statusText}`);
+    throw new CliError(
+      'API_ERROR',
+      `Failed to download app package: ${response.status} ${response.statusText}`,
+      undefined,
+      response.status
+    );
   }
 
   // Response is a JSON-encoded base64 string (with quotes)
@@ -262,10 +267,13 @@ export async function uploadManifest(
   try {
     // Download existing package to preserve icons
     zipBuffer = await downloadAppPackage(token, teamsAppId);
-  } catch {
-    // No existing package — create fresh zip with default icons
-    await importAppPackage(token, createDefaultZip(manifestJson), true);
-    return;
+  } catch (error) {
+    // Only fall back to default zip on 404 (no existing package)
+    if (error instanceof CliError && error.statusCode === 404) {
+      await importAppPackage(token, createDefaultZip(manifestJson), true);
+      return;
+    }
+    throw error;
   }
 
   // Build new zip: copy all entries except manifest.json, then add updated manifest

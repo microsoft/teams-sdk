@@ -37,7 +37,8 @@ export class CliError extends Error {
   constructor(
     public readonly code: ErrorCode,
     message: string,
-    public readonly suggestion?: string
+    public readonly suggestion?: string,
+    public readonly statusCode?: number
   ) {
     super(message);
     this.name = 'CliError';

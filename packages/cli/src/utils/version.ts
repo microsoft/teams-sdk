@@ -1,5 +1,5 @@
 /**
- * Bump the patch (last) segment of a dotted version string.
+ * Increment the last numeric segment of a dotted version string.
  * Returns null if the version can't be parsed.
  */
 export function bumpPatchVersion(version: string): string | null {
@@ -16,9 +16,14 @@ export function bumpPatchVersion(version: string): string | null {
  * Returns 1 if a > b, -1 if a < b, 0 if equal, null if unparseable.
  */
 export function compareVersions(a: string, b: string): number | null {
-  const pa = a.split('.').map(Number);
-  const pb = b.split('.').map(Number);
-  if (pa.some(isNaN) || pb.some(isNaN)) return null;
+  const numericSegment = /^\d+$/;
+  const aParts = a.split('.');
+  const bParts = b.split('.');
+  if (aParts.some((s) => !numericSegment.test(s)) || bParts.some((s) => !numericSegment.test(s))) {
+    return null;
+  }
+  const pa = aParts.map(Number);
+  const pb = bParts.map(Number);
   const maxLen = Math.max(pa.length, pb.length);
   for (let i = 0; i < maxLen; i++) {
     const va = pa[i] ?? 0;
