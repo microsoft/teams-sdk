@@ -163,6 +163,8 @@ For code patterns, API reference, and advanced features (adaptive cards, AI inte
 
 **Important:** This SDK is NOT Bot Framework. Do not use `TurnContext`, `context.sendActivity()`, or other Bot Framework patterns. The SDK uses its own event-driven API — see the docs above for correct patterns.
 
+**Tip:** Use compile-time checks to catch mistakes early. For TypeScript, run `npm run build` (tsc). For Python, run `pyright`. Both SDKs are strongly typed — the compiler will flag incorrect API usage before you even run the bot.
+
 ---
 
 ## Next Steps
