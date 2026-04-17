@@ -36,8 +36,13 @@ export interface BotRegistration {
   name: string;
 }
 
-export async function importAppPackage(token: string, zipBuffer: Buffer): Promise<ImportedApp> {
-  const response = await apiFetch(`${TDP_BASE_URL}/appdefinitions/v2/import`, {
+export async function importAppPackage(
+  token: string,
+  zipBuffer: Buffer,
+  overwrite?: boolean
+): Promise<ImportedApp> {
+  const query = overwrite ? '?overwriteIfAppAlreadyExists=true' : '';
+  const response = await apiFetch(`${TDP_BASE_URL}/appdefinitions/v2/import${query}`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,

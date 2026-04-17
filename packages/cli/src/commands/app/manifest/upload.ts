@@ -8,16 +8,23 @@ import { uploadManifestFromFile } from './actions.js';
 interface ManifestUploadOutput {
   teamsAppId: string;
   filePath: string;
+  version?: string;
+  versionBumped?: boolean;
 }
 
 export const manifestUploadCommand = new Command('upload')
   .description('Upload a manifest.json to update an existing Teams app')
   .argument('<file-path>', 'Path to manifest.json file')
   .argument('[appId]', 'Teams app ID (prompted if not provided)')
+  .option('--no-bump-version', '[OPTIONAL] Disable automatic version bumping')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(
-      async (filePathArg: string, appIdArg: string | undefined, options: { json?: boolean }) => {
+      async (
+        filePathArg: string,
+        appIdArg: string | undefined,
+        options: { json?: boolean; bumpVersion?: boolean }
+      ) => {
         let teamsAppId: string;
         let token: string;
 
@@ -45,10 +52,20 @@ export const manifestUploadCommand = new Command('upload')
           token = picked.token;
         }
 
-        await uploadManifestFromFile(token, teamsAppId, filePathArg, options.json);
+        const result = await uploadManifestFromFile(
+          token,
+          teamsAppId,
+          filePathArg,
+          options.json,
+          options.bumpVersion !== false
+        );
 
         if (options.json) {
-          outputJson({ teamsAppId, filePath: filePathArg } satisfies ManifestUploadOutput);
+          outputJson({
+            teamsAppId,
+            filePath: filePathArg,
+            ...(result ? { version: result.version, versionBumped: result.versionBumped } : {}),
+          } satisfies ManifestUploadOutput);
         }
       }
     )
