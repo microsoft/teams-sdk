@@ -155,11 +155,11 @@ MyBot/
 └── tsup.config.js        # Build config
 ```
 
-The entry point (`src/index.ts`) contains the app setup and inline message handlers. There is no separate bot file — all bot logic lives in the entry point.
+The entry point (`src/index.ts`) contains the app setup and inline message handlers. There is no separate bot file — all bot logic lives in the entry point. The `.env` file is added in Step 4 (not scaffolded by default).
 
 **Language-specific differences:**
 - **C#:** `Program.cs` as entry point, `.csproj` for dependencies
-- **Python:** `app.py` as entry point, managed via `uv` or `pip`
+- **Python:** `src/main.py` as entry point, `pyproject.toml` for dependencies
 
 ---
 
@@ -196,7 +196,7 @@ dotnet run
 
 **Python:**
 ```bash
-python app.py
+python src/main.py
 ```
 
 > **Note:** `npm run dev` uses `tsx watch` with hot reload. Use `npm run build && npm start` for production.
@@ -255,7 +255,7 @@ For code patterns, API reference, and advanced features (adaptive cards, AI inte
 - Python: https://microsoft.github.io/teams-sdk/llms_docs/docs_python/in-depth-guides.txt
 - C#: https://microsoft.github.io/teams-sdk/llms_docs/docs_csharp/in-depth-guides.txt
 
-**Important:** This SDK is NOT BotFramework. Do not use `TurnContext`, `context.sendActivity()`, or other BotFramework patterns. The SDK uses its own event-driven API — see the docs above for correct patterns.
+**Important:** This SDK is NOT Bot Framework. Do not use `TurnContext`, `context.sendActivity()`, or other Bot Framework patterns. The SDK uses its own event-driven API — see the docs above for correct patterns.
 
 ---
 

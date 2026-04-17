@@ -116,4 +116,7 @@ teams app bot get <teamsAppId>
 If your issue isn't listed here:
 1. Check the command's error message for specific guidance
 2. Verify prerequisites are met (authentication, CLI version, etc.)
-3. Consult the Teams SDK docs: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript.txt
+3. Consult the Teams SDK docs for your language:
+   - TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript.txt
+   - Python: https://microsoft.github.io/teams-sdk/llms_docs/llms_python.txt
+   - C#: https://microsoft.github.io/teams-sdk/llms_docs/llms_csharp.txt
