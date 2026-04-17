@@ -11,10 +11,6 @@ const KNOWN_KEYS: Record<string, { values: string[]; description: string }> = {
     values: ['tm', 'azure'],
     description: 'Default bot location for app create (teams-managed or azure)',
   },
-  language: {
-    values: ['typescript', 'csharp', 'python'],
-    description: 'Default language for project creation',
-  },
 };
 
 async function readConfigFile(): Promise<Config> {
