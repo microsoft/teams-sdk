@@ -14,7 +14,7 @@ Verify the Teams CLI is installed:
 teams --version
 ```
 
-**Expected output:** Shows version number (e.g., `1.0.0` or similar)
+**Expected output:** Shows version number (e.g., `2.1.0-preview.3` or similar)
 
 **If not installed:**
 
