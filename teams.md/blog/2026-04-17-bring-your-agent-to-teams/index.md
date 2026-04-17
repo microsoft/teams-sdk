@@ -137,6 +137,7 @@ const teamsApp = new App({ httpServerAdapter: adapter });
 
 teamsApp.on('message', async ({ send, activity }) => {
   await send({ type: 'typing' });
+  // pass the Teams message to LangChain
   const reply = await getChain().invoke({ input: activity.text ?? '' });
   await send(reply);
 });
