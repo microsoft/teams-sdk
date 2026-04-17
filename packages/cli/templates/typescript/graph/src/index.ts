@@ -1,11 +1,9 @@
 import { MessageActivity } from '@microsoft/teams.api';
 import { App } from '@microsoft/teams.apps';
 import { AdaptiveCard, CodeBlock } from '@microsoft/teams.cards';
-import { DevtoolsPlugin } from '@microsoft/teams.dev';
 import * as endpoints from '@microsoft/teams.graph-endpoints';
 
 const app = new App({
-  plugins: [new DevtoolsPlugin()],
   oauth: {
     defaultConnectionName: 'graph'
   },

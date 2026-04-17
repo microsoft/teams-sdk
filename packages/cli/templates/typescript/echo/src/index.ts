@@ -1,9 +1,6 @@
 import { App } from '@microsoft/teams.apps';
-import { DevtoolsPlugin } from '@microsoft/teams.dev';
 
-const app = new App({
-  plugins: [new DevtoolsPlugin()],
-});
+const app = new App();
 
 app.on('message', async ({ send, activity }) => {
   await send({ type: 'typing' });

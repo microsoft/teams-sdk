@@ -1,134 +1,47 @@
 # Integrating Teams into an Existing Server
 
-This guide helps you add Microsoft Teams bot functionality to an existing HTTP server (Express, Flask, FastAPI, etc.) using the Teams SDK's HTTP server adapters (ExpressAdapter, FlaskAdapter, etc.).
+This guide helps you add Microsoft Teams bot functionality to an existing HTTP server without replacing your server architecture.
 
-## Overview
+## How It Works
 
-The Teams SDK allows you to integrate Teams bot capabilities into your existing server without changing your server architecture. You manage your server lifecycle independently while the SDK handles Teams-specific functionality.
+You pass your existing server's app instance into an adapter, then pass that adapter to the Teams `App`. When you call `initialize()`, the SDK registers its routes (like `/api/messages`) on your server. You keep full control of server lifecycle — the SDK never starts or stops your server.
 
-**Official Documentation:**
-- TypeScript: https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/server/http-server
-- Python: https://microsoft.github.io/teams-sdk/python/in-depth-guides/server/http-server
+The SDK ships with built-in adapters for common frameworks, but building a custom adapter for any other framework is simple — see the full docs linked below.
 
-## High-Level Flow
+## Built-in Adapters
 
-### 1. Install Teams SDK
+| Language | Adapter | Framework |
+|----------|---------|-----------|
+| TypeScript | `ExpressAdapter` | Express |
+| Python | `FastAPIAdapter` | FastAPI (async) |
 
-**TypeScript:**
-```bash
-npm install @microsoft/teams.apps
-```
+## Key Things to Know
 
-**Python:**
-```bash
-pip install microsoft-teams-apps
-```
+- Call `initialize()`, NOT `start()` — you manage the server yourself
+- **Python: `initialize()` is async** — you MUST `await` it. Without `await`, the coroutine silently does nothing, routes never register, and you get 404s on `/api/messages`
+- The SDK registers routes on the exact app instance you pass to the adapter
+- Your existing routes continue to work alongside Teams
 
-### 2. Create the Adapter
+## Full Documentation
 
-**TypeScript (Express):**
-```typescript
-import express from 'express';
-import { App, ExpressAdapter } from '@microsoft/teams.apps';
+The SDK docs cover everything: the adapter interface/protocol, step-by-step integration, and examples of building custom adapters for other frameworks (Restify for TypeScript, Starlette for Python).
 
-const app = express();
-app.use(express.json());
+**Read the full guide before implementing:**
+- TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/docs_typescript/self-managing-your-server.txt
+- Python: https://microsoft.github.io/teams-sdk/llms_docs/docs_python/self-managing-your-server.txt
 
-// Your existing routes here...
-app.post('/your-endpoint', ...);
+## After Integration
 
-// Create adapter - pass Express app instance, NOT http.Server
-const adapter = new ExpressAdapter(app);
-const teamsApp = new App({ httpServerAdapter: adapter });
-```
-
-**Python (Flask):**
-```python
-from flask import Flask
-from microsoft_teams.apps import App
-from microsoft_teams.hosting.flask import FlaskAdapter
-
-app = Flask(__name__)
-
-# Your existing routes here...
-@app.route('/your-endpoint')
-def your_endpoint():
-    ...
-
-# Create adapter
-adapter = FlaskAdapter(app)
-teams_app = App(http_server_adapter=adapter)
-```
-
-### 3. Add Bot Message Handler
-
-**TypeScript:**
-```typescript
-teamsApp.on('message', async ({ send, activity }) => {
-  const userMessage = activity.text || '';
-  // Your bot logic here...
-  await send('Response message');
-});
-```
-
-**Python:**
-```python
-@teams_app.on_message()
-async def on_message(context):
-    user_message = context.activity.text
-    # Your bot logic here...
-    await context.send('Response message')
-```
-
-### 4. Initialize Teams App
-
-**Important**: Call `initialize()`, NOT `start()` - you manage the server yourself.
-
-**TypeScript:**
-```typescript
-await teamsApp.initialize();
-
-// Start your server as usual
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-```
-
-**Python:**
-```python
-teams_app.initialize()
-
-# Start your server as usual
-if __name__ == '__main__':
-    app.run(port=3000)
-```
-
-### 5. Set Up Bot Infrastructure, Tunnel, and Endpoint
-
-Follow the **[Bot Infrastructure Setup guide](guide-create-bot-infra.md)** to complete the remaining setup:
+Follow the **[Bot Infrastructure Setup guide](guide-create-bot-infra.md)** to:
 - Create Teams-managed bot registration
 - Get bot credentials (CLIENT_ID, CLIENT_SECRET, TENANT_ID)
-- Configure environment variables
-- Set up development tunnel (devtunnels)
-- Configure bot messaging endpoint
-- Test your bot in Teams
+- Set up a development tunnel
+- Configure the bot messaging endpoint
 
-**Important:** When setting up the devtunnel, use the port your existing server runs on (e.g., `3000`, `5000`, `8080`) instead of the default `3978`. The tunnel must expose the same port your server is already configured to use.
-
-## Key Points
-
-✅ **Adapter Parameter**: Pass your server app instance to the adapter, not an http.Server wrapper
-✅ **Initialize vs Start**: Call `teamsApp.initialize()`, NOT `teamsApp.start()`
-✅ **Existing Routes**: Your existing endpoints continue to work alongside Teams bot functionality
-✅ **Server Management**: You control server lifecycle - the adapter only handles Teams-specific routes
-
-## Common Errors
-
-**ERR_HTTP_HEADERS_SENT**: You likely passed http.Server to the adapter instead of the app instance. Pass the app directly.
+**Important:** When setting up the devtunnel, use the port your existing server runs on (not the default `3978`) — the tunnel must expose the same port your server is already using.
 
 ## Related Guides
 
-- **[Bot Infrastructure Setup](guide-create-bot-infra.md)** - Create bot registration and credentials
-- **[Bot Application Development](guide-create-bot-app.md)** - Scaffold a new Teams bot project
-- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
+- **[Bot Infrastructure Setup](guide-create-bot-infra.md)** — Create bot registration and credentials
+- **[Bot Application Development](guide-create-bot-app.md)** — Scaffold a new Teams bot project
+- **[Troubleshooting](troubleshooting.md)** — Common issues and solutions
