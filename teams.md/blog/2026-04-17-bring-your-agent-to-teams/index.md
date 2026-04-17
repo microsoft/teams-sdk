@@ -52,7 +52,7 @@ A Python SDK is also available. The same adapter pattern applies; pick your stac
 
 You have a Slack bot built with Bolt. Your team uses both Slack and Teams. Rather than maintaining two codebases, run both on the same Express server.
 
-The key insight: `ExpressReceiver` lets Bolt mount onto your Express app instead of owning the server. The Teams SDK does the same thing. One process, two platforms.
+`ExpressReceiver` lets Bolt mount onto your Express app instead of owning the server. The Teams SDK does the same thing. One process, two platforms.
 
 **`teams-app.ts`:**
 
