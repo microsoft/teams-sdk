@@ -826,14 +826,39 @@ button.sdev-blog__plus {
    BLOG POST PAGE — SIDEBAR
    ========================================================================== */
 
-/* Make the blog post layout row fill viewport so the sidebar border runs full height */
-html.blog-post-page .container > .row {
+/* Blog post page layout — anchored to .sdev-sidebar__aside so rules apply
+   immediately without waiting for the html.blog-post-page class injection */
+
+/* Full-width container */
+.container:has(.sdev-sidebar__aside) {
+    max-width: 100% !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+}
+
+.container:has(.sdev-sidebar__aside) > .row {
     min-height: calc(100vh - var(--ifm-navbar-height) - 4rem);
     align-items: stretch;
+    flex-wrap: nowrap !important;
+}
+
+/* Main content fills all remaining space */
+.container:has(.sdev-sidebar__aside) > .row > main {
+    flex: 1 1 0 !important;
+    max-width: none !important;
+    min-width: 0 !important;
+}
+
+/* TOC column (col--2) — narrow and hugs right edge */
+.container:has(.sdev-sidebar__aside) > .row > .col--2 {
+    flex: 0 0 200px !important;
+    max-width: 200px !important;
 }
 
 .sdev-sidebar__aside {
     position: relative;
+    flex: 0 0 180px !important;
+    max-width: 180px !important;
 }
 
 .sdev-sidebar__aside::after {
