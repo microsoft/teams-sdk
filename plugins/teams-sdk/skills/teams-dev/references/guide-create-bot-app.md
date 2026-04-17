@@ -132,7 +132,7 @@ teams project new typescript MyBot \
 
 ## Step 4: Connect to Infrastructure (If Not Done in Step 3)
 
-If you created the project without `--client-id` / `--client-secret`, add the credentials from [Bot Infrastructure Setup](guide-create-bot-infra.md) to a `.env` file in the project root:
+If you created the project without credentials, connect it to your bot infrastructure now. Add the credentials from [Bot Infrastructure Setup](guide-create-bot-infra.md) to a `.env` file in the project root:
 
 ```
 CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
