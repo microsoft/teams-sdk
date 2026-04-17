@@ -22,8 +22,7 @@ Based on the user's request, route to the appropriate guide or handle directly:
 
 **Integrating Teams into an existing server:**
 - Read and follow the **[Integrate Existing Server guide](references/guide-integrate-existing-server.md)**
-- This covers: Adding Teams bot functionality to existing Express/Flask/FastAPI servers using server adapters (ExpressAdapter, FlaskAdapter)
-- Supports: TypeScript (Express), Python (Flask, FastAPI)
+- This covers: Adding Teams bot functionality to an existing server using built-in adapters (ExpressAdapter for TypeScript, FastAPIAdapter for Python) or a custom adapter for any framework
 
 **Setting up bot infrastructure (Teams-managed bot & credentials):**
 - Read and follow the **[Bot Infrastructure Setup guide](references/guide-create-bot-infra.md)**
@@ -121,31 +120,12 @@ teams app list
 
 ## Resources
 
-### Additional Resources
+**Teams SDK Documentation (llms.txt — optimized for LLM consumption):**
+- TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript.txt
+- Python: https://microsoft.github.io/teams-sdk/llms_docs/llms_python.txt
+- C#: https://microsoft.github.io/teams-sdk/llms_docs/llms_csharp.txt
+- Full TypeScript docs: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript_full.txt
+- Full Python docs: https://microsoft.github.io/teams-sdk/llms_docs/llms_python_full.txt
+- Full C# docs: https://microsoft.github.io/teams-sdk/llms_docs/llms_csharp_full.txt
 
-Additional resources for Teams bot development:
-
-**Teams SDK Documentation:**
-- https://microsoft.github.io/teams-sdk/welcome
-- Comprehensive bot framework with built-in Teams features
-- Supports TypeScript, JavaScript, Python, C#
-
-### Setting Up Development Tunnels
-
-**Microsoft devtunnels (Recommended):**
-- https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/get-started?tabs=windows
-- Microsoft's official tunneling solution
-- Free for development use
-
-**ngrok (Alternative):**
-- https://ngrok.com
-- Popular tunneling service
-- Free tier available
-
-### Teams App Development Documentation
-
-**General Teams app development:**
-- https://learn.microsoft.com/en-us/microsoftteams/platform/
-
-**Bot-specific documentation:**
-- https://learn.microsoft.com/en-us/microsoftteams/platform/bots/what-are-bots
+**Development Tunnels:** See the [Bot Infrastructure Setup guide](references/guide-create-bot-infra.md) for devtunnel setup instructions.

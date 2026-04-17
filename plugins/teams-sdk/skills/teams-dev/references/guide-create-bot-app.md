@@ -132,37 +132,13 @@ teams project new typescript MyBot \
 
 ## Step 4: Connect to Infrastructure (If Not Done in Step 3)
 
-If you created the project without credentials, connect it to your bot infrastructure now.
+If you created the project without `--client-id` / `--client-secret`, add the credentials from [Bot Infrastructure Setup](guide-create-bot-infra.md) to a `.env` file in the project root:
 
-### Locate Your Credentials
-
-From [Bot Infrastructure Setup guide](guide-create-bot-infra.md), you should have a `.env` file with:
 ```
 CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 CLIENT_SECRET=your-secret-value
 TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
-
-### Add to Bot Project
-
-**Navigate to your bot project:**
-```bash
-cd MyBot
-```
-
-**Copy or merge the credentials into the project's `.env` file:**
-
-**If project has `.env.sample` or `.env.local`:**
-- Copy your `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID` values into the appropriate file
-- Follow the project's README for environment variable naming conventions
-
-**If project doesn't have `.env` yet:**
-- Copy your `.env` file from infrastructure setup: `cp ../.env .env`
-- Or create `.env` manually with the credentials
-
-**Verify:**
-- Your bot project now has access to the authentication credentials
-- The bot can authenticate with Microsoft Teams using these values
 
 ---
 
@@ -173,24 +149,17 @@ After creation, your project will have this structure (TypeScript example):
 ```
 MyBot/
 ├── src/
-│   ├── index.ts          # Entry point
-│   ├── bot.ts            # Bot logic (message handling)
-│   └── [template-specific files]
-├── .env                  # Environment variables (credentials)
-├── package.json          # Dependencies (Node.js)
+│   └── index.ts          # Entry point — app setup + message handlers
+├── package.json          # Dependencies
 ├── tsconfig.json         # TypeScript config
-└── README.md             # Project documentation
+└── tsup.config.js        # Build config
 ```
 
-**Key Files:**
-- **`src/bot.ts`** - Your bot's message handling logic
-- **`.env`** - Credentials and configuration
-- **`src/index.ts`** - Server setup and bot initialization
-- **`README.md`** - Template-specific documentation
+The entry point (`src/index.ts`) contains the app setup and inline message handlers. There is no separate bot file — all bot logic lives in the entry point.
 
 **Language-specific differences:**
-- **C#:** Uses `.csproj`, `Program.cs`, `Bot.cs`
-- **Python:** Uses `requirements.txt`, `app.py`, `bot.py`
+- **C#:** `Program.cs` as entry point, `.csproj` for dependencies
+- **Python:** `app.py` as entry point, managed via `uv` or `pip`
 
 ---
 
@@ -217,7 +186,7 @@ pip install -r requirements.txt
 
 **TypeScript:**
 ```bash
-npm start
+npm run dev
 ```
 
 **C#:**
@@ -229,6 +198,8 @@ dotnet run
 ```bash
 python app.py
 ```
+
+> **Note:** `npm run dev` uses `tsx watch` with hot reload. Use `npm run build && npm start` for production.
 
 **Expected Output:**
 ```
@@ -277,61 +248,19 @@ Look for `installLink` in the output and open it in your browser.
 
 ## Step 8: Customize Your Bot
 
-### Modify Bot Logic
+The scaffolded project's entry point (`src/index.ts` for TypeScript, `app.py` for Python) contains inline message handlers. Customize your bot by editing these handlers directly.
 
-Edit the main bot file:
-- **TypeScript:** `src/bot.ts`
-- **C#:** `Bot.cs`
-- **Python:** `bot.py`
+For code patterns, API reference, and advanced features (adaptive cards, AI integration, dialogs, proactive messaging, etc.), refer to the SDK docs:
+- TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/docs_typescript/in-depth-guides.txt
+- Python: https://microsoft.github.io/teams-sdk/llms_docs/docs_python/in-depth-guides.txt
+- C#: https://microsoft.github.io/teams-sdk/llms_docs/docs_csharp/in-depth-guides.txt
 
-**Example (TypeScript - Echo Bot):**
-```typescript
-// src/bot.ts
-public async onMessage(context: TurnContext): Promise<void> {
-  const text = context.activity.text;
-
-  // Custom logic here
-  const response = `You said: ${text}`;
-
-  await context.sendActivity(response);
-}
-```
-
-### Add Features
-
-Depending on your template:
-- **AI bots:** Modify prompts, add RAG (Retrieval-Augmented Generation)
-- **Graph bots:** Add more Microsoft 365 API calls (mail, calendar, files)
-- **Echo bots:** Add commands, adaptive cards, message formatting
-
-### Restart After Changes
-
-After modifying code:
-1. Stop the bot (Ctrl+C)
-2. Rebuild if needed (TypeScript: no rebuild needed with `npm start`)
-3. Restart: `npm start` / `dotnet run` / `python app.py`
-4. Test changes in Teams
+**Important:** This SDK is NOT BotFramework. Do not use `TurnContext`, `context.sendActivity()`, or other BotFramework patterns. The SDK uses its own event-driven API — see the docs above for correct patterns.
 
 ---
 
 ## Next Steps
 
-**Set up SSO (Single Sign-On):**
-- See the [SSO Setup guide](guide-setup-sso.md) to enable silent authentication
-- Users won't need to log in separately
-
-**Add advanced features:**
-- Adaptive Cards for rich UI
-- Proactive messaging (send notifications without user prompt)
-- Multi-turn conversations and dialog management
-- Integration with external APIs and databases
-
-**Learn more:**
-- Teams SDK docs: https://microsoft.github.io/teams-sdk/welcome
-- Bot Framework: https://learn.microsoft.com/en-us/azure/bot-service/
-- Adaptive Cards: https://adaptivecards.io/
-
-**Troubleshooting:**
-- See the [Troubleshooting guide](troubleshooting.md) for common errors
-- Check bot logs for errors
-- Verify credentials in `.env` match infrastructure
+- **SSO:** See the [SSO Setup guide](guide-setup-sso.md) to enable silent authentication
+- **Advanced features:** See the in-depth guides linked in Step 8 above
+- **Troubleshooting:** See the [Troubleshooting guide](troubleshooting.md)
