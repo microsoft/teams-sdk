@@ -1,13 +1,11 @@
 import { App } from '@microsoft/teams.apps';
 import { ChatPrompt, Message } from '@microsoft/teams.ai';
 import { LocalStorage } from '@microsoft/teams.common/storage';
-import { DevtoolsPlugin } from '@microsoft/teams.dev';
 import { OpenAIChatModel } from '@microsoft/teams.openai';
 
 const storage = new LocalStorage<Array<Message>>();
 const app = new App({
   storage,
-  plugins: [new DevtoolsPlugin()],
 });
 
 app.on('message', async ({ stream, activity }) => {

@@ -1,6 +1,5 @@
 import { ChatPrompt } from '@microsoft/teams.ai';
 import { App } from '@microsoft/teams.apps';
-import { DevtoolsPlugin } from '@microsoft/teams.dev';
 import { McpPlugin } from '@microsoft/teams.mcp';
 import { OpenAIChatModel } from '@microsoft/teams.openai';
 
@@ -17,7 +16,6 @@ prompt.function('hello-world', 'print hello world', () => {
 
 const app = new App({
   plugins: [
-    new DevtoolsPlugin(),
     new McpPlugin({ name: '{{ toKebabCase name }}' }).use(prompt)
   ],
 });
