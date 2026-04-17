@@ -47,7 +47,7 @@ await teamsApp.initialize();   // registers POST /api/messages on your server
 The SDK injects a `POST /api/messages` route into your existing Express app. Your server stays yours. The Teams SDK just adds one endpoint.
 
 :::tip Customizable endpoint
-`/api/messages` is the default but not a requirement. You can configure the SDK to register any path as your messaging endpoint.
+`/api/messages` is the default but not a requirement. You can configure the SDK to register any path as your messaging endpoint by passing a parameter to the `App` class.
 :::
 
 ---
