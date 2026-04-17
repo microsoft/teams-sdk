@@ -17,7 +17,7 @@ description: Your agent is already built. Here's how to surface it in Teams in u
 
 You've already built the agent. It lives somewhere: a LangChain chain, an Azure Foundry deployment, a Slack bot, a Next.js app. Your users live in Teams. This post shows you how to close that gap in under 50 lines.
 
-The unlock is a single pattern from the Teams TypeScript SDK: the **HTTP server adapter**. Instead of running a separate Teams bot server, you plug the Teams SDK into your existing Express app (or any HTTP server) and it registers its own route. Your agent doesn't change. You just add a new listener.
+It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You plug it into your existing Express app, it registers a single `POST /api/messages` route, and your existing server keeps running as-is. Nothing about your agent changes.
 
 The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically.
 
@@ -168,7 +168,7 @@ http.createServer(expressApp).listen(3978);
 OPENAI_API_KEY=sk-...
 ```
 
-That's the full integration. Your chain runs on every message. The typing indicator fires before the LLM responds so users know something's happening.
+Your chain runs on every message. The typing indicator fires before the LLM responds so users know something's happening.
 
 ---
 
@@ -348,9 +348,9 @@ One command handles AAD app registration, client secret generation, manifest cre
 
 ---
 
-## The Takeaway
+## The same three lines, every time
 
-The Teams SDK HTTP adapter pattern is designed for exactly this: you own the server, the SDK plugs in. Whether you're running Express, Bolt, or Next.js App Router, the integration is the same three lines:
+Regardless of which scenario fits your stack, the Teams integration is always:
 
 ```typescript
 const adapter = new ExpressAdapter(expressApp);
@@ -358,4 +358,4 @@ const teamsApp = new App({ httpServerAdapter: adapter });
 teamsApp.on('message', async ({ send, activity }) => { /* your agent */ });
 ```
 
-Your agent doesn't change. Your server doesn't change. You add one listener, and Teams users can reach your agent. Pick the scenario that matches your stack and ship it.
+Nothing about your agent or server changes. You add one listener and Teams users can reach it. The full SDK docs are at [microsoft.github.io/teams-sdk](https://microsoft.github.io/teams-sdk).
