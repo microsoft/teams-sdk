@@ -80,6 +80,8 @@ teams app update <teamsAppId> --endpoint "https://new-endpoint-url/api/messages"
 - Devtunnels URL changed
 - Switching between different local development tunnels
 
+> **Note:** If the endpoint domain changed (not just the path), the CLI automatically updates `validDomains` in the manifest. This requires the user to reinstall the app in Teams for the change to take effect.
+
 ### Update Teams CLI
 
 **Use case:** Update the Teams CLI to the latest version (recommended to stay current with new features and bug fixes)
