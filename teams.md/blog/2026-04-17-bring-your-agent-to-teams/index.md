@@ -345,4 +345,4 @@ const teamsApp = new App({ httpServerAdapter: adapter });
 teamsApp.on('message', async ({ send, activity }) => { /* your agent */ });
 ```
 
-If you're already running a bot somewhere, the path to Teams is shorter than you think. Full docs at [microsoft.github.io/teams-sdk](https://microsoft.github.io/teams-sdk).
+If you're already running a bot somewhere, the path to Teams is shorter than you think. Full docs at [microsoft.github.io/teams-sdk](https://microsoft.github.io/teams-sdk/python/in-depth-guides/server/http-server/).
