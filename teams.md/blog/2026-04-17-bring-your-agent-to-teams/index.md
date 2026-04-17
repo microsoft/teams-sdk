@@ -17,7 +17,7 @@ description: Your agent is already built. Here's how to surface it in Teams in u
 
 You've already built the agent. It lives somewhere: a LangChain chain, an Azure Foundry deployment, a Slack bot, a Next.js app. Your users live in Teams. This post shows you how to close that gap in under 50 lines.
 
-It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You plug it into your existing Express app, it registers a single `POST /api/messages` route, and your existing server keeps running as-is. Nothing about your agent changes.
+It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You plug it into your existing Express app, it registers a `POST /api/messages` route by default, and your existing server keeps running as-is. Nothing about your agent changes.
 
 The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically.
 
