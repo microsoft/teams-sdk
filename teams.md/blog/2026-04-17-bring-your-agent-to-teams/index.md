@@ -63,23 +63,21 @@ import { App, ExpressAdapter } from '@microsoft/teams.apps';
 
 const expressApp = express();
 
-// Slack mounts at /slack/events, only when credentials are present
-if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_SIGNING_SECRET) {
-  const slackReceiver = new ExpressReceiver({
-    signingSecret: process.env.SLACK_SIGNING_SECRET,
-    app: expressApp,
-    endpoints: { events: '/slack/events' },
-  });
+// Slack mounts at /slack/events
+const slackReceiver = new ExpressReceiver({
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  app: expressApp,
+  endpoints: { events: '/slack/events' },
+});
 
-  const slackApp = new BoltApp({
-    token: process.env.SLACK_BOT_TOKEN,
-    receiver: slackReceiver,
-  });
+const slackApp = new BoltApp({
+  token: process.env.SLACK_BOT_TOKEN,
+  receiver: slackReceiver,
+});
 
-  slackApp.message('hello', async ({ say }) => {
-    await say('Hey! Caught you on Slack.');
-  });
-}
+slackApp.message('hello', async ({ say }) => {
+  await say('Hey! Caught you on Slack.');
+});
 
 // Teams mounts at /api/messages
 const adapter = new ExpressAdapter(expressApp);
