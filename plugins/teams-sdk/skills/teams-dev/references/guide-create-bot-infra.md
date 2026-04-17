@@ -96,7 +96,7 @@ Your persistent tunnel URL remains: `https://<tunnel-id>.devtunnels.ms`
 https://<tunnel-id>.devtunnels.ms/api/messages
 ```
 
-**Alternative:** Use ngrok (`ngrok http 3978`) if you prefer.
+**Alternative:** Use ngrok or Cloudflare tunnel if you prefer.
 
 **Note:** With a persistent tunnel, your URL stays the same across sessions - you only need to run `devtunnel host my-teams-bot` to start it each time.
 

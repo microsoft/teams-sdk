@@ -1,8 +1,19 @@
 # Bot Application Development Guide
 
-This guide walks through creating a new Microsoft Teams bot application using the `teams project new` command. This scaffolds the actual bot code (TypeScript, C#, or Python) that handles messages and interactions.
+This guide walks through creating a new Microsoft Teams bot application using the `teams project new` command. This scaffolds the actual bot code (TypeScript, Python, or C#) that handles messages and interactions.
 
 **Note:** This guide covers bot application code. For bot infrastructure setup (registration, credentials, AAD app), see the [Bot Infrastructure Setup guide](guide-create-bot-infra.md).
+
+## How Teams Bots Work
+
+A Teams bot is a web application that receives messages from Teams via webhooks. When a user messages your bot, Teams sends an HTTP POST to your application's endpoint. Your app processes the message and responds.
+
+Three things need to exist:
+1. **Your web application** — runs locally or deployed, listening for HTTP requests
+2. **A bot registration** — an app identity in Azure with a client ID/secret, pointing to your application's URL
+3. **A public HTTPS endpoint** — so Teams can reach your app (use a dev tunnel for local development)
+
+The Teams SDK handles the webhook plumbing, authentication, and message parsing — you just write handlers for the messages you care about.
 
 ---
 
@@ -18,21 +29,15 @@ teams --version
 
 **If not installed:** See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) for installation instructions.
 
-### Step 2: (Optional) Set Up Bot Infrastructure First
+### Step 2: Set Up Bot Infrastructure
 
-You can create the bot application code before or after setting up infrastructure. However, to connect your bot code to Teams, you'll eventually need:
+Before creating bot code, set up your bot registration and credentials by following the **[Bot Infrastructure Setup guide](guide-create-bot-infra.md)**. You'll need:
 
 - **CLIENT_ID** - Bot's Azure AD application ID
 - **CLIENT_SECRET** - Bot's authentication secret
 - **TENANT_ID** - Your Microsoft 365 tenant ID
 
-**If you haven't created infrastructure yet:**
-- You can scaffold the bot code now and add credentials later
-- See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) when ready to create bot registration
-
-**If you already have infrastructure:**
-- Have your `.env` file or credentials ready from [Bot Infrastructure Setup guide](guide-create-bot-infra.md)
-- You'll connect them in Step 4 below
+Have your `.env` file or credentials ready before proceeding.
 
 ---
 
@@ -47,18 +52,18 @@ teams project new typescript <name>
 teams project new ts <name>
 ```
 
-**C# (Recommended for .NET developers):**
-```bash
-teams project new csharp <name>
-# or short form:
-teams project new cs <name>
-```
-
 **Python (Recommended for Python developers):**
 ```bash
 teams project new python <name>
 # or short form:
 teams project new py <name>
+```
+
+**C# (Recommended for .NET developers):**
+```bash
+teams project new csharp <name>
+# or short form:
+teams project new cs <name>
 ```
 
 ---
@@ -74,9 +79,6 @@ All languages support the same template options via `-t, --template <template>`:
 | `echo` | Simple echo bot (default) | Learning, testing, basic message handling |
 | `ai` | AI-powered bot with LLM integration | Intelligent responses, chat completion, AI features |
 | `graph` | Microsoft Graph integration | Access user data, calendar, mail, SharePoint |
-| `mcp` | Model Context Protocol server | Advanced AI scenarios, custom context handling |
-| `mcpclient` | MCP client integration | Connect to MCP servers |
-| `tab` | Teams tab application | UI-based apps, embedded web content |
 
 **Note:** Template availability varies by language. Check `teams project new <language> --help` for the actual list of available templates for each language.
 
@@ -84,128 +86,32 @@ All languages support the same template options via `-t, --template <template>`:
 - **First bot?** Start with `echo` to learn the basics
 - **AI features?** Use `ai` for LLM-powered responses
 - **Microsoft 365 data?** Use `graph` for accessing user/org data
-- **UI application?** Use `tab` for web-based Teams apps
 
 ---
 
 ## Step 3: Create the Bot Project
 
-### Option A: Create Without Infrastructure (Add Credentials Later)
-
-**Basic creation with template:**
-```bash
-teams project new typescript MyBot -t ai
-```
-
-This creates the project with placeholder credentials. You'll add real credentials from your `.env` file later.
-
-### Option B: Create With Existing Infrastructure
-
-If you already ran [Bot Infrastructure Setup guide](guide-create-bot-infra.md) and have `CLIENT_ID` and `CLIENT_SECRET`:
+Using the credentials from the [Bot Infrastructure Setup guide](guide-create-bot-infra.md):
 
 ```bash
 teams project new typescript MyBot \
   -t ai \
-  --client-id "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" \
-  --client-secret "your-secret-value"
+  --client-id "<CLIENT_ID>" \
+  --client-secret "<CLIENT_SECRET>"
 ```
 
 **Parameters:**
-- `<name>` - Your bot project name (e.g., `MyBot`, `NotificationBot`)
-- `-t, --template` - Template choice (ai, echo, graph, mcp, mcpclient, tab)
-- `--client-id` - **[OPTIONAL]** Your bot's CLIENT_ID from infrastructure setup
-- `--client-secret` - **[OPTIONAL]** Your bot's CLIENT_SECRET from infrastructure setup
-- `--toolkit` - **[OPTIONAL]** M365 Agents Toolkit configuration
-- `-s, --start` - **[OPTIONAL]** Auto-start the project after creation
+- `<name>` - Your bot project name
+- `-t, --template` - Template choice (ai, echo, graph)
+- `--client-id` - Your bot's CLIENT_ID from infrastructure setup
+- `--client-secret` - Your bot's CLIENT_SECRET from infrastructure setup
 - `--json` - **[OPTIONAL]** Output as JSON
 
-**Expected Output:**
-```
-✓ Created bot project: MyBot
-✓ Language: TypeScript
-✓ Template: ai
-✓ Dependencies installed
-✓ Project ready at: ./MyBot
-```
-
 ---
 
-## Step 4: Connect to Infrastructure (If Not Done in Step 3)
+## Step 4: Run the Bot Locally
 
-If you created the project without credentials, connect it to your bot infrastructure now. Add the credentials from [Bot Infrastructure Setup](guide-create-bot-infra.md) to a `.env` file in the project root:
-
-```
-CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-CLIENT_SECRET=your-secret-value
-TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-```
-
----
-
-## Step 5: Understand the Project Structure
-
-After creation, your project will have this structure (TypeScript example):
-
-```
-MyBot/
-├── src/
-│   └── index.ts          # Entry point — app setup + message handlers
-├── package.json          # Dependencies
-├── tsconfig.json         # TypeScript config
-└── tsup.config.js        # Build config
-```
-
-The entry point (`src/index.ts`) contains the app setup and inline message handlers. There is no separate bot file — all bot logic lives in the entry point. The `.env` file is added in Step 4 (not scaffolded by default).
-
-**Language-specific differences:**
-- **C#:** `Program.cs` as entry point, `.csproj` for dependencies
-- **Python:** `src/main.py` as entry point, `pyproject.toml` for dependencies
-
----
-
-## Step 6: Run the Bot Locally
-
-### Install Dependencies (if not auto-installed)
-
-**TypeScript:**
-```bash
-npm install
-```
-
-**C#:**
-```bash
-dotnet restore
-```
-
-**Python:**
-```bash
-pip install -r requirements.txt
-```
-
-### Start the Bot
-
-**TypeScript:**
-```bash
-npm run dev
-```
-
-**C#:**
-```bash
-dotnet run
-```
-
-**Python:**
-```bash
-python src/main.py
-```
-
-> **Note:** `npm run dev` uses `tsx watch` with hot reload. Use `npm run build && npm start` for production.
-
-**Expected Output:**
-```
-Bot is listening on port 3978
-Bot endpoint: http://localhost:3978/api/messages
-```
+Follow the instructions printed by `teams project new` to install dependencies and start the bot.
 
 ### Set Up Local Tunnel (for Testing in Teams)
 
@@ -223,7 +129,7 @@ teams app update <teamsAppId> --endpoint "https://<tunnel-id>.devtunnels.ms/api/
 
 ---
 
-## Step 7: Test Your Bot
+## Step 5: Test Your Bot
 
 ### Install in Teams
 
@@ -246,9 +152,9 @@ Look for `installLink` in the output and open it in your browser.
 
 ---
 
-## Step 8: Customize Your Bot
+## Step 6: Customize Your Bot
 
-The scaffolded project's entry point (`src/index.ts` for TypeScript, `app.py` for Python) contains inline message handlers. Customize your bot by editing these handlers directly.
+The scaffolded project's entry point (`src/index.ts` for TypeScript, `src/main.py` for Python) contains inline message handlers. Customize your bot by editing these handlers directly.
 
 For code patterns, API reference, and advanced features (adaptive cards, AI integration, dialogs, proactive messaging, etc.), refer to the SDK docs:
 - TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/docs_typescript/in-depth-guides.txt
@@ -262,5 +168,5 @@ For code patterns, API reference, and advanced features (adaptive cards, AI inte
 ## Next Steps
 
 - **SSO:** See the [SSO Setup guide](guide-setup-sso.md) to enable silent authentication
-- **Advanced features:** See the in-depth guides linked in Step 8 above
+- **Advanced features:** See the in-depth guides linked in Step 6 above
 - **Troubleshooting:** See the [Troubleshooting guide](troubleshooting.md)
