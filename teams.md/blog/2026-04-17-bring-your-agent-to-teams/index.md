@@ -19,6 +19,8 @@ You've already built the agent. It lives somewhere: a LangChain chain, an Azure 
 
 The unlock is a single pattern from the Teams TypeScript SDK: the **HTTP server adapter**. Instead of running a separate Teams bot server, you plug the Teams SDK into your existing Express app (or any HTTP server) and it registers its own route. Your agent doesn't change. You just add a new listener.
 
+The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically. A Python SDK is also available if that's your stack — the pattern is the same.
+
 <!-- truncate -->
 
 ## The Pattern
@@ -104,6 +106,7 @@ http.createServer(expressApp).listen(3978);
 ```
 CLIENT_ID=your-teams-bot-client-id
 CLIENT_SECRET=your-teams-bot-client-secret
+TENANT_ID=your-tenant-id
 OPENAI_API_KEY=sk-...
 ```
 
@@ -181,11 +184,12 @@ export { expressApp, teamsApp };
 ```
 CLIENT_ID=your-teams-bot-client-id
 CLIENT_SECRET=your-teams-bot-client-secret
+TENANT_ID=your-tenant-id
 AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
 AZURE_AGENT_ID=asst_...
 ```
 
-`DefaultAzureCredential` handles auth automatically — managed identity in production, `az login` in development. No API keys to rotate.
+`DefaultAzureCredential` picks up managed identity automatically when deployed to Azure. In development, you'll need the Azure CLI installed and authenticated (`az login`). No secrets to manage in either environment.
 
 ---
 
@@ -237,17 +241,20 @@ export { expressApp, teamsApp };
 ```
 CLIENT_ID=your-teams-bot-client-id
 CLIENT_SECRET=your-teams-bot-client-secret
+TENANT_ID=your-tenant-id
 SLACK_BOT_TOKEN=xoxb-...
 SLACK_SIGNING_SECRET=...
 ```
 
-One server. Slack events hit `/slack/events`, Teams messages hit `/api/messages`. Your bot logic can be shared functions called from both handlers.
+One process, two platforms. Slack hits `/slack/events`, Teams hits `/api/messages`. Any shared agent logic — LLM calls, database lookups, business rules — lives in plain functions that both handlers call.
 
 ---
 
 ## Scenario 4: Next.js App
 
 You have a Next.js app and want a Teams bot alongside it — same deployment, same codebase. The App Router owns routing, so `ExpressAdapter` won't work. Instead, implement the `IHttpServerAdapter` interface to dispatch into a handler map that the Teams SDK populates.
+
+The adapter is ~10 lines: `registerRoute` stores the SDK's handler references when the app initializes; `dispatch` pulls the body and headers from the incoming request, looks up the right handler, and returns the response. That's the entire contract.
 
 **`lib/nextjs-adapter.ts`:**
 
@@ -320,6 +327,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 ```
 CLIENT_ID=your-teams-bot-client-id
 CLIENT_SECRET=your-teams-bot-client-secret
+TENANT_ID=your-tenant-id
 ```
 
 The `NextjsAdapter` is the custom layer, but everything else is identical to the other scenarios. The Teams SDK doesn't care what's underneath — it just needs something that implements `registerRoute` and handles dispatch.
@@ -328,9 +336,17 @@ The `NextjsAdapter` is the custom layer, but everything else is identical to the
 
 ## Registering Your Bot
 
-All four scenarios share the same registration step. You need a bot endpoint reachable from Teams — use [ngrok](https://ngrok.com) or [dev tunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) locally.
+All four scenarios share the same registration step. First, get a public URL for your local server — [dev tunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) is the recommended option, or [ngrok](https://ngrok.com) works too.
 
-The Teams SDK CLI handles bot registration and credential provisioning. Use [`teams app bot get`](https://microsoft.github.io/teams-sdk/cli/commands/app/bot-get/) to retrieve your `CLIENT_ID` and `CLIENT_SECRET` once your bot is registered.
+Then use the Teams SDK CLI to register your bot and write the credentials directly to your `.env`:
+
+```bash
+npm install -g @microsoft/teams.cli@preview
+teams login
+teams app create --name "My Bot" --endpoint https://your-tunnel-url/api/messages --env .env
+```
+
+One command handles AAD app registration, client secret generation, manifest creation, and bot setup. Your `.env` will be populated with `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` automatically.
 
 ---
 
@@ -344,4 +360,4 @@ const teamsApp = new App({ httpServerAdapter: adapter });
 teamsApp.on('message', async ({ send, activity }) => { /* your agent */ });
 ```
 
-Your agent doesn't need to know about Teams. Teams doesn't need to know about your agent. The adapter is the seam.
+Your agent doesn't change. Your server doesn't change. You add one listener, and Teams users can reach your agent. Pick the scenario that matches your stack and ship it.
