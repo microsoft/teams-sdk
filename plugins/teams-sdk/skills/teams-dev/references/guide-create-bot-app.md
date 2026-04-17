@@ -45,24 +45,18 @@ Have your `.env` file or credentials ready before proceeding.
 
 The `teams project new` command supports three languages:
 
-**TypeScript (Recommended for Node.js developers):**
+**TypeScript:**
 ```bash
-teams project new typescript <name>
-# or short form:
 teams project new ts <name>
 ```
 
-**Python (Recommended for Python developers):**
+**Python:**
 ```bash
-teams project new python <name>
-# or short form:
 teams project new py <name>
 ```
 
-**C# (Recommended for .NET developers):**
+**C#:**
 ```bash
-teams project new csharp <name>
-# or short form:
 teams project new cs <name>
 ```
 
