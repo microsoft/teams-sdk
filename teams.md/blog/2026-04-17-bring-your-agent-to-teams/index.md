@@ -94,9 +94,6 @@ export { expressApp, teamsApp };
 
 **`.env`:**
 ```
-CLIENT_ID=your-teams-bot-client-id
-CLIENT_SECRET=your-teams-bot-client-secret
-TENANT_ID=your-tenant-id
 SLACK_BOT_TOKEN=xoxb-...
 SLACK_SIGNING_SECRET=...
 ```
@@ -168,9 +165,6 @@ http.createServer(expressApp).listen(3978);
 
 **`.env`:**
 ```
-CLIENT_ID=your-teams-bot-client-id
-CLIENT_SECRET=your-teams-bot-client-secret
-TENANT_ID=your-tenant-id
 OPENAI_API_KEY=sk-...
 ```
 
@@ -249,9 +243,6 @@ export { expressApp, teamsApp };
 
 **`.env`:**
 ```
-CLIENT_ID=your-teams-bot-client-id
-CLIENT_SECRET=your-teams-bot-client-secret
-TENANT_ID=your-tenant-id
 AZURE_AI_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
 AZURE_AGENT_ID=asst_...
 ```
@@ -336,13 +327,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 ```
 
 </details>
-
-**`.env.local`:**
-```
-CLIENT_ID=your-teams-bot-client-id
-CLIENT_SECRET=your-teams-bot-client-secret
-TENANT_ID=your-tenant-id
-```
 
 The Teams SDK doesn't care what's underneath. It just needs something that implements `registerRoute` and handles dispatch.
 
