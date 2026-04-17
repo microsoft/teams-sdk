@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import { HtmlClassNameProvider, ThemeClassNames, PageMetadata } from '@docusaurus/theme-common';
 import clsx from 'clsx';
 import type { Props } from '@theme/BlogListPage';
 import BlogPostRows from '@site/src/components/BlogPostRows';
+import { formatBlogDate } from '@site/src/utils/blogDate';
 
 const HIDDEN_FILTER_TAGS = new Set([
     'teams-sdk', 'teams-ai-library', 'microsoft-teams', 'microsoft-365-developer',
@@ -43,6 +45,33 @@ export default function BlogListPage({ items, metadata }: Props): React.ReactNod
               content.metadata.tags.some((t) => selected.has(normalizeTag(t.label))),
           );
 
+    const hero = filtered[0];
+    const rest = filtered.slice(1);
+
+    let heroNode: React.ReactNode = null;
+    if (hero) {
+        const { permalink, title, date, description, authors, frontMatter } = hero.content.metadata;
+        const externalUrl = frontMatter?.external_url as string | undefined;
+        const authorNames = authors.map((a) => a.name).filter(Boolean);
+        const dateStr = formatBlogDate(date);
+        const sharedProps = { className: 'sdev-blog__hero-post' };
+        const inner = (
+            <>
+                <div className="sdev-blog__hero-post-label">/ LATEST</div>
+                <div className="sdev-blog__hero-post-date">{dateStr}</div>
+                <h2 className="sdev-blog__hero-post-title">{title}</h2>
+                {description && <p className="sdev-blog__hero-post-desc">{description}</p>}
+                <div className="sdev-blog__hero-post-footer">
+                    {authorNames.length > 0 && <span className="sdev-blog__hero-post-author">{authorNames.join(', ')}</span>}
+                    <span className="sdev-blog__hero-post-read">Read →</span>
+                </div>
+            </>
+        );
+        heroNode = externalUrl
+            ? <a {...sharedProps} href={externalUrl} target="_blank" rel="noopener noreferrer">{inner}</a>
+            : <Link {...sharedProps} to={permalink}>{inner}</Link>;
+    }
+
     return (
         <HtmlClassNameProvider
             className={clsx(ThemeClassNames.wrapper.blogPages, ThemeClassNames.page.blogListPage)}>
@@ -75,15 +104,20 @@ export default function BlogListPage({ items, metadata }: Props): React.ReactNod
                     </aside>
 
                     <main className="sdev-blog__main">
-                        <div className="sdev-blog__table-head">
-                            <span className="sdev-blog__th sdev-blog__th--date">/ DATE</span>
-                            <span className="sdev-blog__th sdev-blog__th--name">/ TITLE</span>
-                        </div>
-
-                        <BlogPostRows items={filtered} />
-
                         {filtered.length === 0 && (
                             <div className="sdev-blog__empty">No posts match the selected filters.</div>
+                        )}
+
+                        {heroNode}
+
+                        {rest.length > 0 && (
+                            <>
+                                <div className="sdev-blog__table-head">
+                                    <span className="sdev-blog__th sdev-blog__th--date">/ DATE</span>
+                                    <span className="sdev-blog__th sdev-blog__th--name">/ TITLE</span>
+                                </div>
+                                <BlogPostRows items={rest} />
+                            </>
                         )}
                     </main>
                 </div>

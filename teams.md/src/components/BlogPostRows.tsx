@@ -61,19 +61,21 @@ export default function BlogPostRows({ items }: Props) {
 
                 return (
                     <div key={permalink} className={clsx('sdev-blog__entry', isOpen && 'sdev-blog__entry--open')}>
-                        <div className="sdev-blog__row">
+                        <div className="sdev-blog__row" onClick={() => toggleRow(permalink)}>
                             <span className="sdev-blog__bullet" />
                             <span className="sdev-blog__date">{dateStr}</span>
                             {externalUrl
-                                ? <a href={externalUrl} className="sdev-blog__title" target="_blank" rel="noopener noreferrer">{title}</a>
-                                : <Link to={permalink} className="sdev-blog__title">{title}</Link>
+                                ? <a href={externalUrl} className="sdev-blog__title" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>{title}</a>
+                                : <Link to={permalink} className="sdev-blog__title" onClick={(e) => e.stopPropagation()}>{title}</Link>
                             }
                             <button
                                 className="sdev-blog__plus"
-                                onClick={() => toggleRow(permalink)}
+                                onClick={(e) => { e.stopPropagation(); toggleRow(permalink); }}
                                 aria-expanded={isOpen}
                                 aria-label={isOpen ? 'Collapse post details' : 'Expand post details'}>
-                                {isOpen ? '−' : '+'}
+                                <svg className={clsx('sdev-blog__chevron', isOpen && 'sdev-blog__chevron--open')} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
                             </button>
                         </div>
 
