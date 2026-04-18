@@ -71,3 +71,27 @@ N/A
 
 <!-- reactions-preview-note -->
 N/A
+
+<!-- context-send-method-name -->
+
+`send()`
+
+<!-- context-reply-method-name -->
+
+`reply()`
+
+<!-- threading-reactive-example -->
+
+```python
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    # Send in the same thread, no quote
+    await ctx.send("Acknowledged")
+
+    # Send in the same thread with a visual quote of the inbound message
+    await ctx.reply("Got it!")
+```
+N/A
+
+<!-- reactions-preview-note -->
+N/A
