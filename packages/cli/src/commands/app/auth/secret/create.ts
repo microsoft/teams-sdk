@@ -12,7 +12,7 @@ interface SecretCreateOptions {
 export const secretCreateCommand = new Command('create')
   .description('Generate a new client secret for an existing app')
   .argument('[appId]', 'App ID')
-  .option('--env <path>', '[OPTIONAL] Path to .env file to write credentials')
+  .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (appIdArg: string | undefined, options: SecretCreateOptions) => {

@@ -15,7 +15,7 @@ import {
   type BotLocation,
 } from '../../apps/index.js';
 import { getAccount, getTokenSilent, graphScopes, teamsDevPortalScopes } from '../../auth/index.js';
-import { outputCredentials } from '../../utils/env.js';
+import { isJsonFile, outputCredentials, writeEnvFile, writeJsonCredentials } from '../../utils/env.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
 import { readAndValidateIcon } from '../../utils/icon.js';
 import { outputJson } from '../../utils/json-output.js';
@@ -35,11 +35,12 @@ interface AppCreateOutput {
   installLink: string;
   portalLink: string;
   botLocation: 'teams-managed' | 'azure';
-  credentials: {
+  credentials?: {
     CLIENT_ID: string;
     CLIENT_SECRET: string;
     TENANT_ID: string;
   };
+  credentialsFile?: string;
 }
 
 interface CreateOptions {
@@ -61,7 +62,7 @@ export const appCreateCommand = new Command('create')
   .description('Create a new Teams app with bot')
   .option('-n, --name <name>', 'App/bot name')
   .option('-e, --endpoint <url>', '[OPTIONAL] Bot messaging endpoint URL')
-  .option('--env <path>', '[OPTIONAL] Path to .env file to write credentials')
+  .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')
   .option('--azure', '[OPTIONAL] Create bot in Azure (requires az CLI)')
   .option('--teams-managed', '[OPTIONAL] Create bot managed by Teams (default)')
   .option('--subscription <id>', '[OPTIONAL] Azure subscription ID (defaults to az CLI default)')
@@ -161,7 +162,7 @@ export const appCreateCommand = new Command('create')
         options.env ??
         (interactive && !hasFlags && !options.json
           ? (await input({
-              message: 'Path to .env file (leave empty to show in terminal):',
+              message: 'Path to credentials file, e.g. .env or appsettings.json (leave empty to show in terminal):',
             })) || undefined
           : undefined);
 
@@ -210,7 +211,7 @@ export const appCreateCommand = new Command('create')
       if (developerOpts?.name.trim()) summaryLines.push(['Developer', developerOpts.name.trim()]);
       if (colorIconPath) summaryLines.push(['Color icon', colorIconPath]);
       if (outlineIconPath) summaryLines.push(['Outline icon', outlineIconPath]);
-      if (envPath) summaryLines.push(['.env file', envPath]);
+      if (envPath) summaryLines.push(['Credentials file', envPath]);
 
       if (interactive && !silent) {
         logger.info('');
@@ -304,6 +305,20 @@ export const appCreateCommand = new Command('create')
       const portalLink = `https://dev.teams.microsoft.com/apps/${teamsAppId}`;
 
       if (options.json) {
+        const credentialValues = {
+          CLIENT_ID: clientId,
+          CLIENT_SECRET: secretText,
+          TENANT_ID: account.tenantId,
+        };
+
+        if (envPath) {
+          if (isJsonFile(envPath)) {
+            writeJsonCredentials(envPath, credentialValues);
+          } else {
+            writeEnvFile(envPath, credentialValues);
+          }
+        }
+
         const result: AppCreateOutput = {
           appName: name!,
           teamsAppId,
@@ -312,11 +327,9 @@ export const appCreateCommand = new Command('create')
           installLink,
           portalLink,
           botLocation: location === 'tm' ? 'teams-managed' : 'azure',
-          credentials: {
-            CLIENT_ID: clientId,
-            CLIENT_SECRET: secretText,
-            TENANT_ID: account.tenantId,
-          },
+          ...(envPath
+            ? { credentialsFile: envPath }
+            : { credentials: credentialValues }),
         };
         outputJson(result);
       } else {

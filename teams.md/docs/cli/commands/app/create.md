@@ -20,7 +20,7 @@ teams app create [options]
 |------|-------------|
 | `-n, --name <name>` | App/bot name |
 | `-e, --endpoint <url>` | [OPTIONAL] Bot messaging endpoint URL |
-| `--env <path>` | [OPTIONAL] Path to .env file to write credentials |
+| `--env <path>` | [OPTIONAL] Path to credentials file (.env or appsettings.json) |
 | `--azure` | [OPTIONAL] Create bot in Azure (requires az CLI) |
 | `--teams-managed` | [OPTIONAL] Create bot managed by Teams (default) |
 | `--subscription <id>` | [OPTIONAL] Azure subscription ID (defaults to az CLI default) |
@@ -54,6 +54,14 @@ Create with Azure bot and write credentials to `.env`:
 ```bash
 teams app create --name "My Bot" --azure --resource-group my-rg --env .env
 ```
+
+For C# projects, write credentials to `appsettings.json` instead:
+
+```bash
+teams app create --name "My Bot" --env appsettings.json
+```
+
+This writes credentials under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
 
 ### Output
 

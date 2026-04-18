@@ -2,7 +2,7 @@ import { input } from '@inquirer/prompts';
 import { createClientSecret, fetchApp, getAadAppByClientId } from '../../../../apps/index.js';
 import { confirmAction } from '../../../../utils/interactive.js';
 import { getAccount, getTokenSilent, graphScopes } from '../../../../auth/index.js';
-import { outputCredentials } from '../../../../utils/env.js';
+import { isJsonFile, outputCredentials, writeEnvFile, writeJsonCredentials } from '../../../../utils/env.js';
 import { CliError } from '../../../../utils/errors.js';
 import { outputJson } from '../../../../utils/json-output.js';
 import { createSilentSpinner } from '../../../../utils/spinner.js';
@@ -10,11 +10,12 @@ import { createSilentSpinner } from '../../../../utils/spinner.js';
 interface SecretGenerateOutput {
   botId: string;
   aadAppName: string;
-  credentials: {
+  credentials?: {
     CLIENT_ID: string;
     CLIENT_SECRET: string;
     TENANT_ID: string;
   };
+  credentialsFile?: string;
 }
 
 interface GenerateSecretOptions {
@@ -22,9 +23,9 @@ interface GenerateSecretOptions {
   tdpToken: string;
   /** Teams app ID */
   appId: string;
-  /** Explicit .env path (skips prompt) */
+  /** Explicit credentials file path, e.g. .env or appsettings.json (skips prompt) */
   envPath?: string;
-  /** When true, prompt for .env path if not provided */
+  /** When true, prompt for credentials file path if not provided */
   interactive?: boolean;
   /** When true, output JSON instead of human-readable text */
   json?: boolean;
@@ -43,7 +44,7 @@ export async function generateSecret(opts: GenerateSecretOptions): Promise<void>
   if (envPath === undefined && opts.interactive) {
     envPath =
       (await input({
-        message: 'Path to .env file (leave empty to show in terminal):',
+        message: 'Path to credentials file, e.g. .env or appsettings.json (leave empty to show in terminal):',
       })) || undefined;
   }
 
@@ -88,14 +89,26 @@ export async function generateSecret(opts: GenerateSecretOptions): Promise<void>
   spinner.success({ text: 'Generated client secret' });
 
   if (opts.json) {
+    const credentialValues = {
+      CLIENT_ID: clientId,
+      CLIENT_SECRET: secret.secretText,
+      TENANT_ID: account.tenantId,
+    };
+
+    if (envPath) {
+      if (isJsonFile(envPath)) {
+        writeJsonCredentials(envPath, credentialValues);
+      } else {
+        writeEnvFile(envPath, credentialValues);
+      }
+    }
+
     const result: SecretGenerateOutput = {
       botId: clientId,
       aadAppName: aadApp.displayName,
-      credentials: {
-        CLIENT_ID: clientId,
-        CLIENT_SECRET: secret.secretText,
-        TENANT_ID: account.tenantId,
-      },
+      ...(envPath
+        ? { credentialsFile: envPath }
+        : { credentials: credentialValues }),
     };
     outputJson(result);
   } else {
