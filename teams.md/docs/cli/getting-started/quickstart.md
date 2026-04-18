@@ -42,11 +42,13 @@ CLIENT_SECRET=<your-client-secret>
 TENANT_ID=<your-tenant-id>
 ```
 
-Save these to a `.env` file automatically:
+Save these to a credentials file automatically:
 
 ```bash
 teams app create --name "My Bot" --env .env
 ```
+
+For C# projects, use `--env appsettings.json` to write credentials under a `Teams` section with PascalCase keys.
 
 ## 4. View your app
 

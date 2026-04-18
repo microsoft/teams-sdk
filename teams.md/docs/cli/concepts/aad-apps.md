@@ -52,10 +52,12 @@ To generate a new client secret for an existing app:
 teams app auth secret create <appId>
 ```
 
-To write credentials to a `.env` file:
+To write credentials to a file:
 
 ```bash
 teams app auth secret create <appId> --env .env
 ```
+
+For C# projects, use `--env appsettings.json` to write credentials under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
 
 The secret output always includes all three values (`CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`) so you have everything needed to configure your bot.
