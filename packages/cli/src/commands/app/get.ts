@@ -3,6 +3,7 @@ import pc from 'picocolors';
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../auth/index.js';
 import { fetchApp, fetchAppDetailsV2, showAppDetail } from '../../apps/index.js';
+import { fetchBot } from '../../apps/tdp.js';
 import { outputJson } from '../../utils/json-output.js';
 import { pickApp } from '../../utils/app-picker.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
@@ -66,6 +67,18 @@ export const appGetCommand = new Command('get')
       if (options.json) {
         const spinner = createSilentSpinner('Fetching app details...', true).start();
         const details = await fetchAppDetailsV2(token, app.teamsAppId);
+
+        // Fetch bot endpoint separately from the bot framework API
+        let endpoint: string | null = null;
+        if (details.bots && details.bots.length > 0) {
+          try {
+            const bot = await fetchBot(token, details.bots[0].botId);
+            endpoint = bot.messagingEndpoint || null;
+          } catch {
+            // Bot fetch failed, endpoint remains null
+          }
+        }
+
         spinner.stop();
 
         const enriched: AppGetOutput = {
@@ -80,7 +93,7 @@ export const appGetCommand = new Command('get')
           websiteUrl: details.websiteUrl,
           privacyUrl: details.privacyUrl,
           termsOfUseUrl: details.termsOfUseUrl,
-          endpoint: details.bots?.[0]?.messagingEndpoint ?? null,
+          endpoint: endpoint,
           installLink: `https://teams.microsoft.com/l/app/${details.teamsAppId}?installAppPackage=true`,
           portalLink: `https://dev.teams.microsoft.com/apps/${details.teamsAppId}`,
         };

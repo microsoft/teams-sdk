@@ -6,7 +6,7 @@ Configure Single Sign-On so your bot can acquire access tokens silently — no l
 
 - **`az` CLI installed and authenticated:** Run `az --version` and `az account show`. Log in with `az login` using the **same Microsoft account** used for `teams login`.
 - **`teamsAppId` and `botId`** from bot creation output (or run `teams app get <teamsAppId> --json` to retrieve them).
-- **`TENANT_ID`** from your `.env` file.
+- **`TENANT_ID`** from your `.env` file (or `TenantId` from `appsettings.json` for C# projects).
 
 ---
 
@@ -34,7 +34,7 @@ Save `resourceGroup` and `subscription` from the migration output — required i
 
 The OAuth connection requires the bot's client secret.
 
-**Option A — Read from `.env` file:** Use the `CLIENT_SECRET` value already saved there.
+**Option A — Read from credentials file:** Use the `CLIENT_SECRET` value from your `.env` file (or `ClientSecret` from `appsettings.json` for C# projects).
 
 **Option B — Generate a new secret:**
 ```bash
