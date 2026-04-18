@@ -140,8 +140,8 @@ describe('writeJsonCredentials', () => {
 
 // ── outputCredentials (format dispatch) ──────────────────────────────
 
-vi.mock('nanospinner', () => ({
-  createSpinner: () => ({
+vi.mock('../src/utils/spinner.js', () => ({
+  createSilentSpinner: () => ({
     start: () => ({ success: vi.fn() }),
   }),
 }));

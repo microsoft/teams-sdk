@@ -23,9 +23,9 @@ interface GenerateSecretOptions {
   tdpToken: string;
   /** Teams app ID */
   appId: string;
-  /** Explicit .env path (skips prompt) */
+  /** Explicit credentials file path, e.g. .env or appsettings.json (skips prompt) */
   envPath?: string;
-  /** When true, prompt for .env path if not provided */
+  /** When true, prompt for credentials file path if not provided */
   interactive?: boolean;
   /** When true, output JSON instead of human-readable text */
   json?: boolean;

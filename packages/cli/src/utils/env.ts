@@ -1,8 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { createSpinner } from 'nanospinner';
 import pc from 'picocolors';
+import { CliError } from './errors.js';
 import { logger } from './logger.js';
+import { createSilentSpinner } from './spinner.js';
 
 export interface EnvValues {
   CLIENT_ID: string;
@@ -46,7 +47,20 @@ export function writeJsonCredentials(filePath: string, values: EnvValues): void 
 
   let json: Record<string, unknown> = {};
   if (fs.existsSync(resolvedPath)) {
-    json = JSON.parse(fs.readFileSync(resolvedPath, 'utf-8'));
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(fs.readFileSync(resolvedPath, 'utf-8'));
+    } catch {
+      throw new CliError('VALIDATION_FORMAT', `Invalid JSON in ${filePath}.`, 'Fix the JSON syntax and try again.');
+    }
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      throw new CliError(
+        'VALIDATION_FORMAT',
+        `Expected a JSON object in ${filePath}, got ${Array.isArray(parsed) ? 'array' : typeof parsed}.`,
+        'The file must contain a top-level JSON object (e.g. {}).'
+      );
+    }
+    json = parsed as Record<string, unknown>;
   }
 
   const existing = (json.Teams as Record<string, unknown>) ?? {};
@@ -70,7 +84,7 @@ export function outputCredentials(
   successMessage: string
 ): void {
   if (envPath) {
-    const spinner = createSpinner('Writing credentials...').start();
+    const spinner = createSilentSpinner('Writing credentials...').start();
     if (isJsonFile(envPath)) {
       writeJsonCredentials(envPath, values);
     } else {

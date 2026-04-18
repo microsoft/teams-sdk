@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -96,6 +96,10 @@ vi.mock('../src/utils/json-output.js', () => ({
 // Mock process.exit to throw instead of exiting
 const mockExit = vi.spyOn(process, 'exit').mockImplementation((code) => {
   throw new Error(`process.exit(${code})`);
+});
+
+afterAll(() => {
+  mockExit.mockRestore();
 });
 
 // ─── Group 1: generateSecret ─────────────────────────────────────────
