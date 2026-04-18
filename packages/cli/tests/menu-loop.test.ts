@@ -209,22 +209,24 @@ describe('project new menu loop', () => {
   });
 });
 
-describe('config menu includes set-lang', () => {
+describe('config menu loops', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
     setupMocks();
   });
 
-  it('loops back to menu after selecting set-lang', async () => {
+  it('loops back to menu after selecting a setting', async () => {
     const { select } = await import('@inquirer/prompts');
     const mockedSelect = vi.mocked(select);
-    mockedSelect.mockResolvedValueOnce('set-lang' as never).mockResolvedValueOnce('back' as never);
+    mockedSelect
+      .mockResolvedValueOnce('default-bot-location' as never)
+      .mockResolvedValueOnce('back' as never);
 
     const { configCommand } = await import('../src/commands/config/index.js');
 
-    const setLangSub = configCommand.commands.find((c: Command) => c.name() === 'set-lang');
-    if (setLangSub) setLangSub.parseAsync = vi.fn().mockResolvedValue(undefined);
+    const setSub = configCommand.commands.find((c: Command) => c.name() === 'set');
+    if (setSub) setSub.parseAsync = vi.fn().mockResolvedValue(undefined);
 
     await configCommand.parseAsync([], { from: 'user' });
 

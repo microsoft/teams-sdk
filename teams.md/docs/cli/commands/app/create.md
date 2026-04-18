@@ -37,7 +37,7 @@ Creates a complete Teams bot app in a single command: AAD app registration, clie
 
 By default, the bot is Teams-managed (no Azure subscription needed). Use `--azure` to create an Azure Bot instead, which is required for OAuth and SSO features.
 
-**Precedence:** `--azure`/`--teams-managed` flag > `teams config default-bot-location` > Teams-managed default.
+**Precedence:** `--azure`/`--teams-managed` flag > `teams config set default-bot-location` > Teams-managed default.
 
 See [Bot Locations](../../concepts/bot-locations) for details on the trade-offs.
 

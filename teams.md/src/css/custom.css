@@ -304,6 +304,848 @@
   }
 }
 
+/* ==========================================================================
+   BLOG — STRIPE DEV STYLE
+   ========================================================================== */
+
+.sdev-blog {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - var(--ifm-navbar-height));
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    gap: 3rem;
+}
+
+/* ── Sidebar ── */
+.sdev-blog {
+    position: relative;
+}
+
+.sdev-blog::before {
+    content: '';
+    position: absolute;
+    left: 260px;
+    top: -200px;
+    bottom: 0;
+    width: 1px;
+    background: var(--ifm-color-emphasis-200);
+    pointer-events: none;
+}
+
+.sdev-blog__sidebar {
+    padding: 3rem 0 3rem;
+    padding-right: 2rem;
+}
+
+.sdev-blog__hero {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+}
+
+/* ── Featured / hero post ── */
+.sdev-blog__hero-post {
+    display: block;
+    border: 1px solid var(--ifm-color-emphasis-300);
+    padding: 1.75rem 2rem;
+    margin-bottom: 2.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.sdev-blog__hero-post:hover {
+    border-color: var(--ifm-color-primary);
+    background: var(--ifm-color-emphasis-100);
+    text-decoration: none;
+    color: inherit;
+}
+
+.sdev-blog__hero-post-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ifm-color-primary);
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    margin-bottom: 0.5rem;
+}
+
+.sdev-blog__hero-post-date {
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    font-size: 0.82rem;
+    color: var(--ifm-color-emphasis-600);
+    margin-bottom: 0.75rem;
+}
+
+.sdev-blog__hero-post-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 0.9rem;
+    color: var(--ifm-font-color-base);
+}
+
+.sdev-blog__hero-post-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--ifm-color-emphasis-700);
+    margin: 0 0 1.25rem;
+}
+
+.sdev-blog__hero-post-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.sdev-blog__hero-post-author {
+    font-size: 0.82rem;
+    color: var(--ifm-color-emphasis-600);
+}
+
+.sdev-blog__hero-post-read {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ifm-color-primary);
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    white-space: nowrap;
+}
+
+.sdev-blog__heading {
+    font-size: 5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin: 0;
+}
+
+.sdev-blog__count {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--ifm-color-primary);
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+}
+
+.sdev-blog__filter-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ifm-color-emphasis-500);
+    margin-bottom: 0.75rem;
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+}
+
+.sdev-blog__divider {
+    height: 1px;
+    background: var(--ifm-color-emphasis-200);
+    margin-bottom: 1.25rem;
+    margin-right: 1.5rem;
+}
+
+.sdev-blog__filter-group {
+    margin-bottom: 1.5rem;
+}
+
+.sdev-blog__filter-group-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ifm-color-emphasis-700);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.sdev-blog__filter-folder {
+    font-size: 0.9rem;
+}
+
+.sdev-blog__filter-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--ifm-color-emphasis-700);
+    transition: color 0.12s ease;
+}
+
+.sdev-blog__filter-item:hover {
+    color: var(--ifm-color-emphasis-900);
+}
+
+.sdev-blog__filter-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.sdev-blog__checkbox {
+    accent-color: var(--ifm-color-primary);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.sdev-blog__filter-count {
+    color: var(--ifm-color-emphasis-500);
+}
+
+/* ── Main table ── */
+.sdev-blog__main {
+    padding: 3rem 0;
+}
+
+.sdev-blog__table-head {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    padding: 0 0 0.6rem;
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+    margin-bottom: 0;
+    gap: 1.5rem;
+}
+
+.sdev-blog__th {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--ifm-color-emphasis-500);
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+}
+
+/* Post row */
+.sdev-blog__row {
+    display: grid;
+    grid-template-columns: 14px 116px 1fr 24px;
+    align-items: center;
+    gap: 0 1rem;
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    margin: 0 -0.75rem;
+}
+
+.sdev-blog__row:hover {
+    background: var(--ifm-color-emphasis-100);
+}
+
+.sdev-blog__title:hover {
+    color: var(--ifm-color-primary);
+    text-decoration: none;
+}
+
+.sdev-blog__bullet {
+    width: 8px;
+    height: 8px;
+    border-radius: 1px;
+    background: var(--ifm-color-primary);
+    flex-shrink: 0;
+}
+
+.sdev-blog__date {
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    font-size: 0.82rem;
+    color: var(--ifm-color-primary);
+    white-space: nowrap;
+}
+
+.sdev-blog__title {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--ifm-font-color-base);
+    transition: color 0.12s ease;
+    line-height: 1.4;
+}
+
+.sdev-blog__plus {
+    color: var(--ifm-color-emphasis-600);
+    text-align: right;
+    transition: color 0.12s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.sdev-blog__chevron {
+    transition: transform 0.2s ease;
+    display: block;
+}
+
+.sdev-blog__chevron--open {
+    transform: rotate(180deg);
+}
+
+
+.sdev-blog__empty {
+    padding: 2rem 0;
+    color: var(--ifm-color-emphasis-500);
+    font-size: 0.9rem;
+}
+
+/* Tags list page rows */
+.sdev-blog__tags-row {
+    display: grid;
+    grid-template-columns: 14px 116px 1fr;
+    align-items: center;
+    gap: 0 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.12s ease;
+}
+
+.sdev-blog__tags-row:hover {
+    text-decoration: none;
+}
+
+.sdev-blog__tags-name {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--ifm-font-color-base);
+    transition: color 0.12s ease;
+}
+
+.sdev-blog__tags-row:hover .sdev-blog__tags-name {
+    color: var(--ifm-color-primary);
+}
+
+/* Tag page sidebar */
+.sdev-blog__tag-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ifm-font-color-base);
+    margin-bottom: 0.25rem;
+}
+
+.sdev-blog__tag-count {
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    font-size: 0.75rem;
+    color: var(--ifm-color-emphasis-500);
+    margin-bottom: 1.25rem;
+}
+
+.sdev-blog__tag-back {
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    font-size: 0.75rem;
+    color: var(--ifm-color-emphasis-500);
+    text-decoration: none;
+    transition: color 0.12s;
+}
+
+.sdev-blog__tag-back:hover {
+    color: var(--ifm-color-primary);
+    text-decoration: none;
+}
+
+/* ── Accordion entry wrapper ── */
+.sdev-blog__entry {
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.sdev-blog__entry--open {
+    border-bottom-color: var(--ifm-color-emphasis-300);
+}
+
+.sdev-blog__entry--open .sdev-blog__row {
+    background: var(--ifm-color-emphasis-100);
+    border-bottom-color: transparent;
+}
+
+button.sdev-blog__plus {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
+
+/* ── Expanded panel ── */
+.sdev-blog__panel {
+    padding: 1.25rem 0.75rem 1.75rem 2rem;
+    margin: 0 -0.75rem;
+    border-left: 2px solid var(--ifm-color-primary);
+    background: var(--ifm-color-emphasis-100);
+}
+
+.sdev-blog__panel-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0 3rem;
+    margin-bottom: 1.25rem;
+}
+
+.sdev-blog__panel-left,
+.sdev-blog__panel-right {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sdev-blog__panel-section {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 0 1rem;
+    align-items: start;
+}
+
+.sdev-blog__panel-section--author {
+    grid-template-columns: 90px 1fr;
+    align-items: center;
+    align-self: start;
+    padding-top: 0.15rem;
+}
+
+.sdev-blog__panel-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--ifm-color-primary);
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    white-space: nowrap;
+    padding-top: 0.15rem;
+    text-align: right;
+}
+
+.sdev-blog__panel-summary {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--ifm-color-emphasis-700);
+    margin: 0;
+    text-align: justify;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sdev-blog__panel-author {
+    font-size: 0.9rem;
+    color: var(--ifm-font-color-base);
+    font-weight: 500;
+}
+
+.sdev-blog__panel-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--ifm-color-emphasis-400);
+    color: var(--ifm-color-emphasis-700);
+    text-decoration: none;
+    transition: border-color 0.12s, color 0.12s;
+}
+
+.sdev-blog__panel-tag:hover {
+    border-color: var(--ifm-color-primary);
+    color: var(--ifm-color-primary);
+    text-decoration: none;
+}
+
+/* ── Agents rows (AGENTS + SHARE, each label/content) ── */
+.sdev-blog__agents {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 0.5rem 1rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.sdev-blog__agents-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.sdev-blog__agent-btn {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid var(--ifm-color-emphasis-300);
+    border-radius: 3px;
+    color: var(--ifm-color-emphasis-700);
+    background: none;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+    transition: border-color 0.12s, color 0.12s;
+    white-space: nowrap;
+}
+
+.sdev-blog__agent-btn:hover {
+    border-color: var(--ifm-color-primary);
+    color: var(--ifm-color-primary);
+    text-decoration: none;
+}
+
+[data-theme='dark'] .sdev-blog__agent-btn {
+    border-color: var(--ifm-color-emphasis-400);
+    color: var(--ifm-color-emphasis-300);
+}
+
+.sdev-blog__agent-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Read button */
+.sdev-blog__read-btn {
+    display: block;
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--ifm-color-emphasis-400);
+    border-radius: 999px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ifm-color-primary);
+    text-decoration: none;
+    transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.sdev-blog__read-btn:hover {
+    border-color: var(--ifm-color-primary);
+    background: var(--ifm-color-primary);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Dark mode tweaks */
+[data-theme='dark'] .sdev-blog::before {
+    background: var(--ifm-color-emphasis-300);
+}
+
+[data-theme='dark'] .sdev-blog__divider {
+    background: var(--ifm-color-emphasis-300);
+}
+
+[data-theme='dark'] .sdev-blog__row {
+    border-bottom-color: var(--ifm-color-emphasis-300);
+}
+
+[data-theme='dark'] .sdev-blog__table-head {
+    border-bottom-color: var(--ifm-color-emphasis-300);
+}
+
+/* ==========================================================================
+   BLOG POST PAGE — SIDEBAR
+   ========================================================================== */
+
+/* Blog post page layout — anchored to .sdev-sidebar__aside so rules apply
+   immediately without waiting for the html.blog-post-page class injection */
+
+.container:has(.sdev-sidebar__aside) {
+    max-width: 1400px !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}
+
+.container:has(.sdev-sidebar__aside) > .row {
+    min-height: calc(100vh - var(--ifm-navbar-height) - 4rem);
+    align-items: stretch;
+    flex-wrap: nowrap !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Main content fills all remaining space */
+.container:has(.sdev-sidebar__aside) > .row > main {
+    flex: 1 1 0 !important;
+    max-width: none !important;
+    min-width: 0 !important;
+}
+
+/* TOC column (col--2) — narrow and hugs right edge */
+.container:has(.sdev-sidebar__aside) > .row > .col--2 {
+    flex: 0 0 200px !important;
+    max-width: 200px !important;
+}
+
+.sdev-sidebar__aside {
+    position: relative;
+    flex: 0 0 260px !important;
+    max-width: 260px !important;
+}
+
+.sdev-sidebar__aside::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -200px;
+    bottom: 0;
+    width: 1px;
+    background: var(--ifm-color-emphasis-200);
+    pointer-events: none;
+}
+
+.sdev-sidebar {
+    position: sticky;
+    top: calc(var(--ifm-navbar-height) + 1.5rem);
+    padding: 1rem 1.5rem 2rem 0;
+}
+
+.sdev-sidebar__header {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--ifm-color-emphasis-500);
+    margin-bottom: 0.75rem;
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+}
+
+.sdev-sidebar__divider {
+    height: 1px;
+    background: var(--ifm-color-emphasis-200);
+    margin-bottom: 1.25rem;
+}
+
+.sdev-sidebar__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sdev-sidebar__item {
+    margin: 0;
+}
+
+.sdev-sidebar__link {
+    display: grid;
+    grid-template-columns: 8px 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 0.6rem;
+    row-gap: 0.1rem;
+    padding: 0.6rem 0;
+    text-decoration: none;
+    color: inherit;
+    align-items: start;
+}
+
+.sdev-sidebar__link:hover {
+    text-decoration: none;
+}
+
+.sdev-sidebar__link:hover .sdev-sidebar__title {
+    color: var(--ifm-color-primary);
+}
+
+.sdev-sidebar__bullet {
+    width: 6px;
+    height: 6px;
+    border-radius: 1px;
+    background: var(--ifm-color-primary);
+    flex-shrink: 0;
+    margin-top: 0.35rem;
+    grid-row: 1 / 3;
+}
+
+.sdev-sidebar__date {
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    font-size: 0.7rem;
+    color: var(--ifm-color-primary);
+    letter-spacing: 0.02em;
+    grid-column: 2;
+}
+
+.sdev-sidebar__title {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ifm-font-color-base);
+    line-height: 1.35;
+    transition: color 0.12s ease;
+    grid-column: 2;
+}
+
+[data-theme='dark'] .sdev-sidebar__aside::after {
+    background: var(--ifm-color-emphasis-300);
+}
+
+[data-theme='dark'] .sdev-sidebar__divider {
+    background: var(--ifm-color-emphasis-300);
+}
+
+
+/* ==========================================================================
+   BLOG POST ARTICLE PAGE
+   ========================================================================== */
+
+.sdev-post__header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--ifm-color-emphasis-100);
+}
+
+.sdev-post__meta {
+    margin-bottom: 0.6rem;
+}
+
+.sdev-post__date {
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    font-size: 0.82rem;
+    color: var(--ifm-color-primary);
+    letter-spacing: 0.02em;
+}
+
+.sdev-post__title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin: 0 0 1rem;
+}
+
+.sdev-post__info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.sdev-post__info-item {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.sdev-post__label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--ifm-color-primary);
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 72px;
+}
+
+.sdev-post__value {
+    font-size: 0.9rem;
+    color: var(--ifm-font-color-base);
+    font-weight: 500;
+}
+
+.sdev-post__tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.sdev-post__tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.5rem;
+    border: 1px solid var(--ifm-color-emphasis-400);
+    color: var(--ifm-color-emphasis-700);
+    text-decoration: none;
+    transition: border-color 0.12s, color 0.12s;
+}
+
+.sdev-post__tag:hover {
+    border-color: var(--ifm-color-primary);
+    color: var(--ifm-color-primary);
+    text-decoration: none;
+}
+
+
+[data-theme='dark'] .sdev-post__header {
+    border-bottom-color: var(--ifm-color-emphasis-300);
+}
+
+/* ── Paginator ── */
+.sdev-post__paginator {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--ifm-color-emphasis-100);
+}
+
+.sdev-post__paginator-inner {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.sdev-post__pag-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-decoration: none;
+    max-width: 45%;
+}
+
+.sdev-post__pag-link--next {
+    text-align: right;
+    margin-left: auto;
+}
+
+.sdev-post__pag-link:hover {
+    text-decoration: none;
+}
+
+.sdev-post__pag-label {
+    font-family: 'SFMono-Regular', 'Consolas', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--ifm-color-emphasis-500);
+}
+
+.sdev-post__pag-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ifm-font-color-base);
+    line-height: 1.4;
+    transition: color 0.12s ease;
+}
+
+.sdev-post__pag-link:hover .sdev-post__pag-title {
+    color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .sdev-post__paginator {
+    border-top-color: var(--ifm-color-emphasis-300);
+}
+
+/* Mobile: hide blog post sidebar, show content full-width */
+@media (max-width: 996px) {
+    .sdev-sidebar__aside {
+        display: none;
+    }
+}
+
+/* Mobile: stack columns */
+@media (max-width: 768px) {
+    .sdev-blog {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0 1rem;
+    }
+
+    .sdev-blog__sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--ifm-color-emphasis-200);
+        padding: 2rem 0 1.5rem;
+    }
+
+    .sdev-blog__heading {
+        font-size: 3rem;
+    }
+
+    .sdev-blog__row {
+        grid-template-columns: 14px 100px 1fr 20px;
+    }
+}
+
 /* Mobile responsiveness for LanguageDropdown */
 @media (max-width: 768px) {
   .language-dropdown .navbar__link {

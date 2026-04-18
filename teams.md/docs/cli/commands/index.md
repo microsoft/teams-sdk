@@ -46,8 +46,8 @@ teams
 │   │   ├── csharp <name>          Create a new C# Teams app
 │   │   └── python <name>          Create a new Python Teams app
 ├── config                         Manage CLI configuration
-│   ├── default-bot-location       Set default bot location
-│   └── set-lang                   Set default language for project creation
+│   ├── get [key]                  Show configuration values
+│   └── set <key> [value]          Set a configuration value
 └── self-update                    Update to latest version
 ```
 
