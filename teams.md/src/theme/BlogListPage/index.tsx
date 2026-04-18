@@ -31,6 +31,7 @@ export default function BlogListPage({ items, metadata }: Props): React.ReactNod
     const allTags = Object.entries(tagMap).sort((a, b) => a[0].localeCompare(b[0]));
 
     const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [filtersOpen, setFiltersOpen] = useState(false);
 
     const toggleFilter = (label: string) =>
         setSelected((prev) => {
@@ -78,29 +79,40 @@ export default function BlogListPage({ items, metadata }: Props): React.ReactNod
             <PageMetadata title={metadata.blogTitle} description={metadata.blogDescription} />
             <Layout>
                 <div className="sdev-blog">
-                    <aside className="sdev-blog__sidebar">
+                    <aside className={clsx('sdev-blog__sidebar', filtersOpen && 'sdev-blog__sidebar--open')}>
+                        <button
+                            className="sdev-blog__filter-toggle"
+                            onClick={() => setFiltersOpen((v) => !v)}
+                            aria-expanded={filtersOpen}>
+                            / FILTERS
+                            <svg className={clsx('sdev-blog__filter-toggle-icon', filtersOpen && 'sdev-blog__filter-toggle-icon--open')} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
                         <div className="sdev-blog__filter-label">/ FILTERS</div>
-                        <div className="sdev-blog__divider" />
-                        {allTags.length > 0 && (
-                            <div className="sdev-blog__filter-group">
-                                <div className="sdev-blog__filter-group-label">
-                                    <span className="sdev-blog__filter-folder">🗂</span> Topic
+                        <div className="sdev-blog__sidebar-content">
+                            <div className="sdev-blog__divider" />
+                            {allTags.length > 0 && (
+                                <div className="sdev-blog__filter-group">
+                                    <div className="sdev-blog__filter-group-label">
+                                        <span className="sdev-blog__filter-folder">🗂</span> Topic
+                                    </div>
+                                    {allTags.map(([label, { count }]) => (
+                                        <label key={label} className="sdev-blog__filter-item">
+                                            <input
+                                                type="checkbox"
+                                                className="sdev-blog__checkbox"
+                                                checked={selected.has(label)}
+                                                onChange={() => toggleFilter(label)}
+                                            />
+                                            <span className="sdev-blog__filter-text">
+                                                {label} <span className="sdev-blog__filter-count">({count})</span>
+                                            </span>
+                                        </label>
+                                    ))}
                                 </div>
-                                {allTags.map(([label, { count }]) => (
-                                    <label key={label} className="sdev-blog__filter-item">
-                                        <input
-                                            type="checkbox"
-                                            className="sdev-blog__checkbox"
-                                            checked={selected.has(label)}
-                                            onChange={() => toggleFilter(label)}
-                                        />
-                                        <span className="sdev-blog__filter-text">
-                                            {label} <span className="sdev-blog__filter-count">({count})</span>
-                                        </span>
-                                    </label>
-                                ))}
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </aside>
 
                     <main className="sdev-blog__main">

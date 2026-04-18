@@ -431,6 +431,11 @@
     font-family: 'SFMono-Regular', 'Consolas', monospace;
 }
 
+/* Toggle button — hidden on desktop, shown on mobile */
+.sdev-blog__filter-toggle {
+    display: none;
+}
+
 .sdev-blog__filter-label {
     font-size: 0.72rem;
     font-weight: 600;
@@ -1131,18 +1136,125 @@ button.sdev-blog__plus {
         padding: 0 1rem;
     }
 
+    .sdev-blog::before {
+        display: none;
+    }
+
     .sdev-blog__sidebar {
         border-right: none;
         border-bottom: 1px solid var(--ifm-color-emphasis-200);
-        padding: 2rem 0 1.5rem;
+        padding: 0.75rem 0;
+        padding-right: 0;
+    }
+
+    /* Hide the static label on mobile — the toggle replaces it */
+    .sdev-blog__filter-label {
+        display: none;
+    }
+
+    /* Show the toggle button on mobile */
+    .sdev-blog__filter-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.5rem 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ifm-color-emphasis-500);
+        font-family: 'SFMono-Regular', 'Consolas', monospace;
+    }
+
+    .sdev-blog__filter-toggle-icon {
+        transition: transform 0.2s ease;
+    }
+
+    .sdev-blog__filter-toggle-icon--open {
+        transform: rotate(180deg);
+    }
+
+    /* Collapse sidebar content by default on mobile */
+    .sdev-blog__sidebar-content {
+        display: none;
+    }
+
+    .sdev-blog__sidebar--open .sdev-blog__sidebar-content {
+        display: block;
+        padding-top: 0.5rem;
+    }
+
+    .sdev-blog__main {
+        padding: 2rem 0;
     }
 
     .sdev-blog__heading {
         font-size: 3rem;
     }
 
+    .sdev-blog__hero-post {
+        padding: 1.25rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .sdev-blog__hero-post-title {
+        font-size: 1.2rem;
+    }
+
+    .sdev-blog__hero-post-desc {
+        font-size: 0.88rem;
+    }
+
+    .sdev-blog__hero-post-footer {
+        flex-wrap: wrap;
+    }
+
+    .sdev-blog__table-head {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .sdev-blog__th--date {
+        display: none;
+    }
+
     .sdev-blog__row {
-        grid-template-columns: 14px 100px 1fr 20px;
+        grid-template-columns: 14px 1fr 24px;
+        gap: 0 0.5rem;
+        padding: 0.75rem 0.5rem;
+        margin: 0 -0.5rem;
+    }
+
+    .sdev-blog__date {
+        display: none;
+    }
+
+    .sdev-blog__title {
+        font-size: 0.95rem;
+    }
+
+    .sdev-blog__panel {
+        padding: 1rem 0.5rem 1.25rem 1rem;
+        margin: 0 -0.5rem;
+    }
+
+    .sdev-blog__panel-body {
+        grid-template-columns: 1fr;
+        gap: 1rem 0;
+    }
+
+    .sdev-blog__panel-section {
+        grid-template-columns: 1fr;
+        gap: 0.25rem 0;
+    }
+
+    .sdev-blog__panel-label {
+        text-align: left;
+        padding-top: 0;
     }
 }
 
