@@ -431,6 +431,11 @@
     font-family: 'SFMono-Regular', 'Consolas', monospace;
 }
 
+/* Toggle button — hidden on desktop, shown on mobile */
+.sdev-blog__filter-toggle {
+    display: none;
+}
+
 .sdev-blog__filter-label {
     font-size: 0.72rem;
     font-weight: 600;
@@ -1121,6 +1126,20 @@ button.sdev-blog__plus {
     .sdev-sidebar__aside {
         display: none;
     }
+
+    .container:has(.sdev-sidebar__aside) {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    .container:has(.sdev-sidebar__aside) > .row {
+        flex-wrap: wrap !important;
+        min-height: auto;
+    }
+
+    .container:has(.sdev-sidebar__aside) > .row > .col--2 {
+        display: none !important;
+    }
 }
 
 /* Mobile: stack columns */
@@ -1131,18 +1150,171 @@ button.sdev-blog__plus {
         padding: 0 1rem;
     }
 
+    .sdev-blog::before {
+        display: none;
+    }
+
     .sdev-blog__sidebar {
         border-right: none;
         border-bottom: 1px solid var(--ifm-color-emphasis-200);
-        padding: 2rem 0 1.5rem;
+        padding: 0.75rem 0;
+        padding-right: 0;
+    }
+
+    /* Hide the static label on mobile — the toggle replaces it */
+    .sdev-blog__filter-label {
+        display: none;
+    }
+
+    /* Show the collapsible toggle button on mobile */
+    .sdev-blog__filter-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.5rem 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ifm-color-emphasis-500);
+        font-family: 'SFMono-Regular', 'Consolas', monospace;
+    }
+
+    .sdev-blog__filter-toggle-icon {
+        transition: transform 0.2s ease;
+    }
+
+    .sdev-blog__filter-toggle-icon--open {
+        transform: rotate(180deg);
+    }
+
+    /* Collapse sidebar content by default on mobile */
+    .sdev-blog__sidebar-content {
+        display: none;
+    }
+
+    .sdev-blog__sidebar--open .sdev-blog__sidebar-content {
+        display: block;
+        padding-top: 0.5rem;
+    }
+
+    .sdev-blog__main {
+        padding: 1.5rem 0 2rem;
     }
 
     .sdev-blog__heading {
         font-size: 3rem;
     }
 
+    .sdev-blog__hero-post {
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .sdev-blog__hero-post-title {
+        font-size: 1.25rem;
+    }
+
+    .sdev-blog__hero-post-desc {
+        font-size: 0.88rem;
+    }
+
+    .sdev-blog__hero-post-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .sdev-blog__table-head {
+        display: none;
+    }
+
     .sdev-blog__row {
-        grid-template-columns: 14px 100px 1fr 20px;
+        grid-template-columns: 14px minmax(0, 1fr) 20px;
+        grid-template-areas:
+            'bullet title plus'
+            'bullet date plus';
+        gap: 0.35rem 0.75rem;
+        align-items: start;
+        padding: 0.85rem 0.75rem;
+    }
+
+    .sdev-blog__bullet {
+        grid-area: bullet;
+        margin-top: 0.45rem;
+    }
+
+    .sdev-blog__title {
+        grid-area: title;
+        min-width: 0;
+        font-size: 1rem;
+    }
+
+    .sdev-blog__date {
+        grid-area: date;
+        font-size: 0.75rem;
+    }
+
+    .sdev-blog__plus {
+        grid-area: plus;
+        align-self: center;
+    }
+
+    .sdev-blog__tags-row {
+        grid-template-columns: 14px minmax(0, 1fr) auto;
+        gap: 0.35rem 0.75rem;
+        padding: 0.85rem 0;
+    }
+
+    .sdev-blog__panel {
+        padding: 1rem 0.75rem 1.25rem 1rem;
+    }
+
+    .sdev-blog__panel-body {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .sdev-blog__panel-section {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+
+    .sdev-blog__panel-label {
+        text-align: left;
+        padding-top: 0;
+    }
+
+    .sdev-blog__panel-summary {
+        text-align: left;
+    }
+
+    .sdev-post__title {
+        font-size: 1.6rem;
+    }
+
+    .sdev-post__info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .sdev-post__paginator-inner {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .sdev-post__pag-link {
+        max-width: 100%;
+    }
+
+    .sdev-post__pag-link--next {
+        text-align: left;
+        margin-left: 0;
     }
 }
 
