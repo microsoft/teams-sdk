@@ -17,7 +17,7 @@ description: Your agent is already built. Here's how to surface it in Teams in u
 
 You've already built the agent. It lives somewhere: a LangChain chain, an Azure Foundry deployment, a Slack bot, a Next.js app. Your users live in Teams. Here's how to close that gap in under 50 lines.
 
-It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You plug it into your existing Express app, it registers a `POST /api/messages` route by default, and your existing server keeps running as-is. Nothing about your agent changes.
+It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You point it at your HTTP server, it registers a messaging endpoint, and your existing server keeps running as-is. The scenarios below cover four different starting points: a Slack bot, a LangChain chain, an Azure Foundry agent, and a Next.js app.
 
 The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically.
 
@@ -32,10 +32,10 @@ A Python SDK is also available. The same adapter pattern applies with FastAPI an
 Every example in this post uses the same three-step shape:
 
 ```typescript
-import { App, ExpressAdapter } from '@microsoft/teams.apps';
+import { App as TeamsApp, ExpressAdapter } from '@microsoft/teams.apps';
 
 const adapter = new ExpressAdapter(expressApp);   // 1. wrap your server
-const teamsApp = new App({ httpServerAdapter: adapter });  // 2. create the app
+const teamsApp = new TeamsApp({ httpServerAdapter: adapter });  // 2. create the app
 
 teamsApp.on('message', async ({ send, activity }) => {  // 3. handle messages
   await send(/* your agent's response */);
@@ -54,38 +54,50 @@ The SDK injects a `POST /api/messages` route into your existing Express app. You
 
 ## Scenario 1: Slack Bot
 
-You have a Slack bot built with Bolt. Your team uses both Slack and Teams. Rather than maintaining two codebases, run both on the same Express server.
+You have a Slack bot built with Bolt (or any other kind of bot deployed as a web service). Your team uses both Slack and Teams. Rather than maintaining two codebases, run both on the same Express server.
 
 `ExpressReceiver` lets Bolt mount onto your Express app instead of owning the server. The Teams SDK does the same thing. One process, two platforms.
+
+<details>
+<summary><code>slack-app.ts</code>: existing Slack logic, untouched</summary>
+
+```typescript
+import { App as BoltApp, ExpressReceiver } from '@slack/bolt';
+import type { Express } from 'express';
+
+export function mountSlack(expressApp: Express) {
+  const slackReceiver = new ExpressReceiver({
+    signingSecret: process.env.SLACK_SIGNING_SECRET,
+    app: expressApp,
+    endpoints: { events: '/slack/events' },
+  });
+
+  const slackApp = new BoltApp({
+    token: process.env.SLACK_BOT_TOKEN,
+    receiver: slackReceiver,
+  });
+
+  slackApp.message('hello', async ({ say }) => {
+    await say('Hey! Caught you on Slack.');
+  });
+}
+```
+
+</details>
 
 **`teams-app.ts`:**
 
 ```typescript
 import express from 'express';
-import { App as BoltApp, ExpressReceiver } from '@slack/bolt';
-import { App, ExpressAdapter } from '@microsoft/teams.apps';
+import { App as TeamsApp, ExpressAdapter } from '@microsoft/teams.apps';
+import { mountSlack } from './slack-app';
 
 const expressApp = express();
-
-// Slack mounts at /slack/events
-const slackReceiver = new ExpressReceiver({
-  signingSecret: process.env.SLACK_SIGNING_SECRET,
-  app: expressApp,
-  endpoints: { events: '/slack/events' },
-});
-
-const slackApp = new BoltApp({
-  token: process.env.SLACK_BOT_TOKEN,
-  receiver: slackReceiver,
-});
-
-slackApp.message('hello', async ({ say }) => {
-  await say('Hey! Caught you on Slack.');
-});
+mountSlack(expressApp);
 
 // Teams mounts at /api/messages
 const adapter = new ExpressAdapter(expressApp);
-const teamsApp = new App({ httpServerAdapter: adapter });
+const teamsApp = new TeamsApp({ httpServerAdapter: adapter });
 
 teamsApp.on('message', async ({ send, activity }) => {
   await send(`Hey ${activity.from.name}! You said: "${activity.text}"`);
@@ -132,12 +144,12 @@ export function getChain() {
 
 ```typescript
 import express from 'express';
-import { App, ExpressAdapter } from '@microsoft/teams.apps';
+import { App as TeamsApp, ExpressAdapter } from '@microsoft/teams.apps';
 import { getChain } from './chain';
 
 const expressApp = express();
 const adapter = new ExpressAdapter(expressApp);
-const teamsApp = new App({ httpServerAdapter: adapter });
+const teamsApp = new TeamsApp({ httpServerAdapter: adapter });
 
 teamsApp.on('message', async ({ send, activity }) => {
   await send({ type: 'typing' });
@@ -218,12 +230,12 @@ export async function askFoundryAgent(userMessage: string): Promise<string> {
 
 ```typescript
 import express from 'express';
-import { App, ExpressAdapter } from '@microsoft/teams.apps';
+import { App as TeamsApp, ExpressAdapter } from '@microsoft/teams.apps';
 import { askFoundryAgent } from './foundry-agent';
 
 const expressApp = express();
 const adapter = new ExpressAdapter(expressApp);
-const teamsApp = new App({ httpServerAdapter: adapter });
+const teamsApp = new TeamsApp({ httpServerAdapter: adapter });
 
 teamsApp.on('message', async ({ send, activity }) => {
   // pass the Teams message to Foundry
@@ -269,11 +281,11 @@ export class NextjsAdapter implements IHttpServerAdapter {
 
 ```typescript
 import 'server-only';
-import { App } from '@microsoft/teams.apps';
+import { App as TeamsApp } from '@microsoft/teams.apps';
 import { NextjsAdapter } from './nextjs-adapter';
 
 const adapter = new NextjsAdapter();
-const teamsApp = new App({ httpServerAdapter: adapter });
+const teamsApp = new TeamsApp({ httpServerAdapter: adapter });
 
 teamsApp.on('message', async ({ send, activity }) => {
   await send(`Hello from Next.js! You said: "${activity.text}"`);
@@ -345,4 +357,4 @@ const teamsApp = new App({ httpServerAdapter: adapter });
 teamsApp.on('message', async ({ send, activity }) => { /* your agent */ });
 ```
 
-If you're already running a bot somewhere, wiring it into Teams is a few lines of glue code. Full docs at [Self-Managing Your Server](https://microsoft.github.io/teams-sdk/python/in-depth-guides/server/http-server/).
+If you're already running a bot somewhere, wiring it into Teams is a few lines of glue code. Full docs at [Self-Managing Your Server](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/server/http-server/).
