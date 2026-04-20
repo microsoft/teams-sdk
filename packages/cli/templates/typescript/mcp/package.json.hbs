@@ -13,7 +13,9 @@
 "clean": "npx rimraf ./dist",
 "build": "npx tsc",
 "start": "node .",
-"dev": "nodemon -e ts --watch src --exec \"ts-node -r dotenv/config src/index.ts\"",
+"dev": "concurrently \"tsx watch -r dotenv/config src/index.ts\" \"tsc --noEmit --watch\"",
+"dev:run": "tsx watch -r dotenv/config src/index.ts",
+"dev:check": "tsc --noEmit --watch",
 "inspect": "npx cross-env SERVER_PORT=9000 npx @modelcontextprotocol/inspector -e NODE_NO_WARNINGS=1 -e PORT=3978 node
 -r dotenv/config ."
 },
@@ -29,8 +31,8 @@
 "cross-env": "^7.0.3",
 "dotenv": "^16.4.5",
 "rimraf": "^6.0.1",
-"nodemon": "^3.1.4",
-"ts-node": "^10.9.2",
+"concurrently": "^9.1.2",
+"tsx": "^4.20.6",
 "typescript": "^5.4.5"
 }
 }
