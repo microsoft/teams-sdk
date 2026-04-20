@@ -242,5 +242,5 @@ teams app doctor <teamsAppId>
 
 - Your bot can now acquire access tokens silently in Teams
 - Reference the `"sso"` connection name in your bot code when implementing token exchange
-- For troubleshooting SSO issues, see the [Troubleshooting guide](troubleshooting.md)
+- For troubleshooting SSO issues, see the [Troubleshooting guide](https://microsoft.github.io/teams-sdk/llms_docs/references/troubleshooting.md)
 - For managing OAuth connections, see Common Operations in the main skill

@@ -32,7 +32,7 @@ The SDK docs cover everything: the adapter interface/protocol, step-by-step inte
 
 ## After Integration
 
-Follow the **[Bot Infrastructure Setup guide](guide-create-bot-infra.md)** to:
+Follow the **[Bot Infrastructure Setup guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-infra.md)** to:
 - Create Teams-managed bot registration
 - Get bot credentials (CLIENT_ID, CLIENT_SECRET, TENANT_ID)
 - Set up a development tunnel
@@ -42,6 +42,6 @@ Follow the **[Bot Infrastructure Setup guide](guide-create-bot-infra.md)** to:
 
 ## Related Guides
 
-- **[Bot Infrastructure Setup](guide-create-bot-infra.md)** — Create bot registration and credentials
-- **[Bot Application Development](guide-create-bot-app.md)** — Scaffold a new Teams bot project
-- **[Troubleshooting](troubleshooting.md)** — Common issues and solutions
+- **[Bot Infrastructure Setup](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-infra.md)** — Create bot registration and credentials
+- **[Bot Application Development](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-app.md)** — Scaffold a new Teams bot project
+- **[Troubleshooting](https://microsoft.github.io/teams-sdk/llms_docs/references/troubleshooting.md)** — Common issues and solutions

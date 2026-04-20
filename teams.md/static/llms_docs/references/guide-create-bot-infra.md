@@ -1,6 +1,6 @@
 # Bot Infrastructure Creation Guide
 
-This guide walks through setting up the infrastructure for a Microsoft Teams bot: Teams-managed bot, AAD app creation, credentials, and Teams app manifest. **Note:** This creates a Teams-managed bot, not an Azure Bot Service registration. For SSO, you'll need to migrate to Azure-managed later. This creates the bot identity and authentication, but not the bot application code itself (see the [Bot Application Development guide](guide-create-bot-app.md) for that).
+This guide walks through setting up the infrastructure for a Microsoft Teams bot: Teams-managed bot, AAD app creation, credentials, and Teams app manifest. **Note:** This creates a Teams-managed bot, not an Azure Bot Service registration. For SSO, you'll need to migrate to Azure-managed later. This creates the bot identity and authentication, but not the bot application code itself (see the [Bot Application Development guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-app.md) for that).
 
 **Tip:** Run `teams --help --json` to get the full CLI command tree and discover all available options.
 
@@ -195,7 +195,7 @@ teams app get <teamsAppId> --json
 - `endpoint` matches (or is empty if not configured)
 - App shows as active
 
-**If verification fails:** Check the error message and refer to the [Troubleshooting guide](troubleshooting.md).
+**If verification fails:** Check the error message and refer to the [Troubleshooting guide](https://microsoft.github.io/teams-sdk/llms_docs/references/troubleshooting.md).
 
 **Checkpoint:** App verified in Teams Developer Portal.
 
@@ -203,6 +203,6 @@ teams app get <teamsAppId> --json
 
 ## Next Steps
 
-- To set up SSO authentication for your bot, see the [SSO Setup guide](guide-setup-sso.md)
+- To set up SSO authentication for your bot, see the [SSO Setup guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-setup-sso.md)
 - To update the bot endpoint or perform other operations, see Common Operations in the main skill
-- For troubleshooting, see the [Troubleshooting guide](troubleshooting.md)
+- For troubleshooting, see the [Troubleshooting guide](https://microsoft.github.io/teams-sdk/llms_docs/references/troubleshooting.md)

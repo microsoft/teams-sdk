@@ -2,7 +2,7 @@
 
 This guide walks through creating a new Microsoft Teams bot application using the `teams project new` command. This scaffolds the actual bot code (TypeScript, Python, or C#) that handles messages and interactions.
 
-**Note:** This guide covers bot application code. For bot infrastructure setup (registration, credentials, AAD app), see the [Bot Infrastructure Setup guide](guide-create-bot-infra.md).
+**Note:** This guide covers bot application code. For bot infrastructure setup (registration, credentials, AAD app), see the [Bot Infrastructure Setup guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-infra.md).
 
 ## How Teams Bots Work
 
@@ -27,11 +27,11 @@ teams --version
 
 **Expected:** Version number displayed (e.g., `2.1.0-preview.3` or similar)
 
-**If not installed:** See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) for installation instructions.
+**If not installed:** See [Bot Infrastructure Setup guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-infra.md) for installation instructions.
 
 ### Step 2: Set Up Bot Infrastructure
 
-Before creating bot code, set up your bot registration and credentials by following the **[Bot Infrastructure Setup guide](guide-create-bot-infra.md)**. You'll need:
+Before creating bot code, set up your bot registration and credentials by following the **[Bot Infrastructure Setup guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-infra.md)**. You'll need:
 
 - **CLIENT_ID** - Bot's Azure AD application ID
 - **CLIENT_SECRET** - Bot's authentication secret
@@ -89,7 +89,7 @@ All languages support the same template options via `-t, --template <template>`:
 teams project new typescript MyBot -t echo
 ```
 
-Copy credentials from the [Bot Infrastructure Setup guide](guide-create-bot-infra.md) into the project:
+Copy credentials from the [Bot Infrastructure Setup guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-infra.md) into the project:
 - **TypeScript / Python:** Copy the `.env` file into the project root
 - **C#:** Add a `Teams` section to `appsettings.json` with `ClientId`, `ClientSecret`, and `TenantId` (the `--env appsettings.json` flag does this automatically during infrastructure setup)
 
@@ -103,7 +103,7 @@ Follow the instructions printed by `teams project new` to install dependencies a
 
 Your bot needs to be accessible from the internet for Teams to send messages to it.
 
-**For tunnel setup instructions**, see the [Bot Infrastructure Setup guide - Step 3: Set Up Bot Endpoint](guide-create-bot-infra.md#step-3-set-up-bot-endpoint). This covers:
+**For tunnel setup instructions**, see the [Bot Infrastructure Setup guide - Step 3: Set Up Bot Endpoint](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-infra.md#step-3-set-up-bot-endpoint). This covers:
 - Creating a persistent devtunnel (recommended)
 - Alternative options (ngrok, existing endpoints)
 - Proper configuration (port 3978, protocol auto, anonymous access)
@@ -119,7 +119,7 @@ teams app update <teamsAppId> --endpoint "https://<tunnel-id>.devtunnels.ms/api/
 
 ### Install in Teams
 
-If you completed [Bot Infrastructure Setup guide](guide-create-bot-infra.md), you have an install link.
+If you completed [Bot Infrastructure Setup guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-create-bot-infra.md), you have an install link.
 
 **Get the install link:**
 ```bash
@@ -155,6 +155,6 @@ For code patterns, API reference, and advanced features (adaptive cards, AI inte
 
 ## Next Steps
 
-- **SSO:** See the [SSO Setup guide](guide-setup-sso.md) to enable silent authentication
+- **SSO:** See the [SSO Setup guide](https://microsoft.github.io/teams-sdk/llms_docs/references/guide-setup-sso.md) to enable silent authentication
 - **Advanced features:** See the in-depth guides linked in Step 6 above
-- **Troubleshooting:** See the [Troubleshooting guide](troubleshooting.md)
+- **Troubleshooting:** See the [Troubleshooting guide](https://microsoft.github.io/teams-sdk/llms_docs/references/troubleshooting.md)
