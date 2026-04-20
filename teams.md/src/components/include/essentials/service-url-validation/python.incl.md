@@ -2,7 +2,7 @@
 
 ```python
 app = App(
-    additional_allowed_domains=[".my-custom-channel.com"],
+    additional_allowed_domains=["api.my-custom-channel.com"],
 )
 ```
 

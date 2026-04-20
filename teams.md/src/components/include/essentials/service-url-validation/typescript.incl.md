@@ -2,7 +2,7 @@
 
 ```typescript
 const app = new App({
-  additionalAllowedDomains: ['.my-custom-channel.com'],
+  additionalAllowedDomains: ['api.my-custom-channel.com'],
 });
 ```
 

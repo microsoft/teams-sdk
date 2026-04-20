@@ -3,7 +3,7 @@
 ```csharp
 var app = new App(new AppOptions
 {
-    AdditionalAllowedDomains = [".my-custom-channel.com"],
+    AdditionalAllowedDomains = ["api.my-custom-channel.com"],
 });
 ```
 
@@ -12,7 +12,7 @@ Or via `appsettings.json`:
 ```json
 {
   "Teams": {
-    "AdditionalAllowedDomains": [".my-custom-channel.com"]
+    "AdditionalAllowedDomains": ["api.my-custom-channel.com"]
   }
 }
 ```
