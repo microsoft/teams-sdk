@@ -123,23 +123,27 @@ async function generateLlmsTxt(): Promise<void> {
             await generateLanguageFiles(language, baseDir, outputDir, config);
         }
 
-        // Generate root llms.txt index
-        const fullBaseUrl = `${cleanUrl}${cleanBaseUrl}`;
-        const rootContent = [
-            '# Teams SDK Documentation',
-            '',
-            'A comprehensive framework for building AI-powered agents and applications that integrate with Microsoft Teams.',
-            'IMPORTANT: This SDK is NOT built using BotFramework (which was an older iteration).',
-            '',
-            'Language Specific URLs:',
-            `- [TypeScript Documentation](${fullBaseUrl}llms_docs/llms_typescript.txt)`,
-            `- [Python Documentation](${fullBaseUrl}llms_docs/llms_python.txt)`,
-            `- [C# Documentation](${fullBaseUrl}llms_docs/llms_csharp.txt)`,
-        ].join('\n');
-
+        // Generate root llms.txt from SKILL.md
+        const skillDir = path.join(baseDir, '..', 'plugins', 'teams-sdk', 'skills', 'teams-dev');
+        const skillContent = readFileUtf8Normalized(path.join(skillDir, 'SKILL.md'));
+        // Strip YAML frontmatter
+        const rootContent = skillContent.replace(/^---[\s\S]*?---\n*/, '');
         const rootPath = path.join(outputDir, 'llms.txt');
         fs.writeFileSync(rootPath, rootContent, 'utf8');
-        console.log(`  ✓ Generated llms.txt (${formatBytes(rootContent.length)})`);
+        console.log(`  ✓ Generated llms.txt from SKILL.md (${formatBytes(rootContent.length)})`);
+
+        // Copy reference guides so relative links from llms.txt resolve correctly
+        const refsSourceDir = path.join(skillDir, 'references');
+        const refsOutputDir = path.join(outputDir, 'references');
+        if (fs.existsSync(refsOutputDir)) {
+            fs.rmSync(refsOutputDir, { recursive: true });
+        }
+        fs.mkdirSync(refsOutputDir, { recursive: true });
+        const refFiles = fs.readdirSync(refsSourceDir).filter(f => f.endsWith('.md'));
+        for (const refFile of refFiles) {
+            fs.copyFileSync(path.join(refsSourceDir, refFile), path.join(refsOutputDir, refFile));
+        }
+        console.log(`  ✓ Copied ${refFiles.length} reference guides to references/`);
 
         console.log('✅ Successfully generated all llms.txt files!');
     } catch (error) {
