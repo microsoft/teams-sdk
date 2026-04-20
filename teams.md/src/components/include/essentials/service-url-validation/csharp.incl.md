@@ -1,13 +1,6 @@
 <!-- adding-custom-domains -->
 
-```csharp
-var app = new App(new AppOptions
-{
-    AdditionalAllowedDomains = ["api.my-custom-channel.com"],
-});
-```
-
-Or via `appsettings.json`:
+Via `appsettings.json`:
 
 ```json
 {
@@ -19,9 +12,12 @@ Or via `appsettings.json`:
 
 <!-- disabling-validation -->
 
-```csharp
-var app = new App(new AppOptions
+Via `appsettings.json`:
+
+```json
 {
-    AdditionalAllowedDomains = ["*"],
-});
+  "Teams": {
+    "AdditionalAllowedDomains": ["*"]
+  }
+}
 ```
