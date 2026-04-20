@@ -23,33 +23,6 @@ The SDK also handles the parts you don't want to think about: it verifies every 
 
 <!-- truncate -->
 
-:::tip Python SDK
-A Python SDK is also available. The same three-step pattern applies with FastAPI and other ASGI frameworks.
-
-<details>
-<summary>Show Python equivalent</summary>
-
-```python
-from fastapi import FastAPI
-from microsoft_teams.apps import App, FastAPIAdapter
-
-fastapi_app = FastAPI()
-
-adapter = FastAPIAdapter(app=fastapi_app)    # 1. wrap your server
-teams_app = App(http_server_adapter=adapter) # 2. create the app
-
-@teams_app.on_message
-async def handle_message(ctx):               # 3. handle messages
-    await ctx.send("your agent's response")
-
-await teams_app.initialize()
-```
-
-</details>
-
-See [Self-Managing Your Server](/python/in-depth-guides/server/http-server) for the full Python guide.
-:::
-
 ## The Pattern
 
 Every example in this post uses the same three-step shape:
@@ -266,6 +239,33 @@ export { expressApp, teamsApp };
 ```
 
 ---
+
+:::tip Python SDK
+A Python SDK is also available. The same three-step pattern applies with FastAPI and other ASGI frameworks.
+
+<details>
+<summary>Show Python equivalent</summary>
+
+```python
+from fastapi import FastAPI
+from microsoft_teams.apps import App, FastAPIAdapter
+
+fastapi_app = FastAPI()
+
+adapter = FastAPIAdapter(app=fastapi_app)    # 1. wrap your server
+teams_app = App(http_server_adapter=adapter) # 2. create the app
+
+@teams_app.on_message
+async def handle_message(ctx):               # 3. handle messages
+    await ctx.send("your agent's response")
+
+await teams_app.initialize()
+```
+
+</details>
+
+See [Self-Managing Your Server](/python/in-depth-guides/server/http-server) for the full Python guide.
+:::
 
 ## Registering Your Bot
 
