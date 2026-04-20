@@ -28,16 +28,16 @@ A Python SDK is also available. The same three-step pattern applies with FastAPI
 
 ```python
 from fastapi import FastAPI
-from teams.apps import App, FastAPIAdapter
+from microsoft_teams.apps import App, FastAPIAdapter
 
 fastapi_app = FastAPI()
 
-adapter = FastAPIAdapter(fastapi_app)        # 1. wrap your server
+adapter = FastAPIAdapter(app=fastapi_app)    # 1. wrap your server
 teams_app = App(http_server_adapter=adapter) # 2. create the app
 
-@teams_app.on('message')
-async def on_message(send, activity):        # 3. handle messages
-    await send("your agent's response")
+@teams_app.on_message
+async def handle_message(ctx):               # 3. handle messages
+    await ctx.send("your agent's response")
 
 await teams_app.initialize()
 ```
