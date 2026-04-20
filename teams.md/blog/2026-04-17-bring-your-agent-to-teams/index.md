@@ -24,7 +24,10 @@ The SDK also handles the parts you don't want to think about: it verifies every 
 <!-- truncate -->
 
 :::tip Python SDK
-A Python SDK is also available. The same three-step pattern applies with FastAPI and other ASGI frameworks:
+A Python SDK is also available. The same three-step pattern applies with FastAPI and other ASGI frameworks.
+
+<details>
+<summary>Show Python equivalent</summary>
 
 ```python
 from fastapi import FastAPI
@@ -41,6 +44,8 @@ async def handle_message(ctx):               # 3. handle messages
 
 await teams_app.initialize()
 ```
+
+</details>
 
 See [Self-Managing Your Server](/python/in-depth-guides/server/http-server) for the full Python guide.
 :::
