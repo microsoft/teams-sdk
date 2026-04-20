@@ -15,16 +15,34 @@ tags: [teams-sdk, agents, langchain, azure-ai, byo-agent]
 description: Your agent is already built. Here's how to surface it in Teams in under 50 lines, without rewriting anything.
 ---
 
-You've already built the agent. It lives somewhere: a LangChain chain, an Azure Foundry deployment, a Slack bot, a Next.js app. Your users live in Teams. Here's how to close that gap in under 50 lines.
+You've already built the agent. It lives somewhere: a LangChain chain, an Azure Foundry deployment, a Slack bot. Your users live in Teams. Teams is where most enterprise work happens: decisions get made, customers get answered, and projects move forward there. Getting your agent into that context, before you build anything Teams-specific, is already worth doing.
 
-It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You point it at your HTTP server, it registers a messaging endpoint, and your existing server keeps running as-is. The scenarios below cover four different starting points: a Slack bot, a LangChain chain, an Azure Foundry agent, and a Next.js app.
+It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You point it at your HTTP server, it registers a messaging endpoint, and your existing server keeps running as-is. The scenarios below cover three different starting points: a Slack bot, a LangChain chain, and an Azure Foundry agent.
 
 The SDK also handles the parts you don't want to think about: it verifies every incoming request is legitimately from Teams before invoking your handler, and routes messages to the right event handlers automatically.
 
 <!-- truncate -->
 
 :::tip Python SDK
-A Python SDK is also available. The same adapter pattern applies with FastAPI and other ASGI frameworks. See [Self-Managing Your Server](/python/in-depth-guides/server/http-server) in the Python docs.
+A Python SDK is also available. The same three-step pattern applies with FastAPI and other ASGI frameworks:
+
+```python
+from fastapi import FastAPI
+from teams.apps import App, FastAPIAdapter
+
+fastapi_app = FastAPI()
+
+adapter = FastAPIAdapter(fastapi_app)        # 1. wrap your server
+teams_app = App(http_server_adapter=adapter) # 2. create the app
+
+@teams_app.on('message')
+async def on_message(send, activity):        # 3. handle messages
+    await send("your agent's response")
+
+await teams_app.initialize()
+```
+
+See [Self-Managing Your Server](/python/in-depth-guides/server/http-server) for the full Python guide.
 :::
 
 ## The Pattern
@@ -44,11 +62,7 @@ teamsApp.on('message', async ({ send, activity }) => {  // 3. handle messages
 await teamsApp.initialize();   // registers POST /api/messages on your server
 ```
 
-The SDK injects a `POST /api/messages` route into your existing Express app. Your server stays yours. The Teams SDK just adds one endpoint.
-
-:::tip Customizable endpoint
-`/api/messages` is the default but not a requirement. You can configure the SDK to register any path as your messaging endpoint by passing a parameter to the `App` class.
-:::
+The SDK injects a `POST /api/messages` route into your existing Express app. `/api/messages` is the well-known endpoint Teams uses to deliver messages to your bot, the Teams-shaped interface your HTTP server needs to have. Your server stays yours; the Teams SDK just adds that one endpoint.
 
 ---
 
@@ -56,7 +70,7 @@ The SDK injects a `POST /api/messages` route into your existing Express app. You
 
 You have a Slack bot built with Bolt (or any other kind of bot deployed as a web service). Your team uses both Slack and Teams. Rather than maintaining two codebases, run both on the same Express server.
 
-`ExpressReceiver` lets Bolt mount onto your Express app instead of owning the server. The Teams SDK does the same thing. One process, two platforms.
+`ExpressReceiver` lets Bolt mount onto your Express app instead of owning the server. The Teams SDK does the same thing, so both platforms share the same process.
 
 <details>
 <summary><code>slack-app.ts</code>: existing Slack logic, untouched</summary>
@@ -248,94 +262,15 @@ export { expressApp, teamsApp };
 
 ---
 
-## Scenario 4: Next.js App
-
-You have a Next.js app and want a Teams bot alongside it (same deployment, same codebase). The App Router owns routing, so `ExpressAdapter` won't work. Instead, implement the `IHttpServerAdapter` interface to dispatch into a handler map that the Teams SDK populates.
-
-The `registerRoute` stores the SDK's handler references when the app initializes; `dispatch` pulls the body and headers from the incoming request, looks up the right handler, and returns the response.
-
-<details>
-<summary><code>lib/nextjs-adapter.ts</code></summary>
-
-```typescript
-import type { HttpMethod, IHttpServerAdapter, IHttpServerResponse, HttpRouteHandler } from '@microsoft/teams.apps';
-
-export class NextjsAdapter implements IHttpServerAdapter {
-  private handlers = new Map<string, HttpRouteHandler>();
-
-  registerRoute(method: HttpMethod, path: string, handler: HttpRouteHandler): void {
-    this.handlers.set(`${method.toUpperCase()}:${path}`, handler);
-  }
-
-  async dispatch(method: string, path: string, body: unknown, headers: Record<string, string>): Promise<IHttpServerResponse> {
-    const handler = this.handlers.get(`${method.toUpperCase()}:${path}`);
-    if (!handler) return { status: 404, body: { error: 'Not found' } };
-    return handler({ body, headers });
-  }
-}
-```
-
-</details>
-
-**`lib/teams-app.ts`:**
-
-```typescript
-import 'server-only';
-import { App as TeamsApp } from '@microsoft/teams.apps';
-import { NextjsAdapter } from './nextjs-adapter';
-
-const adapter = new NextjsAdapter();
-const teamsApp = new TeamsApp({ httpServerAdapter: adapter });
-
-teamsApp.on('message', async ({ send, activity }) => {
-  await send(`Hello from Next.js! You said: "${activity.text}"`);
-});
-
-let initialized = false;
-
-export async function getAdapter(): Promise<NextjsAdapter> {
-  if (!initialized) {
-    await teamsApp.initialize();
-    initialized = true;
-  }
-  return adapter;
-}
-```
-
-<details>
-<summary><code>app/api/messages/route.ts</code></summary>
-
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { getAdapter } from '@/lib/teams-app';
-
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  const adapter = await getAdapter();
-  const body = await req.json();
-
-  const headers: Record<string, string> = {};
-  req.headers.forEach((value, key) => { headers[key] = value; });
-
-  const result = await adapter.dispatch('POST', '/api/messages', body, headers);
-  const safeBody = result.body instanceof Error
-    ? { error: result.body.message }
-    : result.body;
-
-  return NextResponse.json(safeBody, { status: result.status });
-}
-```
-
-</details>
-
-The Teams SDK doesn't care what's underneath. It just needs something that implements `registerRoute` and handles dispatch.
-
----
-
 ## Registering Your Bot
 
-All four scenarios share the same registration step. First, get a public URL for your local server. [Dev tunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) is the recommended option, or [ngrok](https://ngrok.com) works too.
+All three scenarios share the same registration step.
 
-Then use the Teams SDK CLI to register your bot and write the credentials directly to your `.env`:
+**Step 1: Get a public URL for your local server.**
+
+Teams needs to reach your bot over HTTPS. For local development, [Dev tunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) is the recommended option — it's built into VS Code and the Azure CLI. [ngrok](https://ngrok.com) works too. Either way, you'll get a URL like `https://abc123.devtunnels.ms` that forwards to your local port.
+
+**Step 2: Register your bot using the Teams SDK CLI.**
 
 ```bash
 npm install -g @microsoft/teams.cli@preview
@@ -343,17 +278,23 @@ teams login
 teams app create --name "My Bot" --endpoint https://your-tunnel-url/api/messages --env .env
 ```
 
-One command handles AAD app registration, client secret generation, manifest creation, and bot setup. Your `.env` will be populated with `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` automatically.
+This handles AAD app registration, client secret generation, manifest creation, and bot setup in one command. Your `.env` gets populated with `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` automatically.
+
+**Step 3: Sideload the app into Teams.**
+
+After `teams app create`, follow the sideloading instructions in the CLI output to install the app in your Teams client for testing.
+
+This setup is for local development. For production deployments, hosting, CI/CD, and app store submission, see the [deployment docs](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/deploy).
 
 ---
 
 ## The same three lines, every time
 
-Every scenario in this post follows the same shape because the SDK is built around one idea: your server is yours. The adapter is the seam between your existing infrastructure and Teams. Whether you're running Express, a custom Next.js route, or your own adapter, the SDK doesn't care what's underneath. It just needs something that can register a route and handle a request.
+Every scenario in this post follows the same shape because the SDK is built around one idea: your server is yours. The adapter is the seam between your existing infrastructure and Teams. Whether you're running Express or any other HTTP server, the SDK doesn't care what's underneath. It just needs something that can register a route and handle a request.
 
 ```typescript
-const adapter = new <YourAdapter>(yourServer); // ExpressAdapter, NextjsAdapter, or your own
-const teamsApp = new App({ httpServerAdapter: adapter });
+const adapter = new <YourAdapter>(yourServer); // ExpressAdapter or your own
+const teamsApp = new TeamsApp({ httpServerAdapter: adapter });
 teamsApp.on('message', async ({ send, activity }) => { /* your agent */ });
 ```
 
