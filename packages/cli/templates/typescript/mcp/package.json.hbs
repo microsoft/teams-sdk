@@ -16,8 +16,7 @@
 "dev": "concurrently \"tsx watch -r dotenv/config src/index.ts\" \"tsc --noEmit --watch\"",
 "dev:run": "tsx watch -r dotenv/config src/index.ts",
 "dev:check": "tsc --noEmit --watch",
-"inspect": "npx cross-env SERVER_PORT=9000 npx @modelcontextprotocol/inspector -e NODE_NO_WARNINGS=1 -e PORT=3978 node
--r dotenv/config ."
+"inspect": "npx cross-env SERVER_PORT=9000 npx @modelcontextprotocol/inspector -e NODE_NO_WARNINGS=1 -e PORT=3978 node -r dotenv/config ."
 },
 "dependencies": {
 "@microsoft/teams.apps": "latest",
