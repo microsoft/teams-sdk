@@ -289,7 +289,6 @@ This handles AAD app registration, client secret generation, manifest creation, 
 
 After `teams app create`, follow the sideloading instructions in the CLI output to install the app in your Teams client for testing.
 
-This setup is for local development. For production deployments, hosting, CI/CD, and app store submission, see the [in-depth guides](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/).
 ---
 
 ## The same three lines, every time
