@@ -20,7 +20,8 @@
     "glob": "^11.0.0",
     "prettier": "^3.5.3",
     "turbo": "^2.5.0",
-    "typescript": "5.8.2"
+    "typescript": "5.8.2",
+    "webpack": "5.105.4"
   },
   "engines": {
     "node": ">=20"
@@ -36,6 +37,7 @@
     ]
   },
   "overrides": {
-    "serialize-javascript": "^7.0.5"
+    "serialize-javascript": "^7.0.5",
+    "webpack": "$webpack"
   }
 }
