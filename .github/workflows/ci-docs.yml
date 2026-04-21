@@ -8,6 +8,7 @@ on:
       - 'teams.md/**'
       - 'packages/cli/src/commands/**'
       - 'packages/cli/scripts/generate-command-docs.ts'
+      - 'package-lock.json'
 
 jobs:
   build-teams-md:
