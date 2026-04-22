@@ -100,8 +100,8 @@ new McpClientPlugin()
     .UseMcpServer("https://learn.microsoft.com/api/mcp",
         new McpClientPluginParams()
         {
-               HeadersFactory = () => new Dictionary<string, string>()
-               { { "HEADER_KEY", "HEADER_VALUE" } }
+            HeadersFactory = () => new Dictionary<string, string>()
+            { { "HEADER_KEY", "HEADER_VALUE" } }
         }
     );
 ```
@@ -115,7 +115,7 @@ new McpClientPlugin()
     .UseMcpServer("https://<your-mcp-server>/mcp",
         new McpClientPluginParams()
         {
-               Transport = McpClientTransport.Sse
+            Transport = McpClientTransport.Sse
         }
     );
 ```
