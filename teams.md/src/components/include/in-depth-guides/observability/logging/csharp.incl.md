@@ -23,3 +23,19 @@ builder.AddTeams(appBuilder)
 var app = builder.Build();
 var teams = app.UseTeams();
 ```
+
+<!-- log-levels -->
+
+N/A
+
+<!-- pattern-example -->
+
+N/A
+
+<!-- env-vars -->
+
+N/A
+
+<!-- child-logger -->
+
+N/A
