@@ -28,6 +28,8 @@ interface StatusOutput {
     installed: boolean;
     loggedIn: boolean;
     subscription: { name: string; id: string } | null;
+    tenantId: string | null;
+    tenantMatch: boolean | null;
   };
 }
 
@@ -45,7 +47,7 @@ export const statusCommand = new Command('status')
         username: null,
         tenantId: null,
         tdp: null,
-        azureCli: { installed: false, loggedIn: false, subscription: null },
+        azureCli: { installed: false, loggedIn: false, subscription: null, tenantId: null, tenantMatch: null },
       };
 
       if (!account) {
@@ -150,11 +152,23 @@ export const statusCommand = new Command('status')
             logger.info(`\n${pc.dim('Azure CLI:')} installed, ${pc.yellow('not logged in')}`);
         } else {
           try {
-            const sub = await runAz<{ name: string; id: string }>(['account', 'show']);
+            const sub = await runAz<{ name: string; id: string; tenantId: string }>(['account', 'show']);
             output.azureCli.subscription = { name: sub.name, id: sub.id };
+            output.azureCli.tenantId = sub.tenantId;
+            output.azureCli.tenantMatch = output.tenantId ? output.tenantId === sub.tenantId : null;
             if (!silent) {
               logger.info(`\n${pc.dim('Azure CLI:')} ${pc.green('connected')}`);
               logger.info(`${pc.dim('Subscription:')} ${sub.name} ${pc.dim(`(${sub.id})`)}`);
+              if (output.tenantId && sub.tenantId) {
+                if (output.tenantId === sub.tenantId) {
+                  logger.info(`${pc.dim('Tenant:')} ${pc.green('matches Teams login')}`);
+                } else {
+                  logger.info(`${pc.dim('Tenant:')} ${pc.red('mismatch')}`);
+                  logger.info(`  ${pc.dim('Teams login:')} ${output.tenantId}`);
+                  logger.info(`  ${pc.dim('Azure CLI:')}   ${sub.tenantId}`);
+                  logger.info(`  ${pc.dim('Run')} ${pc.cyan(`az login --tenant ${output.tenantId}`)} ${pc.dim('to align.')}`);
+                }
+              }
             }
           } catch {
             if (!silent)

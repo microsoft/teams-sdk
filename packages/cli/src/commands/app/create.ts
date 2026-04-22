@@ -23,7 +23,7 @@ import { logger } from '../../utils/logger.js';
 import { isInteractive, confirmAction } from '../../utils/interactive.js';
 import { getConfig } from '../../utils/config.js';
 import { ensureAz, runAz } from '../../utils/az.js';
-import { resolveSubscription, resolveResourceGroup } from '../../utils/az-prompts.js';
+import { resolveSubscription, resolveResourceGroup, ensureTenantMatch } from '../../utils/az-prompts.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { openInBrowser, printLinkBanner } from '../../utils/browser.js';
 
@@ -100,6 +100,7 @@ export const appCreateCommand = new Command('create')
         await ensureAz();
         const subscription = await resolveSubscription(options.subscription);
         const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
+        await ensureTenantMatch(account.tenantId);
 
         if (options.createResourceGroup) {
           const rgRegion = options.region ?? 'westus2';
