@@ -1,0 +1,36 @@
+{
+"name": "{{ toKebabCase name }}",
+"version": "0.0.0",
+"license": "MIT",
+"private": true,
+"main": "dist/index",
+"types": "dist/index",
+"files": [
+"dist",
+"README.md"
+],
+"scripts": {
+"clean": "npx rimraf ./dist",
+"start": "node -r dotenv/config .",
+"dev": "npx nodemon",
+"build": "npx tsup && npm run build:client",
+"build:client": "npx vite build --outDir dist/client"
+},
+"dependencies": {
+"@microsoft/teams.apps": "latest",
+"@microsoft/teams.client": "latest",
+"@microsoft/teams.graph-endpoints": "latest",
+"react": "^19.2.1",
+"react-dom": "^19.2.1"
+},
+"devDependencies": {
+"@types/node": "^22.5.4",
+"@vitejs/plugin-react": "^4.3.4",
+"dotenv": "^16.4.5",
+"nodemon": "^3.1.4",
+"rimraf": "^6.0.1",
+"tsup": "^8.4.0",
+"typescript": "^5.4.5",
+"vite": "^6.2.0"
+}
+}

@@ -123,6 +123,39 @@ async function generateLlmsTxt(): Promise<void> {
             await generateLanguageFiles(language, baseDir, outputDir, config);
         }
 
+        // Generate root llms.txt from SKILL.md and copy reference guides
+        const fullBaseUrl = `${cleanUrl}${cleanBaseUrl}`;
+        const refsBaseUrl = `${fullBaseUrl}llms_docs/references`;
+        const skillDir = path.join(baseDir, '..', 'plugins', 'teams-sdk', 'skills', 'teams-dev');
+        const skillContent = readFileUtf8Normalized(path.join(skillDir, 'SKILL.md'));
+        // Strip YAML frontmatter, then convert relative links to absolute URLs
+        const rootContent = skillContent
+            .replace(/^---[\s\S]*?---\n*/, '')
+            .replace(/\]\(references\/([^)]+)\)/g, `](${refsBaseUrl}/$1)`);
+        const rootPath = path.join(outputDir, 'llms.txt');
+        fs.writeFileSync(rootPath, rootContent, 'utf8');
+        console.log(`  ✓ Generated llms.txt from SKILL.md (${formatBytes(rootContent.length)})`);
+
+        // Copy reference guides with internal links converted to absolute URLs
+        const refsSourceDir = path.join(skillDir, 'references');
+        const refsOutputDir = path.join(outputDir, 'references');
+        if (fs.existsSync(refsOutputDir)) {
+            fs.rmSync(refsOutputDir, { recursive: true });
+        }
+        fs.mkdirSync(refsOutputDir, { recursive: true });
+        const refFiles = fs.readdirSync(refsSourceDir).filter(f => f.endsWith('.md'));
+        for (const refFile of refFiles) {
+            let refContent = readFileUtf8Normalized(path.join(refsSourceDir, refFile));
+            // Convert same-directory .md links to absolute URLs
+            // Matches ](filename.md) and ](filename.md#anchor) but not external URLs
+            refContent = refContent.replace(
+                /\]\((?!http|mailto|#)([^)]+\.md(?:#[^)]*)?)\)/g,
+                `](${refsBaseUrl}/$1)`
+            );
+            fs.writeFileSync(path.join(refsOutputDir, refFile), refContent, 'utf8');
+        }
+        console.log(`  ✓ Copied ${refFiles.length} reference guides to references/ (links absolutized)`);
+
         console.log('✅ Successfully generated all llms.txt files!');
     } catch (error) {
         console.error('❌ Error generating llms.txt files:', error);

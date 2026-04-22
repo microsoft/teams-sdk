@@ -1,0 +1,28 @@
+[project]
+name = "{{ toKebabCase name }}"
+version = "0.1.0"
+description = "A Microsoft Teams echo bot"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+  "dotenv>=0.9.9",
+  "microsoft-teams-apps"
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.406",
+]
+
+[project.scripts]
+start = "src.main:main"
+typecheck = "pyright.cli:entrypoint"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

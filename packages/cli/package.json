@@ -1,0 +1,58 @@
+{
+  "name": "@microsoft/teams.cli",
+  "version": "2.1.0",
+  "description": "CLI for scaffolding Teams applications",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "teams": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "rm -rf dist && tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check-types": "tsc --noEmit",
+    "docs:generate": "tsx scripts/generate-command-docs.ts"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "statics"
+  ],
+  "keywords": [
+    "teams",
+    "cli",
+    "scaffolding"
+  ],
+  "author": "Microsoft",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^5.0.4",
+    "@azure/msal-node-extensions": "^5.0.4",
+    "@inquirer/prompts": "^7.2.1",
+    "adm-zip": "^0.5.16",
+    "change-case": "^5.4.4",
+    "commander": "^12.1.0",
+    "env-paths": "^4.0.0",
+    "handlebars": "^4.7.9",
+    "nanospinner": "^1.2.2",
+    "open": "^11.0.0",
+    "picocolors": "^1.1.1",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

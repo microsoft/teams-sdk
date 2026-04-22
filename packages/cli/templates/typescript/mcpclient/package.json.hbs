@@ -1,0 +1,32 @@
+{
+"name": "{{ toKebabCase name }}",
+"version": "0.0.0",
+"license": "MIT",
+"private": true,
+"main": "dist/index",
+"types": "dist/index",
+"files": [
+"dist",
+"README.md"
+],
+"scripts": {
+"clean": "npx rimraf ./dist",
+"build": "npx tsc",
+"start": "node .",
+"dev": "tsx watch -r dotenv/config src/index.ts"
+},
+"dependencies": {
+"@microsoft/teams.apps": "latest",
+"@microsoft/teams.mcpclient": "latest",
+"@microsoft/teams.openai": "latest",
+"@modelcontextprotocol/sdk": "^1.25.2"
+},
+"devDependencies": {
+"@types/node": "^22.5.4",
+"cross-env": "^7.0.3",
+"dotenv": "^16.4.5",
+"rimraf": "^6.0.1",
+"tsx": "^4.20.6",
+"typescript": "^5.4.5"
+}
+}

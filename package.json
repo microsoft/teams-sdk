@@ -12,9 +12,13 @@
     "fmt": "npx prettier --write \"**/*.{js,ts,tsx,md,json}\"",
     "docs:build": "npm -w teams-md run build",
     "docs:dev": "npm -w teams-md run start",
-    "docs:serve": "npm -w teams-md run serve"
+    "docs:serve": "npm -w teams-md run serve",
+    "version:stamp": "node scripts/version.js",
+    "version:get": "nbgv get-version -v NpmPackageVersion"
   },
   "devDependencies": {
+    "glob": "^11.0.0",
+    "webpack": "5.105.4",
     "prettier": "^3.5.3",
     "turbo": "^2.5.0",
     "typescript": "5.8.2"
@@ -31,5 +35,9 @@
     "exclude": [
       "node_modules"
     ]
+  },
+  "overrides": {
+    "serialize-javascript": "^7.0.5",
+    "webpack": "$webpack"
   }
 }

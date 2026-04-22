@@ -1,0 +1,133 @@
+---
+name: teams-dev
+description: Create, integrate, and manage Microsoft Teams bots using the Teams CLI and Teams SDK. Use this skill whenever a user wants to build a Teams bot, add Teams to an existing app or server, set up bot infrastructure (registration, credentials), configure SSO, or troubleshoot Teams bot issues.
+teams_cli_version: 2.1.0-preview.*
+---
+
+# Teams Bot Development & Infrastructure
+
+This skill helps you create and manage Microsoft Teams bots using the Teams CLI. Covers both bot application development (creating bot code) and infrastructure management (bot registration, SSO, credentials).
+
+**IMPORTANT:** Use information and guidance provided within this skill and its reference guides. You may also use external public documentation only when it is explicitly linked from this skill or those guides. Do NOT perform arbitrary web searches or rely on unlisted external sources.
+
+## Workflow Routing
+
+Based on the user's request, route to the appropriate guide or handle directly:
+
+### Complex Workflows (Use References)
+
+**Creating bot application code:**
+- Read and follow the **[Bot Application Development guide](references/guide-create-bot-app.md)**
+- This covers: Scaffolding a new bot project with `teams project new` (TypeScript/C#/Python, templates, connecting to infrastructure)
+
+**Integrating Teams into an existing server:**
+- Read and follow the **[Integrate Existing Server guide](references/guide-integrate-existing-server.md)**
+- This covers: Adding Teams bot functionality to an existing server using built-in adapters (ExpressAdapter for TypeScript, FastAPIAdapter for Python) or a custom adapter for any framework
+
+**Setting up bot infrastructure (Teams-managed bot & credentials):**
+- Read and follow the **[Bot Infrastructure Setup guide](references/guide-create-bot-infra.md)**
+- This covers: Prerequisites → Create Teams-managed bot → Save credentials → Verify
+
+**Setting up SSO authentication:**
+- Read and follow the **[SSO Setup guide](references/guide-setup-sso.md)**
+- This covers: Bot migration → AAD app configuration → OAuth connection → Manifest update → Verification
+- Prerequisites: Existing bot (teamsAppId, botId), az CLI authenticated
+
+**Troubleshooting errors:**
+- Read the **[Troubleshooting guide](references/troubleshooting.md)**
+- Covers: Sideloading issues, auth errors, SSO problems, migration issues
+
+### Simple Operations (Handle Directly)
+
+For simple queries and updates, handle directly using the commands below:
+
+**List all apps:**
+```bash
+teams app list
+```
+
+**View app details:**
+```bash
+teams app get <teamsAppId> --json
+```
+
+**Check authentication status:**
+```bash
+teams status
+```
+
+**Update CLI to latest version:**
+```bash
+teams self-update
+```
+
+---
+
+## Common Operations
+
+### Update Bot Endpoint
+
+**Use case:** Endpoint URL changed (new ngrok/devtunnels session)
+
+**Command:**
+
+```bash
+teams app update <teamsAppId> --endpoint "https://new-endpoint-url/api/messages"
+```
+
+**When to use:**
+- Ngrok URL changed (new session)
+- Devtunnels URL changed
+- Switching between different local development tunnels
+
+> **Note:** If the endpoint domain changed (not just the path), the CLI automatically updates `validDomains` in the manifest. This requires the user to reinstall the app in Teams for the change to take effect.
+
+### Update Teams CLI
+
+**Use case:** Update the Teams CLI to the latest version (recommended to stay current with new features and bug fixes)
+
+**Command:**
+
+```bash
+teams self-update
+```
+
+**When to use:**
+- Periodically update to get latest features
+- After bug reports or known issues
+- When new CLI features are announced
+
+**Expected:** CLI downloads and installs the latest version
+
+### View App Details
+
+**Command:**
+
+```bash
+teams app get <teamsAppId> --json
+```
+
+**Use case:** Check current bot configuration, verify settings
+
+### List All Apps
+
+**Command:**
+
+```bash
+teams app list
+```
+
+**Use case:** See all Teams apps you've created
+
+
+## Resources
+
+**Teams SDK Documentation (llms.txt — optimized for LLM consumption):**
+- TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript.txt
+- Python: https://microsoft.github.io/teams-sdk/llms_docs/llms_python.txt
+- C#: https://microsoft.github.io/teams-sdk/llms_docs/llms_csharp.txt
+- Full TypeScript docs: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript_full.txt
+- Full Python docs: https://microsoft.github.io/teams-sdk/llms_docs/llms_python_full.txt
+- Full C# docs: https://microsoft.github.io/teams-sdk/llms_docs/llms_csharp_full.txt
+
+**Development Tunnels:** See the [Bot Infrastructure Setup guide](references/guide-create-bot-infra.md) for devtunnel setup instructions.

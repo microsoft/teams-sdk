@@ -1,0 +1,30 @@
+import { ChatPrompt } from '@microsoft/teams.ai';
+import { App } from '@microsoft/teams.apps';
+import { McpPlugin } from '@microsoft/teams.mcp';
+import { OpenAIChatModel } from '@microsoft/teams.openai';
+
+const prompt = new ChatPrompt({
+  model: new OpenAIChatModel({
+    model: 'gpt-4o-mini',
+    apiKey: process.env.OPENAI_API_KEY,
+  }),
+});
+
+prompt.function('hello-world', 'print hello world', () => {
+  return 'hello world!';
+});
+
+const app = new App({
+  plugins: [
+    new McpPlugin({ name: '{{ toKebabCase name }}' }).use(prompt)
+  ],
+});
+
+app.on('message', async ({ send, activity }) => {
+  await send({ type: 'typing' });
+  await send(`you said "${activity.text}"`);
+});
+
+(async () => {
+  await app.start();
+})();

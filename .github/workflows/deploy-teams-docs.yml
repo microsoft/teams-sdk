@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'teams.md/**'
+      - 'packages/cli/src/commands/**'
+      - 'packages/cli/scripts/generate-command-docs.ts'
       - .github/workflows/deploy-teams-docs.yml
 
 jobs:
@@ -28,8 +30,14 @@ jobs:
           node-version: '22.x'
 
       - name: Install dependencies
-        working-directory: teams.md
         run: npm install
+
+      - name: Build CLI (for docs generation)
+        run: npx turbo build --filter=@microsoft/teams.cli
+
+      - name: Generate CLI command docs
+        working-directory: packages/cli
+        run: npm run docs:generate
 
       - name: Clear build artifacts
         working-directory: teams.md
