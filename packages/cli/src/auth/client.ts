@@ -41,13 +41,13 @@ const ERROR_TEMPLATE =
   '<html><body><h2>Authentication failed</h2><p>Something went wrong. Please try again.</p></body></html>';
 
 export interface LoginOptions {
-  useDeviceCode?: boolean;
+  forceDeviceCode?: boolean;
 }
 
 export async function login(options?: LoginOptions): Promise<AccountInfo> {
   const client = await getMsalClient();
 
-  const useBrowser = !options?.useDeviceCode && isInteractive() && isLocalSession();
+  const useBrowser = !options?.forceDeviceCode && isInteractive() && isLocalSession();
   const result = useBrowser
     ? await loginInteractive(client)
     : await loginDeviceCode(client);

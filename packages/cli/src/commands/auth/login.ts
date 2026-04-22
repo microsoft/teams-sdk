@@ -20,19 +20,32 @@ export const loginCommand = new Command('login')
       return;
     }
 
-    const useDeviceCode = options.deviceCode;
-    const useBrowser = !useDeviceCode && isInteractive() && isLocalSession();
-    const spinner = createSpinner(
-      useBrowser ? 'Opening browser for login...' : 'Authenticating...'
-    ).start();
-    try {
-      const account = await login({ useDeviceCode });
-      spinner.success({ text: `Logged in as ${account.username}` });
-    } catch (error) {
-      spinner.error({ text: 'Login failed' });
-      if (error instanceof Error) {
-        logger.error(error.message);
+    const forceDeviceCode = options.deviceCode;
+    const useBrowser = !forceDeviceCode && isInteractive() && isLocalSession();
+
+    if (useBrowser) {
+      const spinner = createSpinner('Opening browser for login...').start();
+      try {
+        const account = await login();
+        spinner.success({ text: `Logged in as ${account.username}` });
+      } catch (error) {
+        spinner.error({ text: 'Login failed' });
+        if (error instanceof Error) {
+          logger.error(error.message);
+        }
+        process.exit(1);
       }
-      process.exit(1);
+    } else {
+      // No spinner for device code — MSAL prints the code/URL to stdout
+      try {
+        const account = await login({ forceDeviceCode });
+        logger.info(`Logged in as ${account.username}`);
+      } catch (error) {
+        logger.error('Login failed');
+        if (error instanceof Error) {
+          logger.error(error.message);
+        }
+        process.exit(1);
+      }
     }
   });
