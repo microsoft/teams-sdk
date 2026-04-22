@@ -40,13 +40,17 @@ const SUCCESS_TEMPLATE =
 const ERROR_TEMPLATE =
   '<html><body><h2>Authentication failed</h2><p>Something went wrong. Please try again.</p></body></html>';
 
-export async function login(): Promise<AccountInfo> {
+export interface LoginOptions {
+  forceDeviceCode?: boolean;
+}
+
+export async function login(options?: LoginOptions): Promise<AccountInfo> {
   const client = await getMsalClient();
 
-  const result =
-    isInteractive() && isLocalSession()
-      ? await loginInteractive(client)
-      : await loginDeviceCode(client);
+  const useBrowser = !options?.forceDeviceCode && isInteractive() && isLocalSession();
+  const result = useBrowser
+    ? await loginInteractive(client)
+    : await loginDeviceCode(client);
 
   if (!result?.account) {
     throw new Error('Login failed: no account returned');
