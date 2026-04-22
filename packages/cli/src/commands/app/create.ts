@@ -13,6 +13,8 @@ import {
   createAzureBotHandler,
   type AzureContext,
   type BotLocation,
+  installLink,
+  portalLink,
 } from '../../apps/index.js';
 import { getAccount, getTokenSilent, graphScopes, teamsDevPortalScopes } from '../../auth/index.js';
 import { isJsonFile, outputCredentials, writeEnvFile, writeJsonCredentials } from '../../utils/env.js';
@@ -47,6 +49,7 @@ interface CreateOptions {
   name?: string;
   endpoint?: string;
   env?: string;
+  envFile?: string;
   colorIcon?: string;
   outlineIcon?: string;
   azure?: boolean;
@@ -63,6 +66,7 @@ export const appCreateCommand = new Command('create')
   .option('-n, --name <name>', 'App/bot name')
   .option('-e, --endpoint <url>', '[OPTIONAL] Bot messaging endpoint URL')
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')
+  .option('--env-file <path>', '[OPTIONAL] Alias for --env')
   .option('--azure', '[OPTIONAL] Create bot in Azure (requires az CLI)')
   .option('--teams-managed', '[OPTIONAL] Create bot managed by Teams (default)')
   .option('--subscription <id>', '[OPTIONAL] Azure subscription ID (defaults to az CLI default)')
@@ -159,7 +163,7 @@ export const appCreateCommand = new Command('create')
 
       // Get env path (prompt only in full interactive mode)
       const envPath =
-        options.env ??
+        (options.envFile ?? options.env) ??
         (interactive && !hasFlags && !options.json
           ? (await input({
               message: 'Path to credentials file, e.g. .env or appsettings.json (leave empty to show in terminal):',
@@ -301,8 +305,8 @@ export const appCreateCommand = new Command('create')
       spinner.success({ text: 'Bot registered' });
 
       // Output results
-      const installLink = `https://teams.microsoft.com/l/app/${teamsAppId}?installAppPackage=true`;
-      const portalLink = `https://dev.teams.microsoft.com/apps/${teamsAppId}`;
+      const install = installLink(teamsAppId);
+      const portal = portalLink(teamsAppId);
 
       if (options.json) {
         const credentialValues = {
@@ -324,8 +328,8 @@ export const appCreateCommand = new Command('create')
           teamsAppId,
           botId: clientId,
           endpoint: endpoint ?? null,
-          installLink,
-          portalLink,
+          installLink: install,
+          portalLink: portal,
           botLocation: location === 'tm' ? 'teams-managed' : 'azure',
           ...(envPath
             ? { credentialsFile: envPath }
@@ -341,8 +345,8 @@ export const appCreateCommand = new Command('create')
           logger.info(`${pc.dim('Endpoint:')} ${endpoint}`);
         }
         logger.info('');
-        printLinkBanner('Install in Teams', installLink);
-        printLinkBanner('Developer Portal', portalLink);
+        printLinkBanner('Install in Teams', install);
+        printLinkBanner('Developer Portal', portal);
 
         outputCredentials(
           envPath,
@@ -366,8 +370,8 @@ export const appCreateCommand = new Command('create')
                 ],
               });
               if (action === 'done') break;
-              if (action === 'install') await openInBrowser(installLink);
-              if (action === 'portal') await openInBrowser(portalLink);
+              if (action === 'install') await openInBrowser(install);
+              if (action === 'portal') await openInBrowser(portal);
             }
           } catch (error) {
             if (!(error instanceof Error && error.name === 'ExitPromptError')) throw error;

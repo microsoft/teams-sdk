@@ -21,6 +21,7 @@ teams app create [options]
 | `-n, --name <name>` | App/bot name |
 | `-e, --endpoint <url>` | [OPTIONAL] Bot messaging endpoint URL |
 | `--env <path>` | [OPTIONAL] Path to credentials file (.env or appsettings.json) |
+| `--env-file <path>` | [OPTIONAL] Alias for --env |
 | `--azure` | [OPTIONAL] Create bot in Azure (requires az CLI) |
 | `--teams-managed` | [OPTIONAL] Create bot managed by Teams (default) |
 | `--subscription <id>` | [OPTIONAL] Azure subscription ID (defaults to az CLI default) |

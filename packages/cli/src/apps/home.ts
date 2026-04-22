@@ -6,6 +6,7 @@ import { fetchApp, fetchAppDetailsV2 } from './api.js';
 import { fetchBot } from './tdp.js';
 import { logger } from '../utils/logger.js';
 import { openInBrowser, printLinkBanner } from '../utils/browser.js';
+import { installLink, portalLink } from './links.js';
 
 /**
  * Fetch and print app detail header. Returns the resolved details.
@@ -68,13 +69,13 @@ async function printAppHeader(
   if (endpoint !== null) {
     logger.info(`${pc.dim('Endpoint:')} ${endpoint || pc.yellow('(not set)')}`);
   }
-  const installLink = `https://teams.microsoft.com/l/app/${appDetails.teamsAppId}?installAppPackage=true`;
-  const portalLink = `https://dev.teams.microsoft.com/apps/${appDetails.teamsAppId}`;
+  const install = installLink(appDetails.teamsAppId);
+  const portal = portalLink(appDetails.teamsAppId);
   logger.info('');
-  printLinkBanner('Install in Teams', installLink);
-  printLinkBanner('Developer Portal', portalLink);
+  printLinkBanner('Install in Teams', install);
+  printLinkBanner('Developer Portal', portal);
 
-  return { appDetails, endpoint, installLink, portalLink };
+  return { appDetails, endpoint, installLink: install, portalLink: portal };
 }
 
 /**

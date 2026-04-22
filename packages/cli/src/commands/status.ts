@@ -114,8 +114,9 @@ export const statusCommand = new Command('status')
               logger.info(
                 `  ${pc.dim('Sideloading is enabled for the tenant, but your user policy blocks it.')}`
               );
+              logger.info(`  ${pc.dim('Ask your admin to enable it in Teams Admin Center →')}`);
               logger.info(
-                `  ${pc.dim('Ask your admin to update your Teams app setup policy to allow custom app uploads.')}`
+                `  ${pc.dim('Users → Find the user → Policies → App setup policy → "Upload custom apps"')}`
               );
             }
           } else {

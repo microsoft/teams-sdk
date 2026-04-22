@@ -3,7 +3,8 @@ import pc from 'picocolors';
 import { writeFile } from 'node:fs/promises';
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { showUpdateMenu } from './update.js';
-import { showAppDetail, downloadAppPackage } from '../../apps/index.js';
+import { showAppDetail, downloadAppPackage, installLink } from '../../apps/index.js';
+import { openInBrowser } from '../../utils/browser.js';
 import { logger } from '../../utils/logger.js';
 import { downloadManifest } from './manifest/actions.js';
 import { authCommand } from './auth/index.js';
@@ -20,8 +21,9 @@ export async function showAppActions(app: AppSummary, token: string): Promise<vo
     const action = await select({
       message: `${app.appName ?? 'Unnamed'}:`,
       choices: [
-        { name: 'Get', value: 'get' },
-        { name: 'Update', value: 'update' },
+        { name: 'Install in Teams', value: 'install' },
+        { name: 'Get app details', value: 'get' },
+        { name: 'Update app', value: 'update' },
         { name: 'Download package', value: 'package' },
         { name: 'Download manifest', value: 'manifest' },
         { name: 'Auth (secrets)', value: 'credentials' },
@@ -33,7 +35,9 @@ export async function showAppActions(app: AppSummary, token: string): Promise<vo
 
     if (action === 'back') return;
 
-    if (action === 'get') {
+    if (action === 'install') {
+      await openInBrowser(installLink(app.teamsAppId));
+    } else if (action === 'get') {
       await showAppDetail(app, token, { interactive: true });
     } else if (action === 'update') {
       await showUpdateMenu(app, token);

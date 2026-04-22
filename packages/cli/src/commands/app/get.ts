@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import pc from 'picocolors';
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../auth/index.js';
-import { fetchApp, fetchAppDetailsV2, showAppDetail } from '../../apps/index.js';
+import { fetchApp, fetchAppDetailsV2, showAppDetail, installLink, portalLink } from '../../apps/index.js';
 import { fetchBot } from '../../apps/tdp.js';
 import { outputJson } from '../../utils/json-output.js';
 import { pickApp } from '../../utils/app-picker.js';
@@ -94,8 +94,8 @@ export const appGetCommand = new Command('get')
           privacyUrl: details.privacyUrl,
           termsOfUseUrl: details.termsOfUseUrl,
           endpoint: endpoint,
-          installLink: `https://teams.microsoft.com/l/app/${details.teamsAppId}?installAppPackage=true`,
-          portalLink: `https://dev.teams.microsoft.com/apps/${details.teamsAppId}`,
+          installLink: installLink(details.teamsAppId),
+          portalLink: portalLink(details.teamsAppId),
         };
 
         outputJson(enriched);
@@ -103,18 +103,17 @@ export const appGetCommand = new Command('get')
       }
 
       if (options.installLink) {
-        const installLink = `https://teams.microsoft.com/l/app/${app.teamsAppId}?installAppPackage=true`;
-        logger.info(installLink);
+        logger.info(installLink(app.teamsAppId));
         return;
       }
 
       if (options.web) {
-        const installLink = `https://teams.microsoft.com/l/app/${app.teamsAppId}?installAppPackage=true`;
-        const portalLink = `https://dev.teams.microsoft.com/apps/${app.teamsAppId}`;
+        const install = installLink(app.teamsAppId);
+        const portal = portalLink(app.teamsAppId);
         logger.info(`${pc.dim('App:')} ${app.appName || app.appId}`);
         logger.info('');
-        printLinkBanner('Install in Teams', installLink);
-        printLinkBanner('Developer Portal', portalLink);
+        printLinkBanner('Install in Teams', install);
+        printLinkBanner('Developer Portal', portal);
         return;
       }
 
