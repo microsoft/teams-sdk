@@ -36,7 +36,11 @@ export async function showAppActions(app: AppSummary, token: string): Promise<vo
     if (action === 'back') return;
 
     if (action === 'install') {
-      await openInBrowser(installLink(app.teamsAppId));
+      try {
+        await openInBrowser(installLink(app.teamsAppId));
+      } catch (error) {
+        logger.error(pc.red(error instanceof Error ? error.message : 'Failed to open browser'));
+      }
     } else if (action === 'get') {
       await showAppDetail(app, token, { interactive: true });
     } else if (action === 'update') {
