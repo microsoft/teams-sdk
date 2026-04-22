@@ -305,7 +305,7 @@ export const appCreateCommand = new Command('create')
       spinner.success({ text: 'Bot registered' });
 
       // Output results
-      const install = installLink(teamsAppId);
+      const install = installLink(teamsAppId, account.tenantId);
       const portal = portalLink(teamsAppId);
 
       if (options.json) {

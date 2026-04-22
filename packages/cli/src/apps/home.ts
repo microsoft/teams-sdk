@@ -6,20 +6,21 @@ import { fetchApp, fetchAppDetailsV2 } from './api.js';
 import { fetchBot } from './tdp.js';
 import { logger } from '../utils/logger.js';
 import { openInBrowser, printLinkBanner } from '../utils/browser.js';
-import { installLink, portalLink } from './links.js';
 
-/**
- * Fetch and print app detail header. Returns the resolved details.
- */
-async function printAppHeader(
-  appSummary: AppSummary,
-  token: string
-): Promise<{
+export interface AppDetailData {
   appDetails: AppDetails;
   endpoint: string | null;
   installLink: string;
   portalLink: string;
-}> {
+}
+
+/**
+ * Fetch full app details including bot endpoint.
+ */
+export async function fetchAppDetail(
+  appSummary: AppSummary,
+  token: string
+): Promise<{ appDetails: AppDetails; endpoint: string | null }> {
   const spinner = createSpinner('Fetching details...').start();
 
   let appDetails: AppDetails;
@@ -56,6 +57,19 @@ async function printAppHeader(
 
   spinner.stop();
 
+  return { appDetails, endpoint };
+}
+
+/**
+ * Display-only detail view. Prints app info and links.
+ * When interactive, shows action menu before returning.
+ */
+export async function showAppDetail(
+  data: AppDetailData,
+  options?: { interactive?: boolean }
+): Promise<void> {
+  const { appDetails, endpoint, installLink, portalLink } = data;
+
   logger.info(`\n${pc.bold(appDetails.shortName || 'Unnamed')}`);
   logger.info(`${pc.dim('ID:')} ${appDetails.teamsAppId}`);
   logger.info(`${pc.dim('Version:')} ${appDetails.version ?? 'N/A'}`);
@@ -69,25 +83,10 @@ async function printAppHeader(
   if (endpoint !== null) {
     logger.info(`${pc.dim('Endpoint:')} ${endpoint || pc.yellow('(not set)')}`);
   }
-  const install = installLink(appDetails.teamsAppId);
-  const portal = portalLink(appDetails.teamsAppId);
   logger.info('');
-  printLinkBanner('Install in Teams', install);
-  printLinkBanner('Developer Portal', portal);
+  printLinkBanner('Install in Teams', installLink);
+  printLinkBanner('Developer Portal', portalLink);
 
-  return { appDetails, endpoint, installLink: install, portalLink: portal };
-}
-
-/**
- * Read-only detail view: prints app info with manage hint.
- * When interactive, shows a "Back" prompt before returning.
- */
-export async function showAppDetail(
-  appSummary: AppSummary,
-  token: string,
-  options?: { interactive?: boolean }
-): Promise<void> {
-  const { appDetails, installLink, portalLink } = await printAppHeader(appSummary, token);
   logger.info(
     pc.dim(`\nTip: ${pc.cyan(`teams app get ${appDetails.teamsAppId}`)} to view this app`)
   );

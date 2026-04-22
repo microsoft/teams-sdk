@@ -3,8 +3,8 @@ import pc from 'picocolors';
 import { writeFile } from 'node:fs/promises';
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { showUpdateMenu } from './update.js';
-import { showAppDetail, downloadAppPackage, installLink } from '../../apps/index.js';
-import { openInBrowser } from '../../utils/browser.js';
+import { fetchAppDetail, showAppDetail, downloadAppPackage, installLink, portalLink } from '../../apps/index.js';
+import { getAccount } from '../../auth/index.js';
 import { logger } from '../../utils/logger.js';
 import { downloadManifest } from './manifest/actions.js';
 import { authCommand } from './auth/index.js';
@@ -21,7 +21,6 @@ export async function showAppActions(app: AppSummary, token: string): Promise<vo
     const action = await select({
       message: `${app.appName ?? 'Unnamed'}:`,
       choices: [
-        { name: 'Install in Teams', value: 'install' },
         { name: 'Get app details', value: 'get' },
         { name: 'Update app', value: 'update' },
         { name: 'Download package', value: 'package' },
@@ -35,14 +34,16 @@ export async function showAppActions(app: AppSummary, token: string): Promise<vo
 
     if (action === 'back') return;
 
-    if (action === 'install') {
-      try {
-        await openInBrowser(installLink(app.teamsAppId));
-      } catch (error) {
-        logger.error(pc.red(error instanceof Error ? error.message : 'Failed to open browser'));
-      }
-    } else if (action === 'get') {
-      await showAppDetail(app, token, { interactive: true });
+    if (action === 'get') {
+      const account = await getAccount();
+      const { appDetails, endpoint } = await fetchAppDetail(app, token);
+      const tenantId = account?.tenantId ?? '';
+      await showAppDetail({
+        appDetails,
+        endpoint,
+        installLink: installLink(appDetails.teamsAppId, tenantId),
+        portalLink: portalLink(appDetails.teamsAppId),
+      }, { interactive: true });
     } else if (action === 'update') {
       await showUpdateMenu(app, token);
     } else if (action === 'package') {
