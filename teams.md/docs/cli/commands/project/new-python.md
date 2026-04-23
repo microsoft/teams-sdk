@@ -25,7 +25,6 @@ teams project new python <name> [options]
 | Flag | Description |
 |------|-------------|
 | `-t, --template <template>` | App template (ai, echo, graph) (default: `echo`) |
-| `--toolkit <toolkit>` | [OPTIONAL] M365 Agents Toolkit config (basic, oauth) |
 | `--client-id <id>` | [OPTIONAL] Azure app client ID |
 | `--client-secret <secret>` | [OPTIONAL] Azure app client secret |
 | `--json` | [OPTIONAL] Output as JSON |

@@ -6,6 +6,7 @@ import { generateSecret } from './generate.js';
 
 interface SecretCreateOptions {
   env?: string;
+  envFile?: string;
   json?: boolean;
 }
 
@@ -13,6 +14,7 @@ export const secretCreateCommand = new Command('create')
   .description('Generate a new client secret for an existing app')
   .argument('[appId]', 'App ID')
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')
+  .option('--env-file <path>', '[OPTIONAL] Alias for --env')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (appIdArg: string | undefined, options: SecretCreateOptions) => {
@@ -41,11 +43,12 @@ export const secretCreateCommand = new Command('create')
         tdpToken = picked.token;
       }
 
+      const envPath = options.envFile ?? options.env;
       await generateSecret({
         tdpToken,
         appId,
-        envPath: options.env,
-        interactive: !options.env && !options.json,
+        envPath,
+        interactive: !envPath && !options.json,
         json: options.json,
       });
     })

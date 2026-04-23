@@ -25,7 +25,6 @@ teams project new csharp <name> [options]
 | Flag | Description |
 |------|-------------|
 | `-t, --template <template>` | App template (echo) (default: `echo`) |
-| `--toolkit <toolkit>` | [OPTIONAL] M365 Agents Toolkit config (basic) |
 | `--client-id <id>` | [OPTIONAL] Azure app client ID |
 | `--client-secret <secret>` | [OPTIONAL] Azure app client secret |
 | `-s, --start` | [OPTIONAL] Auto-start project after creation |

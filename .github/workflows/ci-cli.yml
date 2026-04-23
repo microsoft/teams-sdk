@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'packages/cli/**'
+      - 'package-lock.json'
 
 jobs:
   build-cli:
