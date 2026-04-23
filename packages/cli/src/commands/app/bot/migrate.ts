@@ -13,7 +13,7 @@ import {
 import { fetchAppDetailsV2 } from '../../../apps/api.js';
 import { pickApp } from '../../../utils/app-picker.js';
 import { ensureAz, runAz } from '../../../utils/az.js';
-import { resolveSubscription, resolveResourceGroup } from '../../../utils/az-prompts.js';
+import { resolveSubscription, resolveResourceGroup, ensureTenantMatch } from '../../../utils/az-prompts.js';
 import { CliError, wrapAction } from '../../../utils/errors.js';
 import { confirmAction } from '../../../utils/interactive.js';
 import { outputJson } from '../../../utils/json-output.js';
@@ -114,6 +114,7 @@ export const botMigrateCommand = new Command('migrate')
 
       // Azure setup
       await ensureAz();
+      await ensureTenantMatch(account.tenantId);
       const subscription = await resolveSubscription(options.subscription);
       const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
 

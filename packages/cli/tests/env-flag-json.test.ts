@@ -36,6 +36,8 @@ vi.mock('../src/apps/index.js', () => ({
   createTdpBotHandler: vi.fn().mockReturnValue({
     createBot: vi.fn().mockResolvedValue(undefined),
   }),
+  installLink: vi.fn((id: string, tenantId: string) => `https://teams.microsoft.com/l/app/${id}?installAppPackage=true&appTenantId=${tenantId}`),
+  portalLink: vi.fn((id: string) => `https://dev.teams.microsoft.com/apps/${id}`),
 }));
 
 vi.mock('../src/auth/index.js', () => ({

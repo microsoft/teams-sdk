@@ -78,6 +78,10 @@ Create AAD apps via TDP's `/aadapp/v2` endpoint (`createAadAppViaTdp` in `src/ap
 - TDP returns a different `id` than Graph's object ID — use `getAadAppByClientId` to look up the Graph object ID before calling `addPassword`
 - Graph replication lag may require retries after TDP creates the app
 
+### Tenant Cross-Validation
+
+Any command that uses both MSAL (Teams login) and Azure CLI must call `ensureTenantMatch(account.tenantId)` from `src/utils/az-prompts.ts` before creating Azure resources. This throws `CliError("TENANT_MISMATCH", ...)` if `account.tenantId` (MSAL) differs from the Azure CLI's active tenant (`az account show`). The `status` command displays the match/mismatch but does not throw.
+
 ### Auth Client ID
 
 Uses shared public client `7ea7c24c-b1f6-4a20-9d11-9ae12e9e7ac0`. TDP's own web UI uses a different first-party client ID (`e1979c22`) which we cannot use for CLI auth.

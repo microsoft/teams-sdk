@@ -1,9 +1,7 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
-import { createSilentSpinner } from '../../utils/spinner.js';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../auth/index.js';
-import { fetchApp, fetchAppDetailsV2, showAppDetail } from '../../apps/index.js';
-import { fetchBot } from '../../apps/tdp.js';
+import { fetchApp, fetchAppDetail, showAppDetail, installLink, portalLink } from '../../apps/index.js';
 import { outputJson } from '../../utils/json-output.js';
 import { pickApp } from '../../utils/app-picker.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
@@ -40,8 +38,16 @@ export const appGetCommand = new Command('get')
         while (true) {
           try {
             const picked = await pickApp();
+            const pickedAccount = await getAccount();
             const app = await fetchApp(picked.token, picked.app.teamsAppId);
-            await showAppDetail(app, picked.token, { interactive: true });
+            const { appDetails, endpoint } = await fetchAppDetail(app, picked.token);
+            const tenantId = pickedAccount?.tenantId ?? '';
+            await showAppDetail({
+              appDetails,
+              endpoint,
+              installLink: installLink(appDetails.teamsAppId, tenantId),
+              portalLink: portalLink(appDetails.teamsAppId),
+            }, { interactive: true });
           } catch (error) {
             if (error instanceof Error && error.name === 'ExitPromptError') {
               return;
@@ -63,39 +69,26 @@ export const appGetCommand = new Command('get')
       }
 
       const app = await fetchApp(token, appIdArg);
+      const tenantId = account.tenantId;
 
       if (options.json) {
-        const spinner = createSilentSpinner('Fetching app details...', true).start();
-        const details = await fetchAppDetailsV2(token, app.teamsAppId);
-
-        // Fetch bot endpoint separately from the bot framework API
-        let endpoint: string | null = null;
-        if (details.bots && details.bots.length > 0) {
-          try {
-            const bot = await fetchBot(token, details.bots[0].botId);
-            endpoint = bot.messagingEndpoint || null;
-          } catch {
-            // Bot fetch failed, endpoint remains null
-          }
-        }
-
-        spinner.stop();
+        const { appDetails, endpoint } = await fetchAppDetail(app, token, true);
 
         const enriched: AppGetOutput = {
-          appId: details.appId,
-          teamsAppId: details.teamsAppId,
-          name: details.shortName,
-          longName: details.longName,
-          version: details.version,
-          developer: details.developerName,
-          shortDescription: details.shortDescription,
-          longDescription: details.longDescription,
-          websiteUrl: details.websiteUrl,
-          privacyUrl: details.privacyUrl,
-          termsOfUseUrl: details.termsOfUseUrl,
-          endpoint: endpoint,
-          installLink: `https://teams.microsoft.com/l/app/${details.teamsAppId}?installAppPackage=true`,
-          portalLink: `https://dev.teams.microsoft.com/apps/${details.teamsAppId}`,
+          appId: appDetails.appId,
+          teamsAppId: appDetails.teamsAppId,
+          name: appDetails.shortName,
+          longName: appDetails.longName,
+          version: appDetails.version,
+          developer: appDetails.developerName,
+          shortDescription: appDetails.shortDescription,
+          longDescription: appDetails.longDescription,
+          websiteUrl: appDetails.websiteUrl,
+          privacyUrl: appDetails.privacyUrl,
+          termsOfUseUrl: appDetails.termsOfUseUrl,
+          endpoint,
+          installLink: installLink(appDetails.teamsAppId, tenantId),
+          portalLink: portalLink(appDetails.teamsAppId),
         };
 
         outputJson(enriched);
@@ -103,21 +96,26 @@ export const appGetCommand = new Command('get')
       }
 
       if (options.installLink) {
-        const installLink = `https://teams.microsoft.com/l/app/${app.teamsAppId}?installAppPackage=true`;
-        logger.info(installLink);
+        logger.info(installLink(app.teamsAppId, tenantId));
         return;
       }
 
       if (options.web) {
-        const installLink = `https://teams.microsoft.com/l/app/${app.teamsAppId}?installAppPackage=true`;
-        const portalLink = `https://dev.teams.microsoft.com/apps/${app.teamsAppId}`;
+        const install = installLink(app.teamsAppId, tenantId);
+        const portal = portalLink(app.teamsAppId);
         logger.info(`${pc.dim('App:')} ${app.appName || app.appId}`);
         logger.info('');
-        printLinkBanner('Install in Teams', installLink);
-        printLinkBanner('Developer Portal', portalLink);
+        printLinkBanner('Install in Teams', install);
+        printLinkBanner('Developer Portal', portal);
         return;
       }
 
-      await showAppDetail(app, token);
+      const { appDetails, endpoint } = await fetchAppDetail(app, token);
+      await showAppDetail({
+        appDetails,
+        endpoint,
+        installLink: installLink(appDetails.teamsAppId, tenantId),
+        portalLink: portalLink(appDetails.teamsAppId),
+      });
     })
   );

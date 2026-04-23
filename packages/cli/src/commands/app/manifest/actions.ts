@@ -134,7 +134,12 @@ export async function uploadManifestFromFile(
           // Same version — bump if content actually changed
           const { version: _sv, ...serverCopy } = serverManifest;
           const { version: _lv, ...localCopy } = manifest;
-          const stableStringify = (obj: unknown) => JSON.stringify(obj, Object.keys(obj as object).sort());
+          const stableStringify = (obj: unknown) =>
+            JSON.stringify(obj, (_key, value) =>
+              value && typeof value === 'object' && !Array.isArray(value)
+                ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+                : value
+            );
           const contentChanged = stableStringify(serverCopy) !== stableStringify(localCopy);
 
           if (contentChanged) {

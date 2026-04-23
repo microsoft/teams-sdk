@@ -81,6 +81,35 @@ export async function resolveSubscription(flagValue?: string): Promise<string> {
 }
 
 /**
+ * Get the tenantId of the current Azure CLI session.
+ * Returns null if az CLI is not logged in or the call fails.
+ */
+export async function getAzTenantId(): Promise<string | null> {
+  try {
+    const account = await runAz<{ tenantId: string }>(['account', 'show']);
+    return account.tenantId;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Throw if the MSAL tenant (Teams login) and Azure CLI tenant differ.
+ * No-op if the Azure CLI tenant cannot be determined.
+ */
+export async function ensureTenantMatch(msalTenantId: string): Promise<void> {
+  const azureTenantId = await getAzTenantId();
+  if (!azureTenantId) return;
+  if (msalTenantId === azureTenantId) return;
+
+  throw new CliError(
+    'TENANT_MISMATCH',
+    `Tenant mismatch: Teams login tenant (${msalTenantId}) does not match Azure CLI tenant (${azureTenantId}).`,
+    `Run \`az login --tenant ${msalTenantId}\` to align your Azure CLI session.`
+  );
+}
+
+/**
  * Resolve the Azure resource group to use.
  * - Flag value always wins (assumes existing group)
  * - Interactive: pick existing or create new
