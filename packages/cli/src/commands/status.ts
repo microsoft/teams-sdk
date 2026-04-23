@@ -17,6 +17,7 @@ interface StatusOutput {
   loggedIn: boolean;
   username: string | null;
   tenantId: string | null;
+  userObjectId: string | null;
   tdp: {
     connected: boolean;
     sideloading: {
@@ -46,6 +47,7 @@ export const statusCommand = new Command('status')
         loggedIn: false,
         username: null,
         tenantId: null,
+        userObjectId: null,
         tdp: null,
         azureCli: { installed: false, loggedIn: false, subscription: null, tenantId: null, tenantMatch: null },
       };
@@ -62,12 +64,14 @@ export const statusCommand = new Command('status')
       output.loggedIn = true;
       output.username = account.username;
       output.tenantId = account.tenantId;
+      output.userObjectId = account.localAccountId;
 
       if (!silent) {
         logger.info(`${pc.green('✔')} Logged in as ${pc.bold(account.username)}`);
 
         if (options.verbose) {
           logger.info(`  ${pc.dim('Tenant ID:')} ${account.tenantId}`);
+          logger.info(`  ${pc.dim('User Object ID:')} ${account.localAccountId}`);
           logger.info(`  ${pc.dim('Home Account ID:')} ${account.homeAccountId}`);
           logger.info(`  ${pc.dim('Config path:')} ${paths.config}`);
         }
