@@ -72,7 +72,7 @@ export const appGetCommand = new Command('get')
       const tenantId = account.tenantId;
 
       if (options.json) {
-        const { appDetails, endpoint } = await fetchAppDetail(app, token);
+        const { appDetails, endpoint } = await fetchAppDetail(app, token, true);
 
         const enriched: AppGetOutput = {
           appId: appDetails.appId,

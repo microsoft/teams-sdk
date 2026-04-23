@@ -1,11 +1,11 @@
 import { select } from '@inquirer/prompts';
 import pc from 'picocolors';
-import { createSpinner } from 'nanospinner';
 import type { AppSummary, AppDetails } from './types.js';
 import { fetchApp, fetchAppDetailsV2 } from './api.js';
 import { fetchBot } from './tdp.js';
 import { logger } from '../utils/logger.js';
 import { openInBrowser, printLinkBanner } from '../utils/browser.js';
+import { createSilentSpinner } from '../utils/spinner.js';
 
 export interface AppDetailData {
   appDetails: AppDetails;
@@ -19,9 +19,10 @@ export interface AppDetailData {
  */
 export async function fetchAppDetail(
   appSummary: AppSummary,
-  token: string
+  token: string,
+  silent = false
 ): Promise<{ appDetails: AppDetails; endpoint: string | null }> {
-  const spinner = createSpinner('Fetching details...').start();
+  const spinner = createSilentSpinner('Fetching details...', silent).start();
 
   let appDetails: AppDetails;
   try {
