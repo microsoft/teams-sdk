@@ -41,7 +41,7 @@ export function createManifest(options: ManifestOptions): object {
     botName,
     endpoint,
     description,
-    scopes = ['personal', 'team', 'groupchat'],
+    scopes = ['personal', 'team', 'groupChat'],
     developer,
   } = options;
 
@@ -53,11 +53,10 @@ export function createManifest(options: ManifestOptions): object {
 
   return {
     $schema:
-      'https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json',
-    manifestVersion: '1.16',
+      'https://developer.microsoft.com/json-schemas/teams/v1.25/MicrosoftTeams.schema.json',
+    manifestVersion: '1.25',
     version: '1.0.0',
     id: botId,
-    packageName: `com.teams.${botId}`,
     developer: developer ?? {
       name: 'Developer',
       websiteUrl: 'https://www.example.com',
@@ -85,8 +84,13 @@ export function createManifest(options: ManifestOptions): object {
         isNotificationOnly: false,
       },
     ],
+    staticTabs: [
+      { entityId: 'conversations', scopes: ['personal'] },
+      { entityId: 'about', scopes: ['personal'] },
+    ],
     permissions: [],
     validDomains,
+    supportsChannelFeatures: 'tier1',
   };
 }
 
