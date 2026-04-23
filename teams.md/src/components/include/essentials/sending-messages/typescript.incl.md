@@ -63,5 +63,31 @@ app.on('message', async ({ send, activity }) => {
 <!-- targeted-preview-note -->
 N/A
 
+<!-- reactions-example -->
+
+```typescript
+app.on('message', async ({ activity, api }) => {
+  // Add a reaction to the message
+  await api.reactions.add(activity.conversation.id, activity.id, 'like');
+
+  // Remove a reaction from the message
+  await api.reactions.remove(activity.conversation.id, activity.id, 'like');
+});
+```
+
+<!-- reactions-event-example -->
+
+```typescript
+app.on('messageReaction', async ({ activity, send }) => {
+  for (const reaction of activity.reactionsAdded ?? []) {
+    await send(`${reaction.user?.displayName ?? 'Someone'} added a ${reaction.type} reaction!`);
+  }
+
+  for (const reaction of activity.reactionsRemoved ?? []) {
+    await send(`${reaction.user?.displayName ?? 'Someone'} removed a ${reaction.type} reaction.`);
+  }
+});
+```
+
 <!-- reactions-preview-note -->
 N/A
