@@ -11,6 +11,7 @@ export type ErrorCode =
   | 'VALIDATION_MISSING'
   | 'VALIDATION_FORMAT'
   | 'INVALID_ICON'
+  | 'TENANT_MISMATCH'
   // Not found
   | 'NOT_FOUND_BOT'
   | 'NOT_FOUND_AAD'
