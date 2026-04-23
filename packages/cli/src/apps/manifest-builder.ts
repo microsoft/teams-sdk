@@ -1,5 +1,6 @@
 import { input, checkbox } from '@inquirer/prompts';
 import { isInteractive } from '../utils/interactive.js';
+import type { BotScope } from './manifest.js';
 
 /**
  * Placeholder bot ID for manifest generation when no real bot ID is available.
@@ -9,7 +10,7 @@ export const PLACEHOLDER_BOT_ID = '00000000-0000-0000-0000-000000000000';
 export interface ManifestCustomization {
   description?: { short: string; full?: string };
   icons?: { colorIconPath?: string; outlineIconPath?: string };
-  scopes?: string[];
+  scopes?: BotScope[];
   developer?: {
     name: string;
     websiteUrl: string;
@@ -58,7 +59,7 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
   }
 
   if (customizeFields.includes('scopes')) {
-    result.scopes = await checkbox({
+    result.scopes = await checkbox<BotScope>({
       message: 'Select bot scopes:',
       choices: [
         { name: 'Personal', value: 'personal', checked: true },

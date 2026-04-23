@@ -3,12 +3,14 @@ import path from 'node:path';
 import AdmZip from 'adm-zip';
 import { staticsDir } from '../project/paths.js';
 
+export type BotScope = 'personal' | 'team' | 'groupChat' | 'copilot';
+
 export interface ManifestOptions {
   botId: string;
   botName: string;
   endpoint?: string;
   description?: { short: string; full?: string };
-  scopes?: string[];
+  scopes?: BotScope[];
   developer?: {
     name: string;
     websiteUrl: string;
@@ -31,7 +33,7 @@ export function extractDomain(url: string): string | null {
 export interface Manifest {
   id: string;
   name: { short: string; full?: string };
-  bots?: Array<{ botId: string; scopes: string[] }>;
+  bots?: Array<{ botId: string; scopes: BotScope[] }>;
   [key: string]: unknown;
 }
 
