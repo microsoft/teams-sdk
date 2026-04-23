@@ -71,7 +71,6 @@ export const statusCommand = new Command('status')
         if (isVerbose()) {
           logger.info(`  ${pc.dim('Tenant ID:')} ${account.tenantId}`);
           logger.info(`  ${pc.dim('User Object ID:')} ${account.localAccountId}`);
-          logger.info(`  ${pc.dim('Home Account ID:')} ${account.homeAccountId}`);
           logger.info(`  ${pc.dim('Config path:')} ${paths.config}`);
         }
       }
