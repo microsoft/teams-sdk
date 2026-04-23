@@ -114,9 +114,9 @@ export const botMigrateCommand = new Command('migrate')
 
       // Azure setup
       await ensureAz();
+      await ensureTenantMatch(account.tenantId);
       const subscription = await resolveSubscription(options.subscription);
       const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
-      await ensureTenantMatch(account.tenantId);
 
       if (options.createResourceGroup) {
         const rgRegion = options.region ?? 'westus2';

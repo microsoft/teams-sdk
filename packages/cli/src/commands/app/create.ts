@@ -102,9 +102,9 @@ export const appCreateCommand = new Command('create')
       let azureContext: AzureContext | undefined;
       if (location === 'azure') {
         await ensureAz();
+        await ensureTenantMatch(account.tenantId);
         const subscription = await resolveSubscription(options.subscription);
         const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
-        await ensureTenantMatch(account.tenantId);
 
         if (options.createResourceGroup) {
           const rgRegion = options.region ?? 'westus2';
