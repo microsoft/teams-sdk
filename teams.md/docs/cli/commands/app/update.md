@@ -29,7 +29,6 @@ teams app update [appId] [options]
 | `--long-name <name>` | [OPTIONAL] Set the app long name (max 100 chars) |
 | `--short-description <desc>` | [OPTIONAL] Set the short description (max 80 chars) |
 | `--long-description <desc>` | [OPTIONAL] Set the long description (max 4000 chars) |
-| `--version <version>` | [OPTIONAL] Set the app version |
 | `--developer <name>` | [OPTIONAL] Set the developer name |
 | `--website <url>` | [OPTIONAL] Set the website URL (HTTPS required) |
 | `--privacy-url <url>` | [OPTIONAL] Set the privacy policy URL (HTTPS required) |

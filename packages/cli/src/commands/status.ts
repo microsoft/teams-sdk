@@ -4,12 +4,12 @@ import pc from 'picocolors';
 import { getAccount, getTokenSilent, paths, teamsDevPortalScopes } from '../auth/index.js';
 import { isAzInstalled, isAzLoggedIn, runAz } from '../utils/az.js';
 import { wrapAction } from '../utils/errors.js';
+import { isVerbose } from '../utils/logger.js';
 import { logger } from '../utils/logger.js';
 import { outputJson } from '../utils/json-output.js';
 import { fetchTenantSettings, fetchUserAppPolicy } from '../apps/api.js';
 
 interface StatusOptions {
-  verbose?: boolean;
   json?: boolean;
 }
 
@@ -17,6 +17,7 @@ interface StatusOutput {
   loggedIn: boolean;
   username: string | null;
   tenantId: string | null;
+  userObjectId: string | null;
   tdp: {
     connected: boolean;
     sideloading: {
@@ -35,7 +36,6 @@ interface StatusOutput {
 
 export const statusCommand = new Command('status')
   .description('Show current CLI status')
-  .option('-v, --verbose', '[OPTIONAL] Show additional details')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (options: StatusOptions) => {
@@ -46,6 +46,7 @@ export const statusCommand = new Command('status')
         loggedIn: false,
         username: null,
         tenantId: null,
+        userObjectId: null,
         tdp: null,
         azureCli: { installed: false, loggedIn: false, subscription: null, tenantId: null, tenantMatch: null },
       };
@@ -62,13 +63,14 @@ export const statusCommand = new Command('status')
       output.loggedIn = true;
       output.username = account.username;
       output.tenantId = account.tenantId;
+      output.userObjectId = account.localAccountId;
 
       if (!silent) {
         logger.info(`${pc.green('✔')} Logged in as ${pc.bold(account.username)}`);
 
-        if (options.verbose) {
+        if (isVerbose()) {
           logger.info(`  ${pc.dim('Tenant ID:')} ${account.tenantId}`);
-          logger.info(`  ${pc.dim('Home Account ID:')} ${account.homeAccountId}`);
+          logger.info(`  ${pc.dim('User Object ID:')} ${account.localAccountId}`);
           logger.info(`  ${pc.dim('Config path:')} ${paths.config}`);
         }
       }
@@ -116,8 +118,9 @@ export const statusCommand = new Command('status')
               logger.info(
                 `  ${pc.dim('Sideloading is enabled for the tenant, but your user policy blocks it.')}`
               );
+              logger.info(`  ${pc.dim('Ask your admin to enable it in Teams Admin Center →')}`);
               logger.info(
-                `  ${pc.dim('Ask your admin to update your Teams app setup policy to allow custom app uploads.')}`
+                `  ${pc.dim('Users → Find the user → Policies → App setup policy → "Upload custom apps"')}`
               );
             }
           } else {

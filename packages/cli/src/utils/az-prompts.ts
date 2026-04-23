@@ -81,12 +81,6 @@ export async function resolveSubscription(flagValue?: string): Promise<string> {
 }
 
 /**
- * Resolve the Azure resource group to use.
- * - Flag value always wins (assumes existing group)
- * - Interactive: pick existing or create new
- * - Non-interactive: required flag
- */
-/**
  * Get the tenantId of the current Azure CLI session.
  * Returns null if az CLI is not logged in or the call fails.
  */
@@ -115,6 +109,12 @@ export async function ensureTenantMatch(msalTenantId: string): Promise<void> {
   );
 }
 
+/**
+ * Resolve the Azure resource group to use.
+ * - Flag value always wins (assumes existing group)
+ * - Interactive: pick existing or create new
+ * - Non-interactive: required flag
+ */
 export async function resolveResourceGroup(
   subscription: string,
   flagValue?: string
