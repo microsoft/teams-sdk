@@ -4,12 +4,12 @@ import pc from 'picocolors';
 import { getAccount, getTokenSilent, paths, teamsDevPortalScopes } from '../auth/index.js';
 import { isAzInstalled, isAzLoggedIn, runAz } from '../utils/az.js';
 import { wrapAction } from '../utils/errors.js';
+import { isVerbose } from '../utils/logger.js';
 import { logger } from '../utils/logger.js';
 import { outputJson } from '../utils/json-output.js';
 import { fetchTenantSettings, fetchUserAppPolicy } from '../apps/api.js';
 
 interface StatusOptions {
-  verbose?: boolean;
   json?: boolean;
 }
 
@@ -36,7 +36,6 @@ interface StatusOutput {
 
 export const statusCommand = new Command('status')
   .description('Show current CLI status')
-  .option('-v, --verbose', '[OPTIONAL] Show additional details')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (options: StatusOptions) => {
@@ -69,7 +68,7 @@ export const statusCommand = new Command('status')
       if (!silent) {
         logger.info(`${pc.green('✔')} Logged in as ${pc.bold(account.username)}`);
 
-        if (options.verbose) {
+        if (isVerbose()) {
           logger.info(`  ${pc.dim('Tenant ID:')} ${account.tenantId}`);
           logger.info(`  ${pc.dim('User Object ID:')} ${account.localAccountId}`);
           logger.info(`  ${pc.dim('Home Account ID:')} ${account.homeAccountId}`);
