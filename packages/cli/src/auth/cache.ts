@@ -16,8 +16,8 @@ function isWSL(): boolean {
 }
 
 /**
- * Simple file-based cache plugin for environments where msal-node-extensions
- * doesn't work reliably (WSL, headless Linux, containers).
+ * Simple file-based cache plugin for WSL, where msal-node-extensions'
+ * PersistenceCachePlugin doesn't persist reliably across processes.
  */
 function createFileCachePlugin(cachePath: string): ICachePlugin {
   return {
@@ -34,7 +34,7 @@ function createFileCachePlugin(cachePath: string): ICachePlugin {
     async afterCacheAccess(cacheContext: TokenCacheContext): Promise<void> {
       if (cacheContext.cacheHasChanged) {
         try {
-          fs.writeFileSync(cachePath, cacheContext.tokenCache.serialize());
+          fs.writeFileSync(cachePath, cacheContext.tokenCache.serialize(), { mode: 0o600 });
         } catch (error) {
           logger.debug(`Failed to write token cache: ${error instanceof Error ? error.message : error}`);
         }
