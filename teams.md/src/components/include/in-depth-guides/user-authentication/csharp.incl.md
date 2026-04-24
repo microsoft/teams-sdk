@@ -3,7 +3,7 @@
 Use your terminal to run the following command:
 
 ```sh
-npx @microsoft/teams.cli@latest new csharp oauth-app --template graph
+teams project new csharp oauth-app --template graph
 ```
 
 <!-- configure-oauth -->

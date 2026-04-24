@@ -1,107 +1,79 @@
 ---
 sidebar_position: 3
 title: 'Running in Teams'
-summary: Guide to deploying and testing your locally running agent in Microsoft Teams using the Microsoft 365 Agents Toolkit.
+summary: Register and sideload your locally running agent into Microsoft Teams using the Teams CLI.
 llms: ignore
 ---
 
 # Running In Teams
 
-Now that you completed [the quickstart](../quickstart) and your agent is running locally, let's deploy it to Microsoft Teams for testing. This guide will walk you through the process.
+Now that you completed [the quickstart](../quickstart) and your agent is running locally, let's install it in Microsoft Teams. The fastest path is the [Teams CLI](/cli/).
 
-## Microsoft 365 Agents Toolkit
+## Prerequisites
 
-Microsoft 365 Agents Toolkit is a powerful tool that simplifies deploying and debugging Teams applications. It automates tasks like managing the Teams app manifest, configuring authentication, provisioning, and deployment. If you'd like to learn about these concepts, check out [Teams core concepts](/teams/core-concepts).
+- The CLI installed: `npm install -g @microsoft/teams.cli@preview`
+- An M365 account with **custom app upload (sideloading) enabled** on the tenant
+- A public HTTPS tunnel pointing at your local server (e.g. [DevTunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview), [ngrok](https://ngrok.com/))
 
-### Install Microsoft 365 Agents Toolkit
+If you haven't run through this before, the [Quickstart: Register your app](/get-started/quickstart-register) walks the full flow end-to-end. The summary below is for developers already familiar with the steps.
 
-First, you'll need to install the Agents Toolkit IDE extension:
+## 1. Log in
 
-- Visit the [Microsoft 365 Agents Toolkit installation guide](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/install-teams-toolkit) to install on your preferred IDE.
-
-## Adding Teams configuration files via `teams` CLI
-
-To configure your agent for Teams, run the following command in the terminal inside your quote-agent folder:
-
-:::tip
-(if you have `teams` CLI installed globally, use `teams` instead of `npx`)
-:::
-
-```bash
-npx @microsoft/teams.cli config add atk.basic
+```sh
+teams login
+teams status
 ```
 
-:::tip
-The `atk.basic` configuration is a basic setup for Agents Toolkit. It includes the necessary files and configuration to get started with Teams development.<br/>
-Explore more advanced configurations as needed with `npx @microsoft/teams.cli config --help`.<br />
-:::
+`teams status` should report `Sideloading: enabled`. If not, your tenant admin needs to enable [custom app upload](https://learn.microsoft.com/en-us/microsoftteams/teams-custom-app-policies-and-settings).
 
-This [CLI](/developer-tools/cli) command adds configuration files required by Agents Toolkit, including:
+## 2. Register the bot infrastructure
 
-- Environment setup in the `env` folder and root `.env` file
-- Teams app manifest in the `appPackage` folder (if not already present)
-- Debug instructions in `.vscode/launch.json` and `.vscode/tasks.json`
-- Agents Toolkit automation files to your project (e.g. `teamsapp.local.yml`)
+From your project directory:
 
-| Tool Name                    | Command | Description                                                                                                                           |
-| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Teams SDK CLI                | `teams` | A command-line tool for setting up and utilizing the Teams SDK, including integration with Microsoft 365 Agents Toolkit when desired. |
-| Microsoft 365 Agents Toolkit | `atk`   | A tool for managing provisioning, deployment, and in-client debugging for Teams applications.                                         |
+```sh
+teams app create \
+  --name <your-bot-name> \
+  --endpoint https://<tunnel-host>/api/messages \
+  --env .env \
+  --teams-managed
+```
 
-## Debugging in Teams
+This creates the Entra app, a Teams-managed bot registration, and the Teams app entry in one shot. Credentials (`CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`) land in `.env`. For C# projects use `--env appsettings.json`.
 
-After installing Agents Toolkit and adding the configuration:
+`--teams-managed` requires no Azure subscription and is ideal for prototyping. Use `--azure --resource-group <rg>` instead if you need OAuth/SSO or are heading to production. See [Bot Locations](/cli/concepts/bot-locations) for the trade-offs.
 
-1. **Open** your agent's project in your IDE.
-2. **Open the Microsoft 365 Agents Toolkit extension panel** (usually on the left sidebar).
-3. **Log in** to your Microsoft 365 and Azure accounts in the Agents Toolkit extension.
-4. **Select "Local"** under Environment Settings of the Agents Toolkit extension.
-5. **Click on Debug (Chrome) or Debug (Edge)** to start debugging via the 'play' button.
+## 3. Run your agent
 
-![Screenshot of Microsoft 365 Agents Toolkit with 'Environment' section expanded and 'local' selected.](/screenshots/agents-toolkit.png)
+<LanguageInclude section="run-command" />
 
-When debugging starts, the Agents Toolkit will:
+The bot is listening when `curl -X POST http://localhost:3978/api/messages` returns `401`.
 
-- **Build** your application
-- **Start a [devtunnel](/teams/core-concepts#devtunnel)** that will assign a temporary public URL to your local server
-- **Provision the Teams app** for your tenant so that it can be installed and be authenticated on Teams
-- **Set up the local variables** necessary for your agent to run in Teams in `env/.env.local` and `env/env.local.user`. This includes propagating the app manifest with your newly provisioned resources.
-- **Start** the local server.
-- **Package your app manifest** into a Teams application zip package and the manifest json with variables inserted in `appPackage/build`.
-- **Launch Teams** in an incognito window in your browser.
-- **Upload the package** to Teams and signal it to sideload (install) the app just for your use.
+## 4. Install the app in Teams
 
-If you set up Agents Toolkit via the Teams SDK CLI, you should see something like the following in your terminal:
+```sh
+teams app get --install-link
+```
 
-<LanguageInclude section="terminal-output" />
+Open the printed URL in a browser signed in to Teams, click **Add**, then send the bot a message.
 
-## Testing your agent
-
-After the debugging session starts:
-
-1. Teams will open in your browser
-2. You'll be prompted to sign in (if not already)
-3. Teams will ask permission to install the app
-4. Once installed, you can start chatting with your agent!
-
-![Screenshot of `quote-agent-local` agent running in Teams.](/screenshots/example-on-teams.png)
-
-Congratulations! Now you have a fully functional agent running in Microsoft Teams. Interact with it just like any other Teams app and explore the rest of the documentation to build more complex agents.
+![Screenshot of an agent running in Teams.](/screenshots/example-on-teams.png)
 
 ## Troubleshooting
 
-For deployment and resource management we recommend the Microsoft 365 Agents Toolkit. For authentication-related issues, refer to our [Authentication Troubleshooting](/teams/app-authentication/troubleshooting) guide.
+- Run `teams app doctor` against your app to surface configuration issues.
+- For authentication problems, see [Authentication Troubleshooting](/teams/app-authentication/troubleshooting).
+- For manual Azure setup, see [Azure Configuration](/teams/azure-configuration).
 
-If you prefer to set everything up by hand, follow our [Manual Configuration](/teams/configuration/manual-configuration) guide. The Teams SDK itself doesn't handle deployment or Azure resources, so you'll need to rely on the general [Microsoft Teams deployment documentation](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview) for in-depth help.
+## Using Microsoft 365 Agents Toolkit instead
+
+If you prefer working from the [Microsoft 365 Agents Toolkit](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/install-teams-toolkit) VS Code extension, that path still works — install the extension, sign in, select **Local** under Environment Settings, and click Debug. Agents Toolkit handles tunnels, manifest stamping, and sideloading in-IDE.
 
 ## Next steps
 
-Now that your agent is running in Teams, you can learn more [essential concepts](../../essentials) to understand how to build more complex agents. Explore the [in-depth guides](../../in-depth-guides) for advanced topics like authentication, message extensions, and more.
+Continue with [essential concepts](../../essentials) to build more complex agents, or jump to the [in-depth guides](../../in-depth-guides) for AI, message extensions, dialogs, and more.
 
 ## Resources
 
-- [Teams CLI documentation](/developer-tools/cli)
-- [Microsoft 365 Agents Toolkit documentation](https://learn.microsoft.com/en-us/microsoft-365/developer/overview-m365-agents-toolkit?toc=%2Fmicrosoftteams%2Fplatform%2Ftoc.json&bc=%2Fmicrosoftteams%2Fplatform%2Fbreadcrumb%2Ftoc.json)
-- [Microsoft 365 Agents Toolkit CLI documentation](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/microsoft-365-agents-toolkit-cli)
-- [Teams CLI GitHub repository](https://github.com/OfficeDev/Teams-Toolkit)
+- [Teams CLI](/cli/)
+- [Quickstart: Register your app](/get-started/quickstart-register)
 - [Microsoft Teams deployment documentation](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview)

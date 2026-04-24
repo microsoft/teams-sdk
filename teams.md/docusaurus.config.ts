@@ -156,6 +156,11 @@ const config: Config = {
             },
             items: [
                 {
+                    to: '/cli/',
+                    label: 'CLI',
+                    position: 'left',
+                },
+                {
                     to: '/blog',
                     label: 'Blog',
                     position: 'left',
@@ -188,6 +193,10 @@ const config: Config = {
                         {
                             label: 'Python',
                             to: '/python/getting-started',
+                        },
+                        {
+                            label: 'CLI',
+                            to: '/cli/',
                         },
                         {
                             label: 'Privacy policy',
@@ -259,8 +268,8 @@ const config: Config = {
             ],
         },
         announcementBar: {
-            id: 'teams-sdk-rename',
-            content: 'We have been renamed to Teams SDK! 🎉 🥳',
+            id: 'teams-cli-preview',
+            content: 'The new <a href="/teams-sdk/cli/">Teams CLI</a> is in Preview — try it out and share feedback.',
             isCloseable: true,
             backgroundColor: '#515cc6',
             textColor: '#fff'

@@ -90,7 +90,18 @@ Here's how the `copilotAgents` section fits into the overall manifest structure:
 
 ## Regenerating the App Package
 
-After updating the manifest, you need to zip the manifest and icon files into an app package:
+After updating the manifest, zip the manifest and icon files into an app package.
+
+### Using the Teams CLI
+
+If you have an app registered with the Teams CLI, upload the new manifest and download a fresh package:
+
+```bash
+teams app manifest upload <appId> ./manifest.json
+teams app package download <appId>
+```
+
+The download produces a sideload-ready zip with the manifest and icons.
 
 ### Using Microsoft 365 Agents Toolkit
 
