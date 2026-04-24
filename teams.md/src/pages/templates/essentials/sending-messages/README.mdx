@@ -50,7 +50,6 @@ To send a targeted message when responding to an incoming activity, use the <Lan
 
 <LanguageInclude section="targeted-send-example" />
 
-### Targeted messages in preview
 <LanguageInclude section="targeted-preview-note" />
 
 ## Reactions
@@ -61,6 +60,39 @@ Reactions are currently in preview.
 
 Reactions allow your agent to add or remove emoji reactions on messages in a conversation. The reactions client is available via the API client.
 
-### Reactions in preview 
 
 <LanguageInclude section="reactions-preview-note" />
+
+## Quoted Replies
+
+:::info[Coming Soon]
+Quoted replies are coming soon.
+:::
+
+Quoted replies let your agent reference a previous message in the conversation. When a user sends a message that quotes another message, your agent receives structured metadata about the quoted content. Your agent can also send messages that quote previous messages.
+
+### Receiving Quoted Replies
+
+When a user quotes a message and sends it to your agent, the quoted reply metadata is available on the inbound activity. Use the <LanguageInclude section="get-quoted-messages-method-name" /> method to access all quoted reply entities.
+
+<LanguageInclude section="quoted-replies-receive-example" />
+
+Each quoted reply entity contains the quoted message's ID, sender information, a preview of the quoted text, and whether the quoted message has been deleted.
+
+### Sending a Quoted Reply
+
+When your agent calls <LanguageInclude section="reply-method-name" />, the SDK automatically stamps a quoted reply entity referencing the inbound message. No extra code is needed — the reply will appear as a quoted reply in Teams.
+
+<LanguageInclude section="quoted-replies-reply-example" />
+
+To quote a different message in the same conversation (not the inbound message), use the <LanguageInclude section="quote-reply-method-name" /> method with the message ID you want to quote.
+
+<LanguageInclude section="quoted-replies-quote-reply-example" />
+
+### Building Quoted Replies for Proactive Send
+
+For proactive scenarios (using <LanguageInclude section="app-send-method-name" />) or when quoting multiple messages, use the <LanguageInclude section="add-quoted-reply-method-name" /> method on a message activity. Pass the message ID and an optional response text.
+
+<LanguageInclude section="quoted-replies-builder-example" />
+
+<LanguageInclude section="quoted-replies-preview-note" />
