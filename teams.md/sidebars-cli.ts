@@ -92,7 +92,7 @@ export default {
     {
       type: 'category',
       label: 'Guides',
-      items: ['guides/user-authentication-setup', 'guides/troubleshooting'],
+      items: ['guides/user-authentication-setup'],
     },
   ],
 } satisfies SidebarsConfig;
