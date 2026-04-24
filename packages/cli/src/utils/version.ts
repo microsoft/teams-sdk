@@ -15,12 +15,14 @@ export function bumpPatchVersion(version: string): string | null {
  * Stable JSON.stringify that sorts object keys for reliable deep comparison.
  */
 export function stableStringify(obj: unknown): string {
-  return JSON.stringify(obj, (_key, value) =>
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? Object.fromEntries(
-          Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-        )
-      : value
+  return (
+    JSON.stringify(obj, (_key, value) =>
+      value && typeof value === 'object' && !Array.isArray(value)
+        ? Object.fromEntries(
+            Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          )
+        : value
+    ) ?? ''
   );
 }
 

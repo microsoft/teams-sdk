@@ -354,8 +354,11 @@ export const appUpdateCommand = new Command('update')
       }
 
       // Scripting mode: apply all mutation flags
-      // Snapshot before updates for version-bump comparison
-      const detailsBefore = await fetchAppDetailsV2(token, appId);
+      // Snapshot before updates for version-bump comparison (skip if user set --version)
+      let detailsBefore: AppDetails | undefined;
+      if (!options.version) {
+        detailsBefore = await fetchAppDetailsV2(token, appId);
+      }
 
       const allUpdates: AppUpdateOutput['updated'] = {};
       let endpointBotId: string | undefined;
@@ -540,7 +543,7 @@ export const appUpdateCommand = new Command('update')
 
       // Single version bump after all updates (skip if user set --version explicitly)
       let versionBumped = false;
-      if (!options.version) {
+      if (detailsBefore) {
         const detailsAfter = await fetchAppDetailsV2(token, appId);
         const { version: _bv, ...beforeSnapshot } = detailsBefore;
         const { version: _av, ...afterSnapshot } = detailsAfter;
