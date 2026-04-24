@@ -553,12 +553,12 @@ export const appUpdateCommand = new Command('update')
 
       // Single JSON output for all updates
       if (options.json) {
-        const result: AppUpdateOutput & { versionBumped?: boolean } = {
+        const result: AppUpdateOutput & { needsReinstall?: boolean } = {
           teamsAppId: appId,
           ...(endpointBotId ? { botId: endpointBotId } : {}),
           ...(endpointValidDomains ? { validDomains: endpointValidDomains } : {}),
           updated: allUpdates,
-          ...(versionBumped ? { versionBumped: true } : {}),
+          ...(versionBumped ? { needsReinstall: true } : {}),
         };
         outputJson(result);
       }

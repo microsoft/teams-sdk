@@ -1,12 +1,10 @@
 import AdmZip from 'adm-zip';
 import fs from 'node:fs';
 import path from 'node:path';
-import pc from 'picocolors';
 import type { AppSummary, AppDetails, AppBot } from './types.js';
 import { importAppPackage } from './tdp.js';
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
-import { logger } from '../utils/logger.js';
 import { bumpPatchVersion, stableStringify } from '../utils/version.js';
 import { staticsDir } from '../project/paths.js';
 
@@ -185,6 +183,8 @@ export async function updateAppDetails(
   const updatedDetails = { ...currentDetails, ...updates };
 
   // 3. Auto-bump version if content changed and caller didn't set version explicitly
+  let versionBumped = false;
+  let previousVersion: string | undefined;
   const autoBump = options?.autoBumpVersion ?? true;
   if (autoBump && !('version' in updates) && currentDetails.version) {
     const { version: _cv, ...currentWithoutVersion } = currentDetails;
@@ -192,8 +192,9 @@ export async function updateAppDetails(
     if (stableStringify(currentWithoutVersion) !== stableStringify(updatedWithoutVersion)) {
       const bumped = bumpPatchVersion(currentDetails.version);
       if (bumped) {
+        previousVersion = currentDetails.version;
         updatedDetails.version = bumped;
-        logger.info(pc.dim(`Version auto-bumped: ${currentDetails.version} → ${bumped} — reinstall may be needed`));
+        versionBumped = true;
       }
     }
   }
@@ -212,7 +213,10 @@ export async function updateAppDetails(
     throw new Error(`Failed to update app details: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  const result = (await response.json()) as AppDetails;
+  result.versionBumped = versionBumped;
+  if (previousVersion) result.previousVersion = previousVersion;
+  return result;
 }
 
 /**
