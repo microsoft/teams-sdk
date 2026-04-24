@@ -17,7 +17,9 @@ export function bumpPatchVersion(version: string): string | null {
 export function stableStringify(obj: unknown): string {
   return JSON.stringify(obj, (_key, value) =>
     value && typeof value === 'object' && !Array.isArray(value)
-      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+      ? Object.fromEntries(
+          Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        )
       : value
   );
 }

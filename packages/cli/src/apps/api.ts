@@ -165,6 +165,11 @@ export async function fetchAppDetailsV2(token: string, teamsAppId: string): Prom
   return response.json();
 }
 
+export interface UpdateAppDetailsResult extends AppDetails {
+  versionBumped: boolean;
+  previousVersion?: string;
+}
+
 /**
  * Update app details using the read-modify-write pattern.
  * Fetches current full object, merges updates, and POSTs the full object back.
@@ -175,7 +180,7 @@ export async function updateAppDetails(
   teamsAppId: string,
   updates: Partial<AppDetails>,
   options?: { autoBumpVersion?: boolean }
-): Promise<AppDetails> {
+): Promise<UpdateAppDetailsResult> {
   // 1. Fetch current full object
   const currentDetails = await fetchAppDetailsV2(token, teamsAppId);
 
@@ -210,13 +215,15 @@ export async function updateAppDetails(
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to update app details: ${response.status} ${response.statusText}`);
+    const errorText = await response.text();
+    throw new CliError(
+      'API_ERROR',
+      `Failed to update app details: ${response.status} ${errorText}`
+    );
   }
 
-  const result = (await response.json()) as AppDetails;
-  result.versionBumped = versionBumped;
-  if (previousVersion) result.previousVersion = previousVersion;
-  return result;
+  const details = (await response.json()) as AppDetails;
+  return { ...details, versionBumped, previousVersion };
 }
 
 /**
@@ -229,7 +236,7 @@ export async function uploadIcon(
   iconType: 'color' | 'outline',
   base64String: string,
   options?: { autoBumpVersion?: boolean }
-): Promise<void> {
+): Promise<UpdateAppDetailsResult> {
   // Step 1: Upload icon bytes
   const uploadResponse = await apiFetch(`${TDP_BASE_URL}/appdefinitions/${teamsAppId}/image`, {
     method: 'POST',
@@ -257,7 +264,7 @@ export async function uploadIcon(
   // Step 2: Write URL back to app definition (read-modify-write to preserve the other icon)
   const field = iconType === 'color' ? 'colorIcon' : 'outlineIcon';
   try {
-    await updateAppDetails(token, teamsAppId, { [field]: iconUrl }, options);
+    return await updateAppDetails(token, teamsAppId, { [field]: iconUrl }, options);
   } catch (error) {
     if (error instanceof CliError) throw error;
     const msg = error instanceof Error ? error.message : String(error);
