@@ -23,9 +23,19 @@ import { outputJson } from '../../utils/json-output.js';
 import { logger } from '../../utils/logger.js';
 import { pickApp } from '../../utils/app-picker.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
+import { bumpPatchVersion } from '../../utils/version.js';
 import type { AppSummary, AppDetails } from '../../apps/types.js';
 import type { BotDetails } from '../../apps/tdp.js';
 import type { BotLocation } from '../../apps/bot-location.js';
+
+/** Stable JSON.stringify with sorted keys for reliable deep comparison. */
+function stableStringify(obj: unknown): string {
+  return JSON.stringify(obj, (_key, value) =>
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+      : value
+  );
+}
 
 interface UpdateOptions {
   endpoint?: string;
@@ -346,6 +356,9 @@ export const appUpdateCommand = new Command('update')
       }
 
       // Scripting mode: apply all mutation flags
+      // Snapshot before updates for version-bump comparison
+      const detailsBefore = await fetchAppDetailsV2(token, appId);
+
       const allUpdates: AppUpdateOutput['updated'] = {};
       let endpointBotId: string | undefined;
       let endpointValidDomains: string[] | undefined;
@@ -397,14 +410,13 @@ export const appUpdateCommand = new Command('update')
         }
 
         // Update validDomains with the new endpoint's domain
-        const details = await fetchAppDetailsV2(token, appId);
-        const domains = (details.validDomains as string[]) ?? [];
+        const domains = (detailsBefore.validDomains as string[]) ?? [];
         const domain = extractDomain(options.endpoint);
         endpointValidDomains = domains;
         if (domain && !domains.includes(domain)) {
           const domainSpinner = createSilentSpinner('Updating valid domains...', silent).start();
           endpointValidDomains = [...domains, domain];
-          await updateAppDetails(token, appId, { validDomains: endpointValidDomains });
+          await updateAppDetails(token, appId, { validDomains: endpointValidDomains }, { autoBumpVersion: false });
           domainSpinner.success({ text: `Added ${domain} to valid domains` });
         }
 
@@ -498,7 +510,7 @@ export const appUpdateCommand = new Command('update')
       const { endpoint: _ep, colorIcon: _ci, outlineIcon: _oi, ...basicInfoUpdates } = allUpdates;
       if (Object.keys(basicInfoUpdates).length > 0) {
         const spinner = createSilentSpinner('Updating app details...', silent).start();
-        await updateAppDetails(token, appId, basicInfoUpdates);
+        await updateAppDetails(token, appId, basicInfoUpdates, { autoBumpVersion: false });
         spinner.success({ text: 'App details updated successfully' });
 
         if (!options.json) {
@@ -515,25 +527,47 @@ export const appUpdateCommand = new Command('update')
       // --- Icons ---
       if (colorIconData) {
         const spinner = createSilentSpinner('Uploading color icon...', silent).start();
-        await uploadIcon(token, appId, 'color', colorIconData.base64);
+        await uploadIcon(token, appId, 'color', colorIconData.base64, { autoBumpVersion: false });
         spinner.success({ text: 'Color icon uploaded' });
         allUpdates.colorIcon = true;
       }
 
       if (outlineIconData) {
         const spinner = createSilentSpinner('Uploading outline icon...', silent).start();
-        await uploadIcon(token, appId, 'outline', outlineIconData.base64);
+        await uploadIcon(token, appId, 'outline', outlineIconData.base64, { autoBumpVersion: false });
         spinner.success({ text: 'Outline icon uploaded' });
         allUpdates.outlineIcon = true;
       }
 
+      // Single version bump after all updates (skip if user set --version explicitly)
+      let versionBumped = false;
+      if (!options.version) {
+        const detailsAfter = await fetchAppDetailsV2(token, appId);
+        const { version: _bv, ...beforeSnapshot } = detailsBefore;
+        const { version: _av, ...afterSnapshot } = detailsAfter;
+        const contentChanged = stableStringify(beforeSnapshot) !== stableStringify(afterSnapshot);
+
+        if (contentChanged) {
+          const bumped = bumpPatchVersion(detailsAfter.version);
+          if (bumped) {
+            await updateAppDetails(token, appId, { version: bumped }, { autoBumpVersion: false });
+            versionBumped = true;
+            allUpdates.version = bumped;
+            if (!silent) {
+              logger.info(pc.dim(`Version auto-bumped: ${detailsAfter.version} → ${bumped} — reinstall may be needed`));
+            }
+          }
+        }
+      }
+
       // Single JSON output for all updates
       if (options.json) {
-        const result: AppUpdateOutput = {
+        const result: AppUpdateOutput & { versionBumped?: boolean } = {
           teamsAppId: appId,
           ...(endpointBotId ? { botId: endpointBotId } : {}),
           ...(endpointValidDomains ? { validDomains: endpointValidDomains } : {}),
           updated: allUpdates,
+          ...(versionBumped ? { versionBumped: true } : {}),
         };
         outputJson(result);
       }

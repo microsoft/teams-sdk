@@ -1,10 +1,13 @@
 import AdmZip from 'adm-zip';
 import fs from 'node:fs';
 import path from 'node:path';
+import pc from 'picocolors';
 import type { AppSummary, AppDetails, AppBot } from './types.js';
 import { importAppPackage } from './tdp.js';
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
+import { bumpPatchVersion } from '../utils/version.js';
 import { staticsDir } from '../project/paths.js';
 
 /**
@@ -165,13 +168,26 @@ export async function fetchAppDetailsV2(token: string, teamsAppId: string): Prom
 }
 
 /**
+ * Stable JSON.stringify that sorts object keys for reliable deep comparison.
+ */
+function stableStringify(obj: unknown): string {
+  return JSON.stringify(obj, (_key, value) =>
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+      : value
+  );
+}
+
+/**
  * Update app details using the read-modify-write pattern.
  * Fetches current full object, merges updates, and POSTs the full object back.
+ * Auto-bumps the patch version when content changes (unless version is explicitly set).
  */
 export async function updateAppDetails(
   token: string,
   teamsAppId: string,
-  updates: Partial<AppDetails>
+  updates: Partial<AppDetails>,
+  options?: { autoBumpVersion?: boolean }
 ): Promise<AppDetails> {
   // 1. Fetch current full object
   const currentDetails = await fetchAppDetailsV2(token, teamsAppId);
@@ -179,7 +195,21 @@ export async function updateAppDetails(
   // 2. Merge updates into it
   const updatedDetails = { ...currentDetails, ...updates };
 
-  // 3. POST full object back
+  // 3. Auto-bump version if content changed and caller didn't set version explicitly
+  const autoBump = options?.autoBumpVersion ?? true;
+  if (autoBump && !('version' in updates) && currentDetails.version) {
+    const { version: _cv, ...currentWithoutVersion } = currentDetails;
+    const { version: _uv, ...updatedWithoutVersion } = updatedDetails;
+    if (stableStringify(currentWithoutVersion) !== stableStringify(updatedWithoutVersion)) {
+      const bumped = bumpPatchVersion(currentDetails.version);
+      if (bumped) {
+        updatedDetails.version = bumped;
+        logger.info(pc.dim(`Version auto-bumped: ${currentDetails.version} → ${bumped} — reinstall may be needed`));
+      }
+    }
+  }
+
+  // 4. POST full object back
   const response = await apiFetch(`${TDP_BASE_URL}/appdefinitions/v2/${teamsAppId}`, {
     method: 'POST',
     headers: {
@@ -204,7 +234,8 @@ export async function uploadIcon(
   token: string,
   teamsAppId: string,
   iconType: 'color' | 'outline',
-  base64String: string
+  base64String: string,
+  options?: { autoBumpVersion?: boolean }
 ): Promise<void> {
   // Step 1: Upload icon bytes
   const uploadResponse = await apiFetch(`${TDP_BASE_URL}/appdefinitions/${teamsAppId}/image`, {
@@ -233,7 +264,7 @@ export async function uploadIcon(
   // Step 2: Write URL back to app definition (read-modify-write to preserve the other icon)
   const field = iconType === 'color' ? 'colorIcon' : 'outlineIcon';
   try {
-    await updateAppDetails(token, teamsAppId, { [field]: iconUrl });
+    await updateAppDetails(token, teamsAppId, { [field]: iconUrl }, options);
   } catch (error) {
     if (error instanceof CliError) throw error;
     const msg = error instanceof Error ? error.message : String(error);
