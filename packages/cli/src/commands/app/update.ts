@@ -23,19 +23,10 @@ import { outputJson } from '../../utils/json-output.js';
 import { logger } from '../../utils/logger.js';
 import { pickApp } from '../../utils/app-picker.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
-import { bumpPatchVersion } from '../../utils/version.js';
+import { bumpPatchVersion, stableStringify } from '../../utils/version.js';
 import type { AppSummary, AppDetails } from '../../apps/types.js';
 import type { BotDetails } from '../../apps/tdp.js';
 import type { BotLocation } from '../../apps/bot-location.js';
-
-/** Stable JSON.stringify with sorted keys for reliable deep comparison. */
-function stableStringify(obj: unknown): string {
-  return JSON.stringify(obj, (_key, value) =>
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
-      : value
-  );
-}
 
 interface UpdateOptions {
   endpoint?: string;

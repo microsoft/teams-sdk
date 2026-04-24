@@ -7,7 +7,7 @@ import { importAppPackage } from './tdp.js';
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
-import { bumpPatchVersion } from '../utils/version.js';
+import { bumpPatchVersion, stableStringify } from '../utils/version.js';
 import { staticsDir } from '../project/paths.js';
 
 /**
@@ -165,17 +165,6 @@ export async function fetchAppDetailsV2(token: string, teamsAppId: string): Prom
   }
 
   return response.json();
-}
-
-/**
- * Stable JSON.stringify that sorts object keys for reliable deep comparison.
- */
-function stableStringify(obj: unknown): string {
-  return JSON.stringify(obj, (_key, value) =>
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
-      : value
-  );
 }
 
 /**
