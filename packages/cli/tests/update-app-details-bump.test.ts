@@ -34,10 +34,6 @@ vi.mock('../src/utils/http.js', () => ({
   }),
 }));
 
-vi.mock('../src/utils/logger.js', () => ({
-  logger: { info: vi.fn() },
-}));
-
 import { updateAppDetails } from '../src/apps/api.js';
 
 describe('updateAppDetails version auto-bump', () => {
@@ -49,11 +45,13 @@ describe('updateAppDetails version auto-bump', () => {
   });
 
   it('bumps patch version when content changes', async () => {
-    await updateAppDetails('token', 'test-teams-app-id', { shortName: 'New Name' });
+    const result = await updateAppDetails('token', 'test-teams-app-id', { shortName: 'New Name' });
 
     expect(postedBody).not.toBeNull();
     expect(postedBody!.version).toBe('1.0.1');
     expect(postedBody!.shortName).toBe('New Name');
+    expect(result.versionBumped).toBe(true);
+    expect(result.previousVersion).toBe('1.0.0');
   });
 
   it('does NOT bump when updates include explicit version', async () => {
@@ -67,10 +65,12 @@ describe('updateAppDetails version auto-bump', () => {
   });
 
   it('does NOT bump when content is identical (no-op)', async () => {
-    await updateAppDetails('token', 'test-teams-app-id', { shortName: 'Test App' });
+    const result = await updateAppDetails('token', 'test-teams-app-id', { shortName: 'Test App' });
 
     expect(postedBody).not.toBeNull();
     expect(postedBody!.version).toBe('1.0.0');
+    expect(result.versionBumped).toBe(false);
+    expect(result.previousVersion).toBeUndefined();
   });
 
   it('does NOT bump when autoBumpVersion is false', async () => {

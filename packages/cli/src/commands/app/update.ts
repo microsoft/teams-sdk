@@ -50,6 +50,7 @@ interface AppUpdateOutput {
   teamsAppId: string;
   botId?: string;
   validDomains?: string[];
+  needsReinstall?: boolean;
   updated: {
     endpoint?: string;
     shortName?: string;
@@ -196,8 +197,11 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
           const domains = (appDetails.validDomains as string[]) ?? [];
           if (!domains.includes(domain)) {
             const domainSpinner = createSilentSpinner('Updating valid domains...').start();
-            await updateAppDetails(token, app.teamsAppId, { validDomains: [...domains, domain] });
+            const domainResult = await updateAppDetails(token, app.teamsAppId, { validDomains: [...domains, domain] });
             domainSpinner.success({ text: `Added ${domain} to valid domains` });
+            if (domainResult.versionBumped) {
+              logger.info(pc.dim(`Version auto-bumped: ${domainResult.previousVersion} → ${domainResult.version} — reinstall may be needed`));
+            }
           }
         }
         continue;
@@ -225,8 +229,11 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
           const domains = (appDetails.validDomains as string[]) ?? [];
           if (!domains.includes(domain)) {
             const domainSpinner = createSilentSpinner('Updating valid domains...').start();
-            await updateAppDetails(token, app.teamsAppId, { validDomains: [...domains, domain] });
+            const domainResult = await updateAppDetails(token, app.teamsAppId, { validDomains: [...domains, domain] });
             domainSpinner.success({ text: `Added ${domain} to valid domains` });
+            if (domainResult.versionBumped) {
+              logger.info(pc.dim(`Version auto-bumped: ${domainResult.previousVersion} → ${domainResult.version} — reinstall may be needed`));
+            }
           }
         }
         continue;
@@ -400,8 +407,9 @@ export const appUpdateCommand = new Command('update')
           }
         }
 
-        // Update validDomains with the new endpoint's domain
-        const domains = (detailsBefore.validDomains as string[]) ?? [];
+        // Update validDomains with the new endpoint's domain (fresh fetch to avoid stale data)
+        const currentDetails = await fetchAppDetailsV2(token, appId);
+        const domains = (currentDetails.validDomains as string[]) ?? [];
         const domain = extractDomain(options.endpoint);
         endpointValidDomains = domains;
         if (domain && !domains.includes(domain)) {
@@ -553,7 +561,7 @@ export const appUpdateCommand = new Command('update')
 
       // Single JSON output for all updates
       if (options.json) {
-        const result: AppUpdateOutput & { needsReinstall?: boolean } = {
+        const result: AppUpdateOutput = {
           teamsAppId: appId,
           ...(endpointBotId ? { botId: endpointBotId } : {}),
           ...(endpointValidDomains ? { validDomains: endpointValidDomains } : {}),
