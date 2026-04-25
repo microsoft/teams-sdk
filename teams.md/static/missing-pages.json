@@ -1,4 +1,16 @@
 {
+  "ai-integrations": [
+    "typescript",
+    "csharp"
+  ],
+  "ai-integrations/agent-framework": [
+    "typescript",
+    "csharp"
+  ],
+  "ai-integrations/mcp-server": [
+    "typescript",
+    "csharp"
+  ],
   "essentials/on-activity/activity-ref": [
     "csharp",
     "python"
