@@ -14,6 +14,7 @@ import {
   createAzureBotHandler,
   discoverAzureBot,
   extractDomain,
+  validateEndpoint,
   uploadIcon,
 } from '../../apps/index.js';
 import { ensureAz } from '../../utils/az.js';
@@ -173,6 +174,10 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
         const botId = appDetails.bots![0].botId;
         const newEndpoint = await input({
           message: 'Enter new messaging endpoint URL:',
+          validate: (value) => {
+            if (!value.trim()) return true;
+            return validateEndpoint(value.trim()) ?? true;
+          },
         });
 
         if (!newEndpoint.trim()) {
@@ -211,6 +216,10 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
         const newEndpoint = await input({
           message: 'Enter new messaging endpoint URL:',
           default: bot.messagingEndpoint,
+          validate: (value) => {
+            if (!value.trim()) return true;
+            return validateEndpoint(value.trim()) ?? true;
+          },
         });
 
         if (newEndpoint.trim() === bot.messagingEndpoint) {
@@ -309,6 +318,39 @@ export const appUpdateCommand = new Command('update')
             'webApplicationInfo resource URI must start with "api://" (e.g., api://botid-<your-bot-id>).'
           );
         }
+      }
+      if (options.endpoint !== undefined) {
+        const trimmedEndpoint = options.endpoint.trim();
+        if (!trimmedEndpoint) {
+          throw new CliError('VALIDATION_FORMAT', 'Endpoint URL cannot be empty.');
+        }
+        const endpointError = validateEndpoint(trimmedEndpoint);
+        if (endpointError) {
+          throw new CliError('VALIDATION_FORMAT', endpointError);
+        }
+        options.endpoint = trimmedEndpoint;
+      }
+      if (options.name !== undefined && options.name.length > 30) {
+        throw new CliError('VALIDATION_FORMAT', 'Short name must be 30 characters or less.');
+      }
+      if (options.longName !== undefined && options.longName.length > 100) {
+        throw new CliError('VALIDATION_FORMAT', 'Long name must be 100 characters or less.');
+      }
+      if (options.shortDescription !== undefined && options.shortDescription.length > 80) {
+        throw new CliError('VALIDATION_FORMAT', 'Short description must be 80 characters or less.');
+      }
+      if (options.longDescription !== undefined && options.longDescription.length > 4000) {
+        throw new CliError('VALIDATION_FORMAT', 'Long description must be 4000 characters or less.');
+      }
+      const httpsUrlRegex = /^https:\/\/\S+$/i;
+      if (options.website !== undefined && !httpsUrlRegex.test(options.website)) {
+        throw new CliError('VALIDATION_FORMAT', 'Website URL must start with https:// and include a domain.');
+      }
+      if (options.privacyUrl !== undefined && !httpsUrlRegex.test(options.privacyUrl)) {
+        throw new CliError('VALIDATION_FORMAT', 'Privacy URL must start with https:// and include a domain.');
+      }
+      if (options.termsUrl !== undefined && !httpsUrlRegex.test(options.termsUrl)) {
+        throw new CliError('VALIDATION_FORMAT', 'Terms of use URL must start with https:// and include a domain.');
       }
 
       // Interactive mode (no appId, no mutation flags): picker loop
@@ -425,80 +467,16 @@ export const appUpdateCommand = new Command('update')
         allUpdates.endpoint = options.endpoint;
       }
 
-      // --- Basic info fields ---
-      if (options.name !== undefined) {
-        if (options.name.length > 30) {
-          throw new CliError('VALIDATION_FORMAT', 'Short name must be 30 characters or less.');
-        }
-        allUpdates.shortName = options.name;
-      }
-
-      if (options.longName !== undefined) {
-        if (options.longName.length > 100) {
-          throw new CliError('VALIDATION_FORMAT', 'Long name must be 100 characters or less.');
-        }
-        allUpdates.longName = options.longName;
-      }
-
-      if (options.shortDescription !== undefined) {
-        if (options.shortDescription.length > 80) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Short description must be 80 characters or less.'
-          );
-        }
-        allUpdates.shortDescription = options.shortDescription;
-      }
-
-      if (options.longDescription !== undefined) {
-        if (options.longDescription.length > 4000) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Long description must be 4000 characters or less.'
-          );
-        }
-        allUpdates.longDescription = options.longDescription;
-      }
-
-      if (options.version !== undefined) {
-        allUpdates.version = options.version;
-      }
-
-      if (options.developer !== undefined) {
-        allUpdates.developerName = options.developer;
-      }
-
-      const httpsUrlRegex = /^https:\/\/\S+$/i;
-
-      if (options.website !== undefined) {
-        if (!httpsUrlRegex.test(options.website)) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Website URL must start with https:// and include a domain.'
-          );
-        }
-        allUpdates.websiteUrl = options.website;
-      }
-
-      if (options.privacyUrl !== undefined) {
-        if (!httpsUrlRegex.test(options.privacyUrl)) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Privacy URL must start with https:// and include a domain.'
-          );
-        }
-        allUpdates.privacyUrl = options.privacyUrl;
-      }
-
-      if (options.termsUrl !== undefined) {
-        if (!httpsUrlRegex.test(options.termsUrl)) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Terms of use URL must start with https:// and include a domain.'
-          );
-        }
-        allUpdates.termsOfUseUrl = options.termsUrl;
-      }
+      // --- Basic info fields (validation already done upfront) ---
+      if (options.name !== undefined) allUpdates.shortName = options.name;
+      if (options.longName !== undefined) allUpdates.longName = options.longName;
+      if (options.shortDescription !== undefined) allUpdates.shortDescription = options.shortDescription;
+      if (options.longDescription !== undefined) allUpdates.longDescription = options.longDescription;
+      if (options.version !== undefined) allUpdates.version = options.version;
+      if (options.developer !== undefined) allUpdates.developerName = options.developer;
+      if (options.website !== undefined) allUpdates.websiteUrl = options.website;
+      if (options.privacyUrl !== undefined) allUpdates.privacyUrl = options.privacyUrl;
+      if (options.termsUrl !== undefined) allUpdates.termsOfUseUrl = options.termsUrl;
 
       if (options.webAppInfoId !== undefined) {
         allUpdates.webApplicationInfoId = options.webAppInfoId;
