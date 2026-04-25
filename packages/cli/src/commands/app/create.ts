@@ -81,20 +81,14 @@ export const appCreateCommand = new Command('create')
   .action(
     wrapAction(async (options: CreateOptions) => {
       const silent = !!options.json;
-      const account = await getAccount();
-      if (!account) {
-        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
-      }
 
-      // Validate conflicting flags
+      // Validate CLI flags upfront (before auth or any resource creation)
       if (options.azure && options.teamsManaged) {
         throw new CliError(
           'VALIDATION_CONFLICT',
           'Cannot specify both --azure and --teams-managed.'
         );
       }
-
-      // Validate CLI flags upfront (before any resource creation)
       if (options.endpoint !== undefined) {
         const trimmedEndpoint = options.endpoint.trim();
         if (!trimmedEndpoint) {
@@ -111,6 +105,11 @@ export const appCreateCommand = new Command('create')
       }
       const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
       const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
+
+      const account = await getAccount();
+      if (!account) {
+        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
+      }
 
       // Resolve bot location: explicit flag > config > default (teams-managed)
       let location: BotLocation;

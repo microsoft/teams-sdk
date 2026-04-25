@@ -50,10 +50,6 @@ export function validateEndpoint(url: string): string | null {
   if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
     return null; // allow localhost for dev
   }
-  // Reject placeholder/template URLs like <your-tunnel-url>
-  if (parsed.hostname.includes('<') || parsed.hostname.includes('>')) {
-    return 'Endpoint contains placeholder characters — replace with an actual URL.';
-  }
   return null;
 }
 
