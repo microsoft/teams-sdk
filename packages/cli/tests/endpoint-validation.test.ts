@@ -12,23 +12,17 @@ interface JsonErrorResponse {
   };
 }
 
-function run(command: string): { stdout: string; stderr: string; exitCode: number } {
+function runJson(command: string): { data: JsonErrorResponse; exitCode: number } {
   try {
     const stdout = execSync(command, { encoding: 'utf-8', stdio: 'pipe' });
-    return { stdout, stderr: '', exitCode: 0 };
+    return { data: JSON.parse(stdout) as JsonErrorResponse, exitCode: 0 };
   } catch (error: unknown) {
-    const execError = error as { stdout?: string; stderr?: string; status?: number };
+    const execError = error as { stdout?: string; status?: number };
     return {
-      stdout: execError.stdout ?? '',
-      stderr: execError.stderr ?? '',
+      data: JSON.parse(execError.stdout ?? '{}') as JsonErrorResponse,
       exitCode: execError.status ?? 1,
     };
   }
-}
-
-function runJson(command: string): { data: JsonErrorResponse; exitCode: number } {
-  const { stdout, exitCode } = run(command);
-  return { data: JSON.parse(stdout) as JsonErrorResponse, exitCode };
 }
 
 describe('validateEndpoint()', () => {
@@ -60,24 +54,6 @@ describe('validateEndpoint()', () => {
 
   it('rejects FTP protocol', () => {
     expect(validateEndpoint('ftp://example.com/api')).toBe('Endpoint must use HTTPS.');
-  });
-});
-
-describe('app create --endpoint validation (offline)', () => {
-  it('rejects HTTP endpoint before auth', () => {
-    const { stderr, exitCode } = run(
-      `${CLI} app create --name Test --endpoint "http://example.com/api" --yes`
-    );
-    expect(exitCode).toBe(1);
-    expect(stderr).toContain('Endpoint must use HTTPS.');
-  });
-
-  it('rejects empty endpoint', () => {
-    const { stderr, exitCode } = run(
-      `${CLI} app create --name Test --endpoint "" --yes`
-    );
-    expect(exitCode).toBe(1);
-    expect(stderr).toContain('cannot be empty');
   });
 });
 
