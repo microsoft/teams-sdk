@@ -3,12 +3,14 @@ import path from 'node:path';
 import AdmZip from 'adm-zip';
 import { staticsDir } from '../project/paths.js';
 
+export type BotScope = 'personal' | 'team' | 'groupChat' | 'copilot';
+
 export interface ManifestOptions {
   botId: string;
   botName: string;
   endpoint?: string;
   description?: { short: string; full?: string };
-  scopes?: string[];
+  scopes?: BotScope[];
   developer?: {
     name: string;
     websiteUrl: string;
@@ -31,7 +33,7 @@ export function extractDomain(url: string): string | null {
 export interface Manifest {
   id: string;
   name: { short: string; full?: string };
-  bots?: Array<{ botId: string; scopes: string[] }>;
+  bots?: Array<{ botId: string; scopes: BotScope[] }>;
   [key: string]: unknown;
 }
 
@@ -41,7 +43,7 @@ export function createManifest(options: ManifestOptions): object {
     botName,
     endpoint,
     description,
-    scopes = ['personal', 'team', 'groupchat'],
+    scopes = ['personal', 'team', 'groupChat'],
     developer,
   } = options;
 
@@ -53,11 +55,10 @@ export function createManifest(options: ManifestOptions): object {
 
   return {
     $schema:
-      'https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json',
-    manifestVersion: '1.16',
+      'https://developer.microsoft.com/json-schemas/teams/v1.25/MicrosoftTeams.schema.json',
+    manifestVersion: '1.25',
     version: '1.0.0',
     id: botId,
-    packageName: `com.teams.${botId}`,
     developer: developer ?? {
       name: 'Developer',
       websiteUrl: 'https://www.example.com',
@@ -85,8 +86,13 @@ export function createManifest(options: ManifestOptions): object {
         isNotificationOnly: false,
       },
     ],
+    staticTabs: [
+      { entityId: 'conversations', scopes: ['personal'] },
+      { entityId: 'about', scopes: ['personal'] },
+    ],
     permissions: [],
     validDomains,
+    supportsChannelFeatures: 'tier1',
   };
 }
 

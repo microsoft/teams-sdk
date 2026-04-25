@@ -9,6 +9,7 @@ import {
   getAadAppByClientId,
   importAppPackage,
   type ManifestOptions,
+  type BotScope,
   createTdpBotHandler,
   createAzureBotHandler,
   type AzureContext,
@@ -173,7 +174,7 @@ export const appCreateCommand = new Command('create')
 
       // Collect manifest customization options
       let descriptionOpts: { short: string; full?: string } | undefined;
-      let scopeChoices: string[] | undefined;
+      let scopeChoices: BotScope[] | undefined;
       let developerOpts:
         | {
             name: string;

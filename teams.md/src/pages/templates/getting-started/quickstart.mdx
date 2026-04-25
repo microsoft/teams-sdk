@@ -51,15 +51,6 @@ This command:
 When the application starts, you'll see:
 
 1. An HTTP server starting up (on port `3978`). This is the main server which handles incoming requests and serves the agent application.
-2. A devtools server starting up (on port `3979`). This is a developer server that provides a web interface for debugging and testing your agent quickly, without having to deploy it to Teams.
-
-:::info
-The DevTools server runs on a separate port to avoid conflicts with your main application server. This allows you to test your agent locally while keeping the main server available for Teams integration.
-:::
-
-Now, navigate to the devtools server by opening your browser and navigating to [http://localhost:3979/devtools](http://localhost:3979/devtools). You should see a simple interface where you can interact with your agent. Try sending it a message!
-
-![Screenshot of DevTools showing user prompt 'hello!' and agent response 'you said hello!'.](/screenshots/devtools-echo-chat.png)
 
 ## Add to an Existing Project
 
@@ -84,6 +75,5 @@ Otherwise, if you want to run your agent in Teams, you can check out the [Runnin
 ## Resources
 
 - [Teams CLI documentation](/developer-tools/cli)
-- [Teams DevTools documentation](/developer-tools/devtools)
 - [Teams manifest schema](https://learn.microsoft.com/en-us/microsoftteams/platform/resources/schema/manifest-schema)
 - [Teams sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload)

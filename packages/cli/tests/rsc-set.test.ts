@@ -116,7 +116,7 @@ const mockDetails: AppDetails = {
   websiteUrl: 'https://example.com',
   privacyUrl: 'https://example.com/privacy',
   termsOfUseUrl: 'https://example.com/terms',
-  manifestVersion: '1.16',
+  manifestVersion: '1.25',
   webApplicationInfoId: 'existing-aad-app-id',
   mpnId: '',
   accentColor: '#FFFFFF',

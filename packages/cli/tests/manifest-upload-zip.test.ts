@@ -11,7 +11,7 @@ const MOCK_OUTLINE_ICON = Buffer.from('mock-outline-icon-data');
 const SERVER_MANIFEST = JSON.stringify({
   id: 'test-app-id',
   version: '1.0.0',
-  manifestVersion: '1.16',
+  manifestVersion: '1.25',
   name: { short: 'Test' },
 });
 
