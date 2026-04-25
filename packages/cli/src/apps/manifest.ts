@@ -44,6 +44,9 @@ export function validateEndpoint(url: string): string | null {
   if (parsed.protocol !== 'https:') {
     return 'Endpoint must use HTTPS.';
   }
+  if (!parsed.hostname) {
+    return 'Endpoint is missing a hostname.';
+  }
   if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
     return null; // allow localhost for dev
   }

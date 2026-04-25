@@ -319,11 +319,16 @@ export const appUpdateCommand = new Command('update')
           );
         }
       }
-      if (options.endpoint) {
-        const endpointError = validateEndpoint(options.endpoint);
+      if (options.endpoint !== undefined) {
+        const trimmedEndpoint = options.endpoint.trim();
+        if (!trimmedEndpoint) {
+          throw new CliError('VALIDATION_FORMAT', 'Endpoint URL cannot be empty.');
+        }
+        const endpointError = validateEndpoint(trimmedEndpoint);
         if (endpointError) {
           throw new CliError('VALIDATION_FORMAT', endpointError);
         }
+        options.endpoint = trimmedEndpoint;
       }
       if (options.name !== undefined && options.name.length > 30) {
         throw new CliError('VALIDATION_FORMAT', 'Short name must be 30 characters or less.');

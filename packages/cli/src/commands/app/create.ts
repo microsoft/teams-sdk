@@ -109,8 +109,8 @@ export const appCreateCommand = new Command('create')
         }
         options.endpoint = trimmedEndpoint;
       }
-      if (options.colorIcon) readAndValidateIcon(options.colorIcon, 192);
-      if (options.outlineIcon) readAndValidateIcon(options.outlineIcon, 32);
+      const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
+      const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
 
       // Resolve bot location: explicit flag > config > default (teams-managed)
       let location: BotLocation;
@@ -222,9 +222,13 @@ export const appCreateCommand = new Command('create')
       const colorIconPath = options.colorIcon;
       const outlineIconPath = options.outlineIcon;
 
-      // Validate icons upfront (before any API calls)
-      const colorIcon = colorIconPath ? readAndValidateIcon(colorIconPath, 192) : undefined;
-      const outlineIcon = outlineIconPath ? readAndValidateIcon(outlineIconPath, 32) : undefined;
+      // Validate icons (reuse early result for flag-provided paths, otherwise validate now)
+      const colorIcon = colorIconPath
+        ? (earlyColorIcon ?? readAndValidateIcon(colorIconPath, 192))
+        : undefined;
+      const outlineIcon = outlineIconPath
+        ? (earlyOutlineIcon ?? readAndValidateIcon(outlineIconPath, 32))
+        : undefined;
 
       // ===== All inputs gathered — confirm before proceeding =====
       const summaryLines: [string, string][] = [['App name', name]];
