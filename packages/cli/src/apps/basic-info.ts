@@ -102,6 +102,9 @@ async function editField(
       [fieldKey]: newValue.trim(),
     });
     spinner.success({ text: `${field.label} updated successfully` });
+    if (updated.versionBumped) {
+      logger.info(pc.dim(`Version auto-bumped: ${updated.previousVersion} → ${updated.version} — reinstall may be needed`));
+    }
     return updated;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
