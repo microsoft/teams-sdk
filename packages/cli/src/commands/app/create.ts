@@ -95,11 +95,19 @@ export const appCreateCommand = new Command('create')
       }
 
       // Validate CLI flags upfront (before any resource creation)
-      if (options.endpoint) {
-        const endpointError = validateEndpoint(options.endpoint);
+      if (options.endpoint !== undefined) {
+        const trimmedEndpoint = options.endpoint.trim();
+        if (!trimmedEndpoint) {
+          throw new CliError(
+            'VALIDATION_FORMAT',
+            'Bot messaging endpoint URL cannot be empty.'
+          );
+        }
+        const endpointError = validateEndpoint(trimmedEndpoint);
         if (endpointError) {
           throw new CliError('VALIDATION_FORMAT', endpointError);
         }
+        options.endpoint = trimmedEndpoint;
       }
       if (options.colorIcon) readAndValidateIcon(options.colorIcon, 192);
       if (options.outlineIcon) readAndValidateIcon(options.outlineIcon, 32);
