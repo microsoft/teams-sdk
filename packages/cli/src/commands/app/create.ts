@@ -12,6 +12,7 @@ import {
   type BotScope,
   createTdpBotHandler,
   createAzureBotHandler,
+  validateEndpoint,
   type AzureContext,
   type BotLocation,
   installLink,
@@ -93,6 +94,16 @@ export const appCreateCommand = new Command('create')
         );
       }
 
+      // Validate CLI flags upfront (before any resource creation)
+      if (options.endpoint) {
+        const endpointError = validateEndpoint(options.endpoint);
+        if (endpointError) {
+          throw new CliError('VALIDATION_FORMAT', endpointError);
+        }
+      }
+      if (options.colorIcon) readAndValidateIcon(options.colorIcon, 192);
+      if (options.outlineIcon) readAndValidateIcon(options.outlineIcon, 32);
+
       // Resolve bot location: explicit flag > config > default (teams-managed)
       let location: BotLocation;
       if (options.azure) location = 'azure';
@@ -160,6 +171,10 @@ export const appCreateCommand = new Command('create')
         (interactive && !hasFlags
           ? (await input({
               message: 'Bot messaging endpoint URL (leave empty to skip):',
+              validate: (value) => {
+                if (!value.trim()) return true; // allow empty (skip)
+                return validateEndpoint(value.trim()) ?? true;
+              },
             })) || undefined
           : undefined);
 
