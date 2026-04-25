@@ -1,0 +1,134 @@
+---
+sidebar_position: 3.5
+title: Sovereign Cloud
+summary: Configure your Teams bot for US Government (GCCH/DoD) or China (21Vianet) cloud environments
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Sovereign Cloud Configuration
+
+:::info
+Most developers do not need this page. It applies only to bots deployed in US Government (GCC-High, DoD) or China (21Vianet) cloud environments. If your bot runs in the standard commercial cloud, no additional configuration is needed.
+:::
+
+Sovereign clouds use separate Azure infrastructure with different service endpoints for authentication, token services, and bot communication. The Teams SDK handles this automatically when you specify your cloud environment.
+
+## Supported Clouds
+
+| Cloud | Value | Azure Portal | Teams Client |
+|-------|-------|-------------|-------------|
+| Public (default) | `Public` | portal.azure.com | teams.microsoft.com |
+| US Gov (GCCH) | `USGov` | portal.azure.us | gov.teams.microsoft.us |
+| US Gov (DoD) | `USGovDoD` | portal.azure.us | dod.teams.microsoft.us |
+| China (21Vianet) | `China` | portal.azure.cn | — |
+
+## Prerequisites
+
+- A Teams tenant in the corresponding cloud environment
+- An Azure Bot resource and app registration in the sovereign cloud portal
+
+## Configuration
+
+<Tabs>
+<TabItem value="env" label="Environment Variable">
+
+Set the `CLOUD` environment variable. This works across all three SDK languages.
+
+```env
+CLIENT_ID=your-client-id
+CLIENT_SECRET=your-client-secret
+TENANT_ID=your-tenant-id
+CLOUD=USGov
+```
+
+Valid values: `Public`, `USGov`, `USGovDoD`, `China`
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+```typescript
+import { App } from '@microsoft/teams.apps';
+import { US_GOV } from '@microsoft/teams.api';
+
+const app = new App({
+  cloud: US_GOV,
+});
+```
+
+**Available cloud presets:** `PUBLIC`, `US_GOV`, `US_GOV_DOD`, `CHINA`
+
+</TabItem>
+<TabItem value="csharp" label="C#">
+
+In `appsettings.json`:
+
+```json
+{
+  "Teams": {
+    "ClientId": "your-client-id",
+    "ClientSecret": "your-client-secret",
+    "TenantId": "your-tenant-id",
+    "Cloud": "USGov"
+  }
+}
+```
+
+Or programmatically:
+
+```csharp
+var app = new App(new AppOptions
+{
+    Cloud = CloudEnvironment.USGov,
+    Credentials = new ClientCredentials("client-id", "client-secret")
+});
+```
+
+**Available cloud presets:** `CloudEnvironment.Public`, `CloudEnvironment.USGov`, `CloudEnvironment.USGovDoD`, `CloudEnvironment.China`
+
+### Per-Endpoint Overrides
+
+For scenarios requiring customization of individual endpoints — such as China single-tenant bots that need a tenant-specific login URL — you can override specific properties in `appsettings.json`:
+
+```json
+{
+  "Teams": {
+    "Cloud": "China",
+    "LoginTenant": "your-tenant-id"
+  }
+}
+```
+
+Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `ChannelService`, `OAuthRedirectUrl`, `GraphScope`
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```python
+from microsoft_teams.api.auth.cloud_environment import US_GOV
+from microsoft_teams.apps import App
+
+app = App(cloud=US_GOV)
+```
+
+**Available cloud presets:** `PUBLIC`, `US_GOV`, `US_GOV_DOD`, `CHINA`
+
+</TabItem>
+</Tabs>
+
+## What the SDK Configures Automatically
+
+When you set a cloud environment, the SDK automatically uses the correct endpoints for:
+
+- **Login authority** — where tokens are acquired (e.g. `login.microsoftonline.us` for GCCH)
+- **Bot token scope** — the OAuth scope for bot-to-service communication
+- **Token service URL** — where user OAuth tokens are managed
+- **JWT validation** — the signing keys and issuers used to verify inbound activity tokens
+- **OpenID metadata** — the discovery endpoint for token validation configuration
+
+You do not need to configure these endpoints individually.
+
+## Next Steps
+
+After configuring your cloud environment, your bot will authenticate and communicate using the correct sovereign cloud endpoints. No other code changes are needed — the echo bot sample, OAuth flows, and all other SDK features work identically across clouds.
