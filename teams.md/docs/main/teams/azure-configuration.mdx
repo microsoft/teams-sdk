@@ -43,6 +43,10 @@ This guide uses Client Secrets. To use other authentication types, see the [App 
 </TabItem>
 <TabItem value="cli" label="Azure CLI">
 
+:::note
+The Azure CLI snippets on this page use bash syntax (line continuations with `\`, command substitution with `$(...)`, `IFS read`). On Windows, run them in **WSL** or **Git Bash**, or adapt to PowerShell (use `` ` `` for line continuations and `$(...)` works the same way).
+:::
+
 ```bash
 botName="My App"
 appId=$(az ad app create --display-name "$botName" --sign-in-audience "AzureADMyOrg" --query appId -o tsv)
