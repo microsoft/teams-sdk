@@ -34,27 +34,32 @@ From your project directory:
 teams app create \
   --name <your-bot-name> \
   --endpoint https://<tunnel-host>/api/messages \
-  --env .env \
-  --teams-managed
+  --env .env
 ```
 
-This creates the Entra app, a Teams-managed bot registration, and the Teams app entry in one shot. Credentials (`CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`) land in `.env`. For C# projects use `--env appsettings.json`.
+This creates a Teams-managed bot by default — no Azure subscription needed. The command prints a summary including the **Teams App ID** and an **Install in Teams** link, and writes `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` into `.env`. For C# projects use `--env appsettings.json`.
 
-`--teams-managed` requires no Azure subscription and is ideal for prototyping. Use `--azure --resource-group <rg>` instead if you need OAuth/SSO or are heading to production. See [Bot Locations](/cli/concepts/bot-locations) for the trade-offs.
+If you need OAuth/SSO or are heading to production, add `--azure --resource-group <rg>`. See [Bot Locations](/cli/concepts/bot-locations) for the trade-offs.
 
 ## 3. Run your agent
 
 <LanguageInclude section="run-command" />
 
-The bot is listening when `curl -X POST http://localhost:3978/api/messages` returns `401`.
+You should see `listening on port 3978 🚀` once the server starts.
 
 ## 4. Install the app in Teams
 
+The **Install in Teams** link from step 2 is your sideload URL. Click it from a browser signed in to Teams, then **Add**.
+
+If you closed the terminal, get the link back with the Teams App ID printed in step 2:
+
 ```sh
-teams app get --install-link
+teams app get <teamsAppId> --install-link
 ```
 
-Open the printed URL in a browser signed in to Teams, click **Add**, then send the bot a message.
+(Run `teams app list` to see all your apps with IDs.)
+
+Send the bot a message to confirm it's working.
 
 ![Screenshot of an agent running in Teams.](/screenshots/example-on-teams.png)
 

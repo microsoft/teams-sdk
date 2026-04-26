@@ -269,7 +269,7 @@ const config: Config = {
         },
         announcementBar: {
             id: 'teams-cli-preview',
-            content: 'The new <a href="/teams-sdk/cli/">Teams CLI</a> is in Preview — try it out and share feedback.',
+            content: `The new <a href="${baseUrl}cli/">Teams CLI</a> is in Preview — try it out and share feedback.`,
             isCloseable: true,
             backgroundColor: '#515cc6',
             textColor: '#fff'

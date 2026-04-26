@@ -1219,3 +1219,14 @@ div[class^='announcementBar'] a {
   color: var(--ifm-color-success, #00a86b);
   background: transparent;
 }
+
+.llm-copy-button--failed {
+  border-color: var(--ifm-color-danger, #c0392b);
+  color: var(--ifm-color-danger, #c0392b);
+}
+
+.llm-copy-button--failed:hover {
+  border-color: var(--ifm-color-danger, #c0392b);
+  color: var(--ifm-color-danger, #c0392b);
+  background: transparent;
+}

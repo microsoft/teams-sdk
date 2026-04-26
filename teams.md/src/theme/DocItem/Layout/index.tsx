@@ -40,28 +40,53 @@ function CheckIcon(): React.JSX.Element {
   );
 }
 
-function CopyForLLMButton(): React.JSX.Element {
-  const [copied, setCopied] = useState(false);
+type CopyState = 'idle' | 'copied' | 'failed';
 
-  const handleCopy = () => {
+function CopyForLLMButton(): React.JSX.Element {
+  const [state, setState] = useState<CopyState>('idle');
+
+  const handleCopy = async () => {
     const article = document.querySelector('article');
     if (!article) return;
-    navigator.clipboard.writeText(article.innerText).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+
+    const text = (article as HTMLElement).innerText;
+
+    if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+      setState('failed');
+      setTimeout(() => setState('idle'), 2000);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setState('copied');
+    } catch {
+      setState('failed');
+    } finally {
+      setTimeout(() => setState('idle'), 2000);
+    }
   };
+
+  const label =
+    state === 'copied' ? 'Copied!' : state === 'failed' ? 'Copy failed' : 'Copy for LLM';
+  const ariaLabel =
+    state === 'copied'
+      ? 'Copied!'
+      : state === 'failed'
+        ? 'Copy failed — clipboard unavailable'
+        : 'Copy page content for LLM';
 
   return (
     <div className="llm-copy-bar">
       <button
-        className={`llm-copy-button${copied ? ' llm-copy-button--copied' : ''}`}
+        type="button"
+        className={`llm-copy-button${state === 'copied' ? ' llm-copy-button--copied' : ''}${state === 'failed' ? ' llm-copy-button--failed' : ''}`}
         onClick={handleCopy}
-        aria-label={copied ? 'Copied!' : 'Copy page content for LLM'}
-        title="Copy page content for LLM"
+        aria-label={ariaLabel}
+        title={ariaLabel}
       >
-        {copied ? <CheckIcon /> : <CopyIcon />}
-        {copied ? 'Copied!' : 'Copy for LLM'}
+        {state === 'copied' ? <CheckIcon /> : <CopyIcon />}
+        {label}
       </button>
     </div>
   );

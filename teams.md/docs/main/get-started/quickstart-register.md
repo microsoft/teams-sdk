@@ -40,12 +40,39 @@ teams status
 
 Skip this step if you're bringing your own server endpoint.
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="language">
+<TabItem value="typescript" label="TypeScript" default>
+
 ```bash
 teams project new typescript echo-bot
 cd echo-bot
 ```
 
-Replace `typescript` with `csharp` or `python` for those languages. The default template is `echo` — see `teams project new typescript --help` for other templates (`ai`, `graph`, `mcp`, `mcpclient`, `tab`).
+</TabItem>
+<TabItem value="csharp" label="C#">
+
+```bash
+teams project new csharp echo-bot
+cd Echo.Bot/Echo.Bot
+```
+
+The C# scaffold creates a solution at `Echo.Bot/` with the project nested inside. Follow the **Next steps** line printed by the CLI for the exact path.
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```bash
+teams project new python echo-bot
+cd echo-bot
+```
+
+</TabItem>
+</Tabs>
+
+The default template is `echo`. Run `teams project new <language> --help` to see other templates available for your language.
 
 ## 4. Register bot infrastructure
 
@@ -55,28 +82,16 @@ Run from inside your project directory:
 teams app create \
   --name echo-bot \
   --endpoint https://<tunnel-host>/api/messages \
-  --env .env \
-  --teams-managed
+  --env .env
 ```
 
-This creates the Entra app, a Teams-managed bot registration, the Teams app entry, and writes `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` into `.env`.
+This creates a Teams-managed bot by default — no Azure subscription needed. The command prints a summary including the **Teams App ID** and an **Install in Teams** link, and writes `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` into `.env`.
 
 For C#, pass `--env appsettings.json` to write credentials under a `Teams` section with PascalCase keys.
 
-### Teams-managed vs. Azure
-
-| | `--teams-managed` | `--azure` |
-|---|---|---|
-| Azure subscription | Not required | Required |
-| OAuth / SSO | Not supported | Supported |
-| Best for | Local dev, prototyping | Production |
-
-To migrate later: `teams app bot migrate <appId> --resource-group <rg>`. See [Bot Locations](/cli/concepts/bot-locations) for details.
+If you need OAuth/SSO or are heading to production, add `--azure --resource-group <rg>` instead. See [Bot Locations](/cli/concepts/bot-locations) for the trade-offs and `teams app bot migrate` to switch later.
 
 ## 5. Run your agent
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
 <Tabs groupId="language">
 <TabItem value="typescript" label="TypeScript" default>
@@ -104,21 +119,21 @@ python src/main.py
 </TabItem>
 </Tabs>
 
-Verify the bot is listening:
-
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3978/api/messages
-```
-
-`401` means the agent is running and rejecting unsigned requests — exactly what you want.
+You should see `listening on port 3978 🚀` in the terminal. Your tunnel will now forward Teams traffic to your local server.
 
 ## 6. Install in Teams
 
+The **Install in Teams** link from step 4 is your sideload URL. Click it from a browser signed in to Teams, then **Add**.
+
+If you closed the terminal and need the link again:
+
 ```bash
-teams app get --install-link
+teams app get <teamsAppId> --install-link
 ```
 
-Open the printed URL in a browser signed in to Teams, click **Add**, and send your bot a message.
+Use the `Teams App ID` printed in step 4. (Run `teams app list` to see all your apps with IDs.)
+
+Send your bot a message to confirm it's working.
 
 ## What's next
 

@@ -46,10 +46,8 @@ This guide uses Client Secrets. To use other authentication types, see the [App 
 ```bash
 botName="My App"
 appId=$(az ad app create --display-name "$botName" --sign-in-audience "AzureADMyOrg" --query appId -o tsv)
-az ad sp create --id $appId
-appCred=$(az ad app credential reset --id $appId)
-tenantId=$(echo $appCred | jq -r '.tenant')
-clientSecret=$(echo $appCred | jq -r '.password')
+az ad sp create --id "$appId"
+IFS=$'\t' read -r tenantId clientSecret <<< "$(az ad app credential reset --id "$appId" --query "[tenant, password]" -o tsv)"
 ```
 
 </TabItem>

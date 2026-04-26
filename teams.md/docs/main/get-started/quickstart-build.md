@@ -90,6 +90,7 @@ If you scaffolded with `teams project new python`, your `src/main.py` already lo
 
 ```python
 import asyncio
+import re
 
 from microsoft_teams.api import MessageActivity, TypingActivityInput
 from microsoft_teams.apps import ActivityContext, App
@@ -97,10 +98,21 @@ from microsoft_teams.apps import ActivityContext, App
 app = App()
 
 
+@app.on_message_pattern(re.compile(r"hello|hi|greetings"))
+async def handle_greeting(ctx: ActivityContext[MessageActivity]) -> None:
+    """Handle greeting messages."""
+    await ctx.send("Hello! How can I assist you today?")
+
+
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
+    """Handle message activities using the new generated handler system."""
     await ctx.reply(TypingActivityInput())
-    await ctx.send(f"You said '{ctx.activity.text}'")
+
+    if "reply" in ctx.activity.text.lower():
+        await ctx.reply("Hello! How can I assist you today?")
+    else:
+        await ctx.send(f"You said '{ctx.activity.text}'")
 
 
 def main():
@@ -110,6 +122,8 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+The scaffold registers two handlers: `on_message_pattern` for greetings and a fall-through `on_message` for everything else.
 
 Run it:
 

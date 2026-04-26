@@ -1,9 +1,9 @@
 <!-- create-project -->
 
-Use your terminal to run the following command:
+The Teams CLI doesn't ship a `graph` template for C# yet (tracked in [microsoft/teams-sdk#2736](https://github.com/microsoft/teams-sdk/issues/2736)). Scaffold the `echo` template and add the OAuth wiring shown below by hand:
 
 ```sh
-teams project new csharp oauth-app --template graph
+teams project new csharp oauth-app
 ```
 
 <!-- configure-oauth -->
