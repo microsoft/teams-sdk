@@ -7,3 +7,9 @@
 [INFO] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
 [INFO] Microsoft.Hosting.Lifetime Hosting environment: Development
 ```
+
+<!-- run-command -->
+
+```sh
+dotnet run
+```

@@ -10,3 +10,10 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete..
 INFO:     Uvicorn running on http://0.0.0.0:3979 (Press CTRL+C to quit)
 ```
+
+<!-- run-command -->
+
+```sh
+pip install -e .
+python src/main.py
+```

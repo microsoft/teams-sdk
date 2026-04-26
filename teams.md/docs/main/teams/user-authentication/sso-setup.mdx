@@ -28,15 +28,11 @@ You need an Entra ID App Registration to configure the OAuth Connection in Azure
 
 ![Entra oauth authorize client app](/screenshots/entra-authorize-clientapp.png)
 
-### Configure the Entra App Registration with the CLI
+### Let an AI assistant run this for you
 
-```bash
-#!/bin/bash
+The full SSO setup involves several steps the Teams CLI doesn't handle directly (creating the `access_as_user` scope, pre-authorizing Teams clients, configuring the OAuth connection in Azure Bot Service, updating `webApplicationInfo` in the manifest). The [`teams-dev` skill](/cli/getting-started/agent-skills) orchestrates all of this for you — install it in your AI coding assistant and say *"set up SSO for my Teams bot"*.
 
-az ad app update --id $appId --web-redirect-uris "https://token.botframework.com/.auth/web/redirect"
-az ad app update --id $appId --identifier-uris "api://$appId"
-# TODO: add oauthpermission settings and client applications.
-```
+If you'd rather script it yourself, see [User Authentication Setup](/cli/guides/user-authentication-setup) for the full sequence of `az` and Graph API calls.
 
 ## Create the OAuth connection in Azure Bot Service
 

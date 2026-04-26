@@ -7,9 +7,9 @@ All teams commands. Run any command with `--help` for inline usage.
 | Flag | Description |
 |------|-------------|
 | `-v, --verbose` | Enable verbose logging |
-| `--disable-auto-update` | Disable automatic update checks |
-| `--version` | Show version |
-| `--help` | Show help |
+| `-y, --yes` | Auto-confirm prompts (for CI/agent use) |
+| `-V, --version` | Show version |
+| `-h, --help` | Show help (use with `--json` for structured output) |
 
 ## Command Tree
 
@@ -41,10 +41,10 @@ teams
 │       └── secret
 │           └── create [appId]     Generate client secret
 ├── project                        Create and configure Teams app projects
-│   ├── new                        Create a new Teams app project
-│   │   ├── typescript <name>      Create a new TypeScript Teams app
-│   │   ├── csharp <name>          Create a new C# Teams app
-│   │   └── python <name>          Create a new Python Teams app
+│   └── new                        Create a new Teams app project
+│       ├── typescript <name>      Create a new TypeScript Teams app
+│       ├── csharp <name>          Create a new C# Teams app
+│       └── python <name>          Create a new Python Teams app
 ├── config                         Manage CLI configuration
 │   ├── get [key]                  Show configuration values
 │   └── set <key> [value]          Set a configuration value

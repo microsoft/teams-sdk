@@ -10,3 +10,10 @@
 [INFO] @teams/app/http listening on port 3978 🚀
 [INFO] @teams/app/devtools available at http://localhost:3979/devtools
 ```
+
+<!-- run-command -->
+
+```sh
+npm install
+npm run dev
+```

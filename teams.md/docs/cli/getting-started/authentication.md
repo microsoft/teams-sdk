@@ -8,7 +8,13 @@ teams uses Microsoft's MSAL (Microsoft Authentication Library) to authenticate w
 teams login
 ```
 
-This starts a **device code flow** — you'll see a code and a URL. Open the URL in your browser, enter the code, and sign in with your Microsoft 365 account.
+This opens your default browser to sign in with your Microsoft 365 account. If you're on a headless machine (CI, SSH, container), use the device code flow instead:
+
+```bash
+teams login --device-code
+```
+
+You'll get a code and URL — open the URL on any device, enter the code, and complete sign-in.
 
 Your session is cached locally and persists across CLI invocations. You don't need to log in every time.
 
