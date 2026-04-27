@@ -4,7 +4,7 @@ import { login, getAccount } from '../../auth/index.js';
 import { logger } from '../../utils/logger.js';
 import { isInteractive, isLocalSession } from '../../utils/interactive.js';
 import { wrapAction } from '../../utils/errors.js';
-import { checkAndDisplayEnvironment } from '../status.js';
+import { checkAndDisplayEnvironment } from '../../utils/environment.js';
 
 interface LoginCommandOptions {
   deviceCode?: boolean;
