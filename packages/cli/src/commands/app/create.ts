@@ -197,6 +197,8 @@ export const appCreateCommand = new Command('create')
             })) || undefined
           : undefined);
 
+      const generateSecret = options.secret !== false;
+
       // Collect manifest customization options
       let descriptionOpts: { short: string; full?: string } | undefined;
       let scopeChoices: BotScope[] | undefined;
@@ -246,7 +248,7 @@ export const appCreateCommand = new Command('create')
       if (developerOpts?.name.trim()) summaryLines.push(['Developer', developerOpts.name.trim()]);
       if (colorIconPath) summaryLines.push(['Color icon', colorIconPath]);
       if (outlineIconPath) summaryLines.push(['Outline icon', outlineIconPath]);
-      if (options.secret === false) summaryLines.push(['Secret', 'Skipped (--no-secret)']);
+      if (!generateSecret) summaryLines.push(['Secret', 'Skipped']);
       if (envPath) summaryLines.push(['Credentials file', envPath]);
 
       if (interactive && !silent) {
@@ -266,7 +268,7 @@ export const appCreateCommand = new Command('create')
 
       // Graph token only needed for secret generation
       let graphToken: string | null | undefined;
-      if (options.secret !== false) {
+      if (generateSecret) {
         graphToken = await getTokenSilent(graphScopes);
         if (!graphToken) {
           spinner.error({ text: 'Failed to get Graph token' });
@@ -311,7 +313,7 @@ export const appCreateCommand = new Command('create')
 
       // Generate client secret (skipped with --no-secret)
       let secretText: string | undefined;
-      if (options.secret !== false) {
+      if (generateSecret) {
         spinner = createSilentSpinner('Generating client secret...', silent).start();
         let graphApp: { id: string } | null = null;
         for (let i = 0; i < 10; i++) {
@@ -347,7 +349,7 @@ export const appCreateCommand = new Command('create')
       const install = installLink(teamsAppId, account.tenantId);
       const portal = portalLink(teamsAppId);
 
-      const secretSkipped = options.secret === false;
+      const secretSkipped = !generateSecret;
       const credentialValues: EnvValues = {
         CLIENT_ID: clientId,
         ...(secretText !== undefined && { CLIENT_SECRET: secretText }),
