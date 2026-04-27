@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-summary: Manually create the Entra App Registration and Azure Bot Service resource needed to run a Teams bot in production.
+summary: Manually create the Entra App Registration and Azure Bot Service resource for cases where the Teams CLI is not the right fit.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -8,14 +8,17 @@ import TabItem from '@theme/TabItem';
 
 # Azure Configuration
 
-For production setups, or when you need full control over your Azure resources, this guide walks through creating the Entra App Registration and Azure Bot Service resource by hand.
+This page walks through creating the Entra App Registration and Azure Bot Service resource by hand. As described in [Core Concepts](./core-concepts), those two pieces are what every Azure-managed Teams bot needs.
 
-As described in [Core Concepts](./core-concepts), the two pieces required for a bot are an **App Registration** and an **Azure Bot**.
+:::tip Most readers should use the Teams CLI instead
+For almost everything, `teams app create --azure --resource-group <rg>` is the right answer — it provisions the Entra app, the Azure Bot resource, the Teams channel, and writes credentials in one command. See the [Quickstart: Register your app](../get-started/quickstart-register).
 
-:::tip Use the Teams CLI for the common case
-For local development and prototyping, run `teams app create --azure --resource-group <rg>`. The CLI handles app registration, the Azure Bot resource, the Teams channel, and credential output for you. See the [Quickstart: Register your app](../get-started/quickstart-register).
+**Use this page when:**
 
-This page is the manual fallback for cases where you need explicit control or the CLI cannot be used.
+- You have an existing Entra app you can't recreate (and want to point an Azure Bot at it)
+- Your tenant policy requires Azure resources be created with specific naming, tags, or networking the CLI doesn't expose
+- You're working in a locked-down environment where the CLI can't run (e.g., audited CI without Node, restricted service accounts)
+- You want to understand exactly what `teams app create --azure` does under the hood
 :::
 
 ## Requirements
