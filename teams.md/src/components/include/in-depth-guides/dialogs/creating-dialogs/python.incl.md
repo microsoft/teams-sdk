@@ -36,7 +36,11 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 <!-- dialog-open-intro -->
 
-When a user clicks the button, Teams sends a `task/fetch` invoke to your app. Register a handler with `@app.on_dialog_open("dialog_id")` to handle a specific dialog, or `@app.on_dialog_open()` for a catch-all:
+When a user clicks the button, Teams sends a `task/fetch` invoke to your app. Register a handler with `@app.on_dialog_open("dialog_id")` to handle a specific dialog, or `@app.on_dialog_open()` for a catch-all.
+
+:::tip
+Use `@app.on_dialog_open("simple_form")` to handle specific dialogs directly, instead of a single catch-all handler with if-else logic. This keeps each handler focused and avoids routing boilerplate.
+:::
 
 <!-- dialog-open-code -->
 

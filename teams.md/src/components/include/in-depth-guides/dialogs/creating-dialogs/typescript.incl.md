@@ -42,7 +42,11 @@ app.on('message', async ({ send }) => {
 
 <!-- dialog-open-intro -->
 
-When a user clicks the button, Teams sends a `task/fetch` invoke to your app. Register a handler using `dialog.open.<dialog_id>` to handle a specific dialog, or `dialog.open` for a catch-all:
+When a user clicks the button, Teams sends a `task/fetch` invoke to your app. Register a handler using `dialog.open.<dialog_id>` to handle a specific dialog, or `dialog.open` for a catch-all.
+
+:::tip
+Use sub-routes like `dialog.open.simple_form` to handle specific dialogs directly, instead of a single catch-all handler with if-else logic. This keeps each handler focused and avoids routing boilerplate.
+:::
 
 <!-- dialog-open-code -->
 
