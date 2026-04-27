@@ -272,4 +272,31 @@ describe('app create — JSON env-flag behavior', () => {
       TenantId: FAKE_TENANT_ID,
     });
   });
+
+  // Must be last — --no-secret sets Commander state that persists on the shared Command instance
+  it('--json --no-secret --env — secretSkipped true, file has no CLIENT_SECRET', async () => {
+    const envFile = tmpFile('.env');
+    files.push(envFile);
+
+    const { appCreateCommand } = await import(
+      '../src/commands/app/create.js'
+    );
+
+    await appCreateCommand.parseAsync(
+      ['--name', 'TestApp', '--json', '--no-secret', '--env', envFile],
+      { from: 'user' }
+    );
+
+    expect(jsonOutput).not.toBeNull();
+    const output = jsonOutput as Record<string, unknown>;
+    expect(output.secretSkipped).toBe(true);
+    expect(output.credentialsFile).toBe(envFile);
+    expect(output).not.toHaveProperty('credentials');
+
+    // .env file should have CLIENT_ID and TENANT_ID but no CLIENT_SECRET
+    const content = fs.readFileSync(envFile, 'utf-8');
+    expect(content).toContain(`CLIENT_ID=${FAKE_CLIENT_ID}`);
+    expect(content).toContain(`TENANT_ID=${FAKE_TENANT_ID}`);
+    expect(content).not.toContain('CLIENT_SECRET');
+  });
 });

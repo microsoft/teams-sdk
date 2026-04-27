@@ -28,6 +28,7 @@ teams app create [options]
 | `--resource-group <name>` | Azure resource group (required for --azure) |
 | `--create-resource-group` | [OPTIONAL] Create the resource group if it doesn't exist |
 | `--region <name>` | [OPTIONAL] Azure region for resource group (default: westus2) |
+| `--no-secret` | [OPTIONAL] Skip client secret generation (for managed identity or federated credentials) |
 | `--color-icon <path>` | [OPTIONAL] Path to color icon (192x192 PNG) |
 | `--outline-icon <path>` | [OPTIONAL] Path to outline icon (32x32 PNG) |
 | `--json` | [OPTIONAL] Output as JSON |
@@ -66,6 +67,16 @@ teams app create --name "My Bot" --env appsettings.json
 ```
 
 This writes credentials under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
+
+### Skipping Secret Generation
+
+Use `--no-secret` to skip client secret generation when using managed identity or federated credentials:
+
+```bash
+teams app create --name "My Bot" --no-secret
+```
+
+Only `CLIENT_ID` and `TENANT_ID` are output. You can generate a secret later with [`teams app auth secret create`](./auth-secret-create).
 
 ### Output
 
