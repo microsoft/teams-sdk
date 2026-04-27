@@ -12,18 +12,14 @@ There are two real choices to make before you provision a Teams bot. Get them ri
 
 Use the [Teams CLI](/cli/) with the default Teams-managed bot. If you later need OAuth or SSO (typically for delegated Microsoft Graph access), run `teams app bot migrate <appId> --resource-group <rg>` to switch to Azure — your `CLIENT_ID`, secret, and `TENANT_ID` stay the same. Use the Microsoft 365 Agents Toolkit if you live in VS Code and want F5 debug plus in-IDE sideloading.
 
-## Two questions to answer
-
-The setup space looks like four competing tools, but it's actually two independent decisions.
-
-### Where does the bot registration live?
+## Where does the bot registration live?
 
 - **Teams-managed** — registered via Teams Developer Portal (TDP), no Azure subscription needed. Works for production too. Can't host OAuth connections.
 - **Azure-managed** — registered as an Azure Bot resource in your subscription. Required for OAuth/SSO. Migration is supported either direction without changing credentials.
 
 See [Bot Locations](/cli/concepts/bot-locations) for the full comparison.
 
-### What tool orchestrates setup?
+## What tool orchestrates setup?
 
 - **Teams CLI** — single-command provisioning, scriptable, supports both bot locations
 - **Microsoft 365 Agents Toolkit (ATK)** — VS Code extension; full IDE-integrated lifecycle including debug and deploy
