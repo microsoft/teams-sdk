@@ -65,6 +65,7 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
         { name: 'Personal', value: 'personal', checked: true },
         { name: 'Team', value: 'team', checked: true },
         { name: 'Group Chat', value: 'groupChat', checked: true },
+        { name: 'Copilot', value: 'copilot' },
       ],
     });
   }

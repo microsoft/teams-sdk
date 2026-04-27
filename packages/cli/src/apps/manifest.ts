@@ -66,9 +66,16 @@ export function createManifest(options: ManifestOptions): object {
     botName,
     endpoint,
     description,
-    scopes = ['personal', 'team', 'groupChat'],
     developer,
   } = options;
+  let scopes = options.scopes ?? ['personal', 'team', 'groupChat'];
+
+  const hasCopilot = scopes.includes('copilot');
+
+  // Copilot requires personal scope
+  if (hasCopilot && !scopes.includes('personal')) {
+    scopes = ['personal', ...scopes];
+  }
 
   const validDomains: string[] = ['*.botframework.com'];
   if (endpoint) {
@@ -76,7 +83,7 @@ export function createManifest(options: ManifestOptions): object {
     if (domain) validDomains.push(domain);
   }
 
-  return {
+  const manifest: Record<string, unknown> = {
     $schema:
       'https://developer.microsoft.com/json-schemas/teams/v1.25/MicrosoftTeams.schema.json',
     manifestVersion: '1.25',
@@ -117,6 +124,14 @@ export function createManifest(options: ManifestOptions): object {
     validDomains,
     supportsChannelFeatures: 'tier1',
   };
+
+  if (hasCopilot) {
+    manifest.copilotAgents = {
+      customEngineAgents: [{ type: 'bot', id: botId }],
+    };
+  }
+
+  return manifest;
 }
 
 function defaultIcon(name: string): Buffer {
