@@ -1,6 +1,6 @@
 <!-- protocol-name -->
 
-SSE protocol
+Streamable HTTP protocol
 
 <!-- install -->
 
@@ -12,11 +12,11 @@ dotnet add package Microsoft.Teams.Plugins.External.McpClient --prerelease
 
 <!-- remote-protocol -->
 
-SSE
+Streamable HTTP/SSE
 
 <!-- server-setup -->
 
-a valid SSE
+valid remote
 
 <!-- auth-requirements -->
 
@@ -100,8 +100,22 @@ new McpClientPlugin()
     .UseMcpServer("https://learn.microsoft.com/api/mcp",
         new McpClientPluginParams()
         {
-               HeadersFactory = () => new Dictionary<string, string>()
-               { { "HEADER_KEY", "HEADER_VALUE" } }
+            HeadersFactory = () => new Dictionary<string, string>()
+            { { "HEADER_KEY", "HEADER_VALUE" } }
+        }
+    );
+```
+
+### Transport Mode
+
+The client defaults to the Streamable HTTP transport. If the MCP server you are connecting to only supports SSE, set `Transport` to `McpClientTransport.Sse`:
+
+```csharp
+new McpClientPlugin()
+    .UseMcpServer("https://<your-mcp-server>/mcp",
+        new McpClientPluginParams()
+        {
+            Transport = McpClientTransport.Sse
         }
     );
 ```
