@@ -84,6 +84,9 @@ Teams must reach your bot over **public HTTPS** — your `localhost` port isn't 
 
 Run from inside your project directory:
 
+<Tabs groupId="language">
+<TabItem value="typescript" label="TypeScript" default>
+
 ```bash
 teams app create \
   --name echo-bot \
@@ -91,11 +94,32 @@ teams app create \
   --env .env
 ```
 
-This creates a Teams-managed bot by default — no Azure subscription needed. The command prints a summary including the **Teams App ID** and an **Install in Teams** link, and writes `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` into `.env`.
+</TabItem>
+<TabItem value="csharp" label="C#">
 
-For C#, pass `--env appsettings.json` to write credentials under a `Teams` section with PascalCase keys.
+```bash
+teams app create \
+  --name echo-bot \
+  --endpoint https://<tunnel-host>/api/messages \
+  --env appsettings.json
+```
 
-If you need OAuth/SSO or are heading to production, add `--azure --resource-group <rg>` instead. See [Bot Locations](/cli/concepts/bot-locations) for the trade-offs and `teams app bot migrate` to switch later.
+Credentials are written under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```bash
+teams app create \
+  --name echo-bot \
+  --endpoint https://<tunnel-host>/api/messages \
+  --env .env
+```
+
+</TabItem>
+</Tabs>
+
+The command prints a summary including the **Teams App ID** and an **Install in Teams** link, and writes credentials into your env file.
 
 ## 5. Run your agent
 
