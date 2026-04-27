@@ -1,0 +1,90 @@
+---
+sidebar_position: 2
+title: "Setup Paths"
+summary: Pick the right bot registration location and orchestration tool for your Teams app, with concrete decision rules and links to detailed guides.
+---
+
+# Setup Paths
+
+There are two real choices to make before you provision a Teams bot. Get them right and the rest is mechanical.
+
+## TL;DR
+
+Use the [Teams CLI](/cli/) with the default Teams-managed bot. If you later need OAuth or SSO (typically for delegated Microsoft Graph access), run `teams app bot migrate <appId> --resource-group <rg>` to switch to Azure — your `CLIENT_ID`, secret, and `TENANT_ID` stay the same. Use the Microsoft 365 Agents Toolkit if you live in VS Code and want F5 debug plus in-IDE sideloading.
+
+## Two questions to answer
+
+The setup space looks like four competing tools, but it's actually two independent decisions.
+
+### Where does the bot registration live?
+
+- **Teams-managed** — registered via Teams Developer Portal (TDP), no Azure subscription needed. Works for production too. Can't host OAuth connections.
+- **Azure-managed** — registered as an Azure Bot resource in your subscription. Required for OAuth/SSO. Migration is supported either direction without changing credentials.
+
+See [Bot Locations](/cli/concepts/bot-locations) for the full comparison.
+
+### What tool orchestrates setup?
+
+- **Teams CLI** — single-command provisioning, scriptable, supports both bot locations
+- **Microsoft 365 Agents Toolkit (ATK)** — VS Code extension; full IDE-integrated lifecycle including debug and deploy
+- **Manual Azure** — Azure Portal or `az` CLI for the Azure pieces, TDP for the Teams app entry. Use when CLI and ATK don't fit
+- **Manual TDP-only** — Teams Developer Portal web UI at [dev.teams.microsoft.com](https://dev.teams.microsoft.com); works for Teams-managed bots
+
+These two choices are independent. You can use the Teams CLI to register either kind of bot. ATK can do both too.
+
+## Which path should I use?
+
+| Your situation | Recommended path |
+|---|---|
+| Quickest path to a running bot | Teams CLI, default (Teams-managed) |
+| Need OAuth or SSO (now or later) | Teams CLI `--azure --resource-group <rg>`, or start Teams-managed and `teams app bot migrate` later |
+| You live in VS Code, want F5 debug and in-IDE sideload | Microsoft 365 Agents Toolkit |
+| Scripting from CI or a coding agent | Teams CLI with `--json` |
+| Existing Entra app you can't recreate | Manual Azure |
+| Tenant policy requires explicit Azure config the CLI doesn't expose | Manual Azure |
+| No Azure subscription | Teams CLI default (Teams-managed) |
+
+## Detailed paths
+
+<details>
+<summary><strong>Teams CLI</strong> — recommended for most</summary>
+
+Single-command, scriptable CLI that provisions the Entra app, the bot registration (Teams-managed or Azure), and the Teams app entry. Best for local dev, CI, and AI coding assistants. Supports `--json` for programmatic use.
+
+- [Quickstart: Register your app](/get-started/quickstart-register)
+- [CLI command reference](/cli/commands/)
+
+</details>
+
+<details>
+<summary><strong>Microsoft 365 Agents Toolkit</strong> — VS Code extension</summary>
+
+In-IDE provisioning, sideloading, and F5 debug. Best fit if you primarily work in VS Code and want everything orchestrated visually with bicep templates for resources.
+
+- [Microsoft Learn: Install Agents Toolkit](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/install-teams-toolkit)
+
+</details>
+
+<details>
+<summary><strong>Manual Azure</strong> — Azure Portal or <code>az</code> CLI</summary>
+
+Use when you need explicit control over Azure resource configuration, you're working with an existing Entra app, or your environment can't run the Teams CLI.
+
+- [Azure Configuration](./azure-configuration)
+
+</details>
+
+<details>
+<summary><strong>Manual TDP-only</strong> — Teams Developer Portal web UI</summary>
+
+Web-based UI for creating and managing Teams-managed bot apps. No local tooling required. Good for prototyping or environments where Node.js is unavailable.
+
+- [Teams Developer Portal](https://dev.teams.microsoft.com)
+
+</details>
+
+## What's next
+
+- New to all this? Start with [Quickstart: Register your app](/get-started/quickstart-register)
+- Need the architecture picture? See [Core Concepts](./core-concepts)
+- Need to switch your bot's registration later? See [`teams app bot migrate`](/cli/commands/app/bot-migrate)
