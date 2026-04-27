@@ -31,6 +31,8 @@ If your bot is configured for a sovereign cloud, only that cloud's hostnames are
 
 If your bot receives activities from a service URL outside the cloud preset's allowlist (e.g., sovereign clouds without presets, non-Teams channels, or custom environments), you can add additional hostnames.
 
+Entries must be **bare hostnames matched exactly** (case-insensitive). Wildcard patterns like `*.example.com`, URL suffixes, or full URLs are **not** supported — a URL's hostname is extracted and compared for an exact match. The one exception is the `'*'` string as the sole entry, which disables domain validation entirely; see [Disabling validation](#disabling-validation) below.
+
 Sovereign cloud FQDNs that require `additionalAllowedDomains`:
 
 | Environment | FQDN |
@@ -47,7 +49,7 @@ Sovereign cloud FQDNs that require `additionalAllowedDomains`:
 Disabling service URL validation removes a security protection that prevents your bot's credentials from being sent to unauthorized endpoints. Only disable this if you understand the security implications.
 :::
 
-If you have a non-standard setup where domain-based validation does not work, you can disable it by passing `*` as an additional domain:
+If you have a non-standard setup where domain-based validation does not work, you can disable it by configuring the allowlist to contain only the string `'*'`. This is the only wildcard form supported and is interpreted as "disable validation"; mixing `*` with other entries has no additional effect beyond the disable.
 
 <LanguageInclude section="disabling-validation" />
 
