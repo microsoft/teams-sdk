@@ -68,7 +68,7 @@ export function createManifest(options: ManifestOptions): object {
     description,
     developer,
   } = options;
-  let scopes = options.scopes ?? ['personal', 'team', 'groupChat'];
+  let scopes = options.scopes?.length ? options.scopes : ['personal', 'team', 'groupChat'];
 
   const hasCopilot = scopes.includes('copilot');
 

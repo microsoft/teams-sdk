@@ -106,7 +106,9 @@ describe('createManifest copilotAgents', () => {
       botId: 'test-bot-id',
       botName: 'Test Bot',
       scopes: ['personal', 'team'],
-    }) as Record<string, unknown>;
+    }) as {
+      copilotAgents?: { customEngineAgents: Array<{ type: string; id: string }> };
+    };
 
     expect(manifest.copilotAgents).toBeUndefined();
   });

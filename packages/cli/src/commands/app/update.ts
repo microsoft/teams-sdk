@@ -37,6 +37,8 @@ const VALID_SCOPES: BotScope[] = ['personal', 'team', 'groupChat', 'copilot'];
  * Enforces `personal` when `copilot` is selected, and manages the `copilotAgents` block.
  */
 export function buildScopeUpdates(appDetails: AppDetails, newScopes: BotScope[]): Partial<AppDetails> {
+  if (newScopes.length === 0) return {};
+
   let scopes = [...newScopes];
   const hasCopilot = scopes.includes('copilot');
 
@@ -57,7 +59,7 @@ export function buildScopeUpdates(appDetails: AppDetails, newScopes: BotScope[])
       customEngineAgents: [{ type: 'bot', id: currentBot.botId }],
     };
   } else {
-    // Explicitly null out copilotAgents to remove it
+    // Explicitly unset/remove copilotAgents
     updates.copilotAgents = undefined;
   }
 
@@ -179,15 +181,26 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 
     if (action === 'edit-scopes') {
       const currentScopes = (appDetails.bots?.[0]?.scopes ?? ['personal']) as BotScope[];
-      const newScopes = await checkbox<BotScope>({
-        message: 'Select bot scopes:',
-        choices: [
-          { name: 'Personal', value: 'personal', checked: currentScopes.includes('personal') },
-          { name: 'Team', value: 'team', checked: currentScopes.includes('team') },
-          { name: 'Group Chat', value: 'groupChat', checked: currentScopes.includes('groupChat') },
-          { name: 'Copilot', value: 'copilot', checked: currentScopes.includes('copilot') },
-        ],
-      });
+      let newScopes: BotScope[];
+
+      while (true) {
+        const selectedScopes = await checkbox<BotScope>({
+          message: 'Select bot scopes:',
+          choices: [
+            { name: 'Personal', value: 'personal', checked: currentScopes.includes('personal') },
+            { name: 'Team', value: 'team', checked: currentScopes.includes('team') },
+            { name: 'Group Chat', value: 'groupChat', checked: currentScopes.includes('groupChat') },
+            { name: 'Copilot', value: 'copilot', checked: currentScopes.includes('copilot') },
+          ],
+        });
+
+        if (selectedScopes.length > 0) {
+          newScopes = selectedScopes;
+          break;
+        }
+
+        logger.warn(pc.yellow('Select at least 1 scope.'));
+      }
 
       if (JSON.stringify(newScopes.sort()) === JSON.stringify([...currentScopes].sort())) {
         logger.info(pc.dim('\nNo changes made.'));
