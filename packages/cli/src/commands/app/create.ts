@@ -19,7 +19,7 @@ import {
   portalLink,
 } from '../../apps/index.js';
 import { getAccount, getTokenSilent, graphScopes, teamsDevPortalScopes } from '../../auth/index.js';
-import { isJsonFile, outputCredentials, writeEnvFile, writeJsonCredentials } from '../../utils/env.js';
+import { type EnvValues, isJsonFile, outputCredentials, writeEnvFile, writeJsonCredentials } from '../../utils/env.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
 import { readAndValidateIcon } from '../../utils/icon.js';
 import { outputJson } from '../../utils/json-output.js';
@@ -39,9 +39,10 @@ interface AppCreateOutput {
   installLink: string;
   portalLink: string;
   botLocation: 'teams-managed' | 'azure';
+  secretSkipped?: boolean;
   credentials?: {
     CLIENT_ID: string;
-    CLIENT_SECRET: string;
+    CLIENT_SECRET?: string;
     TENANT_ID: string;
   };
   credentialsFile?: string;
@@ -54,6 +55,7 @@ interface CreateOptions {
   envFile?: string;
   colorIcon?: string;
   outlineIcon?: string;
+  secret?: boolean;
   azure?: boolean;
   teamsManaged?: boolean;
   subscription?: string;
@@ -69,6 +71,7 @@ export const appCreateCommand = new Command('create')
   .option('-e, --endpoint <url>', '[OPTIONAL] Bot messaging endpoint URL')
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')
   .option('--env-file <path>', '[OPTIONAL] Alias for --env')
+  .option('--no-secret', '[OPTIONAL] Skip client secret generation (for managed identity or federated credentials)')
   .option('--azure', '[OPTIONAL] Create bot in Azure (requires az CLI)')
   .option('--teams-managed', '[OPTIONAL] Create bot managed by Teams (default)')
   .option('--subscription <id>', '[OPTIONAL] Azure subscription ID (defaults to az CLI default)')
@@ -243,6 +246,7 @@ export const appCreateCommand = new Command('create')
       if (developerOpts?.name.trim()) summaryLines.push(['Developer', developerOpts.name.trim()]);
       if (colorIconPath) summaryLines.push(['Color icon', colorIconPath]);
       if (outlineIconPath) summaryLines.push(['Outline icon', outlineIconPath]);
+      if (options.secret === false) summaryLines.push(['Secret', 'Skipped (--no-secret)']);
       if (envPath) summaryLines.push(['Credentials file', envPath]);
 
       if (interactive && !silent) {
@@ -260,14 +264,18 @@ export const appCreateCommand = new Command('create')
       // Get tokens
       let spinner = createSilentSpinner('Acquiring tokens...', silent).start();
 
-      const graphToken = await getTokenSilent(graphScopes);
-      if (!graphToken) {
-        spinner.error({ text: 'Failed to get Graph token' });
-        throw new CliError(
-          'AUTH_TOKEN_FAILED',
-          'Failed to get Graph token.',
-          'Try `teams login` again.'
-        );
+      // Graph token only needed for secret generation
+      let graphToken: string | null | undefined;
+      if (options.secret !== false) {
+        graphToken = await getTokenSilent(graphScopes);
+        if (!graphToken) {
+          spinner.error({ text: 'Failed to get Graph token' });
+          throw new CliError(
+            'AUTH_TOKEN_FAILED',
+            'Failed to get Graph token.',
+            'Try `teams login` again.'
+          );
+        }
       }
 
       const tdpToken = await getTokenSilent(teamsDevPortalScopes);
@@ -301,23 +309,26 @@ export const appCreateCommand = new Command('create')
 
       const zipBuffer = createManifestZip(manifestOpts);
 
-      // Look up Graph object ID (TDP returns a different ID; retry for replication lag)
-      spinner = createSilentSpinner('Generating client secret...', silent).start();
-      let graphApp: { id: string } | null = null;
-      for (let i = 0; i < 10; i++) {
-        try {
-          graphApp = await getAadAppByClientId(graphToken, clientId);
-          break;
-        } catch {
-          await new Promise((r) => setTimeout(r, 3000));
+      // Generate client secret (skipped with --no-secret)
+      let secretText: string | undefined;
+      if (options.secret !== false) {
+        spinner = createSilentSpinner('Generating client secret...', silent).start();
+        let graphApp: { id: string } | null = null;
+        for (let i = 0; i < 10; i++) {
+          try {
+            graphApp = await getAadAppByClientId(graphToken!, clientId);
+            break;
+          } catch {
+            await new Promise((r) => setTimeout(r, 3000));
+          }
         }
+        if (!graphApp) {
+          throw new Error('AAD app not yet available in Graph API. Try again shortly.');
+        }
+        const secret = await createClientSecret(graphToken!, graphApp.id);
+        secretText = secret.secretText;
+        spinner.success({ text: 'Generated client secret' });
       }
-      if (!graphApp) {
-        throw new Error('AAD app not yet available in Graph API. Try again shortly.');
-      }
-      const secret = await createClientSecret(graphToken, graphApp.id);
-      const secretText = secret.secretText;
-      spinner.success({ text: 'Generated client secret' });
 
       // Import to Teams
       spinner = createSilentSpinner('Creating Teams app...', silent).start();
@@ -336,13 +347,14 @@ export const appCreateCommand = new Command('create')
       const install = installLink(teamsAppId, account.tenantId);
       const portal = portalLink(teamsAppId);
 
-      if (options.json) {
-        const credentialValues = {
-          CLIENT_ID: clientId,
-          CLIENT_SECRET: secretText,
-          TENANT_ID: account.tenantId,
-        };
+      const secretSkipped = options.secret === false;
+      const credentialValues: EnvValues = {
+        CLIENT_ID: clientId,
+        ...(secretText !== undefined && { CLIENT_SECRET: secretText }),
+        TENANT_ID: account.tenantId,
+      };
 
+      if (options.json) {
         if (envPath) {
           if (isJsonFile(envPath)) {
             writeJsonCredentials(envPath, credentialValues);
@@ -359,6 +371,7 @@ export const appCreateCommand = new Command('create')
           installLink: install,
           portalLink: portal,
           botLocation: location === 'tm' ? 'teams-managed' : 'azure',
+          ...(secretSkipped && { secretSkipped: true }),
           ...(envPath
             ? { credentialsFile: envPath }
             : { credentials: credentialValues }),
@@ -376,15 +389,12 @@ export const appCreateCommand = new Command('create')
         printLinkBanner('Install in Teams', install);
         printLinkBanner('Developer Portal', portal);
 
-        outputCredentials(
-          envPath,
-          {
-            CLIENT_ID: clientId,
-            CLIENT_SECRET: secretText,
-            TENANT_ID: account.tenantId,
-          },
-          'Credentials:'
-        );
+        outputCredentials(envPath, credentialValues, 'Credentials:');
+
+        if (secretSkipped) {
+          logger.info(`\nSecret generation skipped. To create one later, run:`);
+          logger.info(`  ${pc.cyan(`teams app auth secret create ${teamsAppId}`)}`);
+        }
 
         if (isInteractive()) {
           try {
