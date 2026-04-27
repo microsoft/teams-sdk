@@ -12,6 +12,7 @@ import {
   type BotScope,
   createTdpBotHandler,
   createAzureBotHandler,
+  validateEndpoint,
   type AzureContext,
   type BotLocation,
   installLink,
@@ -80,17 +81,34 @@ export const appCreateCommand = new Command('create')
   .action(
     wrapAction(async (options: CreateOptions) => {
       const silent = !!options.json;
-      const account = await getAccount();
-      if (!account) {
-        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
-      }
 
-      // Validate conflicting flags
+      // Validate CLI flags upfront (before auth or any resource creation)
       if (options.azure && options.teamsManaged) {
         throw new CliError(
           'VALIDATION_CONFLICT',
           'Cannot specify both --azure and --teams-managed.'
         );
+      }
+      if (options.endpoint !== undefined) {
+        const trimmedEndpoint = options.endpoint.trim();
+        if (!trimmedEndpoint) {
+          throw new CliError(
+            'VALIDATION_FORMAT',
+            'Bot messaging endpoint URL cannot be empty.'
+          );
+        }
+        const endpointError = validateEndpoint(trimmedEndpoint);
+        if (endpointError) {
+          throw new CliError('VALIDATION_FORMAT', endpointError);
+        }
+        options.endpoint = trimmedEndpoint;
+      }
+      const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
+      const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
+
+      const account = await getAccount();
+      if (!account) {
+        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
       }
 
       // Resolve bot location: explicit flag > config > default (teams-managed)
@@ -160,6 +178,10 @@ export const appCreateCommand = new Command('create')
         (interactive && !hasFlags
           ? (await input({
               message: 'Bot messaging endpoint URL (leave empty to skip):',
+              validate: (value) => {
+                if (!value.trim()) return true; // allow empty (skip)
+                return validateEndpoint(value.trim()) ?? true;
+              },
             })) || undefined
           : undefined);
 
@@ -199,9 +221,13 @@ export const appCreateCommand = new Command('create')
       const colorIconPath = options.colorIcon;
       const outlineIconPath = options.outlineIcon;
 
-      // Validate icons upfront (before any API calls)
-      const colorIcon = colorIconPath ? readAndValidateIcon(colorIconPath, 192) : undefined;
-      const outlineIcon = outlineIconPath ? readAndValidateIcon(outlineIconPath, 32) : undefined;
+      // Validate icons (reuse early result for flag-provided paths, otherwise validate now)
+      const colorIcon = colorIconPath
+        ? (earlyColorIcon ?? readAndValidateIcon(colorIconPath, 192))
+        : undefined;
+      const outlineIcon = outlineIconPath
+        ? (earlyOutlineIcon ?? readAndValidateIcon(outlineIconPath, 32))
+        : undefined;
 
       // ===== All inputs gathered — confirm before proceeding =====
       const summaryLines: [string, string][] = [['App name', name]];
