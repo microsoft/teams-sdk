@@ -76,6 +76,12 @@ The default template is `echo`. Run `teams project new <language> --help` to see
 
 ## 4. Register bot infrastructure
 
+:::note Start your tunnel first
+Teams must reach your bot over **public HTTPS** — your `localhost` port isn't reachable from Teams' servers. Before running the command below, start a tunnel (e.g. [DevTunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) or [ngrok](https://ngrok.com/)) and replace `<tunnel-host>` with the hostname it gives you.
+
+[Learn more about local tunnels →](/cli/concepts/local-tunnels)
+:::
+
 Run from inside your project directory:
 
 ```bash

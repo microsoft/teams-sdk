@@ -85,6 +85,7 @@ export default {
       label: 'Concepts',
       items: [
         'concepts/bot-locations',
+        'concepts/local-tunnels',
         'concepts/aad-apps',
         'concepts/tdp-portal',
         'concepts/sso-architecture',
