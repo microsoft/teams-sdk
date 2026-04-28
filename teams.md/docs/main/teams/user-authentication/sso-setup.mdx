@@ -11,7 +11,7 @@ This section describes how to configure the Azure Bot Service (ABS), the Entra A
 SSO requires an Azure-managed bot because the OAuth connection lives in Azure Bot Service. If you registered with `teams app create` (default Teams-managed), upgrade your bot first:
 
 ```bash
-teams app bot migrate <appId> --resource-group <rg>
+teams app bot migrate <appId> --subscription <id> --resource-group <rg>
 ```
 
 Your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` stay the same. See [Bot Locations](/cli/concepts/bot-locations) for the migration details.

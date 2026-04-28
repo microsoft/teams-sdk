@@ -60,13 +60,13 @@ After migration, you may need to manually reconfigure:
 ### Examples
 
 ```bash
-teams app bot migrate <appId> --resource-group my-rg
+teams app bot migrate <appId> --subscription <id> --resource-group my-rg
 ```
 
 Create the resource group if it doesn't exist:
 
 ```bash
-teams app bot migrate <appId> --resource-group my-rg --create-resource-group --region eastus
+teams app bot migrate <appId> --subscription <id> --resource-group my-rg --create-resource-group --region eastus
 ```
 
 ### Prerequisites

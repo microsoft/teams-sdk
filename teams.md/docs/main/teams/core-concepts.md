@@ -119,6 +119,6 @@ To test your app in Teams you need, at minimum, a provisioned bot. You'll likely
 
 The fastest path is `teams app create`, which provisions a Teams-managed bot by default — no Azure subscription required. See the [Quickstart: Register your app](../get-started/quickstart-register).
 
-If you need OAuth or SSO (typically for delegated Microsoft Graph access on behalf of a user), the bot must be Azure-managed. Either start with `teams app create --azure --resource-group <rg>`, or start Teams-managed and switch later with `teams app bot migrate <appId> --subscription <id> --resource-group <rg>` (both require an Azure subscription) — your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` stay the same. For a hand-rolled Azure setup, follow the [Azure Configuration](./azure-configuration) guide.
+If you need OAuth or SSO (typically for delegated Microsoft Graph access on behalf of a user), the bot must be Azure-managed. Either start with `teams app create --azure --subscription <id> --resource-group <rg>`, or start Teams-managed and switch later with `teams app bot migrate <appId> --subscription <id> --resource-group <rg>` (both require an Azure subscription) — your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` stay the same. For a hand-rolled Azure setup, follow the [Azure Configuration](./azure-configuration) guide.
 
 For deploying your bot's endpoint to App Service, Container Apps, or other Azure compute, see the Microsoft Learn [deployment overview](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview).

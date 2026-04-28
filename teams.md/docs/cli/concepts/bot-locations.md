@@ -47,7 +47,7 @@ Use Azure only when your bot needs **OAuth or SSO** — that's the one thing Tea
 By default, `teams app create` uses Teams-managed. Override this per-command:
 
 ```bash
-teams app create --name "My Bot" --azure --resource-group my-rg
+teams app create --name "My Bot" --azure --subscription <id> --resource-group my-rg
 teams app create --name "My Bot" --teams-managed
 ```
 
@@ -66,7 +66,7 @@ If you try to use a feature that requires Azure (like OAuth or SSO) on a Teams-m
 You can also migrate manually at any time without changing your AAD app or credentials:
 
 ```bash
-teams app bot migrate <appId> --resource-group my-rg
+teams app bot migrate <appId> --subscription <id> --resource-group my-rg
 ```
 
 See [app bot migrate](../commands/app/bot-migrate) for details. The migration:
