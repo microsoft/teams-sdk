@@ -1,13 +1,13 @@
 <!-- entry-point-intro -->
 
-To open a dialog, you need to supply a special type of action as to the Adaptive Card. Once this button is clicked, the dialog will open and ask the application what to show.
+To open a dialog, add a button to your Adaptive Card using `OpenDialogData`. This sets up the `task/fetch` protocol and includes a `dialog_id` that the SDK uses to route to the correct handler.
 
 <!-- entry-point-code -->
 
 ```python
 from microsoft_teams.api import MessageActivity, MessageActivityInput, TypingActivityInput
 from microsoft_teams.apps import ActivityContext
-from microsoft_teams.cards import AdaptiveCard, TextBlock, TaskFetchAction
+from microsoft_teams.cards import AdaptiveCard, TextBlock, SubmitAction, OpenDialogData
 # ...
 
 @app.on_message
@@ -24,103 +24,108 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
             )
         ]
     ).with_actions([
-        # Special type of action to open a dialog
-        TaskFetchAction(value={"OpenDialogType": "webpage_dialog"}).with_title("Webpage Dialog"),
-        # This data will be passed back in an event, so we can handle what to show in the dialog
-        TaskFetchAction(value={"OpenDialogType": "multi_step_form"}).with_title("Multi-step Form"),
-        TaskFetchAction(value={"OpenDialogType": "mixed_example"}).with_title("Mixed Example")
+        # OpenDialogData sets msteams.type = "task/fetch" and adds dialog_id for routing
+        SubmitAction(title="Simple form test").with_data(OpenDialogData("simple_form")),
+        SubmitAction(title="Webpage Dialog").with_data(OpenDialogData("webpage_dialog")),
+        SubmitAction(title="Multi-step Form").with_data(OpenDialogData("multi_step_form")),
     ])
-    # Send the card as an attachment
+
     message = MessageActivityInput(text="Enter this form").add_card(card)
     await ctx.send(message)
 ```
 
 <!-- dialog-open-intro -->
 
-Once an action is executed to open a dialog, the Teams client will send an event to the agent to request what the content of the dialog should be. Here is how to handle this event:
+When a user clicks the button, Teams sends a `task/fetch` invoke to your app. Register a handler with `@app.on_dialog_open("dialog_id")` to handle a specific dialog, or `@app.on_dialog_open()` for a catch-all.
+
+:::tip
+Use `@app.on_dialog_open("simple_form")` to handle specific dialogs directly, instead of a single catch-all handler with if-else logic. This keeps each handler focused and avoids routing boilerplate.
+:::
 
 <!-- dialog-open-code -->
 
 ```python
-@app.on_dialog_open
-async def handle_dialog_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
-    """Handle dialog open events for all dialog types."""
+from microsoft_teams.api import (
+    TaskFetchInvokeActivity, TaskModuleResponse,
+    TaskModuleContinueResponse, CardTaskModuleTaskInfo,
+    AdaptiveCardAttachment, card_attachment,
+)
+from microsoft_teams.apps import ActivityContext
+from microsoft_teams.cards import AdaptiveCard
+# ...
+
+# Handle a specific dialog by ID — no if-else needed
+@app.on_dialog_open("simple_form")
+async def handle_simple_form_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
     card = AdaptiveCard(...)
 
-    # Return an object with the task value that renders a card
-    return InvokeResponse(
-                body=TaskModuleResponse(
-                    task=TaskModuleContinueResponse(
-                        value=CardTaskModuleTaskInfo(
-                            title="Title of Dialog",
-                            card=card_attachment(AdaptiveCardAttachment(content=card)),
-                        )
-                    )
-                )
+    return TaskModuleResponse(
+        task=TaskModuleContinueResponse(
+            value=CardTaskModuleTaskInfo(
+                title="Title of Dialog",
+                card=card_attachment(AdaptiveCardAttachment(content=card)),
             )
+        )
+    )
 ```
 
 <!-- rendering-card-code -->
 
 ```python
-from microsoft_teams.api import AdaptiveCardAttachment, TaskFetchInvokeActivity, InvokeResponse, card_attachment
-from microsoft_teams.api import CardTaskModuleTaskInfo, TaskModuleContinueResponse, TaskModuleResponse
+from microsoft_teams.api import (
+    TaskFetchInvokeActivity, TaskModuleResponse,
+    TaskModuleContinueResponse, CardTaskModuleTaskInfo,
+    AdaptiveCardAttachment, card_attachment,
+)
 from microsoft_teams.apps import ActivityContext
-from microsoft_teams.cards import AdaptiveCard, TextBlock, TextInput, SubmitAction, SubmitActionData
+from microsoft_teams.cards import AdaptiveCard, TextBlock, TextInput, SubmitAction, SubmitData
 # ...
 
-@app.on_dialog_open
-async def handle_dialog_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
-    """Handle dialog open events for all dialog types."""
-    # Return an object with the task value that renders a card
+@app.on_dialog_open("simple_form")
+async def handle_simple_form_open(ctx: ActivityContext[TaskFetchInvokeActivity]):
     dialog_card = AdaptiveCard(
         schema="http://adaptivecards.io/schemas/adaptive-card.json",
         body=[
             TextBlock(text="This is a simple form", size="Large", weight="Bolder"),
             TextInput().with_label("Name").with_is_required(True).with_id("name").with_placeholder("Enter your name"),
         ],
+        # Use SubmitData to set the "action" field, which routes to @app.on_dialog_submit("action")
         actions=[
-            SubmitAction().with_title("Submit").with_data(SubmitActionData(ms_teams={"SubmissionDialogType": "simple_form"}))
+            SubmitAction().with_title("Submit").with_data(SubmitData("simple_form"))
         ]
     )
 
-
-    # Return an object with the task value that renders a card
-    return InvokeResponse(
-                body=TaskModuleResponse(
-                    task=TaskModuleContinueResponse(
-                        value=CardTaskModuleTaskInfo(
-                            title="Simple Form Dialog",
-                            card=card_attachment(AdaptiveCardAttachment(content=dialog_card)),
-                        )
-                    )
-                )
+    return TaskModuleResponse(
+        task=TaskModuleContinueResponse(
+            value=CardTaskModuleTaskInfo(
+                title="Simple Form Dialog",
+                card=card_attachment(AdaptiveCardAttachment(content=dialog_card)),
             )
+        )
+    )
 ```
 
 <!-- rendering-webpage-code -->
 
 ```python
 import os
-from microsoft_teams.api import InvokeResponse, TaskModuleContinueResponse, TaskModuleResponse, UrlTaskModuleTaskInfo
+from microsoft_teams.api import TaskModuleContinueResponse, TaskModuleResponse, UrlTaskModuleTaskInfo
 # ...
 
-return InvokeResponse(
-                body=TaskModuleResponse(
-                    task=TaskModuleContinueResponse(
-                        value=UrlTaskModuleTaskInfo(
-                            title="Webpage Dialog",
-                            # Here we are using a webpage that is hosted in the same
-                            # server as the agent. This server needs to be publicly accessible,
-                            # needs to set up teams.js client library (https://www.npmjs.com/package/@microsoft/teams-js)
-                            # and needs to be registered in the manifest.
-                            url=f"{os.getenv('BOT_ENDPOINT')}/tabs/dialog-webpage",
-                            width=1000,
-                            height=800,
-                        )
-                    )
-                )
+@app.on_dialog_open("webpage_dialog")
+async def handle_webpage_dialog_open(ctx):
+    return TaskModuleResponse(
+        task=TaskModuleContinueResponse(
+            value=UrlTaskModuleTaskInfo(
+                title="Webpage Dialog",
+                # The webpage must be publicly accessible, use the teams-js client library,
+                # and be registered in validDomains in the manifest.
+                url=f"{os.getenv('BOT_ENDPOINT')}/tabs/dialog-form",
+                width=1000,
+                height=800,
             )
+        )
+    )
 ```
 
 <!-- embedded-web-content -->
