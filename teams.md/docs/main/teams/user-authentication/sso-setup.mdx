@@ -21,15 +21,15 @@ Before starting SSO configuration, ensure you have:
 - An **Azure-managed** Azure Bot Service resource and its associated Entra App Registration (Application ID / Client ID and Tenant ID).
 - To setup using CLIs: the [`az` CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and the [Teams CLI](/cli/getting-started/installation) installed and authenticated.
 
-:::note Migrate first if your bot is Teams-managed
-SSO requires an Azure-managed bot because the OAuth connection lives in Azure Bot Service. If you registered with `teams app create` (default Teams-managed), migrate your bot first:
+  :::note CLI users: migrate first if your bot is Teams-managed
+  SSO requires an Azure-managed bot because the OAuth connection lives in Azure Bot Service. If you registered with `teams app create` (default Teams-managed), migrate your bot first:
 
-```bash
-teams app bot migrate <appId> --subscription <id> --resource-group <rg>
-```
+  ```bash
+  teams app bot migrate <appId> --subscription <id> --resource-group <rg>
+  ```
 
-Your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` stay the same. See [Bot Locations](/cli/concepts/bot-locations) for details.
-:::
+  Your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` stay the same. See [Bot Locations](/cli/concepts/bot-locations) for details.
+  :::
 
 ## Configure the Entra App Registration for SSO
 
