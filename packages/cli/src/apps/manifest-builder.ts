@@ -1,5 +1,7 @@
 import { input, checkbox } from '@inquirer/prompts';
+import pc from 'picocolors';
 import { isInteractive } from '../utils/interactive.js';
+import { logger } from '../utils/logger.js';
 import type { BotScope } from './manifest.js';
 
 /**
@@ -59,14 +61,24 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
   }
 
   if (customizeFields.includes('scopes')) {
-    result.scopes = await checkbox<BotScope>({
-      message: 'Select bot scopes:',
-      choices: [
-        { name: 'Personal', value: 'personal', checked: true },
-        { name: 'Team', value: 'team', checked: true },
-        { name: 'Group Chat', value: 'groupChat', checked: true },
-      ],
-    });
+    while (true) {
+      const scopes = await checkbox<BotScope>({
+        message: 'Select bot scopes:',
+        choices: [
+          { name: 'Personal', value: 'personal', checked: true },
+          { name: 'Team', value: 'team', checked: true },
+          { name: 'Group Chat', value: 'groupChat', checked: true },
+          { name: 'Copilot', value: 'copilot' },
+        ],
+      });
+
+      if (scopes.length > 0) {
+        result.scopes = scopes;
+        break;
+      }
+
+      logger.warn(pc.yellow('Select at least 1 scope.'));
+    }
   }
 
   if (customizeFields.includes('developer')) {
