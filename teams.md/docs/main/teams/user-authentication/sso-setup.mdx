@@ -7,6 +7,16 @@ summary: Describes how to configure SSO in Teams
 
 This section describes how to configure the Azure Bot Service (ABS), the Entra App Registration and the Teams manifest to enable Single-Sign-On (SSO) for your Teams app.
 
+:::note Migrate first if your bot is Teams-managed
+SSO requires an Azure-managed bot because the OAuth connection lives in Azure Bot Service. If you registered with `teams app create` (default Teams-managed), upgrade your bot first:
+
+```bash
+teams app bot migrate <appId> --resource-group <rg>
+```
+
+Your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` stay the same. See [Bot Locations](/cli/concepts/bot-locations) for the migration details.
+:::
+
 ## Create the Entra App Registration
 
 You need an Entra ID App Registration to configure the OAuth Connection in Azure Bot Service. This can be the same EntraId app registration you used to configure your ABS resource or a new App created just for this purpose. You can create the App Registration from the Azure portal, or the CLI, the next list summarizes the creation steps from the portal.
