@@ -29,7 +29,7 @@ teams app create --name "My Bot" --endpoint https://mybot.azurewebsites.net/api/
 This creates a Teams-managed bot (no Azure subscription needed). To use Azure instead:
 
 ```bash
-teams app create --name "My Bot" --azure --resource-group my-rg --endpoint https://mybot.azurewebsites.net/api/messages
+teams app create --name "My Bot" --azure --subscription <id> --resource-group my-rg --endpoint https://mybot.azurewebsites.net/api/messages
 ```
 
 ## 3. Get your credentials

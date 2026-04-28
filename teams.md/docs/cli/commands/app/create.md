@@ -46,6 +46,19 @@ By default, the bot is Teams-managed (no Azure subscription needed). Use `--azur
 
 See [Bot Locations](../../concepts/bot-locations) for details on the trade-offs.
 
+### Scopes
+
+During interactive creation, you can customize which scopes the bot supports:
+
+| Scope | Description |
+|-------|-------------|
+| **Personal** | 1:1 chat with the bot (default) |
+| **Team** | Channel conversations (default) |
+| **Group Chat** | Group chat conversations (default) |
+| **Copilot** | Available as a custom engine agent in M365 Copilot |
+
+Selecting **Copilot** automatically adds the `copilotAgents.customEngineAgents` block to the manifest and ensures the **Personal** scope is included (required by M365 Copilot).
+
 ### Examples
 
 Create with defaults (Teams-managed, generated manifest):
@@ -57,7 +70,7 @@ teams app create --name "My Bot"
 Create with Azure bot and write credentials to `.env`:
 
 ```bash
-teams app create --name "My Bot" --azure --resource-group my-rg --env .env
+teams app create --name "My Bot" --azure --subscription <id> --resource-group my-rg --env .env
 ```
 
 For C# projects, write credentials to `appsettings.json` instead:

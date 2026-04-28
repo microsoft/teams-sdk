@@ -1,3 +1,8 @@
+---
+sidebar_position: 2
+summary: Give AI coding assistants (Claude Code, Cursor, GitHub Copilot) relevant context for Teams bot development using the teams-dev agent skill.
+---
+
 # Agent Skills
 
 [Agent Skills](https://agentskills.io/what-are-skills) give AI coding assistants relevant context for specific development tasks. The `teams-dev` skill is the go-to agent skill for Teams bot development. It gives AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) relevant context to assist in developing Teams bots and use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.

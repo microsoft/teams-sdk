@@ -5,7 +5,7 @@
 <!-- create-command -->
 
 ```sh
-npx @microsoft/teams.cli@latest new csharp quote-agent --template echo
+teams project new csharp quote-agent --template echo
 ```
 
 <!-- create-explanation -->
