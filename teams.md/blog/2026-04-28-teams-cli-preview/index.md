@@ -66,7 +66,7 @@ The CLI also includes a `teams app doctor` command that checks your agent's regi
 
 ## Let Your Coding Agent Handle It
 
-The CLI also ships with a [`teams-dev` agent skill](/cli/guides/agent-skills) for AI coding agents like Copilot, Claude Code, and Cursor. Instead of running commands yourself, tell your assistant:
+The CLI also ships with a [`teams-dev` agent skill](/developer-tools/agent-skills) for AI coding agents like Copilot, Claude Code, and Cursor. Instead of running commands yourself, tell your assistant:
 
 - *"Help me build a Teams agent that answers FAQs"*
 - *"Get my agent running in Teams"*
