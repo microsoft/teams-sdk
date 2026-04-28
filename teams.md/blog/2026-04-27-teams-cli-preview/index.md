@@ -3,6 +3,14 @@ slug: teams-cli-preview
 title: "Teams CLI Preview: build Teams apps from your terminal"
 date: 2026-04-27
 authors:
+  - name: Aamir Jawaid
+    title: Microsoft
+    url: https://github.com/heyitsaamir
+    image_url: https://github.com/heyitsaamir.png
+  - name: Kavin Singh
+    title: Microsoft
+    url: https://github.com/singhk97
+    image_url: https://github.com/singhk97.png
   - name: Umang Sehgal
     title: Microsoft
     url: https://github.com/umangsehgal
@@ -164,4 +172,4 @@ Install:
 npm install -g @microsoft/teams.cli@preview
 ```
 
-Full docs at [microsoft.github.io/teams-sdk](https://microsoft.github.io/teams-sdk/typescript/). Issues at [github.com/microsoft/teams-sdk](https://github.com/microsoft/teams-sdk/issues). The next round is already in motion.
+Full docs at [microsoft.github.io/teams-sdk](https://microsoft.github.io/teams-sdk/typescript/). Issues at [github.com/microsoft/teams-sdk](https://github.com/microsoft/teams-sdk/issues).
