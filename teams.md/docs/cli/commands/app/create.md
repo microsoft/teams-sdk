@@ -28,6 +28,7 @@ teams app create [options]
 | `--resource-group <name>` | Azure resource group (required for --azure) |
 | `--create-resource-group` | [OPTIONAL] Create the resource group if it doesn't exist |
 | `--region <name>` | [OPTIONAL] Azure region for resource group (default: westus2) |
+| `--no-secret` | [OPTIONAL] Skip client secret generation (for managed identity or federated credentials) |
 | `--color-icon <path>` | [OPTIONAL] Path to color icon (192x192 PNG) |
 | `--outline-icon <path>` | [OPTIONAL] Path to outline icon (32x32 PNG) |
 | `--json` | [OPTIONAL] Output as JSON |
@@ -44,6 +45,19 @@ By default, the bot is Teams-managed (no Azure subscription needed). Use `--azur
 **Precedence:** `--azure`/`--teams-managed` flag > `teams config set default-bot-location` > Teams-managed default.
 
 See [Bot Locations](../../concepts/bot-locations) for details on the trade-offs.
+
+### Scopes
+
+During interactive creation, you can customize which scopes the bot supports:
+
+| Scope | Description |
+|-------|-------------|
+| **Personal** | 1:1 chat with the bot (default) |
+| **Team** | Channel conversations (default) |
+| **Group Chat** | Group chat conversations (default) |
+| **Copilot** | Available as a custom engine agent in M365 Copilot |
+
+Selecting **Copilot** automatically adds the `copilotAgents.customEngineAgents` block to the manifest and ensures the **Personal** scope is included (required by M365 Copilot).
 
 ### Examples
 
@@ -66,6 +80,16 @@ teams app create --name "My Bot" --env appsettings.json
 ```
 
 This writes credentials under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
+
+### Skipping Secret Generation
+
+Use `--no-secret` to skip client secret generation when using managed identity or federated credentials:
+
+```bash
+teams app create --name "My Bot" --no-secret
+```
+
+Only `CLIENT_ID` and `TENANT_ID` are output. You can generate a secret later with [`teams app auth secret create`](./auth-secret-create).
 
 ### Output
 

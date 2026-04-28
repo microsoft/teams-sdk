@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { select, input } from '@inquirer/prompts';
+import { select, input, checkbox } from '@inquirer/prompts';
 import pc from 'picocolors';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../auth/index.js';
 import {
@@ -14,6 +14,7 @@ import {
   createAzureBotHandler,
   discoverAzureBot,
   extractDomain,
+  validateEndpoint,
   uploadIcon,
 } from '../../apps/index.js';
 import { ensureAz } from '../../utils/az.js';
@@ -27,9 +28,47 @@ import { bumpPatchVersion, stableStringify } from '../../utils/version.js';
 import type { AppSummary, AppDetails } from '../../apps/types.js';
 import type { BotDetails } from '../../apps/tdp.js';
 import type { BotLocation } from '../../apps/bot-location.js';
+import type { BotScope } from '../../apps/manifest.js';
+
+const VALID_SCOPES: BotScope[] = ['personal', 'team', 'groupChat', 'copilot'];
+
+/**
+ * Build the partial AppDetails update for a scope change.
+ * Enforces `personal` when `copilot` is selected, and manages the `copilotAgents` block.
+ */
+export function buildScopeUpdates(appDetails: AppDetails, newScopes: BotScope[]): Partial<AppDetails> {
+  if (newScopes.length === 0) return {};
+
+  let scopes = [...newScopes];
+  const hasCopilot = scopes.includes('copilot');
+
+  // Copilot requires personal scope
+  if (hasCopilot && !scopes.includes('personal')) {
+    scopes = ['personal', ...scopes];
+  }
+
+  const currentBot = appDetails.bots?.[0];
+  if (!currentBot) return {};
+
+  const updates: Partial<AppDetails> = {
+    bots: [{ ...currentBot, scopes }],
+  };
+
+  if (hasCopilot) {
+    updates.copilotAgents = {
+      customEngineAgents: [{ type: 'bot', id: currentBot.botId }],
+    };
+  } else {
+    // Explicitly unset/remove copilotAgents
+    updates.copilotAgents = undefined;
+  }
+
+  return updates;
+}
 
 interface UpdateOptions {
   endpoint?: string;
+  scopes?: string;
   name?: string;
   longName?: string;
   shortDescription?: string;
@@ -62,6 +101,7 @@ interface AppUpdateOutput {
     websiteUrl?: string;
     privacyUrl?: string;
     termsOfUseUrl?: string;
+    scopes?: string[];
     colorIcon?: boolean;
     outlineIcon?: boolean;
     webApplicationInfoId?: string;
@@ -120,11 +160,13 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
     }
 
     const showEndpoint = bot || botLocation === 'azure';
+    const hasBots = appDetails.bots && appDetails.bots.length > 0;
     const action = await select({
       message: 'What would you like to update?',
       choices: [
         { name: 'Basic info', value: 'edit-basic-info' },
         ...(showEndpoint ? [{ name: 'Endpoint', value: 'edit-endpoint' }] : []),
+        ...(hasBots ? [{ name: 'Scopes', value: 'edit-scopes' }] : []),
         { name: 'Icons', value: 'edit-icons' },
         { name: 'Back', value: 'back' },
       ],
@@ -134,6 +176,47 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 
     if (action === 'edit-basic-info') {
       appDetails = await showBasicInfoEditor(appDetails, token);
+      continue;
+    }
+
+    if (action === 'edit-scopes') {
+      const currentScopes = (appDetails.bots?.[0]?.scopes ?? ['personal']) as BotScope[];
+      let newScopes: BotScope[];
+
+      while (true) {
+        const selectedScopes = await checkbox<BotScope>({
+          message: 'Select bot scopes:',
+          choices: [
+            { name: 'Personal', value: 'personal', checked: currentScopes.includes('personal') },
+            { name: 'Team', value: 'team', checked: currentScopes.includes('team') },
+            { name: 'Group Chat', value: 'groupChat', checked: currentScopes.includes('groupChat') },
+            { name: 'Copilot', value: 'copilot', checked: currentScopes.includes('copilot') },
+          ],
+        });
+
+        if (selectedScopes.length > 0) {
+          newScopes = selectedScopes;
+          break;
+        }
+
+        logger.warn(pc.yellow('Select at least 1 scope.'));
+      }
+
+      if (JSON.stringify(newScopes.sort()) === JSON.stringify([...currentScopes].sort())) {
+        logger.info(pc.dim('\nNo changes made.'));
+        continue;
+      }
+
+      const scopeUpdates = buildScopeUpdates(appDetails, newScopes);
+      const scopeSpinner = createSilentSpinner('Updating scopes...').start();
+      const result = await updateAppDetails(token, app.teamsAppId, scopeUpdates);
+      scopeSpinner.success({ text: `Scopes updated: ${(scopeUpdates.bots?.[0]?.scopes ?? []).join(', ')}` });
+      if (result.versionBumped) {
+        logger.info(pc.dim(`Version auto-bumped: ${result.previousVersion} → ${result.version} — reinstall may be needed`));
+      }
+
+      // Refresh appDetails
+      appDetails = await fetchAppDetailsV2(token, app.teamsAppId);
       continue;
     }
 
@@ -173,6 +256,10 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
         const botId = appDetails.bots![0].botId;
         const newEndpoint = await input({
           message: 'Enter new messaging endpoint URL:',
+          validate: (value) => {
+            if (!value.trim()) return true;
+            return validateEndpoint(value.trim()) ?? true;
+          },
         });
 
         if (!newEndpoint.trim()) {
@@ -211,6 +298,10 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
         const newEndpoint = await input({
           message: 'Enter new messaging endpoint URL:',
           default: bot.messagingEndpoint,
+          validate: (value) => {
+            if (!value.trim()) return true;
+            return validateEndpoint(value.trim()) ?? true;
+          },
         });
 
         if (newEndpoint.trim() === bot.messagingEndpoint) {
@@ -246,6 +337,7 @@ export const appUpdateCommand = new Command('update')
   .description("Update a Teams app's properties")
   .argument('[appId]', 'App ID')
   .option('--endpoint <url>', '[OPTIONAL] Set the bot messaging endpoint URL')
+  .option('--scopes <scopes>', '[OPTIONAL] Set bot scopes (comma-separated: personal,team,groupChat,copilot)')
   .option('--name <name>', '[OPTIONAL] Set the app short name (max 30 chars)')
   .option('--long-name <name>', '[OPTIONAL] Set the app long name (max 100 chars)')
   .option('--short-description <desc>', '[OPTIONAL] Set the short description (max 80 chars)')
@@ -267,6 +359,7 @@ export const appUpdateCommand = new Command('update')
       // Check if any mutation flags were provided
       const hasMutationFlags =
         options.endpoint !== undefined ||
+        options.scopes !== undefined ||
         options.name !== undefined ||
         options.longName !== undefined ||
         options.shortDescription !== undefined ||
@@ -309,6 +402,52 @@ export const appUpdateCommand = new Command('update')
             'webApplicationInfo resource URI must start with "api://" (e.g., api://botid-<your-bot-id>).'
           );
         }
+      }
+      if (options.scopes !== undefined) {
+        const parsed = options.scopes.split(',').map((s) => s.trim()).filter(Boolean);
+        const invalid = parsed.filter((s) => !VALID_SCOPES.includes(s as BotScope));
+        if (invalid.length > 0) {
+          throw new CliError(
+            'VALIDATION_FORMAT',
+            `Invalid scope(s): ${invalid.join(', ')}. Valid scopes: ${VALID_SCOPES.join(', ')}`
+          );
+        }
+        if (parsed.length === 0) {
+          throw new CliError('VALIDATION_FORMAT', 'At least one scope is required.');
+        }
+      }
+      if (options.endpoint !== undefined) {
+        const trimmedEndpoint = options.endpoint.trim();
+        if (!trimmedEndpoint) {
+          throw new CliError('VALIDATION_FORMAT', 'Endpoint URL cannot be empty.');
+        }
+        const endpointError = validateEndpoint(trimmedEndpoint);
+        if (endpointError) {
+          throw new CliError('VALIDATION_FORMAT', endpointError);
+        }
+        options.endpoint = trimmedEndpoint;
+      }
+      if (options.name !== undefined && options.name.length > 30) {
+        throw new CliError('VALIDATION_FORMAT', 'Short name must be 30 characters or less.');
+      }
+      if (options.longName !== undefined && options.longName.length > 100) {
+        throw new CliError('VALIDATION_FORMAT', 'Long name must be 100 characters or less.');
+      }
+      if (options.shortDescription !== undefined && options.shortDescription.length > 80) {
+        throw new CliError('VALIDATION_FORMAT', 'Short description must be 80 characters or less.');
+      }
+      if (options.longDescription !== undefined && options.longDescription.length > 4000) {
+        throw new CliError('VALIDATION_FORMAT', 'Long description must be 4000 characters or less.');
+      }
+      const httpsUrlRegex = /^https:\/\/\S+$/i;
+      if (options.website !== undefined && !httpsUrlRegex.test(options.website)) {
+        throw new CliError('VALIDATION_FORMAT', 'Website URL must start with https:// and include a domain.');
+      }
+      if (options.privacyUrl !== undefined && !httpsUrlRegex.test(options.privacyUrl)) {
+        throw new CliError('VALIDATION_FORMAT', 'Privacy URL must start with https:// and include a domain.');
+      }
+      if (options.termsUrl !== undefined && !httpsUrlRegex.test(options.termsUrl)) {
+        throw new CliError('VALIDATION_FORMAT', 'Terms of use URL must start with https:// and include a domain.');
       }
 
       // Interactive mode (no appId, no mutation flags): picker loop
@@ -425,80 +564,31 @@ export const appUpdateCommand = new Command('update')
         allUpdates.endpoint = options.endpoint;
       }
 
-      // --- Basic info fields ---
-      if (options.name !== undefined) {
-        if (options.name.length > 30) {
-          throw new CliError('VALIDATION_FORMAT', 'Short name must be 30 characters or less.');
+      // --- Scopes ---
+      if (options.scopes !== undefined) {
+        if (!app.bots || app.bots.length === 0) {
+          throw new CliError('NOT_FOUND_BOT', 'This app has no bots.');
         }
-        allUpdates.shortName = options.name;
+
+        const parsed = options.scopes.split(',').map((s) => s.trim()).filter(Boolean) as BotScope[];
+        const currentDetails = detailsBefore ?? await fetchAppDetailsV2(token, appId);
+        const scopeUpdates = buildScopeUpdates(currentDetails, parsed);
+        const spinner = createSilentSpinner('Updating scopes...', silent).start();
+        await updateAppDetails(token, appId, scopeUpdates, { autoBumpVersion: false });
+        spinner.success({ text: `Scopes updated: ${(scopeUpdates.bots?.[0]?.scopes ?? []).join(', ')}` });
+        allUpdates.scopes = scopeUpdates.bots?.[0]?.scopes as string[];
       }
 
-      if (options.longName !== undefined) {
-        if (options.longName.length > 100) {
-          throw new CliError('VALIDATION_FORMAT', 'Long name must be 100 characters or less.');
-        }
-        allUpdates.longName = options.longName;
-      }
-
-      if (options.shortDescription !== undefined) {
-        if (options.shortDescription.length > 80) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Short description must be 80 characters or less.'
-          );
-        }
-        allUpdates.shortDescription = options.shortDescription;
-      }
-
-      if (options.longDescription !== undefined) {
-        if (options.longDescription.length > 4000) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Long description must be 4000 characters or less.'
-          );
-        }
-        allUpdates.longDescription = options.longDescription;
-      }
-
-      if (options.version !== undefined) {
-        allUpdates.version = options.version;
-      }
-
-      if (options.developer !== undefined) {
-        allUpdates.developerName = options.developer;
-      }
-
-      const httpsUrlRegex = /^https:\/\/\S+$/i;
-
-      if (options.website !== undefined) {
-        if (!httpsUrlRegex.test(options.website)) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Website URL must start with https:// and include a domain.'
-          );
-        }
-        allUpdates.websiteUrl = options.website;
-      }
-
-      if (options.privacyUrl !== undefined) {
-        if (!httpsUrlRegex.test(options.privacyUrl)) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Privacy URL must start with https:// and include a domain.'
-          );
-        }
-        allUpdates.privacyUrl = options.privacyUrl;
-      }
-
-      if (options.termsUrl !== undefined) {
-        if (!httpsUrlRegex.test(options.termsUrl)) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Terms of use URL must start with https:// and include a domain.'
-          );
-        }
-        allUpdates.termsOfUseUrl = options.termsUrl;
-      }
+      // --- Basic info fields (validation already done upfront) ---
+      if (options.name !== undefined) allUpdates.shortName = options.name;
+      if (options.longName !== undefined) allUpdates.longName = options.longName;
+      if (options.shortDescription !== undefined) allUpdates.shortDescription = options.shortDescription;
+      if (options.longDescription !== undefined) allUpdates.longDescription = options.longDescription;
+      if (options.version !== undefined) allUpdates.version = options.version;
+      if (options.developer !== undefined) allUpdates.developerName = options.developer;
+      if (options.website !== undefined) allUpdates.websiteUrl = options.website;
+      if (options.privacyUrl !== undefined) allUpdates.privacyUrl = options.privacyUrl;
+      if (options.termsUrl !== undefined) allUpdates.termsOfUseUrl = options.termsUrl;
 
       if (options.webAppInfoId !== undefined) {
         allUpdates.webApplicationInfoId = options.webAppInfoId;
@@ -509,7 +599,7 @@ export const appUpdateCommand = new Command('update')
       }
 
       // Apply basic info updates (endpoint and icons use separate API calls)
-      const { endpoint: _ep, colorIcon: _ci, outlineIcon: _oi, ...basicInfoUpdates } = allUpdates;
+      const { endpoint: _ep, scopes: _sc, colorIcon: _ci, outlineIcon: _oi, ...basicInfoUpdates } = allUpdates;
       if (Object.keys(basicInfoUpdates).length > 0) {
         const spinner = createSilentSpinner('Updating app details...', silent).start();
         await updateAppDetails(token, appId, basicInfoUpdates, { autoBumpVersion: false });

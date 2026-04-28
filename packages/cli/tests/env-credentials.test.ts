@@ -201,4 +201,40 @@ describe('outputCredentials', () => {
     expect(logger.info).toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalled();
   });
+
+  it('omits CLIENT_SECRET and save warning when secret is undefined', async () => {
+    const { logger } = await import('../src/utils/logger.js');
+
+    outputCredentials(undefined, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' }, 'Credentials:');
+
+    const infoCalls = (logger.info as ReturnType<typeof vi.fn>).mock.calls.map((c: unknown[]) => c[0]);
+    expect(infoCalls.some((c: string) => c.includes('CLIENT_ID'))).toBe(true);
+    expect(infoCalls.some((c: string) => c.includes('TENANT_ID'))).toBe(true);
+    expect(infoCalls.some((c: string) => c.includes('CLIENT_SECRET'))).toBe(false);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('omits ClientSecret from JSON file when secret is undefined', () => {
+    const filePath = tmpFile('appsettings.json');
+    files.push(filePath);
+
+    writeJsonCredentials(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    expect(json.Teams.ClientId).toBe('id-123');
+    expect(json.Teams.TenantId).toBe('tenant-456');
+    expect(json.Teams).not.toHaveProperty('ClientSecret');
+  });
+
+  it('omits CLIENT_SECRET from .env file when secret is undefined', () => {
+    const filePath = tmpFile('.env');
+    files.push(filePath);
+
+    writeEnvFile(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('CLIENT_ID=id-123');
+    expect(content).toContain('TENANT_ID=tenant-456');
+    expect(content).not.toContain('CLIENT_SECRET');
+  });
 });
