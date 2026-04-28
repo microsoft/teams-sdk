@@ -1131,6 +1131,10 @@ button.sdev-blog__plus {
         padding: 0 1rem;
     }
 
+    .sdev-blog::before {
+        display: none;
+    }
+
     .sdev-blog__sidebar {
         border-right: none;
         border-bottom: 1px solid var(--ifm-color-emphasis-200);
