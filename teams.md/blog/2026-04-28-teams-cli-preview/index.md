@@ -1,7 +1,7 @@
 ---
 slug: teams-cli-preview
-title: "The Teams CLI Preview: skip the setup, ship the agent"
-date: 2026-04-27
+title: "Teams CLI v3 Preview: Skip the Setup, Ship the Agent"
+date: 2026-04-28
 authors:
   - name: Aamir Jawaid
     title: Microsoft
@@ -25,7 +25,7 @@ But before you write a single line of that logic, you have to register it with T
 
 <!-- truncate -->
 
-## The setup tax
+## The Setup Tax
 
 <div style={{textAlign: 'center'}}>
 <img src={require('./setup-steps.png').default} alt="The 9 steps required to register a Teams agent today" style={{maxHeight: '400px'}} />
@@ -44,7 +44,7 @@ npm install -g @microsoft/teams.cli@preview
 teams login
 ```
 
-### Create is now just one command
+### Create Is Now Just One Command
 
 ```bash
 teams app create --name "My Bot" --endpoint https://my-bot.example.com/api/messages --env .env
@@ -56,7 +56,7 @@ teams app create --name "My Bot" --endpoint https://my-bot.example.com/api/messa
 
 Now you can focus on your agent's logic without worrying about app registration concepts. See the [CLI docs](/cli/) for all available flags.
 
-### Easy installation
+### Easy Installation
 
 Traditionally, getting an agent into Teams means building an app package, managing a manifest, and sideloading it. With the CLI, `app create` gives you an installation link. Open it and the agent is in Teams, no sideloading required.
 
@@ -64,7 +64,7 @@ Traditionally, getting an agent into Teams means building an app package, managi
 
 The CLI also includes a `teams app doctor` command that checks your agent's registration, credentials, endpoint, and manifest so when something breaks, you know exactly what to fix.
 
-## Let your coding agent handle it
+## Let Your Coding Agent Handle It
 
 The CLI also ships with a [`teams-dev` agent skill](/cli/guides/agent-skills) for AI coding agents like Copilot, Claude Code, and Cursor. Instead of running commands yourself, tell your assistant:
 
@@ -78,7 +78,7 @@ The skill uses the CLI under the hood to handle the full infrastructure workflow
 
 For CI pipelines and custom tooling, every CLI command supports `--json` output for programmatic consumption.
 
-## Get started
+## Get Started
 
 ```bash
 npm install -g @microsoft/teams.cli@preview
