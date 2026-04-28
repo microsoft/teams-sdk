@@ -58,7 +58,7 @@ Now you can focus on your agent's logic without worrying about app registration 
 
 ### Easy Installation
 
-Traditionally, getting an agent into Teams means building an app package, managing a manifest, and sideloading it. With the CLI, `app create` gives you an installation link. Open it and the agent is in Teams, no sideloading required.
+Traditionally, getting an agent into Teams means building an app package, managing a manifest, and sideloading it. With the CLI, `app create` gives you an installation link. Open it and Teams handles the install flow without a manual zip/package upload.
 
 ![Teams install dialog from the installation link](./install-link.png)
 
