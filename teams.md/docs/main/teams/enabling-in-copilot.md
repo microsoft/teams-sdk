@@ -5,120 +5,61 @@ summary: Learn how to enable your Teams app to work in M365 Copilot by updating 
 
 # Enabling in M365 Copilot
 
-If you've built a Teams app or agent and want to make it available in M365 Copilot, you can easily do so by updating your app manifest. This allows users to interact with your agent through Copilot's interface.
+If you've built a Teams app or agent and want to make it available in M365 Copilot, you can do so with a single CLI command that handles the manifest update automatically.
 
-## Prerequisites
+## Using the Teams CLI
 
-Before enabling your app in Copilot, ensure you have:
+```bash
+teams app update <appId> --scopes personal,team,copilot
+```
 
-1. A working Teams app or agent
-2. Completed the app registration process (see "Running in Teams" for your language)
-3. Your `BOT_ID` from the app registration
+This command:
+- Adds `copilot` to the bot's scope list (and ensures `personal` is included — required by M365 Copilot)
+- Adds the `copilotAgents.customEngineAgents` block to the manifest automatically
+- Bumps the app version so Teams recognizes the change
 
-## Updating the Manifest
+Then reinstall the app. The quickest way is the install link from the original `teams app create` output. If you need to retrieve it again:
 
-To enable your app in Copilot, add the following configuration to your `manifest.json` file:
+```bash
+teams app get <appId> --install-link
+```
+
+## Testing in Copilot
+
+Once the updated app is installed:
+
+1. Open M365 Copilot in Teams or at [m365.cloud.microsoft](https://m365.cloud.microsoft/)
+2. Your app should now be available as an agent option
+3. Interact with your agent through the Copilot interface
+
+## Manual Manifest Editing
+
+If you are not using the Teams CLI, you can update the manifest by hand. Add the following to your `manifest.json`:
 
 ```json
+"bots": [
+  {
+    "botId": "<your-bot-id>",
+    "scopes": ["personal", "team", "groupChat", "copilot"]
+  }
+],
 "copilotAgents": {
   "customEngineAgents": [
     {
       "type": "bot",
-      "id": "${{BOT_ID}}"
+      "id": "<your-bot-id>"
     }
   ]
 }
 ```
 
-The `BOT_ID` is assigned to your agent after you have registered your application. If you followed the "Running in Teams" guide for your language, this ID should already be available in your environment configuration.
+After editing, re-package and upload the manifest:
 
-## Location of the Manifest
-
-The manifest file is typically located in the `appPackage` folder of your project. If you used the Teams CLI to set up your project, this folder was automatically created for you.
-
-### Example Manifest Structure
-
-Here's how the `copilotAgents` section fits into the overall manifest structure:
-
-```json
-{
-  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
-  "manifestVersion": "1.19",
-  "version": "1.0.0",
-  "id": "${{APP_ID}}",
-  "developer": {
-    "name": "Your Company",
-    "websiteUrl": "https://www.example.com",
-    "privacyUrl": "https://www.example.com/privacy",
-    "termsOfUseUrl": "https://www.example.com/terms"
-  },
-  "name": {
-    "short": "Your App Name",
-    "full": "Your Full App Name"
-  },
-  "description": {
-    "short": "Short description",
-    "full": "Full description of your app"
-  },
-  "icons": {
-    "outline": "outline.png",
-    "color": "color.png"
-  },
-  "accentColor": "#FFFFFF",
-  "bots": [
-    {
-      "botId": "${{BOT_ID}}",
-      "scopes": [
-        "personal",
-        "team",
-        "groupchat"
-      ],
-      "supportsFiles": false,
-      "isNotificationOnly": false
-    }
-  ],
-  "copilotAgents": {
-    "customEngineAgents": [
-      {
-        "type": "bot",
-        "id": "${{BOT_ID}}"
-      }
-    ]
-  }
-}
+```bash
+teams app manifest upload <appId> ./manifest.json
 ```
 
-## Regenerating the App Package
-
-After updating the manifest, you need to zip the manifest and icon files into an app package:
-
-### Using Microsoft 365 Agents Toolkit
-
-If you're using the Microsoft 365 Agents Toolkit, the app package is automatically regenerated when you build or debug your app. The toolkit will:
-
-1. Read your updated manifest
-2. Replace variables like `${{BOT_ID}}` with actual values from your environment
-3. Package the manifest and icons into a zip file
-4. Deploy the updated package to Teams
-
-### Manual Packaging
-
-If you're manually packaging your app:
-
-1. Ensure the `manifest.json` file is updated with the `copilotAgents` section
-2. Create a zip file containing:
-   - `manifest.json`
-   - `color.png` (192x192 icon)
-   - `outline.png` (32x32 icon)
-3. Upload the zip file to Teams
-
-## Testing in Copilot
-
-Once you've updated and redeployed your app:
-
-1. Open M365 Copilot in Teams or at [m365.cloud.microsoft](https://m365.cloud.microsoft/)
-2. Your app should now be available as an agent option
-3. Interact with your agent through the Copilot interface
+Or zip the manifest and icons manually (manifest.json + color.png + outline.png) and sideload the zip in Teams.
 
 ## Resources
 

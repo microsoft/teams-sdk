@@ -10,4 +10,5 @@ One of the main motivations for Teams SDK is to provide excellent tools that sim
 Learn more about the developer tools that come with Teams SDK.
 
 1. [Teams CLI](./cli)
-2. [DevTools](./devtools)
+2. [Agent Skills](./agent-skills) — give AI coding assistants context for Teams development
+3. [DevTools](./devtools)

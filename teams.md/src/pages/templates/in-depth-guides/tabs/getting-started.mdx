@@ -12,13 +12,13 @@ To use this package, you can either set up a new project using the Teams CLI, or
 
 ## Setting up a new project
 
-The Teams CLI contains a Microsoft 365 Agents Toolkit configuration and a template to easily scaffold a new tab app with a callable remote function. To set this up, first install the Teams CLI as outlined in the [Quickstart](../../getting-started/quickstart) guide. Then, create the app by running:
+The Teams CLI ships a `tab` template that scaffolds a new tab app with a callable remote function. First install the Teams CLI as outlined in the [Quickstart](../../getting-started/quickstart) guide, then create the app:
 
 ```sh
-npx @microsoft/teams.cli@latest new typescript my-first-tab-app --atk embed --template tab
+teams project new typescript my-first-tab-app --template tab
 ```
 
-When the app is created, you can use the Agents Toolkit to run and debug it inside of Teams from your local machine, same as for any other Agents Toolkit tab app.
+Once the project is created, follow [Quickstart: Register your app](/get-started/quickstart-register) to register and sideload it into Teams.
 
 ## Adding to an existing project
 
@@ -32,5 +32,5 @@ If you're already using Microsoft Authentication Library (MSAL) in an NAA enable
 
 ## Resources
 
-- [Running and debugging local apps in Agents Toolkit](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/debug-local?tabs=Windows)
+- [Quickstart: Register your app](/get-started/quickstart-register)
 - [Configuring an app for Nested App Authentication](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/authentication/nested-authentication#configure-naa)
