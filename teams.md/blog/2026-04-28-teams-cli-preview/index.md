@@ -21,19 +21,19 @@ description: The Teams CLI v3 Preview takes the pain out of getting your agent i
 
 You want to build a Teams agent. Maybe it answers customer questions from a knowledge base. Maybe it runs your team's standups. The interesting part is the logic, the thing the agent actually *does*.
 
-But before you write a single line of that logic, you have to register it with Teams. And that's where the day goes sideways.
+But before you write a single line of that logic, you have to register it with Teams. That takes a number of steps. That's why we have updated the [Teams CLI](/cli/) in this latest iteration, along with a [`teams-dev` agent skill](/developer-tools/agent-skills) that lets your coding agent handle it too.
 
 <!-- truncate -->
 
-## The Setup Tax
+## How It Works Today
+
+Getting an agent into Teams requires configuring an identity, generating credentials, authoring a manifest, and wiring it all together. The process spans multiple surfaces:
 
 <div style={{textAlign: 'center'}}>
 <img src={require('./setup-steps.png').default} alt="The 9 steps required to register a Teams agent today" style={{maxHeight: '400px'}} />
 </div>
 
-That's a lot of steps across the Azure portal, Developer Portal, and your editor before your agent handles its first message. Each step is individually straightforward. The problem is the compound cost: too many portals, too many copy-pastes, and too many concepts between you and a working agent.
-
-At best, this takes 30 minutes. At worst, something doesn't work and you're left retracing every step to find the one that went wrong.
+These steps span the Azure portal, Developer Portal, and your editor. Each one is straightforward on its own, but the context-switching between them adds up.
 
 ## The Teams CLI Preview
 
