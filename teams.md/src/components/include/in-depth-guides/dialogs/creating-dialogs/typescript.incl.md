@@ -1,6 +1,6 @@
 <!-- entry-point-intro -->
 
-To open a dialog, you need to supply a special type of action as to the Adaptive Card. Once this button is clicked, the dialog will open and ask the application what to show.
+To open a dialog, add a button to your Adaptive Card using `OpenDialogData`. This sets up the `task/fetch` protocol and includes a `dialog_id` that the SDK uses to route to the correct handler.
 
 <!-- entry-point-code -->
 
@@ -10,54 +10,43 @@ import { App } from '@microsoft/teams.apps';
 import {
   AdaptiveCard,
   IAdaptiveCard,
-  TaskFetchAction,
-  TaskFetchData,
+  OpenDialogData,
+  SubmitAction,
 } from '@microsoft/teams.cards';
 // ...
 
 app.on('message', async ({ send }) => {
   await send({ type: 'typing' });
 
-  // Create the launcher adaptive card
   const card: IAdaptiveCard = new AdaptiveCard({
     type: 'TextBlock',
     text: 'Select the examples you want to see!',
     size: 'Large',
     weight: 'Bolder',
   }).withActions(
-    // raw action
-    {
-      type: 'Action.Submit',
-      title: 'Simple form test',
-      data: {
-        msteams: {
-          type: 'task/fetch',
-        },
-        opendialogtype: 'simple_form',
-      },
-    },
-    // Special type of action to open a dialog
-    new TaskFetchAction({})
+    // OpenDialogData sets msteams.type = "task/fetch" and adds dialog_id for routing
+    new SubmitAction()
+      .withTitle('Simple form test')
+      .withData(new OpenDialogData('simple_form')),
+    new SubmitAction()
       .withTitle('Webpage Dialog')
-      // This data will be passed back in an event so we can
-      // handle what to show in the dialog
-      .withValue(new TaskFetchData({ opendialogtype: 'webpage_dialog' })),
-    new TaskFetchAction({})
+      .withData(new OpenDialogData('webpage_dialog')),
+    new SubmitAction()
       .withTitle('Multi-step Form')
-      .withValue(new TaskFetchData({ opendialogtype: 'multi_step_form' })),
-    new TaskFetchAction({})
-      .withTitle('Mixed Example')
-      .withValue(new TaskFetchData({ opendialogtype: 'mixed_example' }))
+      .withData(new OpenDialogData('multi_step_form'))
   );
 
-  // Send the card as an attachment
   await send(new MessageActivity('Enter this form').addCard('adaptive', card));
 });
 ```
 
 <!-- dialog-open-intro -->
 
-Once an action is executed to open a dialog, the Teams client will send an event to the agent to request what the content of the dialog should be. Here is how to handle this event:
+When a user clicks the button, Teams sends a `task/fetch` invoke to your app. Register a handler using `dialog.open.<dialog_id>` to handle a specific dialog, or `dialog.open` for a catch-all.
+
+:::tip
+Use sub-routes like `dialog.open.simple_form` to handle specific dialogs directly, instead of a single catch-all handler with if-else logic. This keeps each handler focused and avoids routing boilerplate.
+:::
 
 <!-- dialog-open-code -->
 
@@ -67,10 +56,10 @@ import { App } from '@microsoft/teams.apps';
 import { AdaptiveCard, IAdaptiveCard } from '@microsoft/teams.cards';
 // ...
 
-app.on('dialog.open', async ({ activity }) => {
+// Handle a specific dialog by ID — no if-else needed
+app.on('dialog.open.simple_form', async ({ activity }) => {
   const card: IAdaptiveCard = new AdaptiveCard()...
 
-  // Return an object with the task value that renders a card
   return {
     task: {
       type: 'continue',
@@ -80,17 +69,17 @@ app.on('dialog.open', async ({ activity }) => {
       },
     },
   };
-}
+});
 ```
 
 <!-- rendering-card-code -->
 
 ```typescript
 import { cardAttachment } from '@microsoft/teams.api';
-import { AdaptiveCard, TextInput, SubmitAction } from '@microsoft/teams.cards';
+import { AdaptiveCard, TextInput, SubmitAction, SubmitData } from '@microsoft/teams.cards';
 // ...
 
-if (dialogType === 'simple_form') {
+app.on('dialog.open.simple_form', async () => {
   const dialogCard = new AdaptiveCard(
     {
       type: 'TextBlock',
@@ -104,13 +93,11 @@ if (dialogType === 'simple_form') {
       .withId('name')
       .withPlaceholder('Enter your name')
   )
-    // Inside the dialog, the card actions for submitting the card must be
-    // of type Action.Submit
+    // Use SubmitData to set the "action" field, which routes to dialog.submit.<action>
     .withActions(
-      new SubmitAction().withTitle('Submit').withData({ submissiondialogtype: 'simple_form' })
+      new SubmitAction().withTitle('Submit').withData(new SubmitData('simple_form'))
     );
 
-  // Return an object with the task value that renders a card
   return {
     task: {
       type: 'continue',
@@ -120,7 +107,7 @@ if (dialogType === 'simple_form') {
       },
     },
   };
-}
+});
 ```
 
 <!-- rendering-webpage-code -->
@@ -129,21 +116,21 @@ if (dialogType === 'simple_form') {
 import { App } from '@microsoft/teams.apps';
 // ...
 
-return {
-  task: {
-    type: 'continue',
-    value: {
-      title: 'Webpage Dialog',
-      // Here we are using a webpage that is hosted in the same
-      // server as the agent. This server needs to be publicly accessible,
-      // needs to set up teams.js client library (https://www.npmjs.com/package/@microsoft/teams-js)
-      // and needs to be registered in the manifest.
-      url: `${process.env['BOT_ENDPOINT']}/tabs/dialog-form`,
-      width: 1000,
-      height: 800,
+app.on('dialog.open.webpage_dialog', async () => {
+  return {
+    task: {
+      type: 'continue',
+      value: {
+        title: 'Webpage Dialog',
+        // The webpage must be publicly accessible, use the teams-js client library,
+        // and be registered in validDomains in the manifest.
+        url: `${process.env['BOT_ENDPOINT']}/tabs/dialog-form`,
+        width: 1000,
+        height: 800,
+      },
     },
-  },
-};
+  };
+});
 ```
 
 <!-- embedded-web-content -->

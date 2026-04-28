@@ -68,6 +68,16 @@ Update multiple properties at once:
 teams app update <appId> --name "New Name" --version "2.0.0" --developer "My Team"
 ```
 
+### Scopes
+
+Update which scopes the bot supports. In interactive mode, select "Scopes" from the update menu. In scripted mode, use `--scopes`:
+
+```bash
+teams app update <appId> --scopes personal,team,copilot
+```
+
+Selecting **copilot** automatically adds the `copilotAgents.customEngineAgents` block to the manifest and ensures **personal** is included. Removing **copilot** removes the `copilotAgents` block.
+
 ### webApplicationInfo (SSO)
 
 Set the `webApplicationInfo` fields used for SSO and app identity:
