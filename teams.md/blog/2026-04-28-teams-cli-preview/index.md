@@ -16,7 +16,7 @@ authors:
     url: https://github.com/umangsehgal
     image_url: https://github.com/umangsehgal.png
 tags: [teams-sdk, cli, preview, announcement, skills]
-description: Building a Teams agent should start with agent logic, not portal navigation. The Teams CLI Preview collapses registration, credentials, and manifest setup into a single command.
+description: The Teams CLI v3 Preview takes the pain out of getting your agent into Teams. One command to register, an installation link to deploy, and an agent skill to let your coding agent do it for you.
 ---
 
 You want to build a Teams agent. Maybe it answers customer questions from a knowledge base. Maybe it runs your team's standups. The interesting part is the logic, the thing the agent actually *does*.
