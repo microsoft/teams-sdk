@@ -133,7 +133,7 @@ az rest \
 ```
 
 :::note
-Step 4 must run after Step 3 because the pre-authorized apps reference the `scopeId`, which must exist first. If it fails with a scope-not-found error, wait 15 seconds (AAD replication lag) and retry.
+The pre-authorization patch must run after the scope patch because the pre-authorized apps reference the `scopeId`, which must exist first. If it fails with a scope-not-found error, wait 15 seconds (AAD replication lag) and retry.
 :::
 
 </TabItem>
