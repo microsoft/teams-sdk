@@ -185,15 +185,18 @@ The Teams application manifest needs to be updated to include `webApplicationInf
 
 Add `*.botframework.com` to `validDomains` and add the `webApplicationInfo` section to your `manifest.json`:
 
-```diff
- "validDomains": [
-     "*.devtunnels.ms",
-+    "*.botframework.com"
-  ],
-+ "webApplicationInfo": {
-+    "id": "<Your-Application-Id>",
-+    "resource": "api://<Your-Application-Id>"
-+  }
+```json
+"validDomains": [
+    ...
+    // highlight-next-line
+    "*.botframework.com"
+ ],
+ // highlight-start
+ "webApplicationInfo": {
+    "id": "<Your-Application-Id>",
+    "resource": "api://<Your-Application-Id>"
+  }
+ // highlight-end
 ```
 
 </TabItem>
