@@ -1146,13 +1146,21 @@ button.sdev-blog__plus {
     }
 }
 
-/* Mobile responsiveness for LanguageDropdown */
-@media (max-width: 768px) {
-  .language-dropdown .navbar__link {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.75rem;
+/* Mobile: hide "Teams SDK" title text, keep the logo.
+   Tighten language dropdown padding to save space. */
+@media (max-width: 996px) {
+  b.navbar__title {
+    display: none;
   }
 
+  .navbar__items:not(.navbar__items--right) .language-dropdown .navbar__link {
+    padding: 0.4rem 0.4rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile responsiveness for LanguageDropdown (when visible on desktop) */
+@media (max-width: 768px) {
   #language-switch-list {
     min-width: 120px;
   }

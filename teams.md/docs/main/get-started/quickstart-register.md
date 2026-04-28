@@ -11,7 +11,7 @@ Register a Teams app and its bot infrastructure with the [Teams CLI](/cli/) (`@m
 If you don't have an agent yet, step 3 scaffolds one using the Teams SDK. If you already have a server, skip step 3 and pass your endpoint to step 4.
 
 :::tip Let your AI assistant do this for you
-Install the [`teams-dev` skill](/cli/getting-started/agent-skills) in Claude Code, GitHub Copilot, Cursor, or VS Code, then say *"create a Teams bot"* — your assistant runs every step on this page for you, including the tunnel setup and sideload link.
+Install the [`teams-dev` skill](/developer-tools/agent-skills) in Claude Code, GitHub Copilot, Cursor, or VS Code, then say *"create a Teams bot"* — your assistant runs every step on this page for you, including the tunnel setup and sideload link.
 :::
 
 ## Prerequisites
@@ -168,5 +168,5 @@ Send your bot a message to confirm it's working.
 ## What's next
 
 - [Quickstart: Build your first bot](./quickstart-build) — wire up handlers and reply logic
-- [Agent Skills](/cli/getting-started/agent-skills) — let your AI coding assistant run this whole flow for you
+- [Agent Skills](/developer-tools/agent-skills) — let your AI coding assistant run this whole flow for you
 - [CLI command reference](/cli/commands/) — every flag, every subcommand
