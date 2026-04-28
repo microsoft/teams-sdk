@@ -10,6 +10,10 @@ import TabItem from '@theme/TabItem';
 
 This section describes how to configure the Azure Bot Service (ABS), the Entra App Registration and the Teams manifest to enable Single-Sign-On (SSO) for your Teams app.
 
+:::tip Let an AI assistant run this for you
+The [`teams-dev` skill](/cli/getting-started/agent-skills) can orchestrate the full SSO setup for you — install it in your AI coding assistant and say *"set up SSO for my Teams bot"*.
+:::
+
 ## Prerequisites
 
 Before starting SSO configuration, ensure you have:
@@ -20,10 +24,6 @@ Before starting SSO configuration, ensure you have:
 ## Configure the Entra App Registration for SSO
 
 You need an Entra ID App Registration to configure the OAuth Connection in Azure Bot Service. If you don't already have one, follow the [Create the Entra App Registration](../azure-configuration#create-the-entra-app-registration) guide first.
-
-:::tip Let an AI assistant run this for you
-The [`teams-dev` skill](/cli/getting-started/agent-skills) can orchestrate the full SSO setup for you — install it in your AI coding assistant and say *"set up SSO for my Teams bot"*.
-:::
 
 <Tabs groupId="sso-setup">
 <TabItem value="portal" label="Azure Portal">
