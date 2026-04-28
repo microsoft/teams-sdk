@@ -22,7 +22,7 @@ Before starting SSO configuration, ensure you have:
 You need an Entra ID App Registration to configure the OAuth Connection in Azure Bot Service. If you don't already have one, follow the [Create the Entra App Registration](../azure-configuration#create-the-entra-app-registration) guide first.
 
 :::tip Let an AI assistant run this for you
-The full SSO setup involves several steps the Teams CLI doesn't handle directly (creating the `access_as_user` scope, pre-authorizing Teams clients, configuring the OAuth connection in Azure Bot Service, updating `webApplicationInfo` in the manifest). The [`teams-dev` skill](/cli/getting-started/agent-skills) orchestrates all of this for you — install it in your AI coding assistant and say *"set up SSO for my Teams bot"*.
+The [`teams-dev` skill](/cli/getting-started/agent-skills) can orchestrate the full SSO setup for you — install it in your AI coding assistant and say *"set up SSO for my Teams bot"*.
 :::
 
 <Tabs groupId="sso-setup">
@@ -80,7 +80,23 @@ az rest \
   --method PATCH \
   --uri "https://graph.microsoft.com/v1.0/applications/$objectId" \
   --headers "Content-Type=application/json" \
-  --body "{\"identifierUris\":[\"api://botid-$appId\"],\"api\":{\"requestedAccessTokenVersion\":2,\"oauth2PermissionScopes\":[{\"id\":\"$scopeId\",\"adminConsentDescription\":\"Access as user\",\"adminConsentDisplayName\":\"Access as user\",\"isEnabled\":true,\"type\":\"User\",\"value\":\"access_as_user\"}]},\"web\":{\"redirectUris\":[\"https://token.botframework.com/.auth/web/redirect\"]}}"
+  --body "{
+    \"identifierUris\": [\"api://botid-$appId\"],
+    \"api\": {
+      \"requestedAccessTokenVersion\": 2,
+      \"oauth2PermissionScopes\": [{
+        \"id\": \"$scopeId\",
+        \"adminConsentDescription\": \"Access as user\",
+        \"adminConsentDisplayName\": \"Access as user\",
+        \"isEnabled\": true,
+        \"type\": \"User\",
+        \"value\": \"access_as_user\"
+      }]
+    },
+    \"web\": {
+      \"redirectUris\": [\"https://token.botframework.com/.auth/web/redirect\"]
+    }
+  }"
 ```
 
 ### Step 4: Pre-Authorize Teams Clients
@@ -92,7 +108,28 @@ az rest \
   --method PATCH \
   --uri "https://graph.microsoft.com/v1.0/applications/$objectId" \
   --headers "Content-Type=application/json" \
-  --body "{\"api\":{\"oauth2PermissionScopes\":[{\"id\":\"$scopeId\",\"adminConsentDescription\":\"Access as user\",\"adminConsentDisplayName\":\"Access as user\",\"isEnabled\":true,\"type\":\"User\",\"value\":\"access_as_user\"}],\"preAuthorizedApplications\":[{\"appId\":\"1fec8e78-bce4-4aaf-ab1b-5451cc387264\",\"delegatedPermissionIds\":[\"$scopeId\"]},{\"appId\":\"5e3ce6c0-2b1f-4285-8d4b-75ee78787346\",\"delegatedPermissionIds\":[\"$scopeId\"]}]}}"
+  --body "{
+    \"api\": {
+      \"oauth2PermissionScopes\": [{
+        \"id\": \"$scopeId\",
+        \"adminConsentDescription\": \"Access as user\",
+        \"adminConsentDisplayName\": \"Access as user\",
+        \"isEnabled\": true,
+        \"type\": \"User\",
+        \"value\": \"access_as_user\"
+      }],
+      \"preAuthorizedApplications\": [
+        {
+          \"appId\": \"1fec8e78-bce4-4aaf-ab1b-5451cc387264\",
+          \"delegatedPermissionIds\": [\"$scopeId\"]
+        },
+        {
+          \"appId\": \"5e3ce6c0-2b1f-4285-8d4b-75ee78787346\",
+          \"delegatedPermissionIds\": [\"$scopeId\"]
+        }
+      ]
+    }
+  }"
 ```
 
 :::note
@@ -133,7 +170,7 @@ az bot authsetting create \
 ```
 
 :::tip
-The `--provider-scope-string` controls which permissions are requested. `User.Read` covers basic user profile via Microsoft Graph. To include additional Graph permissions, space-delimit them: `"User.Read Mail.Read"`. For SharePoint or custom APIs, server-side On-Behalf-Of (OBO) token exchange in bot code is required.
+The `--provider-scope-string` controls which permissions are requested. `User.Read` covers basic user profile via Microsoft Graph. To include additional permissions, space-delimit them: `"User.Read Mail.Read"`. Your bot code is required to handle the token exchange for SSO.
 :::
 
 </TabItem>
