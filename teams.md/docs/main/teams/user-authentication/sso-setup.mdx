@@ -170,7 +170,7 @@ az bot authsetting create \
 ```
 
 :::tip
-The `--provider-scope-string` controls which permissions are requested. `User.Read` covers basic user profile via Microsoft Graph. To include additional permissions, space-delimit them: `"User.Read Mail.Read"`. Your bot code is required to handle the token exchange for SSO.
+To include additional permissions (Graph, SharePoint, etc.), space-delimit them: `"User.Read Mail.Read Sites.Read.All"`.
 :::
 
 </TabItem>
