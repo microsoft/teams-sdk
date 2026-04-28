@@ -34,15 +34,12 @@ An **Azure bot** is a bot registration in your own Azure subscription (via Azure
 
 ## Choosing a Location
 
-The only thing that forces an Azure-managed bot is **OAuth or SSO** (because OAuth connection management lives in Azure Bot Service). Production by itself is not a reason to switch — many production bots run fine as Teams-managed. And the choice isn't permanent: `teams app bot migrate` upgrades a Teams-managed bot to Azure later without changing your credentials.
+Use Azure only when your bot needs **OAuth or SSO** — that's the one thing Teams-managed can't do. For everything else, Teams-managed is the simpler choice. The decision isn't permanent: you can always migrate later with `teams app bot migrate`.
 
 | Scenario | Recommended |
 |----------|------------|
-| Quick prototyping | Teams-managed |
-| Development/testing | Teams-managed |
+| Prototyping or development | Teams-managed |
 | Need OAuth or SSO | Azure (or migrate later) |
-| Production bot that doesn't need OAuth/SSO | Teams-managed |
-| Tenant policy requires registration in your Azure subscription | Azure |
 | No Azure subscription available | Teams-managed |
 
 ## Default Location
