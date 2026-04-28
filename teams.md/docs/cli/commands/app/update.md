@@ -25,6 +25,7 @@ teams app update [appId] [options]
 | Flag | Description |
 |------|-------------|
 | `--endpoint <url>` | [OPTIONAL] Set the bot messaging endpoint URL |
+| `--scopes <scopes>` | [OPTIONAL] Set bot scopes (comma-separated: personal,team,groupChat,copilot) |
 | `--name <name>` | [OPTIONAL] Set the app short name (max 30 chars) |
 | `--long-name <name>` | [OPTIONAL] Set the app long name (max 100 chars) |
 | `--short-description <desc>` | [OPTIONAL] Set the short description (max 80 chars) |
@@ -67,6 +68,16 @@ Update multiple properties at once:
 teams app update <appId> --name "New Name" --version "2.0.0" --developer "My Team"
 ```
 
+### Scopes
+
+Update which scopes the bot supports. In interactive mode, select "Scopes" from the update menu. In scripted mode, use `--scopes`:
+
+```bash
+teams app update <appId> --scopes personal,team,copilot
+```
+
+Selecting **copilot** automatically adds the `copilotAgents.customEngineAgents` block to the manifest and ensures **personal** is included. Removing **copilot** removes the `copilotAgents` block.
+
 ### webApplicationInfo (SSO)
 
 Set the `webApplicationInfo` fields used for SSO and app identity:
@@ -74,6 +85,16 @@ Set the `webApplicationInfo` fields used for SSO and app identity:
 ```bash
 teams app update <appId> --web-app-info-id <client-id> --web-app-info-resource "api://botid-<client-id>"
 ```
+
+### Scopes
+
+Update which scopes the bot supports. In interactive mode, select "Scopes" from the update menu. In scripted mode, use `--scopes`:
+
+```bash
+teams app update <appId> --scopes personal,team,copilot
+```
+
+Selecting **copilot** automatically adds the `copilotAgents.customEngineAgents` block to the manifest and ensures **personal** is included. Removing **copilot** removes the `copilotAgents` block.
 
 ### Portal Equivalent
 

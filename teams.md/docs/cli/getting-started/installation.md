@@ -22,16 +22,10 @@ teams --version
 
 ## Update
 
-The CLI checks for updates automatically on each run. To update manually:
+The CLI checks for updates automatically once per day. To update manually:
 
 ```bash
 teams self-update
-```
-
-Disable auto-update checks with:
-
-```bash
-teams --disable-auto-update <command>
 ```
 
 ## Azure CLI (Optional)

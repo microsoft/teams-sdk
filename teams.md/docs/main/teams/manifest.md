@@ -17,4 +17,8 @@ Sideloading is the ability to install and test your app before it is published t
 
 To sideload, ensure the manifest includes all required information (such as the app ID, tenant details, and permissions). Place the manifest and icons at the root of a zip file.
 
-For convenient assistance with managing your manifest and automating important functionality like sideloading, deployment, and provisioning, we recommend the [Microsoft 365 Agents Toolkit extension](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/install-teams-toolkit)) and [CLI](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/microsoft-365-agents-toolkit-cli). Please continue to the [Toolkit documentation](./configuration/agents-toolkit) to learn more.
+The [Teams CLI](/cli/) handles manifest scaffolding, validation, and updates as part of `teams app create`. To work with the manifest directly:
+
+- [`teams app manifest download`](/cli/commands/app/manifest-download) — pull the current manifest from a registered app
+- [`teams app manifest upload`](/cli/commands/app/manifest-upload) — apply a local manifest.json to an existing app
+- [`teams app package download`](/cli/commands/app/package-download) — get a sideload-ready zip (manifest + icons)

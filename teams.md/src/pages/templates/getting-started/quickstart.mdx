@@ -17,17 +17,17 @@ Get started with Teams SDK quickly using the Teams CLI.
 
 ## Instructions
 
-### Use the Teams CLI
+### Install the Teams CLI
 
-Use your terminal to run the Teams CLI using npx:
+Install `teams` globally:
 
 ```sh
-npx @microsoft/teams.cli --version
+npm install -g @microsoft/teams.cli@preview
+teams --version
 ```
 
 :::info
-_The [Teams CLI](/developer-tools/cli) is a command-line tool that helps you create and manage Teams applications. It provides a set of commands to simplify the development process._<br /><br />
-Using `npx` allows you to run the Teams CLI without installing it globally. You can verify it works by running the version command above.
+The [Teams CLI](/cli/) is the command-line tool for scaffolding, registering, and managing Teams apps. It's currently in Preview.
 :::
 
 ## Creating Your First Agent
@@ -74,6 +74,6 @@ Otherwise, if you want to run your agent in Teams, you can check out the [Runnin
 
 ## Resources
 
-- [Teams CLI documentation](/developer-tools/cli)
+- [Teams CLI documentation](/cli/)
 - [Teams manifest schema](https://learn.microsoft.com/en-us/microsoftteams/platform/resources/schema/manifest-schema)
 - [Teams sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload)
