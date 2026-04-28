@@ -3,7 +3,7 @@
 Use your terminal to run the following command:
 
 ```sh
-npx @microsoft/teams.cli@latest new typescript oauth-app --template graph
+teams project new typescript oauth-app --template graph
 ```
 
 This command:
