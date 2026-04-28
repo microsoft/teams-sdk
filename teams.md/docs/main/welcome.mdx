@@ -8,50 +8,25 @@ import LangLink from '@site/src/components/LangLink';
 
 # 👋 Welcome
 
-Teams SDK is a suite of packages used to develop on Microsoft Teams. Rebuilt from the ground up with improved developer experience in mind, it's never been easier to build powerful agents and applications for the hundreds of millions Microsoft Teams users.
+Teams SDK is a suite of packages for building agents and applications on Microsoft Teams. It handles authentication, event routing, and Teams-specific plumbing so you can focus on your app's logic.
 
-## Quickstart
+## Get started
 
-The Teams CLI makes it easy to bootstrap your first agent. Using `npx @microsoft/teams.cli` you can get started using these commands:
+The fastest path is the [Teams CLI](/cli/) (in Preview):
 
-**TypeScript:**
+1. **[Register your app](/get-started/quickstart-register)** — install the CLI, register a bot, sideload into Teams.
+2. **[Build your first bot](/get-started/quickstart-build)** — write a message handler in TypeScript, C#, or Python.
 
-```bash
-npx @microsoft/teams.cli@latest new typescript quote-agent --template echo
-```
+If you'd rather have your AI coding assistant do the work, install the [`teams-dev` skill](/developer-tools/agent-skills) and ask it to "create a Teams bot".
 
-**C#:**
+## What you can build
 
-```bash
-npx @microsoft/teams.cli@latest new csharp quote-agent --template echo
-```
+Teams SDK has you covered for <LangLink to="in-depth-guides/ai">AI-powered agents</LangLink>, <LangLink to="in-depth-guides/message-extensions">message extensions</LangLink>, embedded web apps, Adaptive Cards, dialogs, Microsoft Graph integrations, and more — across TypeScript, C#, and Python.
 
-**Python:**
+- [Why an SDK?](/why) — what the SDK handles for you
+- [TypeScript guide](/typescript/getting-started) · [C# guide](/csharp/getting-started) · [Python guide](/python/getting-started)
+- [CLI reference](/cli/) · [DevTools](/developer-tools/devtools/) — local testing without sideloading
 
-```bash
-npx @microsoft/teams.cli@latest new python quote-agent --template echo
-```
+## Navigation tips
 
-## Overview
-
-Microsoft Teams has a robust developer ecosystem with a broad suite of capabilities, now unified via Teams SDK. Whether you are building <LangLink to="in-depth-guides/ai">AI-powered agents</LangLink>, <LangLink to="in-depth-guides/message-extensions">message extensions</LangLink>, embedded web applications, or Graph, Teams SDK has you covered.
-
-## ⭐ What's new?
-
-### Streamlined Developer Experience
-
-We’ve refined the developer experience so you can concentrate on building your app’s logic — not wrestling with integrations.
-
-### Effortless Integration
-
-We’ve simplified complex integration workflows to help you deliver a richer, more seamless user experience.
-
-### Accelerate Your Workflow
-
-Get your application up and running in under 30 seconds with our lightning-fast CLI—so you can spend more time on what really matters.
-
-## 🔎 Navigation Tips
-
-We encourage you to use the left sidebar to navigate to your desired section.
-
-Can't find what you're searching for? Use the search button above.
+Use the left sidebar to navigate. Can't find what you're looking for? Try the search button above.

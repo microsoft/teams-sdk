@@ -14,7 +14,7 @@ This is an advanced guide. It is highly recommended that you are familiar with [
 :::
 
 :::warning
-User authentication does not work with the developer tools setup. You have to run the app in Teams. Follow these [instructions](/typescript/getting-started/running-in-teams#debugging-in-teams) to run your app in Teams.
+User authentication does not work with the developer tools setup. You have to run the app in Teams. Follow [Quickstart: Register your app](/get-started/quickstart-register) to register and sideload your bot.
 :::
 
 :::info
@@ -33,23 +33,18 @@ Skip this step if you want to add the auth configurations to an existing app.
 
 <LanguageInclude section="create-project" />
 
-### Add Agents Toolkit auth configuration
+### Set up the OAuth connection
 
-Open your terminal with the project folder set as the current working directory and run the following command:
+User authentication requires an **Azure-managed bot** (Teams-managed bots don't support OAuth connections). If you registered with `--teams-managed`, migrate first:
 
 ```sh
-npx @microsoft/teams.cli config add atk.oauth
+teams app bot migrate <appId> --subscription <id> --resource-group <your-resource-group>
 ```
 
-The `atk.oauth` configuration is a basic setup for Agents Toolkit along with configurations to authenticate the user with Microsoft Entra ID to access Microsoft Graph APIs.
+Then follow the [User Authentication Setup guide](/cli/guides/user-authentication-setup) to configure the AAD app, create the Azure Bot OAuth connection, and update the manifest. The guide covers both SSO (silent token exchange) and generic OAuth.
 
-This [CLI](/developer-tools/cli) command adds configuration files required by Agents Toolkit, including:
-
-- Azure Application Entra ID manifest file `aad.manifest.json`.
-- Azure bicep files to provision Azure bot in `infra/` folder.
-
-:::info
-Agents Toolkit, in the debugging flow, will deploy the `aad.manifest.json` and `infra/azure.local.bicep` file to provision the Application Entra ID and Azure bot with oauth configurations.
+:::tip
+If you'd rather have an AI coding assistant run the setup, install the [`teams-dev` skill](/developer-tools/agent-skills) and ask it to "set up SSO for my Teams bot".
 :::
 
 ## Configure the OAuth connection
@@ -103,7 +98,7 @@ When using SSO, if the token exchange fails Teams sends a `signin/failure` invok
 <LanguageInclude section="signin-failure" />
 
 :::tip
-The most common failure codes are `installedappnotfound` (bot app not installed for the user) and `resourcematchfailed` (Token Exchange URL doesn't match the Application ID URI). See [SSO Setup - Troubleshooting](/teams/user-authentication/sso-setup#troubleshooting-sso) for a full list of failure codes and troubleshooting steps.
+The most common failure codes are `installedappnotfound` (bot app not installed for the user) and `resourcematchfailed` (Token Exchange URL doesn't match the Application ID URI). See [SSO Setup - Troubleshooting](/teams/user-authentication/sso-setup#troubleshooting) for a full list of failure codes and troubleshooting steps.
 :::
 
 <LanguageInclude section="regional-bot" />
