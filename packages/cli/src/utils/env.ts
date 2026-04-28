@@ -7,7 +7,7 @@ import { createSilentSpinner } from './spinner.js';
 
 export interface EnvValues {
   CLIENT_ID: string;
-  CLIENT_SECRET: string;
+  CLIENT_SECRET?: string;
   TENANT_ID: string;
 }
 
@@ -67,7 +67,7 @@ export function writeJsonCredentials(filePath: string, values: EnvValues): void 
   json.Teams = {
     ...existing,
     ClientId: values.CLIENT_ID,
-    ClientSecret: values.CLIENT_SECRET,
+    ...(values.CLIENT_SECRET !== undefined && { ClientSecret: values.CLIENT_SECRET }),
     TenantId: values.TENANT_ID,
   };
 
@@ -97,9 +97,13 @@ export function outputCredentials(
   } else {
     logger.info(pc.bold(pc.green(`\n${successMessage}`)));
     logger.info(`\n${pc.dim('CLIENT_ID=')}${values.CLIENT_ID}`);
-    logger.info(`${pc.dim('CLIENT_SECRET=')}${values.CLIENT_SECRET}`);
+    if (values.CLIENT_SECRET !== undefined) {
+      logger.info(`${pc.dim('CLIENT_SECRET=')}${values.CLIENT_SECRET}`);
+    }
     logger.info(`${pc.dim('TENANT_ID=')}${values.TENANT_ID}`);
 
-    logger.warn("Save the client secret - it won't be shown again!");
+    if (values.CLIENT_SECRET !== undefined) {
+      logger.warn("Save the client secret - it won't be shown again!");
+    }
   }
 }

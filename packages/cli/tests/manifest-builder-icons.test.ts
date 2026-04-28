@@ -83,6 +83,99 @@ describe('collectManifestCustomization icons', () => {
   });
 });
 
+describe('createManifest copilotAgents', () => {
+  it('adds copilotAgents block when copilot scope is selected', () => {
+    const manifest = createManifest({
+      botId: 'test-bot-id',
+      botName: 'Test Bot',
+      scopes: ['personal', 'copilot'],
+    }) as {
+      bots: Array<{ scopes: string[] }>;
+      copilotAgents: { customEngineAgents: Array<{ type: string; id: string }> };
+    };
+
+    expect(manifest.copilotAgents).toEqual({
+      customEngineAgents: [{ type: 'bot', id: 'test-bot-id' }],
+    });
+    expect(manifest.bots[0].scopes).toContain('copilot');
+    expect(manifest.bots[0].scopes).toContain('personal');
+  });
+
+  it('does not add copilotAgents block when copilot scope is not selected', () => {
+    const manifest = createManifest({
+      botId: 'test-bot-id',
+      botName: 'Test Bot',
+      scopes: ['personal', 'team'],
+    }) as {
+      copilotAgents?: { customEngineAgents: Array<{ type: string; id: string }> };
+    };
+
+    expect(manifest.copilotAgents).toBeUndefined();
+  });
+
+  it('auto-includes personal scope when copilot is selected without it', () => {
+    const manifest = createManifest({
+      botId: 'test-bot-id',
+      botName: 'Test Bot',
+      scopes: ['copilot'],
+    }) as { bots: Array<{ scopes: string[] }> };
+
+    expect(manifest.bots[0].scopes).toContain('personal');
+    expect(manifest.bots[0].scopes).toContain('copilot');
+  });
+});
+
+describe('buildScopeUpdates', () => {
+  const baseApp = {
+    teamsAppId: 'test-app-id',
+    appId: 'test-app-id',
+    shortName: 'Test',
+    longName: '',
+    shortDescription: '',
+    longDescription: '',
+    version: '1.0.0',
+    developerName: '',
+    websiteUrl: '',
+    privacyUrl: '',
+    termsOfUseUrl: '',
+    manifestVersion: '1.25',
+    webApplicationInfoId: '',
+    mpnId: '',
+    accentColor: '',
+    bots: [{ botId: 'test-bot-id', scopes: ['personal', 'team'] }],
+  };
+
+  it('adds copilotAgents block when copilot scope is added', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const updates = buildScopeUpdates(baseApp, ['personal', 'copilot']);
+    expect(updates.copilotAgents).toEqual({
+      customEngineAgents: [{ type: 'bot', id: 'test-bot-id' }],
+    });
+    expect(updates.bots?.[0]?.scopes).toContain('copilot');
+    expect(updates.bots?.[0]?.scopes).toContain('personal');
+  });
+
+  it('removes copilotAgents block when copilot scope is removed', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const updates = buildScopeUpdates(baseApp, ['personal', 'team']);
+    expect(updates.copilotAgents).toBeUndefined();
+  });
+
+  it('auto-includes personal when copilot is selected without it', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const updates = buildScopeUpdates(baseApp, ['copilot']);
+    expect(updates.bots?.[0]?.scopes).toContain('personal');
+    expect(updates.bots?.[0]?.scopes).toContain('copilot');
+  });
+
+  it('returns empty object when app has no bots', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const noBotApp = { ...baseApp, bots: undefined };
+    const updates = buildScopeUpdates(noBotApp, ['personal']);
+    expect(updates).toEqual({});
+  });
+});
+
 describe('createManifest validDomains', () => {
   it('includes *.botframework.com by default with no endpoint', () => {
     const manifest = createManifest({
