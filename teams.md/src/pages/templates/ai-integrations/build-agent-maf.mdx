@@ -71,7 +71,8 @@ agent = Agent(
 
 ## Running the agent in Teams
 
-The Teams integration connects incoming messages to the agent runtime and streams the response back to the chat interface.
+Integrate with Teams by forwarding incoming messages to the agent runtime
+and streaming the response back to the chat interface chunk by chunk.
 ```python
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
@@ -97,7 +98,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     async for chunk in agent.run(ctx.activity.text or "", session=session, stream=True):
         ...
 ```
-In production push sessions into Redis, Cosmos DB, or whatever you already use for state. Watch the token budget too — long sessions can blow past the model's context window.
+In production push session history into Redis, Cosmos DB, or whatever you already use for state.
 
 ## Middleware
 Middleware sits between tool execution and the model response, enabling you to inspect, transform, or annotate results without coupling this logic to the agent itself.

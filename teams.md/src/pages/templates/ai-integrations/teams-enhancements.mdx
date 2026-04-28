@@ -9,14 +9,16 @@ suppressLanguageIncludeWarning: true
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import CitationsImgUrl from '@site/static/screenshots/citations.gif';
 
 # Enhance the Teams Experience
-This layer defines how agent output is enriched into a Teams-native experience - adding structure, interactivity, and metadata on top of the generated text.
+You can enrich the agent output into a more Teams-native experience - adding structure, interactivity, and metadata on top of the generated text.
 
 ## Streaming 
 
-Streaming lets the agent send partial responses back to Teams as they are generated, instead of waiting for the full completion.
-Each text chunk is emitted immediately into the chat.
+Streaming allows the agent to deliver responses to Teams incrementally as they’re generated,
+rather than waiting for the full reply to complete.
+Each chunk of text is appended to the stream as it arrives.
 ```python
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
@@ -25,6 +27,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
             ctx.stream.emit(chunk.text)
 ```
 
+See [Streaming](../essentials/sending-messages#streaming) for the full story on how Teams renders chunks and the constraints on stream lifecycle.
 
 ## Suggested prompts
 
@@ -56,6 +59,8 @@ reply= MessageActivityInput().with_suggested_actions(
 
 The `to` field scopes the chips to a specific user — important in group chats where only the asker should see the follow-ups.
 
+![Screenshot of outgoing agent message to user marked with 'AI generated' badge, with thumbs up/down feedback controls below the message.](/screenshots/suggested-prompts.png)
+
 ## Marking AI-generated content and enabling feedback
 `add_ai_generated()` marks the message as system-generated, ensuring it is clearly labeled as AI output within Teams.
 `add_feedback(mode="custom")` enables built-in thumbs up/down controls and allows you to surface a custom feedback flow when users respond.
@@ -68,6 +73,7 @@ reply = (
     .add_feedback(mode="custom")
 )
 ```
+
 See [Feedback](../../in-depth-guides/feedback) for the full form-handling story.
 
 ## Citations
@@ -90,4 +96,10 @@ def attach_citations(reply, full_text, citations):
                     url=c.url),
                 )
 ```
+
+<img
+  src={CitationsImgUrl}
+  alt="Animated screenshot showing user hovering over a footnote citation in agent response, and a pop-up showing explanatory text."
+  style={{ width: '100%', maxWidth: 900 }}
+/>
 

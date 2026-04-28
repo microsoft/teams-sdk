@@ -3,11 +3,19 @@
     "typescript",
     "csharp"
   ],
-  "ai-integrations/agent-framework": [
+  "ai-integrations/a2a": [
+    "typescript",
+    "csharp"
+  ],
+  "ai-integrations/build-agent-maf": [
     "typescript",
     "csharp"
   ],
   "ai-integrations/mcp-server": [
+    "typescript",
+    "csharp"
+  ],
+  "ai-integrations/teams-enhancements": [
     "typescript",
     "csharp"
   ],
