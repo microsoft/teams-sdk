@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import { HtmlClassNameProvider, ThemeClassNames, PageMetadata } from '@docusaurus/theme-common';
+import { useWindowSize } from '@docusaurus/theme-common/internal';
 import clsx from 'clsx';
 import type { Props } from '@theme/BlogListPage';
 import BlogPostRows from '@site/src/components/BlogPostRows';
@@ -31,6 +32,9 @@ export default function BlogListPage({ items, metadata }: Props): React.ReactNod
     const allTags = Object.entries(tagMap).sort((a, b) => a[0].localeCompare(b[0]));
 
     const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const windowSize = useWindowSize();
+    const isMobile = windowSize === 'mobile';
 
     const toggleFilter = (label: string) =>
         setSelected((prev) => {
@@ -79,27 +83,37 @@ export default function BlogListPage({ items, metadata }: Props): React.ReactNod
             <Layout>
                 <div className="sdev-blog">
                     <aside className="sdev-blog__sidebar">
-                        <div className="sdev-blog__filter-label">/ FILTERS</div>
-                        <div className="sdev-blog__divider" />
-                        {allTags.length > 0 && (
-                            <div className="sdev-blog__filter-group">
-                                <div className="sdev-blog__filter-group-label">
-                                    <span className="sdev-blog__filter-folder">🗂</span> Topic
-                                </div>
-                                {allTags.map(([label, { count }]) => (
-                                    <label key={label} className="sdev-blog__filter-item">
-                                        <input
-                                            type="checkbox"
-                                            className="sdev-blog__checkbox"
-                                            checked={selected.has(label)}
-                                            onChange={() => toggleFilter(label)}
-                                        />
-                                        <span className="sdev-blog__filter-text">
-                                            {label} <span className="sdev-blog__filter-count">({count})</span>
-                                        </span>
-                                    </label>
-                                ))}
-                            </div>
+                        <div
+                            className="sdev-blog__filter-label"
+                            onClick={isMobile ? () => setFiltersOpen((o) => !o) : undefined}
+                            style={isMobile ? { cursor: 'pointer' } : undefined}
+                        >
+                            / FILTERS {isMobile && (filtersOpen ? '▲' : '▼')}
+                        </div>
+                        {(!isMobile || filtersOpen) && (
+                            <>
+                                <div className="sdev-blog__divider" />
+                                {allTags.length > 0 && (
+                                    <div className="sdev-blog__filter-group">
+                                        <div className="sdev-blog__filter-group-label">
+                                            <span className="sdev-blog__filter-folder">🗂</span> Topic
+                                        </div>
+                                        {allTags.map(([label, { count }]) => (
+                                            <label key={label} className="sdev-blog__filter-item">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sdev-blog__checkbox"
+                                                    checked={selected.has(label)}
+                                                    onChange={() => toggleFilter(label)}
+                                                />
+                                                <span className="sdev-blog__filter-text">
+                                                    {label} <span className="sdev-blog__filter-count">({count})</span>
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </aside>
 

@@ -86,6 +86,16 @@ Set the `webApplicationInfo` fields used for SSO and app identity:
 teams app update <appId> --web-app-info-id <client-id> --web-app-info-resource "api://botid-<client-id>"
 ```
 
+### Scopes
+
+Update which scopes the bot supports. In interactive mode, select "Scopes" from the update menu. In scripted mode, use `--scopes`:
+
+```bash
+teams app update <appId> --scopes personal,team,copilot
+```
+
+Selecting **copilot** automatically adds the `copilotAgents.customEngineAgents` block to the manifest and ensures **personal** is included. Removing **copilot** removes the `copilotAgents` block.
+
 ### Portal Equivalent
 
 Apps → select app → Basic information in the [Teams Developer Portal](https://dev.teams.microsoft.com).

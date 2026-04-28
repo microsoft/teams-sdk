@@ -70,7 +70,7 @@ teams app create --name "My Bot"
 Create with Azure bot and write credentials to `.env`:
 
 ```bash
-teams app create --name "My Bot" --azure --resource-group my-rg --env .env
+teams app create --name "My Bot" --azure --subscription <id> --resource-group my-rg --env .env
 ```
 
 For C# projects, write credentials to `appsettings.json` instead:
