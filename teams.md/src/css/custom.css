@@ -1172,6 +1172,13 @@ div[class^='announcementBar'] a {
   font-weight: 600;
 }
 
+/* Hide sidebar entries marked with `sidebar_class_name: 'sidebar-hidden'`.
+   The page still builds, is reachable via direct link, and is included
+   in search; it just doesn't appear in the sidebar tree. */
+.menu__list-item.sidebar-hidden {
+  display: none;
+}
+
 /* ==========================================================================
    COPY FOR LLM BUTTON
    ========================================================================== */

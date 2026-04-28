@@ -38,7 +38,7 @@ Skip this step if you want to add the auth configurations to an existing app.
 User authentication requires an **Azure-managed bot** (Teams-managed bots don't support OAuth connections). If you registered with `--teams-managed`, migrate first:
 
 ```sh
-teams app bot migrate <appId> --resource-group <your-resource-group>
+teams app bot migrate <appId> --subscription <id> --resource-group <your-resource-group>
 ```
 
 Then follow the [User Authentication Setup guide](/cli/guides/user-authentication-setup) to configure the AAD app, create the Azure Bot OAuth connection, and update the manifest. The guide covers both SSO (silent token exchange) and generic OAuth.

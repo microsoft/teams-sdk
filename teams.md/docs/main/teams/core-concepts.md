@@ -117,6 +117,8 @@ Sideloading needs to be enabled in your tenant. If this is not the case, then yo
 
 To test your app in Teams you need, at minimum, a provisioned bot. You'll likely also have other resources such as storage.
 
-- For local development and prototyping: run `teams app create` (Teams-managed bot, no Azure subscription required) — see the [Quickstart: Register your app](../get-started/quickstart-register).
-- For production with Azure: run `teams app create --azure --resource-group <rg>`, or follow the [Azure Configuration](./azure-configuration) guide for a manual setup.
-- For deployment to App Service, Container Apps, or other Azure compute, see the Microsoft Learn [deployment overview](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview).
+The fastest path is `teams app create`, which provisions a Teams-managed bot by default — no Azure subscription required. See the [Quickstart: Register your app](../get-started/quickstart-register).
+
+If you need OAuth or SSO (typically for delegated Microsoft Graph access on behalf of a user), the bot must be Azure-managed. Either start with `teams app create --azure --subscription <id> --resource-group <rg>`, or start Teams-managed and switch later with `teams app bot migrate <appId> --subscription <id> --resource-group <rg>` (both require an Azure subscription) — your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` stay the same. For a hand-rolled Azure setup, follow the [Azure Configuration](./azure-configuration) guide.
+
+For deploying your bot's endpoint to App Service, Container Apps, or other Azure compute, see the Microsoft Learn [deployment overview](https://learn.microsoft.com/en-us/microsoftteams/deploy-overview).

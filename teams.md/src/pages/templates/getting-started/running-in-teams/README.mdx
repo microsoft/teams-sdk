@@ -39,7 +39,7 @@ teams app create \
 
 This creates a Teams-managed bot by default — no Azure subscription needed. The command prints a summary including the **Teams App ID** and an **Install in Teams** link, and writes `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` into `.env`. For C# projects use `--env appsettings.json`.
 
-If you need OAuth/SSO or are heading to production, add `--azure --resource-group <rg>`. See [Bot Locations](/cli/concepts/bot-locations) for the trade-offs.
+If you need OAuth or SSO, add `--azure --resource-group <rg>` (or migrate later with `teams app bot migrate`). See [Bot Locations](/cli/concepts/bot-locations) for the details.
 
 ## 3. Run your agent
 
