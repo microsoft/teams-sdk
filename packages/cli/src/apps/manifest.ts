@@ -30,6 +30,29 @@ export function extractDomain(url: string): string | null {
   }
 }
 
+/**
+ * Validates that an endpoint URL is a well-formed HTTPS URL.
+ * Returns an error message string if invalid, or `null` if valid.
+ */
+export function validateEndpoint(url: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return 'Endpoint is not a valid URL.';
+  }
+  if (parsed.protocol !== 'https:') {
+    return 'Endpoint must use HTTPS.';
+  }
+  if (!parsed.hostname) {
+    return 'Endpoint is missing a hostname.';
+  }
+  if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+    return null; // allow localhost for dev
+  }
+  return null;
+}
+
 export interface Manifest {
   id: string;
   name: { short: string; full?: string };

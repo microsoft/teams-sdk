@@ -8,7 +8,7 @@ import { CliError } from '../../../utils/errors.js';
 import { isAutoConfirm } from '../../../utils/interactive.js';
 import { logger } from '../../../utils/logger.js';
 import { createSilentSpinner } from '../../../utils/spinner.js';
-import { bumpPatchVersion, compareVersions } from '../../../utils/version.js';
+import { bumpPatchVersion, compareVersions, stableStringify } from '../../../utils/version.js';
 
 export interface UploadResult {
   version?: string;
@@ -134,12 +134,6 @@ export async function uploadManifestFromFile(
           // Same version — bump if content actually changed
           const { version: _sv, ...serverCopy } = serverManifest;
           const { version: _lv, ...localCopy } = manifest;
-          const stableStringify = (obj: unknown) =>
-            JSON.stringify(obj, (_key, value) =>
-              value && typeof value === 'object' && !Array.isArray(value)
-                ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
-                : value
-            );
           const contentChanged = stableStringify(serverCopy) !== stableStringify(localCopy);
 
           if (contentChanged) {
