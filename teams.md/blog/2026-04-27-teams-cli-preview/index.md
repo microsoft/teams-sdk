@@ -115,11 +115,6 @@ The migration runs in stages:
 
 If any stage fails, it rolls back automatically. Your client ID and tenant ID stay the same. Users don't see a thing.
 
-:::note Screenshot needed
-**File:** `screenshot-bot-migrate.png`
-**Show:** Terminal output of `teams app bot migrate` running through the validation, dry-run, and swap stages.
-:::
-
 ## Run it interactively, or script it
 
 `teams app` with no arguments drops you into an interactive picker with arrow-key navigation. Useful when you don't remember an app ID, or you're exploring what's been registered to your tenant.
