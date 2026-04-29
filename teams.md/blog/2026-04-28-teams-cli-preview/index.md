@@ -1,6 +1,6 @@
 ---
 slug: teams-cli-preview
-title: "Teams CLI v3 Preview: Skip the Setup, Ship the Agent"
+title: "From Prompt to Production: Teams Agent Setup, Simplified"
 date: 2026-04-28
 authors:
   - name: Aamir Jawaid
@@ -16,24 +16,22 @@ authors:
     url: https://github.com/umangsehgal
     image_url: https://github.com/umangsehgal.png
 tags: [teams-sdk, cli, preview, announcement, skills]
-description: The Teams CLI v3 Preview takes the pain out of getting your agent into Teams. One command to register, an installation link to deploy, and an agent skill to let your coding agent do it for you.
+description: Introducing the teams-dev agent skill and the Teams CLI v3 Preview for registering and building Teams agents.
 ---
 
 You want to build a Teams agent. Maybe it answers customer questions from a knowledge base. Maybe it runs your team's standups. The interesting part is the logic, the thing the agent actually *does*.
 
-But before you write a single line of that logic, you have to register it with Teams. That takes a number of steps. That's why we have updated the [Teams CLI](/cli/) in this latest iteration, along with a [`teams-dev` agent skill](/developer-tools/agent-skills) that lets your coding agent handle it too.
+But before you write a single line of that logic, you have to register it with Teams. That takes a number of steps.
 
 <!-- truncate -->
 
 ## How It Works Today
 
-Getting an agent into Teams requires configuring an identity, generating credentials, authoring a manifest, and wiring it all together. The process spans multiple surfaces:
+Getting an agent into Teams requires configuring an identity, generating credentials, authoring a manifest, and wiring it all together. These steps span the Azure portal, Developer Portal, and your editor. Each one is straightforward on its own, but the context-switching between them adds up.
 
 <div style={{textAlign: 'center'}}>
 <img src={require('./setup-steps.png').default} alt="The 9 steps required to register a Teams agent today" style={{maxHeight: '400px'}} />
 </div>
-
-These steps span the Azure portal, Developer Portal, and your editor. Each one is straightforward on its own, but the context-switching between them adds up.
 
 ## Let Your Coding Agent Handle It
 
