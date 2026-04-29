@@ -9,6 +9,13 @@ suppressLanguageIncludeWarning: true
 
 # Build an agent using Microsoft Agent Framework
 
+This guide walks through building a Teams agent with [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/) (MAF) — Microsoft's open-source SDK for AI agents.
+MAF gives you typed primitives — `Agent`, `Tool`, `AgentSession`, `FunctionMiddleware` — that wrap the underlying model API, the tool-dispatch loop, and conversation history into composable pieces, so you don't hand-roll chat completions or thread tool calls yourself.
+It works against multiple model backends (OpenAI, Azure OpenAI, and others) and scales from a single chat agent up to coordinated multi-agent workflows.
+In a Teams app, MAF runs the agent loop (model calls, tool invocations, and per-conversation memory) while the Teams SDK handles activity routing, streaming, and Teams-native affordances like Adaptive Cards and feedback controls.
+
+### Defining the agent 
+
 An agent is composed of three core elements: a **client** (model backend), **instructions** (system prompt), and **tools** (capabilities beyond text generation). A minimal setup starts with just a chat-enabled agent:
 
 ```python
@@ -64,15 +71,14 @@ mcp_tools = [
 
 agent = Agent(
     client=client,
-    instructions="You are a helpful Teams assistant.",
+    instructions="You are a helpful Teams assistant with access to local tools and remote MCP servers..",
     tools=[send_welcome_card, *mcp_tools],
 )
 ```
 
 ## Running the agent in Teams
 
-Integrate with Teams by forwarding incoming messages to the agent runtime
-and streaming the response back to the chat interface chunk by chunk.
+Integrate with Teams by forwarding incoming messages to the agent runtime and streaming the response back to the chat interface chunk by chunk.
 ```python
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
@@ -111,17 +117,40 @@ A common use case is grounding responses with citations — extracting reference
 from agent_framework import FunctionMiddleware
 
 class CitationMiddleware(FunctionMiddleware):
+    citations: dict[str, Any]
+
     async def process(self, context, call_next):
+        # Run the wrapped tool first, then post-process its result.
         await call_next()
 
-        # Parse tool output
         data = parse_json(context.result)
 
-        # Extract and attach citations
         for item in data["results"]:
-            item["citation"] = { "position": pos, "url": url, "title": item.get("title", ""), "snippet": (item.get("content") or "")[:160], }
+            pos = len(self.citations) + 1
+            url = item.get("contentUrl") or item.get("link")
+            snippet = item.get("content") or item.get("description")
+            # setdefault dedupes by URL — the same source returned by multiple
+            # tool calls keeps a single, stable position.
+            entry = self.citations.setdefault(url,{ "position": pos, 
+                                "url": url,
+                                "title": item.get("title", ""),
+                                "snippet": snippet[:160],
+                                })
+            # Attach the citation back onto the result so the model sees it
+            # alongside the content and can reference it inline.
+            item["citation"] = entry
 
         context.result = serialize_json(data)
+
+
+tool_logger = AgentMiddleware()
+agent = Agent(
+    client=client,
+    instructions="""You are a helpful Teams assistant with access to local tools and remote MCP servers.
+    When you use information from a search tool, cite your sources inline using the "citation" value """,
+    tools=[send_welcome_card, *mcp_tools],
+    middleware=[tool_logger],
+)
 ```
 
 For Teams-specific enhancements — continue to [Enhancing the Teams Experience using Teams SDK](./teams-enhancements).
