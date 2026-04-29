@@ -1,6 +1,6 @@
 import React from 'react';
 import { useThemeConfig } from '@docusaurus/theme-common';
-import { splitNavbarItems, useNavbarMobileSidebar } from '@docusaurus/theme-common/internal';
+import { splitNavbarItems, useNavbarMobileSidebar, useWindowSize } from '@docusaurus/theme-common/internal';
 import NavbarItem from '@theme/NavbarItem';
 import NavbarColorModeToggle from '@theme/Navbar/ColorModeToggle';
 import NavbarLogo from '@theme/Navbar/Logo';
@@ -37,6 +37,13 @@ export default function NavbarContent(): React.JSX.Element {
   const mobileSidebar = useNavbarMobileSidebar();
   const items = useNavbarItems();
   const [leftItems, rightItems] = splitNavbarItems(items);
+  const windowSize = useWindowSize();
+  const isMobile = windowSize === 'mobile';
+
+  // On mobile, hide CLI from the top navbar — it lives in the hamburger menu instead
+  const visibleLeftItems = isMobile
+    ? leftItems.filter((item: any) => item.to !== '/cli/')
+    : leftItems;
 
   return (
     <NavbarContentLayout
@@ -45,7 +52,7 @@ export default function NavbarContent(): React.JSX.Element {
           {!mobileSidebar.disabled && <NavbarMobileSidebarToggle />}
           <NavbarLogo />
           <LanguageDropdown className="navbar__item" />
-          <NavbarItems items={leftItems} />
+          <NavbarItems items={visibleLeftItems} />
         </>
       }
       right={

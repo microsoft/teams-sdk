@@ -79,7 +79,7 @@ The user sees no login prompt — it's completely silent.
 If your bot is Teams-managed, [migrate it first](../commands/app/bot-migrate):
 
 ```bash
-teams app bot migrate <appId> --resource-group my-rg
+teams app bot migrate <appId> --subscription <id> --resource-group my-rg
 ```
 
 ## Setting Up SSO

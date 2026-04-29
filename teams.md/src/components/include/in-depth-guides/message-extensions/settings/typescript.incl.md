@@ -90,8 +90,7 @@ app.on('message.ext.query-settings-url', async ({ activity }) => {
           {
             type: 'openUrl',
             title: 'Settings',
-            // ensure the bot endpoint is set in the environment variables
-            // process.env.BOT_ENDPOINT is not populated by default in the Teams Toolkit setup.
+            // ensure BOT_ENDPOINT is set in your .env (Teams CLI does not populate it by default).
             value: `${process.env.BOT_ENDPOINT}/tabs/settings?selectedOption=${escapedSelectedOption}`,
           },
         ],

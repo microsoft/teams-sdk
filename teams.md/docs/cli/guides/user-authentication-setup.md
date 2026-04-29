@@ -13,7 +13,7 @@ Before setting up SSO or OAuth, ensure your bot meets these requirements:
 Your bot must be **Azure-managed** (not Teams-managed). If your bot is Teams-managed, migrate it to Azure first using:
 
 ```bash
-teams app bot migrate <appId> --resource-group <your-resource-group>
+teams app bot migrate <appId> --subscription <id> --resource-group <your-resource-group>
 ```
 
 ### Required Tools and Authentication

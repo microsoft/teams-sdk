@@ -5,7 +5,7 @@
 <!-- create-command -->
 
 ```sh
-npx @microsoft/teams.cli@latest new typescript quote-agent --template echo
+teams project new typescript quote-agent --template echo
 ```
 
 <!-- create-explanation -->

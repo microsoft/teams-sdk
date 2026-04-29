@@ -3,7 +3,7 @@
 Use your terminal to run the following command:
 
 ```sh
-npx @microsoft/teams.cli@latest new python oauth-app --template graph
+teams project new python oauth-app --template graph
 ```
 
 This command:
