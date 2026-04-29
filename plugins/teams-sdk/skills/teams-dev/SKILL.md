@@ -1,7 +1,7 @@
 ---
 name: teams-dev
-description: Create, integrate, and manage Microsoft Teams bots using the Teams CLI and Teams SDK. Use this skill whenever a user wants to build a Teams bot, add Teams to an existing app or server, set up bot infrastructure (registration, credentials), configure SSO, or troubleshoot Teams bot issues.
-teams_cli_version: 2.1.0-preview.*
+description: Use this skill whenever the user mentions Microsoft Teams in a development context — whether they're building, integrating, configuring, debugging, or just asking questions. Covers bots, message extensions, embedded web apps, Adaptive Cards, dialogs, SSO, infrastructure, the Teams CLI/SDK, and general Teams platform queries. If the word "Teams" appears, err on the side of invoking this skill.
+teams_cli_version: 3.0.0-preview.*
 ---
 
 # Teams Bot Development & Infrastructure
