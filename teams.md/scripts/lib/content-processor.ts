@@ -166,6 +166,9 @@ async function parseMarkdownContent(
         content = content.replace(/<FileCodeBlock[\s\S]*?\/>/g, '[Code example removed for brevity]');
     }
 
+    // Flatten <Tabs>/<TabItem> components into labeled sections before stripping JSX
+    content = processTabComponents(content);
+
     // Clean up MDX-specific syntax while preserving markdown
     content = cleanMdxSyntax(content);
 
@@ -228,6 +231,37 @@ async function loadCodeFile(src: string, baseDir: string): Promise<string> {
     } else {
         throw new Error(`File not found: ${filePath}`);
     }
+}
+
+/**
+ * Flattens <Tabs>/<TabItem> components into labeled markdown sections.
+ * Each TabItem's content is preserved with its label as a bold heading,
+ * so the content survives the JSX stripping in cleanMdxSyntax().
+ * @param content - Content containing Tabs/TabItem components
+ * @returns Content with Tabs replaced by labeled sections
+ */
+function processTabComponents(content: string): string {
+    // Match entire <Tabs>...</Tabs> blocks (non-greedy to handle multiple)
+    return content.replace(/<Tabs[^>]*>[\s\S]*?<\/Tabs>/g, (tabsBlock) => {
+        const sections: string[] = [];
+
+        // Extract each <TabItem ...>...</TabItem>
+        const tabItemRegex = /<TabItem\s+([^>]*)>([\s\S]*?)<\/TabItem>/g;
+        let match;
+        while ((match = tabItemRegex.exec(tabsBlock)) !== null) {
+            const attrs = match[1];
+            const innerContent = match[2].trim();
+
+            // Get label from "label" attr first, fall back to "value" attr
+            const labelMatch = attrs.match(/label=["']([^"']+)["']/);
+            const valueMatch = attrs.match(/value=["']([^"']+)["']/);
+            const label = labelMatch?.[1] ?? valueMatch?.[1] ?? 'Tab';
+
+            sections.push(`**${label}:**\n\n${innerContent}`);
+        }
+
+        return sections.join('\n\n');
+    });
 }
 
 /**

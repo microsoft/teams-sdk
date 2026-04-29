@@ -91,7 +91,7 @@ export default function BlogPostRows({ items }: Props) {
                                         )}
                                         {authorNames.length > 0 && (
                                             <div className="sdev-blog__panel-section">
-                                                <span className="sdev-blog__panel-label">AUTHOR :</span>
+                                                <span className="sdev-blog__panel-label">{authorNames.length > 1 ? 'AUTHORS' : 'AUTHOR'} :</span>
                                                 <span className="sdev-blog__panel-author">{authorNames.join(', ')}</span>
                                             </div>
                                         )}
