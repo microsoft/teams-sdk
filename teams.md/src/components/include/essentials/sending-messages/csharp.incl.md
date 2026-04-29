@@ -99,12 +99,12 @@ In .NET, reaction APIs are marked with `[Experimental("ExperimentalTeamsReaction
 <!-- threading-reactive-example -->
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
     // Send in the same thread, no quote
-    await context.Send("Acknowledged");
+    await context.Send("Acknowledged", cancellationToken);
 
     // Send in the same thread with a visual quote of the inbound message
-    await context.Reply("Got it!");
+    await context.Reply("Got it!", cancellationToken);
 });
 ```
