@@ -50,7 +50,7 @@ Set the following environment variable:
 <!-- availability-note -->
 
 :::note
-Environment-file (`.env`) configuration is not yet supported for C#. Use `appsettings.json` or programmatic configuration as shown above.
+C# uses `appsettings.json` and process environment variables via `IConfiguration` (the standard ASP.NET Core pattern). `.env` files are not used.
 :::
 
 <!-- sovereign-cloud-overrides -->
