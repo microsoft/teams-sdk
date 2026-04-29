@@ -35,9 +35,21 @@ Getting an agent into Teams requires configuring an identity, generating credent
 
 These steps span the Azure portal, Developer Portal, and your editor. Each one is straightforward on its own, but the context-switching between them adds up.
 
-## The Teams CLI Preview
+## Let Your Coding Agent Handle It
 
-We updated our CLI (v3 preview) to make this simpler. Install it and log in:
+The [`teams-dev` agent skill](/developer-tools/agent-skills) works with AI coding agents like Copilot, Claude Code, and Cursor. Instead of learning the registration steps yourself, tell your coding agent:
+
+- *"Help me build a Teams agent that answers FAQs"*
+- *"Get my agent running in Teams"*
+- *"My agent isn't loading in Teams, can you help?"*
+
+![The teams-dev agent skill in action](./agent-skill.gif)
+
+The skill uses the CLI under the hood to handle the full infrastructure workflow, from login to a working agent in Teams, and troubleshooting when something breaks. Beyond infrastructure, it also helps your coding agent write application logic following best practices from the Teams SDK documentation.
+
+## Under the Hood: The Teams CLI
+
+For developers who want direct control, the skill is powered by the next iteration of our CLI. Install it and log in:
 
 ```bash
 npm install -g @microsoft/teams.cli@preview
@@ -64,21 +76,20 @@ Traditionally, getting an agent into Teams means building an app package, managi
 
 The CLI also includes a `teams app doctor` command that checks your agent's registration, credentials, endpoint, and manifest so when something breaks, you know exactly what to fix.
 
-## Let Your Coding Agent Handle It
-
-The CLI also ships with a [`teams-dev` agent skill](/developer-tools/agent-skills) for AI coding agents like Copilot, Claude Code, and Cursor. Instead of running commands yourself, tell your assistant:
-
-- *"Help me build a Teams agent that answers FAQs"*
-- *"Get my agent running in Teams"*
-- *"My agent isn't loading in Teams, can you help?"*
-
-![The teams-dev agent skill in action](./agent-skill.gif)
-
-The skill uses the CLI under the hood to handle the full infrastructure workflow, from login to a working agent in Teams, and troubleshooting when something breaks. Beyond infrastructure, it also helps your coding agent write application logic following best practices from the Teams SDK documentation.
-
 For CI pipelines and custom tooling, every CLI command supports `--json` output for programmatic consumption.
 
 ## Get Started
+
+Install the `teams-dev` agent skill (Copilot, Claude Code, Cursor):
+
+```
+/plugin marketplace add microsoft/teams-sdk
+/plugin install teams-sdk@teams-skills
+```
+
+See the [agent skills guide](/developer-tools/agent-skills) for VS Code and other editors.
+
+Install the CLI:
 
 ```bash
 npm install -g @microsoft/teams.cli@preview
