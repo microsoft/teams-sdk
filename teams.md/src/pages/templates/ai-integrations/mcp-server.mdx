@@ -7,9 +7,6 @@ languages: ['python']
 suppressLanguageIncludeWarning: true
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Exposing Teams to AI Agents (MCP)
 
 This guide turns your Teams bot into an [MCP](https://modelcontextprotocol.io/introduction) server, enabling external AI agents to interact with users in Teams.
@@ -63,10 +60,7 @@ Because MCP tools are expected to return quickly, this pattern separates the int
 
 The `ask` tool sends the question and returns a `request_id`, which can later be used to retrieve the user’s reply via `get_reply`.
 
-
-<Tabs>
-<TabItem value="tools" label="MCP tools" default>
-
+**The MCP tools**
 ```python
 @mcp.tool()
 async def ask(user_id: str, question: str) -> dict:
@@ -74,6 +68,7 @@ async def ask(user_id: str, question: str) -> dict:
     conversation_id = await _get_or_create_conversation(user_id)
     request_id = str(uuid.uuid4())
     await app.send(conversation_id=conversation_id, activity=question)
+    # Update state with pending ask.
     pending_asks[request_id] = PendingAsk(user_id=user_id)
     return {"request_id": request_id}
 
@@ -86,8 +81,7 @@ async def get_reply(request_id: str) -> dict:
     return {"status": entry.status, "reply": entry.reply}
 ```
 
-</TabItem>
-<TabItem value="handler" label="Teams handler">
+**The Teams handler**
 
 User responses are captured in the bot’s message handler.
 When a message arrives from a user with a pending request, it is treated as the answer to the outstanding question.
@@ -96,17 +90,17 @@ When a message arrives from a user with a pending request, it is treated as the 
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     user_id = ctx.activity.from_.id
     if ctx.activity.conversation.conversation_type == "personal":
+        # Cache the personal conversation_id so MCP tools can DM this user later.
         personal_conversations[user_id] = ctx.activity.conversation.id
 
+    # If this user has a pending ask, treat their next message as the answer.
     request_id = user_pending_ask.pop(user_id, None)
     if request_id and request_id in pending_asks:
+        # Update state of pending ask with the answer.
         pending_asks[request_id].reply = ctx.activity.text or ""
         pending_asks[request_id].status = "answered"
         await ctx.reply("Got it, thank you!")
 ```
-
-</TabItem>
-</Tabs>
 
 ## Requesting an approval via Adaptive Card
 
@@ -114,9 +108,8 @@ For decisions that require a clear outcome — such as approving a deployment or
 Instead, Adaptive Cards can be used to present structured Approve / Reject actions directly in the conversation.
 
 This pattern mirrors the request–response flow used in `ask`, but replaces text input with a single explicit user action captured through a card interaction.
-<Tabs>
-<TabItem value="tools" label="MCP tools" default>
 
+**The MCP tools**
 ```python
 from microsoft_teams.cards import AdaptiveCard, ExecuteAction, SubmitData, TextBlock
 
@@ -127,6 +120,7 @@ async def request_approval(user_id: str, title: str, description: str) -> dict:
     """Send an Approve/Reject card. Returns an approval_id — poll get_approval for the decision."""
     conversation_id = await _get_or_create_conversation(user_id)
     approval_id = str(uuid.uuid4())
+    # Create adaptive card to send to the user asking for approval/confirmation.
     card = AdaptiveCard(
         body=[
             TextBlock(text=title, weight="Bolder", size="Large", wrap=True),
@@ -142,6 +136,7 @@ async def request_approval(user_id: str, title: str, description: str) -> dict:
         ],
     )
     await app.send(conversation_id=conversation_id, activity=card)
+    # Update state with pending approval.
     approvals[approval_id] = "pending"
     return {"approval_id": approval_id}
 
@@ -153,8 +148,7 @@ async def get_approval(approval_id: str) -> dict:
     return {"approval_id": approval_id, "status": approvals[approval_id]}
 ```
 
-</TabItem>
-<TabItem value="handler" label="Card-action handler">
+**The card-action handler**
 
 User actions from Adaptive Cards are delivered as invoke activities. The handler updates shared state based on the selected action.
 ```python
@@ -166,19 +160,19 @@ from microsoft_teams.api import (
 
 @app.on_card_action_execute("approval_response")
 async def handle_approval(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -> AdaptiveCardInvokeResponse:
+    # The SubmitData payload set on the card carries the approval_id back here.
     data = ctx.activity.value.action.data
     approval_id, decision = data.get("approval_id"), data.get("decision")
+    # Update pending approval with decision.
     if approval_id in approvals and decision in ("approved", "rejected"):
         approvals[approval_id] = decision
+    # Send invoke response back to Teams.
     return AdaptiveCardActionMessageResponse(
         status_code=200,
         type="application/vnd.microsoft.activity.message",
         value="Response recorded",
     )
 ```
-
-</TabItem>
-</Tabs>
 
 ## Wiring the MCP server into your Teams app
 
