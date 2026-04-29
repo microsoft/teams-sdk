@@ -35,7 +35,9 @@ When sending targeted messages proactively, you must explicitly specify the reci
 
 ## Proactive Threading
 
-To send a message to a thread outside of a handler, use <LanguageInclude section="app-reply-method-name" /> with the conversation ID and thread root message ID. The SDK constructs the threaded conversation ID for you.
+Threads are only rendered visibly in Teams channels. In 1:1 chats, group chats, and meetings, messages appear flat; passing a thread root message ID has no visible effect in those scopes.
+
+To proactively send a message as a reply to a thread, use <LanguageInclude section="app-reply-method-name" /> with the conversation ID and thread root message ID. The SDK constructs the threaded conversation ID for you.
 
 <LanguageInclude section="threading-proactive-example" />
 
