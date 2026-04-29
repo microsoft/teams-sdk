@@ -17,7 +17,7 @@ authors:
     image_url: https://github.com/umangsehgal.png
 tags: [teams-sdk, cli, preview, announcement, skills]
 description: Introducing the teams-dev agent skill and the Teams CLI v3 Preview for registering and building Teams agents.
-image: ./hero.png
+image: /img/blog-teams-cli-preview-hero.png
 ---
 
 You want to build a Teams agent. Maybe it answers customer questions from a knowledge base. Maybe it runs your team's standups. The interesting part is the logic, the thing the agent actually *does*.
