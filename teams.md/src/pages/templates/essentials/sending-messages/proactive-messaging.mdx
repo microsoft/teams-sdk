@@ -39,12 +39,12 @@ To send a message to a thread outside of a handler, use <LanguageInclude section
 
 <LanguageInclude section="threading-proactive-example" />
 
-You can also pass just a conversation ID to <LanguageInclude section="app-reply-method-name" /> for flat contexts (1:1, group chat, meetings).
+You can also pass just a conversation ID to <LanguageInclude section="app-reply-method-name" /> for flat contexts.
 
 For reactive threading (within a handler), see [Threading](./#threading).
 
 ### Thread ID Helper
 
-For advanced scenarios, the <LanguageInclude section="to-thread-id-method-name" /> helper constructs the threaded conversation ID directly. Use it with <LanguageInclude section="app-send-method-name" /> when you need full control. Note that <LanguageInclude section="to-thread-id-method-name" /> is only valid for conversations that support threading (channels and some 1:1 chats) — group chats and meetings do not support threading at this time.
+For advanced scenarios, the <LanguageInclude section="to-thread-id-method-name" /> helper constructs the threaded conversation ID directly. Use it with <LanguageInclude section="app-send-method-name" /> when you need full control.
 
 <LanguageInclude section="threading-helper-example" />
