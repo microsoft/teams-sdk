@@ -50,7 +50,7 @@ Set the following environment variable:
 <!-- availability-note -->
 
 :::note
-Support for C# is coming soon.
+Environment-file (`.env`) configuration is not yet supported for C#. Use `appsettings.json` or programmatic configuration as shown above.
 :::
 
 <!-- sovereign-cloud-overrides -->
@@ -66,4 +66,4 @@ For scenarios requiring customization of individual cloud endpoints — such as 
 }
 ```
 
-Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `ChannelService`, `OAuthRedirectUrl`
+Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `GraphScope`
