@@ -48,12 +48,6 @@ Just like when building cards, if you prefer to work with raw JSON, you can do j
 
 ## Working with Input Values
 
-### Using SubmitData
-
-The SDK provides a `SubmitData` helper that sets the routing key for your action. This is the recommended way to wire up actions to specific handlers:
-
-<LanguageInclude section="submit-data-example" />
-
 ### Associating data with the cards
 
 Sometimes you want to send a card and have it be associated with some data. Set the `data` value to be sent back to the client so you can associate it with a particular entity.
@@ -66,11 +60,17 @@ Input Controls provide ways for you to validate. More details can be found on th
 
 <LanguageInclude section="input-validation-example" />
 
-## Server Handlers
+## Routing & Handlers
+
+### Using SubmitData
+
+The SDK provides a `SubmitData` helper that sets the routing key for your action. This is the recommended way to wire up actions to specific handlers:
+
+<LanguageInclude section="submit-data-example" />
 
 ### Action-Specific Handlers
 
-The recommended approach is to register handlers for specific actions. When you use `SubmitData` to set the action name on the card, you can route directly to a handler for that action:
+Register handlers for specific actions. When you use `SubmitData` to set the action name on the card, the SDK routes directly to the matching handler:
 
 <LanguageInclude section="sub-route-handler-example" />
 
