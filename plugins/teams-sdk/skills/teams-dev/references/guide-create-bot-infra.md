@@ -120,6 +120,8 @@ teams app create --name "YourBotName" --endpoint "https://your-endpoint/api/mess
 
 For C# projects, use `--env appsettings.json` instead of `--env .env`. This writes credentials under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
 
+ALWAYS use the `--env` flag on app creation to prevent client secrets from leaking into the agent session.
+
 **Expected:** Command completes successfully, writes credentials to the specified file, and returns JSON output.
 
 ### Step 2: Parse JSON Output
