@@ -38,25 +38,6 @@ json = {
 }
 ```
 
-<!-- submit-data-example -->
-
-```python
-from microsoft_teams.cards import ExecuteAction, SubmitData
-# ...
-
-action = ExecuteAction(title="Submit Feedback")
-    .with_data(SubmitData("submit_feedback"))
-    .with_associated_inputs("auto")
-```
-
-`SubmitData` sets the `action` key in the data payload, which the SDK uses to route to the correct handler. You can also pass extra data:
-
-```python
-action = ExecuteAction(title="Save")
-    .with_data(SubmitData("save_profile", entity_id="12345"))
-    .with_associated_inputs("auto")
-```
-
 <!-- input-association-example -->
 
 ```python
@@ -121,36 +102,6 @@ def create_profile_card_input_validation():
     )
     return card
 ```
-
-<!-- sub-route-handler-example -->
-
-```python
-from microsoft_teams.api import AdaptiveCardInvokeActivity, AdaptiveCardActionMessageResponse, AdaptiveCardInvokeResponse
-from microsoft_teams.apps import ActivityContext
-# ...
-
-@app.on_card_action("submit_feedback")
-async def handle_feedback(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -> AdaptiveCardInvokeResponse:
-    data = ctx.activity.value.action.data
-    await ctx.send(f"Feedback received: {data.get('feedback')}")
-    return AdaptiveCardActionMessageResponse(
-        status_code=200,
-        type="application/vnd.microsoft.activity.message",
-        value="Feedback submitted!",
-    )
-
-@app.on_card_action("save_profile")
-async def handle_save_profile(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -> AdaptiveCardInvokeResponse:
-    data = ctx.activity.value.action.data
-    await ctx.send(f"Profile saved! Name: {data.get('name')}, Email: {data.get('email')}")
-    return AdaptiveCardActionMessageResponse(
-        status_code=200,
-        type="application/vnd.microsoft.activity.message",
-        value="Profile saved!",
-    )
-```
-
-The route `@app.on_card_action("<name>")` matches when the `action` field in the card's data equals `<name>`. This is automatically set when you use `SubmitData`.
 
 <!-- server-handler-example -->
 

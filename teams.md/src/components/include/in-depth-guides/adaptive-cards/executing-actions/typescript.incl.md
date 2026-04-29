@@ -40,25 +40,6 @@ import { IOpenUrlAction } from '@microsoft/teams.cards';
 } as const satisfies IOpenUrlAction
 ```
 
-<!-- submit-data-example -->
-
-```typescript
-import { ExecuteAction, SubmitData } from '@microsoft/teams.cards';
-// ...
-
-new ExecuteAction({ title: 'Submit Feedback' })
-  .withData(new SubmitData('submit_feedback'))
-  .withAssociatedInputs('auto'),
-```
-
-`SubmitData` sets the `action` key in the data payload, which the SDK uses to route to the correct handler. You can also pass extra data:
-
-```typescript
-new ExecuteAction({ title: 'Save' })
-  .withData(new SubmitData('save_profile', { entityId: '12345' }))
-  .withAssociatedInputs('auto'),
-```
-
 <!-- input-association-example -->
 
 ```typescript
@@ -140,36 +121,6 @@ function createProfileCardInputValidation() {
   return card;
 }
 ```
-
-<!-- sub-route-handler-example -->
-
-```typescript
-import { AdaptiveCardActionMessageResponse } from '@microsoft/teams.api';
-import { App } from '@microsoft/teams.apps';
-// ...
-
-app.on('card.action.submit_feedback', async ({ activity, send }) => {
-  const data = activity.value?.action?.data;
-  await send(`Feedback received: ${data.feedback}`);
-  return {
-    statusCode: 200,
-    type: 'application/vnd.microsoft.activity.message',
-    value: 'Feedback submitted!',
-  } satisfies AdaptiveCardActionMessageResponse;
-});
-
-app.on('card.action.save_profile', async ({ activity, send }) => {
-  const data = activity.value?.action?.data;
-  await send(`Profile saved! Name: ${data.name}, Email: ${data.email}`);
-  return {
-    statusCode: 200,
-    type: 'application/vnd.microsoft.activity.message',
-    value: 'Profile saved!',
-  } satisfies AdaptiveCardActionMessageResponse;
-});
-```
-
-The route `card.action.<name>` matches when the `action` field in the card's data equals `<name>`. This is automatically set when you use `SubmitData`.
 
 <!-- server-handler-example -->
 
