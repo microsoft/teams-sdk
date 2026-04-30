@@ -192,7 +192,13 @@ private static AdaptiveCard CreateProfileCardWithValidation()
 }
 ```
 
-<!-- server-handler-example -->
+<!-- handlers-section -->
+
+## Server Handlers
+
+### Basic Structure
+
+Card actions arrive as `card.action` activities in your app. These give you access to the validated input values plus any `data` values you had configured to be sent back to you.
 
 ```csharp
 using System.Text.Json;
@@ -285,8 +291,6 @@ teams.OnAdaptiveCardAction(async (context, cancellationToken) =>
     return new ActionResponse.Message("Action processed successfully") { StatusCode = 200 };
 });
 ```
-
-<!-- data-typing-note -->
 
 :::note
 The `data` values come from JSON and need to be extracted using the helper method shown above to handle different JSON element types.

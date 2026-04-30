@@ -19,6 +19,10 @@ tags: [teams-sdk, cli, preview, announcement, skills]
 description: Introducing the teams-dev agent skill and the Teams CLI v3 Preview for registering and building Teams agents.
 ---
 
+:::info
+This post is also available on the [Microsoft 365 Developer Blog](https://devblogs.microsoft.com/microsoft365dev/from-prompt-to-production-teams-agent-setup-simplified/).
+:::
+
 You want to build a Teams agent. Maybe it answers customer questions from a knowledge base. Maybe it runs your team's standups. The interesting part is the logic, the thing the agent actually *does*.
 
 But before you write a single line of that logic, you have to register it with Teams. That takes a number of steps.

@@ -103,7 +103,68 @@ def create_profile_card_input_validation():
     return card
 ```
 
-<!-- server-handler-example -->
+<!-- handlers-section -->
+
+## Routing & Handlers
+
+### Using SubmitData
+
+The SDK provides a `SubmitData` helper that sets the routing key for your action. This is the recommended way to wire up actions to specific handlers:
+
+```python
+from microsoft_teams.cards import ExecuteAction, SubmitData
+# ...
+
+ExecuteAction(title="Submit Feedback") \
+    .with_data(SubmitData("submit_feedback")) \
+    .with_associated_inputs("auto")
+
+# You can also pass extra static data alongside the action name
+ExecuteAction(title="Save") \
+    .with_data(SubmitData("save_profile", {"entity_id": "12345"})) \
+    .with_associated_inputs("auto")
+```
+
+`SubmitData` sets a reserved `action` key in the card's data payload. When the user clicks the button, the SDK router reads this key to dispatch to the matching handler.
+
+### Action-Specific Handlers
+
+Register handlers for specific actions. When you use `SubmitData` to set the action name on the card, the SDK routes directly to the matching handler:
+
+```python
+from microsoft_teams.apps import App, ActivityContext
+from microsoft_teams.api import AdaptiveCardInvokeActivity, AdaptiveCardActionMessageResponse, AdaptiveCardInvokeResponse
+# ...
+
+# 'submit_feedback' matches the identifier passed to SubmitData('submit_feedback')
+@app.on_card_action_execute("submit_feedback")
+async def handle_submit_feedback(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -> AdaptiveCardInvokeResponse:
+    data = ctx.activity.value.action.data
+    await ctx.send(f"Feedback received: {data.get('feedback')}")
+    return AdaptiveCardActionMessageResponse(
+        status_code=200,
+        type="application/vnd.microsoft.activity.message",
+        value="Action processed successfully",
+    )
+
+@app.on_card_action_execute("save_profile")
+async def handle_save_profile(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -> AdaptiveCardInvokeResponse:
+    data = ctx.activity.value.action.data
+    await ctx.send(f"Profile saved!\nName: {data.get('name')}\nEmail: {data.get('email')}")
+    return AdaptiveCardActionMessageResponse(
+        status_code=200,
+        type="application/vnd.microsoft.activity.message",
+        value="Action processed successfully",
+    )
+```
+
+The decorator argument matches the value passed to `SubmitData`. Both the catch-all `@app.on_card_action` handler and the specific `@app.on_card_action_execute` handler will fire when a match is found.
+
+This is cleaner than a catch-all with a switch statement, and scales better as you add more actions.
+
+### Catch-All Handler
+
+If you need to handle all card actions in one place, you can use the catch-all handler:
 
 ```python
 from microsoft_teams.api import AdaptiveCardInvokeActivity, AdaptiveCardActionErrorResponse, AdaptiveCardActionMessageResponse, HttpError, InnerHttpError, AdaptiveCardInvokeResponse
@@ -157,8 +218,6 @@ async def handle_card_action(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -
         value="Action processed successfully",
     )
 ```
-
-<!-- data-typing-note -->
 
 :::note
 The `data` values are accessible as a dictionary and can be accessed using `.get()` method for safe access.

@@ -15,6 +15,10 @@ tags: [teams-sdk, agents, langchain, azure-ai, byo-agent]
 description: Your agent is already built. Here's how to surface it in Teams in under 50 lines, without rewriting anything.
 ---
 
+:::info
+This post is also available on the [Microsoft 365 Developer Blog](https://devblogs.microsoft.com/microsoft365dev/from-prompt-to-production-teams-agent-setup-simplified/).
+:::
+
 You've already built the agent. It lives somewhere: a LangChain chain, an Azure Foundry deployment, a Slack bot. Your users live in Teams. Teams is where most enterprise work happens: decisions get made, customers get answered, and projects move forward there. Getting your agent into that context, before you build anything Teams-specific, is already worth doing.
 
 It comes down to one pattern in the Teams TypeScript SDK: the **HTTP server adapter**. You point it at your HTTP server, it registers a messaging endpoint, and your existing server keeps running as-is. The scenarios below cover three different starting points: a Slack bot, a LangChain chain, and an Azure Foundry agent.

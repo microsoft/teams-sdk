@@ -183,8 +183,21 @@ function processLanguageIncludeTags(
           const fileContent = readFileUtf8Normalized(inclPath);
           const sectionContent = extractSection(fileContent, sectionName);
 
-          if (sectionContent === null || sectionContent === '' || sectionContent === 'EMPTY_SECTION') {
-            // Skip missing sections (null), intentional N/A content (empty string), or empty sections
+          if (sectionContent === '' ) {
+            // Intentional N/A content - skip without tracking as a gap
+            return '';
+          }
+
+          if (sectionContent === null || sectionContent === 'EMPTY_SECTION') {
+            // Track missing/empty sections as content gaps
+            const gapKey = normalizePath(path.relative(TEMPLATES_DIR, templatePath));
+            if (!contentGapsManifest[gapKey]) {
+              contentGapsManifest[gapKey] = {};
+            }
+            if (!contentGapsManifest[gapKey][sectionName]) {
+              contentGapsManifest[gapKey][sectionName] = [];
+            }
+            contentGapsManifest[gapKey][sectionName].push(targetLanguage);
             return '';
           }
 

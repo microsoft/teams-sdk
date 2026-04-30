@@ -57,6 +57,8 @@ Env vars override options passed to the constructor. If you do not pass a logger
 
 <!-- child-logger -->
 
+## Child Loggers
+
 Call `log.child('scope')` on an existing logger to get a scoped logger. Its name is `parent/scope`, and pattern/level are inherited.
 
 ```typescript
