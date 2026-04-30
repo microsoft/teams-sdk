@@ -6,7 +6,7 @@ slug: /
 # Teams CLI
 
 :::warning[Preview]
-The Teams CLI v2.1 is currently in **preview**. Commands, options, and behavior may change between releases.
+The Teams CLI v3 is currently in **preview**. Commands, options, and behavior may change between releases.
 :::
 
 CLI for managing Microsoft Teams apps. Create, manage, and configure Teams apps from the command line.

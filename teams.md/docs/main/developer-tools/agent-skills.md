@@ -5,7 +5,7 @@ summary: Give AI coding assistants (Claude Code, Cursor, GitHub Copilot) relevan
 
 # Agent Skills
 
-[Agent Skills](https://agentskills.io/what-are-skills) give AI coding assistants relevant context for specific development tasks. The `teams-dev` skill is the go-to agent skill for Teams bot development. It gives AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) relevant context to assist in developing Teams bots and use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
+[Agent Skills](https://aka.ms/teams-agent-skills) give AI coding assistants relevant context for specific development tasks. The `teams-dev` skill is the go-to agent skill for Teams bot development. It gives AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) relevant context to assist in developing Teams bots and use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
 
 :::note Alternative: Use llms.txt directly
 If you'd rather not install a skill, you can provide the same context by pointing your AI tool to the llms.txt URL:

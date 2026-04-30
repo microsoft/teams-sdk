@@ -5,6 +5,8 @@ summary: Configure app authentication in your Teams SDK application using client
 languages: ['typescript','python','csharp']
 ---
 
+import LangLink from '@site/src/components/LangLink';
+
 # App Authentication
 
 Your application needs to authenticate to send messages to Teams as your bot. Authentication allows your app service to certify that it is _allowed_ to send messages as your Azure Bot.
@@ -113,6 +115,18 @@ MANAGED_IDENTITY_CLIENT_ID=system
 # Do not set CLIENT_SECRET
 TENANT_ID=your-tenant-id
 ```
+
+## Sovereign Cloud
+
+If your bot runs in a US Government (GCC-High, DoD) or China (21Vianet) cloud environment, add the `CLOUD` environment variable to your configuration:
+
+```env
+CLOUD=USGov
+```
+
+Valid values: `Public` (default), `USGov`, `USGovDoD`, `China`
+
+The SDK automatically configures all authentication endpoints for the specified cloud. No other changes are needed. See the <LangLink to="essentials/app-configuration/sovereign-cloud">Sovereign Cloud</LangLink> guide for details and programmatic configuration options.
 
 ## Troubleshooting
 
