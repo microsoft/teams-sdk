@@ -3,10 +3,10 @@ contact_links:
   - name: File an issue for TypeScript SDK
     url: https://github.com/microsoft/teams.ts/issues/new/choose
     about: Report a bug or issue specific to the TypeScript SDK
-  - name: File an Issue for .NET SDK
-    url: https://github.com/microsoft/teams.net/issues/new/choose
+  - name: File an issue for .NET SDK
+    url: https://github.com/microsoft/teams.net/issues
     about: Report a bug or issue specific to the .NET/C# SDK
-  - name: File an Issue for Python SDK
+  - name: File an issue for Python SDK
     url: https://github.com/microsoft/teams.py/issues/new/choose
     about: Report a bug or issue specific to the Python SDK
   - name: General Question or Feature Request
