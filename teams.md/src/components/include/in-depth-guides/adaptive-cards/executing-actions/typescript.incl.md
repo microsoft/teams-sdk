@@ -176,9 +176,7 @@ app.on('card.action.save_profile', async ({ activity, send }) => {
 });
 ```
 
-The route name follows the pattern `card.action.<action-name>`, where `<action-name>` matches the value passed to `SubmitData`. Both the catch-all `card.action` handler and the specific sub-route handler will fire when a match is found.
-
-This is cleaner than a catch-all with a switch statement, and scales better as you add more actions.
+The route name follows the pattern `card.action.<action-name>`, where `<action-name>` matches the value passed to `SubmitData`. This is cleaner than a catch-all with a switch statement, and scales better as you add more actions.
 
 ### Catch-All Handler
 

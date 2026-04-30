@@ -183,7 +183,9 @@ function processLanguageIncludeTags(
           if (!contentGapsManifest[gapKey][sectionName]) {
             contentGapsManifest[gapKey][sectionName] = [];
           }
-          contentGapsManifest[gapKey][sectionName].push(targetLanguage);
+          if (!contentGapsManifest[gapKey][sectionName].includes(targetLanguage)) {
+            contentGapsManifest[gapKey][sectionName].push(targetLanguage);
+          }
           return '';
         }
 
@@ -205,7 +207,9 @@ function processLanguageIncludeTags(
             if (!contentGapsManifest[gapKey][sectionName]) {
               contentGapsManifest[gapKey][sectionName] = [];
             }
-            contentGapsManifest[gapKey][sectionName].push(targetLanguage);
+            if (!contentGapsManifest[gapKey][sectionName].includes(targetLanguage)) {
+              contentGapsManifest[gapKey][sectionName].push(targetLanguage);
+            }
             return '';
           }
 

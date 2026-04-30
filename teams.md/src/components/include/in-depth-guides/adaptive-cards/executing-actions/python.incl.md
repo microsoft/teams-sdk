@@ -158,9 +158,7 @@ async def handle_save_profile(ctx: ActivityContext[AdaptiveCardInvokeActivity]) 
     )
 ```
 
-The decorator argument matches the value passed to `SubmitData`. Both the catch-all `@app.on_card_action` handler and the specific `@app.on_card_action_execute` handler will fire when a match is found.
-
-This is cleaner than a catch-all with a switch statement, and scales better as you add more actions.
+The decorator argument matches the value passed to `SubmitData`. This is cleaner than a catch-all with a switch statement, and scales better as you add more actions.
 
 ### Catch-All Handler
 

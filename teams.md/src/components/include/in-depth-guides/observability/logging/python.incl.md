@@ -1,6 +1,6 @@
 <!-- default-logger -->
 
-Python's standard `logging` module (`logging.getLogger(__name__)` per module).
+Python's standard `logging` module, using `logging.getLogger(__name__)` per module.
 
 <!-- package-name -->
 
