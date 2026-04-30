@@ -54,3 +54,34 @@ const sendTargetedNotification = async (conversationId: string, recipient: Accou
   );
 };
 ```
+
+<!-- app-reply-method-name -->
+
+`app.reply()`
+
+<!-- to-thread-id-method-name -->
+
+`toThreadedConversationId()`
+
+<!-- app-send-method-name -->
+
+`app.send()`
+
+<!-- threading-proactive-example -->
+
+```typescript
+// Send to a specific thread proactively
+await app.reply(conversationId, messageId, 'Thread update!');
+
+// Send to a flat conversation (1:1, group chat)
+await app.reply(conversationId, 'Hello!');
+```
+
+<!-- threading-helper-example -->
+
+```typescript
+import { toThreadedConversationId } from '@microsoft/teams.apps';
+
+const threadId = toThreadedConversationId(conversationId, messageId);
+await app.send(threadId, 'Sent via helper');
+```

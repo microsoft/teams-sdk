@@ -32,3 +32,21 @@ Targeted messages, also known as ephemeral messages, are delivered to a specific
 When sending targeted messages proactively, you must explicitly specify the recipient account.
 
 <LanguageInclude section="targeted-proactive-example" />
+
+## Proactive Threading
+
+Threads are only rendered visibly in Teams channels. In 1:1 chats, group chats, and meetings, messages appear flat; passing a thread root message ID has no visible effect in those scopes.
+
+To proactively send a message as a reply to a thread, use <LanguageInclude section="app-reply-method-name" /> with the conversation ID and thread root message ID. The SDK constructs the threaded conversation ID for you.
+
+<LanguageInclude section="threading-proactive-example" />
+
+You can also pass just a conversation ID to <LanguageInclude section="app-reply-method-name" /> for non-threaded conversations such as 1:1 chats and group chats. To target a specific thread, include the thread root message ID as shown above.
+
+For reactive threading (within a handler), see [Threading](./#threading).
+
+### Thread ID Helper
+
+For advanced scenarios, the <LanguageInclude section="to-thread-id-method-name" /> helper constructs the threaded conversation ID directly. Use it with <LanguageInclude section="app-send-method-name" /> when you need full control.
+
+<LanguageInclude section="threading-helper-example" />

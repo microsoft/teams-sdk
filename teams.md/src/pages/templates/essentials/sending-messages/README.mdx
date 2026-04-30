@@ -64,3 +64,15 @@ Reactions allow your agent to add or remove emoji reactions on messages in a con
 ### Reactions in preview 
 
 <LanguageInclude section="reactions-preview-note" />
+
+## Threading
+
+In Teams channels, messages can be organized into threads. The SDK provides helpers to simplify working with threads.
+
+### Reactive Threading (Within a Handler)
+
+When your agent receives a message in a thread, the conversation context already carries the thread ID. Use <LanguageInclude section="context-send-method-name" /> to send a message in the same thread without quoting, or <LanguageInclude section="context-reply-method-name" /> to send with a visual quote of the inbound message.
+
+<LanguageInclude section="threading-reactive-example" />
+
+For proactive threading (sending to a thread outside of a handler), see [Proactive Messaging](./proactive-messaging#proactive-threading).
