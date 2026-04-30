@@ -1,0 +1,158 @@
+---
+sidebar_position: 1
+sidebar_label: Build an agent in Teams
+title: Build an agent in Teams
+summary: Create an agent with Microsoft Agent Framework, add local Python tools and remote MCP tool servers, stream responses into Teams, and preserve conversation history across turns.
+languages: ['python']
+suppressLanguageIncludeWarning: true
+---
+
+# Build an agent using Microsoft Agent Framework
+
+This guide walks through building a Teams agent with [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/) (MAF) — Microsoft's open-source SDK for AI agents.
+MAF gives you typed primitives — `Agent`, `Tool`, `AgentSession`, `FunctionMiddleware` — that wrap the underlying model API, the tool-dispatch loop, and conversation history into composable pieces, so you don't hand-roll chat completions or thread tool calls yourself.
+It works against multiple model backends (OpenAI, Azure OpenAI, and others) and scales from a single chat agent up to coordinated multi-agent workflows.
+In a Teams app, MAF runs the agent loop (model calls, tool invocations, and per-conversation memory) while the Teams SDK handles activity routing, streaming, and Teams-native affordances like Adaptive Cards and feedback controls.
+
+### Defining the agent 
+
+An agent is composed of three core elements: a **client** (model backend), **instructions** (system prompt), and **tools** (capabilities beyond text generation). A minimal setup starts with just a chat-enabled agent:
+
+```python
+from agent_framework import Agent
+from agent_framework.openai import OpenAIChatClient
+
+client = OpenAIChatClient(
+    model=getenv("AZURE_OPENAI_MODEL"),
+    azure_endpoint=getenv("AZURE_OPENAI_ENDPOINT"),
+    api_key=getenv("AZURE_OPENAI_API_KEY"),
+)
+
+agent = Agent(
+    client=client,
+    instructions="You are a helpful Teams assistant.",
+)
+```
+
+## Adding a local tool
+Tools extend the agent with executable capabilities. They are regular functions annotated so the model can decide when to invoke them. Anything that runs in your process — such as database lookups, business logic, or Teams-specific actions like attaching an Adaptive Card to the reply — belongs here.
+
+Tools are declared using the `@tool` decorator from the Agent Framework. The function name, docstring, and type hints (or annotations) are used by the model to understand when and how to call the tool.
+
+```python
+from agent_framework import tool
+
+@tool
+async def send_welcome_card(
+    greeting: Annotated[str, Field(description="Greeting message, e.g. 'Hello, Alex!'")],
+) -> str:
+    """Attach a welcome card to the reply."""
+    cards = pending_cards.get()
+    if cards is None:
+        return "No active turn context."
+    cards.append(AdaptiveCard(version="1.5").with_body([
+        TextBlock(text=greeting, size="Large", weight="Bolder", wrap=True),
+    ]))
+    return "Card attached."
+```
+Tools run inside the agent loop, and their outputs can influence both the final response and side effects in the Teams message (such as cards or metadata).
+
+## Adding remote MCP tools
+
+Remote tools are exposed via MCP servers and live behind a network boundary. The agent discovers their schemas at runtime and invokes them over HTTP. From the model’s perspective, they behave like any other tool.
+
+Remote tools are declared using MCP tool wrappers from Agent Framework and passed to the agent just like local tools:
+```python
+from agent_framework import MCPStreamableHTTPTool
+
+mcp_tools = [
+    MCPStreamableHTTPTool(name="MSLearn", url="https://learn.microsoft.com/api/mcp"),
+]
+
+agent = Agent(
+    client=client,
+    instructions="You are a helpful Teams assistant with access to local tools and remote MCP servers..",
+    tools=[send_welcome_card, *mcp_tools],
+)
+```
+
+## Running the agent in Teams
+
+Integrate with Teams by forwarding incoming messages to the agent runtime and streaming the response back to the chat interface chunk by chunk.
+```python
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    async for chunk in agent.run(ctx.activity.text or "", stream=True):
+        if chunk.text:
+            ctx.stream.emit(chunk.text)
+```
+
+## Per-conversation memory
+By default, the agent is stateless. Each `agent.run(...)` call starts with no history — the model only sees the current message. This works well for one-shot interactions, but is insufficient for multi-turn conversations where users refer back to earlier context.
+A **session** provides a conversation buffer that maintains state across turns. Create one per Teams conversation and reuse it for subsequent messages:
+
+```python
+from agent_framework import AgentSession
+
+_sessions: dict[str, AgentSession] = {}
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    conversation_id = ctx.activity.conversation.id
+    session = _sessions.setdefault(conversation_id, agent.create_session())
+
+    async for chunk in agent.run(ctx.activity.text or "", session=session, stream=True):
+        ...
+```
+In production push session history into Redis, Cosmos DB, or whatever you already use for state.
+
+## Middleware
+Middleware sits between tool execution and the model response, enabling you to inspect, transform, or annotate results without coupling this logic to the agent itself.
+It is implemented by subclassing `FunctionMiddleware` from Agent Framework and overriding the process method,
+which receives the tool context and allows you to modify the result before it is passed back to the model.
+
+A common use case is grounding responses with citations — extracting references from tool outputs and assigning stable indices so the model can cite them inline.
+
+```python
+from agent_framework import FunctionMiddleware
+
+class CitationMiddleware(FunctionMiddleware):
+    citations: dict[str, Any]
+
+    async def process(self, context, call_next):
+        # Run the wrapped tool first, then post-process its result.
+        await call_next()
+
+        data = parse_json(context.result)
+
+        for item in data["results"]:
+            pos = len(self.citations) + 1
+            url = item.get("contentUrl") or item.get("link")
+            snippet = item.get("content") or item.get("description")
+            # setdefault dedupes by URL — the same source returned by multiple
+            # tool calls keeps a single, stable position.
+            entry = self.citations.setdefault(url,{ "position": pos, 
+                                "url": url,
+                                "title": item.get("title", ""),
+                                "snippet": snippet[:160],
+                                })
+            # Attach the citation back onto the result so the model sees it
+            # alongside the content and can reference it inline.
+            item["citation"] = entry
+
+        context.result = serialize_json(data)
+
+
+tool_logger = AgentMiddleware()
+agent = Agent(
+    client=client,
+    instructions="""You are a helpful Teams assistant with access to local tools and remote MCP servers.
+    When you use information from a search tool, cite your sources inline using the "citation" value """,
+    tools=[send_welcome_card, *mcp_tools],
+    middleware=[tool_logger],
+)
+```
+
+For Teams-specific enhancements — continue to [Enhancing the Teams Experience using Teams SDK](./teams-enhancements).
+
+

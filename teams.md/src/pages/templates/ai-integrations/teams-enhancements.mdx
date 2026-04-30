@@ -1,0 +1,164 @@
+---
+sidebar_position: 2
+sidebar_label: Teams Enhancements
+title: Teams Enhancements
+summary: Round out a Teams agent reply with suggested follow-up prompts, inline citations from tool middleware, the AI-generated label, and a custom feedback form — then assemble the full message handler.
+languages: ['python']
+suppressLanguageIncludeWarning: true
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CitationsImgUrl from '@site/static/screenshots/citations.gif';
+
+# Enhance the Teams Experience
+You can enrich the agent output into a more Teams-native experience - adding structure, interactivity, and metadata on top of the generated text.
+
+## Streaming 
+
+Streaming allows the agent to deliver responses to Teams incrementally as they’re generated,
+rather than waiting for the full reply to complete.
+Each chunk of text is appended to the stream as it arrives.
+```python
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    async for chunk in agent.run(ctx.activity.text or "", stream=True):
+        if chunk.text:
+            ctx.stream.emit(chunk.text)
+```
+
+See [Streaming](../essentials/sending-messages#streaming) for the full story on how Teams renders chunks and the constraints on stream lifecycle.
+
+## AI-generated label
+
+`add_ai_generated()` marks the message as system-generated, ensuring it is clearly labeled as AI output within Teams.
+
+```python
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    async for chunk in agent.run(ctx.activity.text or "", stream=True):
+        if chunk.text:
+            ctx.stream.emit(chunk.text)
+
+    # highlight-success-start
+    reply = MessageActivityInput().add_ai_generated()
+    ctx.stream.emit(reply)
+    # highlight-success-end
+```
+
+## Feedback
+
+`add_feedback(mode="custom")` enables built-in thumbs up/down controls on the reply and lets you surface a custom feedback form when users respond.
+
+```python
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    async for chunk in agent.run(ctx.activity.text or "", stream=True):
+        if chunk.text:
+            ctx.stream.emit(chunk.text)
+
+    reply = (MessageActivityInput().add_ai_generated()
+            # highlight-success-start
+            .add_feedback(mode="custom")
+            # highlight-success-end
+    )
+    ctx.stream.emit(reply)
+```
+
+See [Feedback](../in-depth-guides/feedback) for the full form-handling story — capturing the submission, persisting it, and following up with the user.
+
+## Suggested prompts
+
+Suggested prompts give the user one-click follow-up questions after a reply.
+In Teams they render as chips under the message; tapping one sends the `value` back as a normal user message, so the same `on_message` handler picks it up — no extra routing required.
+
+Define prompts using `CardAction` and attach them to the reply via `with_suggested_actions`:
+
+```python
+from microsoft_teams.api import CardAction, CardActionType, SuggestedActions
+
+_SUGGESTED_PROMPTS = [
+    CardAction(
+        type=CardActionType.IM_BACK,
+        title="How do I stream in teams.py?",
+        value="How do I stream in teams.py?",
+    ),
+    CardAction(
+        type=CardActionType.IM_BACK,
+        title="How do I create an Adaptive Card in teams.py?",
+        value="How do I create an Adaptive Card in teams.py?",
+    ),
+]
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    async for chunk in agent.run(ctx.activity.text or "", stream=True):
+        if chunk.text:
+            ctx.stream.emit(chunk.text)
+
+    reply = (MessageActivityInput().add_ai_generated()
+            .add_feedback(mode="custom")
+            # highlight-success-start
+            .with_suggested_actions(
+                SuggestedActions(to=[ctx.activity.from_.id], actions=_SUGGESTED_PROMPTS)
+            )
+            # highlight-success-end
+    )
+    ctx.stream.emit(reply)
+```
+
+![Screenshot of outgoing agent message to user marked with 'AI generated' badge, with thumbs up/down feedback controls below the message.](/screenshots/suggested-prompts.png)
+
+## Citations
+
+Citations render as footnote-style references inline with the reply — `[1]`, `[2]`, etc. — surfacing the source title, abstract, and URL on hover. They typically originate from tool outputs, where middleware assigns each result a stable `position` (see the [`CitationMiddleware` example](./build-agent-maf#middleware) earlier).
+
+When building the final reply, attach only the citations whose `position` actually appears in the streamed text.
+```python
+from microsoft_teams.api import CitationAppearance
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    # highlight-success-line
+    full_text = ""
+    async for chunk in agent.run(text, session=_sessions[conversation_id], stream=True):
+        if chunk.text:
+            ctx.stream.emit(chunk.text)
+            # highlight-success-line
+            full_text += chunk.text
+
+    reply = (MessageActivityInput().add_ai_generated()
+            .add_feedback(mode="custom")
+            .with_suggested_actions(
+                SuggestedActions(to=[ctx.activity.from_.id], actions=_SUGGESTED_PROMPTS)
+            )
+    )
+    # highlight-success-start
+    citations = tool_logger.get_citations()
+    attach_citations(reply, full_text, citations)
+    # highlight-success-end
+
+    ctx.stream.emit(reply)
+
+# highlight-success-start
+def attach_citations(reply, full_text, citations):
+    used = extract_referenced_ids(full_text)
+
+    for c in citations:
+        if c.position in used:
+            reply.add_citation(
+                position=c.position,
+                appearance=CitationAppearance(
+                    name=c.title,
+                    abstract=c.description,
+                    url=c.url),
+                )
+# highlight-success-end
+```
+
+<img
+  src={CitationsImgUrl}
+  alt="Animated screenshot showing user hovering over a footnote citation in agent response, and a pop-up showing explanatory text."
+  style={{ width: '100%', maxWidth: 900 }}
+/>
+
