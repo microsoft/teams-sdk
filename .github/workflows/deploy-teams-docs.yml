@@ -55,6 +55,8 @@ jobs:
 
       - name: Build static site
         working-directory: teams.md
+        env:
+          NODE_ENV: production
         run: npm run build
 
       - name: Setup GitHub Pages

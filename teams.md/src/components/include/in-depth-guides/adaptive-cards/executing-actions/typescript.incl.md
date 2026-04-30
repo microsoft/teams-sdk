@@ -122,7 +122,65 @@ function createProfileCardInputValidation() {
 }
 ```
 
-<!-- server-handler-example -->
+<!-- handlers-section -->
+
+## Routing & Handlers
+
+### Using SubmitData
+
+The SDK provides a `SubmitData` helper that sets the routing key for your action. This is the recommended way to wire up actions to specific handlers:
+
+```typescript
+import { ExecuteAction, SubmitData } from '@microsoft/teams.cards';
+// ...
+
+new ExecuteAction({ title: 'Submit Feedback' })
+  .withData(new SubmitData('submit_feedback'))
+  .withAssociatedInputs('auto')
+
+// You can also pass extra static data alongside the action name
+new ExecuteAction({ title: 'Save' })
+  .withData(new SubmitData('save_profile', { entityId: '12345' }))
+  .withAssociatedInputs('auto')
+```
+
+`SubmitData` sets a reserved `action` key in the card's data payload. When the user clicks the button, the SDK router reads this key to dispatch to the matching handler.
+
+### Action-Specific Handlers
+
+Register handlers for specific actions. When you use `SubmitData` to set the action name on the card, the SDK routes directly to the matching handler:
+
+```typescript
+import { App } from '@microsoft/teams.apps';
+// ...
+
+// 'submit_feedback' matches the identifier passed to SubmitData('submit_feedback')
+app.on('card.action.submit_feedback', async ({ activity, send }) => {
+  const data = activity.value.action.data;
+  await send(`Feedback received: ${data.feedback}`);
+  return {
+    statusCode: 200,
+    type: 'application/vnd.microsoft.activity.message',
+    value: 'Action processed successfully',
+  };
+});
+
+app.on('card.action.save_profile', async ({ activity, send }) => {
+  const data = activity.value.action.data;
+  await send(`Profile saved!\nName: ${data.name}\nEmail: ${data.email}`);
+  return {
+    statusCode: 200,
+    type: 'application/vnd.microsoft.activity.message',
+    value: 'Action processed successfully',
+  };
+});
+```
+
+The route name follows the pattern `card.action.<action-name>`, where `<action-name>` matches the value passed to `SubmitData`. This is cleaner than a catch-all with a switch statement, and scales better as you add more actions.
+
+### Catch-All Handler
+
+If you need to handle all card actions in one place, you can use the catch-all handler:
 
 ```typescript
 import {
@@ -188,8 +246,6 @@ app.on('card.action', async ({ activity, send }) => {
   } satisfies AdaptiveCardActionMessageResponse;
 });
 ```
-
-<!-- data-typing-note -->
 
 :::note
 The `data` values are not typed and come as `any`, so you will need to cast them to the correct type in this case.
