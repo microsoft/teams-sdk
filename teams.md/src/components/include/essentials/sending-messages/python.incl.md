@@ -89,5 +89,42 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     await ctx.reply("Got it!")
 ```
 
+<!-- reactions-example -->
+
+```python
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    # Add a reaction to the message
+    await ctx.api.reactions.add(
+        conversation_id=ctx.activity.conversation.id,
+        activity_id=ctx.activity.id,
+        reaction_type='like'
+    )
+
+    # Remove a reaction from the message
+    await ctx.api.reactions.delete(
+        conversation_id=ctx.activity.conversation.id,
+        activity_id=ctx.activity.id,
+        reaction_type='like'
+    )
+```
+
+<!-- reactions-event-example -->
+
+```python
+from microsoft_teams.api import MessageReactionActivity
+from microsoft_teams.apps import ActivityContext
+
+@app.on_message_reaction
+async def handle_message_reaction(ctx: ActivityContext[MessageReactionActivity]):
+    for reaction in ctx.activity.reactions_added or []:
+        name = reaction.user.display_name if reaction.user else 'Someone'
+        await ctx.send(f"{name} added a {reaction.type} reaction!")
+
+    for reaction in ctx.activity.reactions_removed or []:
+        name = reaction.user.display_name if reaction.user else 'Someone'
+        await ctx.send(f"{name} removed a {reaction.type} reaction.")
+```
+
 <!-- reactions-preview-note -->
 N/A
