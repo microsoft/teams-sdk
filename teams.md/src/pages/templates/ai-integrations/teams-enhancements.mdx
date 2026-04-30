@@ -40,8 +40,10 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         if chunk.text:
             ctx.stream.emit(chunk.text)
 
-    reply = MessageActivityInput().add_ai_generated() # Add AI generated label
+    # highlight-success-start
+    reply = MessageActivityInput().add_ai_generated()
     ctx.stream.emit(reply)
+    # highlight-success-end
 ```
 
 ## Feedback
@@ -55,8 +57,11 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         if chunk.text:
             ctx.stream.emit(chunk.text)
 
-    reply = MessageActivityInput().add_ai_generated() 
-            .add_feedback(mode="custom") # Add feedback handling
+    reply = (MessageActivityInput().add_ai_generated()
+            # highlight-success-start
+            .add_feedback(mode="custom")
+            # highlight-success-end
+    )
     ctx.stream.emit(reply)
 ```
 
@@ -91,11 +96,14 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         if chunk.text:
             ctx.stream.emit(chunk.text)
 
-    reply = MessageActivityInput().add_ai_generated() 
-            .add_feedback(mode="custom") 
-            .with_suggested_actions( # Add suggested actions
+    reply = (MessageActivityInput().add_ai_generated()
+            .add_feedback(mode="custom")
+            # highlight-success-start
+            .with_suggested_actions(
                 SuggestedActions(to=[ctx.activity.from_.id], actions=_SUGGESTED_PROMPTS)
             )
+            # highlight-success-end
+    )
     ctx.stream.emit(reply)
 ```
 
@@ -111,38 +119,41 @@ from microsoft_teams.api import CitationAppearance
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
+    # highlight-success-line
     full_text = ""
     async for chunk in agent.run(text, session=_sessions[conversation_id], stream=True):
         if chunk.text:
             ctx.stream.emit(chunk.text)
+            # highlight-success-line
             full_text += chunk.text
 
-    reply = MessageActivityInput().add_ai_generated() 
-            .add_feedback(mode="custom") 
+    reply = (MessageActivityInput().add_ai_generated()
+            .add_feedback(mode="custom")
             .with_suggested_actions(
                 SuggestedActions(to=[ctx.activity.from_.id], actions=_SUGGESTED_PROMPTS)
             )
-    citations = tool_logger.get_citations() # fetch citations from agent middleware
-    attach_citations(reply, full_text, citations) # attach citations to reply
+    )
+    # highlight-success-start
+    citations = tool_logger.get_citations()
+    attach_citations(reply, full_text, citations)
+    # highlight-success-end
 
     ctx.stream.emit(reply)
 
+# highlight-success-start
 def attach_citations(reply, full_text, citations):
     used = extract_referenced_ids(full_text)
 
     for c in citations:
-        # filter for citations that are actually referenced in final text
         if c.position in used:
-            # Add each citation as an entity to the reply activity
-            reply.add_citation( 
+            reply.add_citation(
                 position=c.position,
                 appearance=CitationAppearance(
                     name=c.title,
                     abstract=c.description,
                     url=c.url),
                 )
-
-
+# highlight-success-end
 ```
 
 <img
