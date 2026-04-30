@@ -27,7 +27,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
             ctx.stream.emit(chunk.text)
 ```
 
-See [Streaming](../essentials/sending-messages#streaming) for the full story on how Teams renders chunks and the constraints on stream lifecycle.
+See [Streaming](../../essentials/sending-messages#streaming) for the full story on how Teams renders chunks and the constraints on stream lifecycle.
 
 ## AI-generated label
 
@@ -65,7 +65,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     ctx.stream.emit(reply)
 ```
 
-See [Feedback](../in-depth-guides/feedback) for the full form-handling story — capturing the submission, persisting it, and following up with the user.
+See [Feedback](../feedback) for the full form-handling story — capturing the submission, persisting it, and following up with the user.
 
 ## Suggested prompts
 
