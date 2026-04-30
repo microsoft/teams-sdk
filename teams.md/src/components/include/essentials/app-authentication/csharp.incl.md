@@ -50,5 +50,20 @@ Set the following environment variable:
 <!-- availability-note -->
 
 :::note
-Support for C# is coming soon.
+C# uses `appsettings.json` and process environment variables via `IConfiguration` (the standard ASP.NET Core pattern). `.env` files are not used.
 :::
+
+<!-- sovereign-cloud-overrides -->
+
+For scenarios requiring customization of individual cloud endpoints — such as China single-tenant bots that need a tenant-specific login URL — C# supports per-endpoint overrides in `appsettings.json`:
+
+```json
+{
+  "Teams": {
+    "Cloud": "China",
+    "LoginTenant": "your-tenant-id"
+  }
+}
+```
+
+Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `GraphScope`

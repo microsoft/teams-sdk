@@ -33,7 +33,7 @@ export default function BlogPostItemHeader() {
             <div className="sdev-post__info-row">
                 {authorNames.length > 0 && (
                     <div className="sdev-post__info-item">
-                        <span className="sdev-post__label">AUTHOR :</span>
+                        <span className="sdev-post__label">{authorNames.length > 1 ? 'AUTHORS' : 'AUTHOR'} :</span>
                         <span className="sdev-post__value">{authorNames.join(', ')}</span>
                     </div>
                 )}
