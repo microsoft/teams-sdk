@@ -175,7 +175,15 @@ function processLanguageIncludeTags(
       if (isProduction && targetLanguage) {
         const inclPath = getIncludeFilePath(templatePath, targetLanguage);
         if (!fs.existsSync(inclPath)) {
-          // Skip missing content (prod)
+          // Track missing include file as a content gap
+          const gapKey = normalizePath(path.relative(TEMPLATES_DIR, templatePath));
+          if (!contentGapsManifest[gapKey]) {
+            contentGapsManifest[gapKey] = {};
+          }
+          if (!contentGapsManifest[gapKey][sectionName]) {
+            contentGapsManifest[gapKey][sectionName] = [];
+          }
+          contentGapsManifest[gapKey][sectionName].push(targetLanguage);
           return '';
         }
 
@@ -183,7 +191,7 @@ function processLanguageIncludeTags(
           const fileContent = readFileUtf8Normalized(inclPath);
           const sectionContent = extractSection(fileContent, sectionName);
 
-          if (sectionContent === '' ) {
+          if (sectionContent === '') {
             // Intentional N/A content - skip without tracking as a gap
             return '';
           }

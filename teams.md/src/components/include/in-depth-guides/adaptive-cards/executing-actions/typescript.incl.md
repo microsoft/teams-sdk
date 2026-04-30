@@ -136,12 +136,12 @@ import { ExecuteAction, SubmitData } from '@microsoft/teams.cards';
 
 new ExecuteAction({ title: 'Submit Feedback' })
   .withData(new SubmitData('submit_feedback'))
-  .withAssociatedInputs('auto'),
+  .withAssociatedInputs('auto')
 
 // You can also pass extra static data alongside the action name
 new ExecuteAction({ title: 'Save' })
   .withData(new SubmitData('save_profile', { entityId: '12345' }))
-  .withAssociatedInputs('auto'),
+  .withAssociatedInputs('auto')
 ```
 
 `SubmitData` sets a reserved `action` key in the card's data payload. When the user clicks the button, the SDK router reads this key to dispatch to the matching handler.
