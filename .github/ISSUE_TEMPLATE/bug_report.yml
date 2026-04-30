@@ -54,12 +54,17 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: dropdown
     id: tested-languages
     attributes:
       label: Languages Affected
-      description: Which languages did you see this bug in? (TypeScript, .NET/C#, Python)
-      placeholder: e.g., TypeScript and Python
+      description: Which languages did you see this bug in?
+      multiple: true
+      options:
+        - TypeScript
+        - C#
+        - Python
+        - All
     validations:
       required: true
 
