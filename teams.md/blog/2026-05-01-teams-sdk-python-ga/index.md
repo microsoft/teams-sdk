@@ -27,7 +27,7 @@ We’re excited to announce that Python support in the Microsoft Teams SDK is no
 
 <!-- truncate -->
 
-With the Teams SDK, developers have a production ready foundation for building intelligent collaboration centric experiences directly within Microsoft Teams. And starting today, Python developers can take full advantage of that platform, using the same SDK surface that powers modern Teams apps and agents. You can learn more about the Python release of the Teams SDK in our [documentation](https://microsoft.github.io/teams-sdk/python/getting-started/)
+With the Teams SDK, developers have a production-ready foundation for building intelligent, collaboration-centric experiences directly within Microsoft Teams. And starting today, Python developers can take full advantage of that platform, using the same SDK surface that powers modern Teams apps and agents. You can learn more about the Python release of the Teams SDK in our [documentation](https://microsoft.github.io/teams-sdk/python/getting-started/).
 
 ## Bringing Python to the Teams Platform
 
@@ -35,7 +35,7 @@ The Teams SDK was built to bring speed, clarity, and delight back to your develo
 
 ![Simplified development with Python on Teams SDK](./image.png)
 
-With Python now supported in the Teams SDK, developers can build Teams native intelligent apps and agents [AJ2.1][RC2.2][RC2.3]with pythonic patterns. This allows developers to jump in quickly with their natural Python development flow.
+With Python now supported in the Teams SDK, developers can build Teams native intelligent apps and agents with Pythonic patterns. This allows developers to jump in quickly with their natural Python development flow.
 This means your orchestration logic, reasoning layer, workflow automation, or domain specific copilots can now:
 
 - Participate directly in Teams conversations
