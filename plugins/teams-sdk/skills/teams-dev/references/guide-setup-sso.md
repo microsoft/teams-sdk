@@ -4,7 +4,7 @@ Configure Single Sign-On so your bot can acquire access tokens silently — no l
 
 ## Prerequisites for SSO
 
-- **`az` CLI installed and authenticated:** Run `az --version` and `az account show`. Log in with `az login` using the **same Microsoft account** used for `teams login`.
+- **`az` CLI installed and authenticated:** Run `az --version` and `az account show`. Log in with `az login` using the **same Microsoft account** used for `teams login`. If you have multiple subscriptions, confirm the active one is the subscription containing your bot's resource group — list all with `az account list --query "[].{name:name, id:id}" -o table` and switch using `az account set --subscription <subscription-id>`.
 - **`teamsAppId` and `botId`** from bot creation output (or run `teams app get <teamsAppId> --json` to retrieve them).
 - **`TENANT_ID`** from your `.env` file (or `TenantId` from `appsettings.json` for C# projects).
 
@@ -20,7 +20,15 @@ teams app bot get <teamsAppId>
 
 Look at the `Location` in the output:
 - `Azure` → proceed to Step 2, note the `resourceGroup` and `subscription` for your Azure bot
-- `Teams (managed)` → migrate first:
+- `Teams (managed)` → migrate first.
+
+To migrate, you need an Azure resource group. List existing ones with `az group list --query "[].name" -o tsv`, or create one:
+
+```bash
+az group create --name <your-resource-group> --location eastus
+```
+
+Then run the migration:
 
 ```bash
 teams app bot migrate <teamsAppId> --resource-group <your-resource-group>
@@ -74,38 +82,14 @@ Save the result as `<scopeId>`.
 
 ## Step 5: Configure the AAD App — PATCH 1
 
-Set the identifier URI, `access_as_user` scope, Bot Framework redirect URI, and token version. Write the request body to a file, substituting `<botId>` and `<scopeId>`:
+Set the identifier URI, `access_as_user` scope, Bot Framework redirect URI, and token version. Substitute `<objectId>`, `<botId>`, and `<scopeId>`:
 
-**`patch1.json`:**
-```json
-{
-  "identifierUris": ["api://botid-<botId>"],
-  "api": {
-    "requestedAccessTokenVersion": 2,
-    "oauth2PermissionScopes": [
-      {
-        "id": "<scopeId>",
-        "adminConsentDescription": "Access as user",
-        "adminConsentDisplayName": "Access as user",
-        "isEnabled": true,
-        "type": "User",
-        "value": "access_as_user"
-      }
-    ]
-  },
-  "web": {
-    "redirectUris": ["https://token.botframework.com/.auth/web/redirect"]
-  }
-}
-```
-
-Apply it:
 ```bash
 az rest \
   --method PATCH \
   --uri "https://graph.microsoft.com/v1.0/applications/<objectId>" \
   --headers "Content-Type=application/json" \
-  --body @patch1.json
+  --body '{"identifierUris":["api://botid-<botId>"],"api":{"requestedAccessTokenVersion":2,"oauth2PermissionScopes":[{"id":"<scopeId>","adminConsentDescription":"Access as user","adminConsentDisplayName":"Access as user","isEnabled":true,"type":"User","value":"access_as_user"}]},"web":{"redirectUris":["https://token.botframework.com/.auth/web/redirect"]}}'
 ```
 
 **Verify:**
@@ -122,43 +106,14 @@ Expected: `identifierUris` contains `api://botid-<botId>`, `scopes` contains `ac
 
 ## Step 6: Pre-Authorize Teams Clients — PATCH 2
 
-Pre-authorize the Teams desktop and web clients so they can silently acquire SSO tokens. Write the body, substituting `<scopeId>`:
+Pre-authorize the Teams desktop and web clients so they can silently acquire SSO tokens. Substitute `<objectId>` and `<scopeId>`:
 
-**`patch2.json`:**
-```json
-{
-  "api": {
-    "oauth2PermissionScopes": [
-      {
-        "id": "<scopeId>",
-        "adminConsentDescription": "Access as user",
-        "adminConsentDisplayName": "Access as user",
-        "isEnabled": true,
-        "type": "User",
-        "value": "access_as_user"
-      }
-    ],
-    "preAuthorizedApplications": [
-      {
-        "appId": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
-        "delegatedPermissionIds": ["<scopeId>"]
-      },
-      {
-        "appId": "5e3ce6c0-2b1f-4285-8d4b-75ee78787346",
-        "delegatedPermissionIds": ["<scopeId>"]
-      }
-    ]
-  }
-}
-```
-
-Apply it:
 ```bash
 az rest \
   --method PATCH \
   --uri "https://graph.microsoft.com/v1.0/applications/<objectId>" \
   --headers "Content-Type=application/json" \
-  --body @patch2.json
+  --body '{"api":{"oauth2PermissionScopes":[{"id":"<scopeId>","adminConsentDescription":"Access as user","adminConsentDisplayName":"Access as user","isEnabled":true,"type":"User","value":"access_as_user"}],"preAuthorizedApplications":[{"appId":"1fec8e78-bce4-4aaf-ab1b-5451cc387264","delegatedPermissionIds":["<scopeId>"]},{"appId":"5e3ce6c0-2b1f-4285-8d4b-75ee78787346","delegatedPermissionIds":["<scopeId>"]}]}}'
 ```
 
 > **Note:** PATCH 2 must run after PATCH 1 because the pre-authorized apps reference `<scopeId>`, which must exist first. If PATCH 2 fails with a scope-not-found error, wait 15 seconds and retry (AAD replication lag).
@@ -181,7 +136,7 @@ Expected: Both `1fec8e78-bce4-4aaf-ab1b-5451cc387264` and `5e3ce6c0-2b1f-4285-8d
 az bot authsetting create \
   --name <botId> \
   --resource-group <resourceGroup> \
-  --setting-name "sso" \
+  --setting-name "graph" \
   --service Aadv2 \
   --client-id <botId> \
   --client-secret <clientSecret> \
@@ -192,14 +147,14 @@ az bot authsetting create \
 
 > **Scopes:** `User.Read` covers basic user profile. To include additional Graph permissions, space-delimit them: `"User.Read Mail.Read"`. For SharePoint or custom APIs, server-side On-Behalf-Of (OBO) token exchange in bot code is required.
 
-> **Connection name:** The connection is named `sso`. Your bot code must reference this exact name when initiating token exchange.
+> **Connection name:** The connection is named `graph`. Your bot code must reference this exact name when initiating token exchange.
 
 **Verify:**
 ```bash
 az bot authsetting show \
   --name <botId> \
   --resource-group <resourceGroup> \
-  --setting-name "sso" \
+  --setting-name "graph" \
   --subscription <subscription>
 ```
 
@@ -232,7 +187,7 @@ teams app doctor <teamsAppId>
 - `access_as_user` scope ✔
 - Teams clients pre-authorized ✔
 - Bot Framework redirect URI present ✔
-- OAuth `"sso"` — URIs aligned ✔
+- OAuth `"graph"` — URIs aligned ✔
 
 **Checkpoint:** SSO is fully configured and verified.
 
@@ -241,6 +196,6 @@ teams app doctor <teamsAppId>
 ## Next Steps
 
 - Your bot can now acquire access tokens silently in Teams
-- Reference the `"sso"` connection name in your bot code when implementing token exchange
+- Reference the `"graph"` connection name in your bot code when implementing token exchange
 - For troubleshooting SSO issues, see the [Troubleshooting guide](troubleshooting.md)
 - For managing OAuth connections, see Common Operations in the main skill
