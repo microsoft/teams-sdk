@@ -1,8 +1,6 @@
 <!-- warning -->
 
-:::tip
-Teams SDK for Python is now generally available (GA)! 🎉
-:::
+N/A
 
 <!-- language-name -->
 
