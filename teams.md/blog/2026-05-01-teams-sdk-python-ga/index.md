@@ -52,6 +52,6 @@ With GA support for Python in the Microsoft Teams SDK, developers now have a dir
 
 - **Follow the Quick Start guide:** You can create a new Teams agent in seconds using the Python release of the Teams SDK, our [documentation](https://microsoft.github.io/teams-sdk/python/getting-started/) will guide you through it step by step
 - **See an example:** Our Teams sample inventory can help you dig deeper into the code to learn more via a hands-on experience. You can see our quick start sample for Python [here](https://github.com/OfficeDev/Microsoft-Teams-Samples/tree/main/samples/TeamsSDK/bot-quickstart/python/bot-quickstart)
-- **Join the Community:** We’re building this for and with a community of developers. Join the discussions in the Microsoft 365 Developer Forum, share your agent ideas or ask questions on Stack Overflow, and follow our updates on the Teams developer blog. Your feedback will help shape future releases—please report any issues you may experience [here](http://aka.ms/NewIssue)
+- **Join the Community:** We’re building this for and with a community of developers. Join the discussions in the Microsoft 365 Developer Forum, share your agent ideas or ask questions on Stack Overflow, and follow our updates on the Teams developer blog. Your feedback will help shape future releases—please report any issues you may experience [here](https://aka.ms/NewIssue)
 
 We’re excited to see what you build!
