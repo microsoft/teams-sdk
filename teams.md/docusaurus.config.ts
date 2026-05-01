@@ -268,8 +268,8 @@ const config: Config = {
             ],
         },
         announcementBar: {
-            id: 'teams-cli-preview',
-            content: `The new <a href="${baseUrl}cli/">Teams CLI</a> is in Preview — try it out and share feedback.`,
+            id: 'python-sdk-ga',
+            content: `Teams SDK for Python is now GA! 🎉`,
             isCloseable: true,
             backgroundColor: '#515cc6',
             textColor: '#fff'
