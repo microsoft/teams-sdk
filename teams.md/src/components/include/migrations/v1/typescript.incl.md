@@ -246,6 +246,23 @@ Activity handlers in Teams SDK v2 work slightly differently than in v1, with a m
     // highlight-success-end
     ```
   </TabItem>
+  <TabItem value="v2" label="Teams SDK v2">
+    ```ts
+    // triggers when user sends "/hi" or "@bot /hi"
+    app.message('/hi', async (client) => {
+      // SDK does not auto send typing indicators
+      await client.send({ type: 'typing' });
+      await client.send("Hi!");
+    });
+    // listen for ANY message to be received
+    app.on('message', async (client) => {
+      await client.send({ type: 'typing' });
+      await client.send(
+        `you said "${client.activity.text}"`
+      );
+    });
+    ```
+  </TabItem>
   <TabItem value="v1" label="Teams SDK v1">
     ```ts
     // triggers when user sends "/hi" or "@bot /hi"
@@ -262,23 +279,6 @@ Activity handlers in Teams SDK v2 work slightly differently than in v1, with a m
         );
       }
     );
-    ```
-  </TabItem>
-  <TabItem value="v2" label="Teams SDK v2">
-    ```ts
-    // triggers when user sends "/hi" or "@bot /hi"
-    app.message('/hi', async (client) => {
-      // SDK does not auto send typing indicators
-      await client.send({ type: 'typing' });
-      await client.send("Hi!");
-    });
-    // listen for ANY message to be received
-    app.on('message', async (client) => {
-      await client.send({ type: 'typing' });
-      await client.send(
-        `you said "${client.activity.text}"`
-      );
-    });
     ```
   </TabItem>
 </Tabs>
