@@ -269,7 +269,7 @@ const config: Config = {
         },
         announcementBar: {
             id: 'python-sdk-ga',
-            content: `Teams SDK for Python is now GA! 🎉`,
+            content: `Teams SDK for Python is now GA! 🎉 <a href="https://devblogs.microsoft.com/microsoft365dev/python-support-for-the-microsoft-teams-sdk-is-now-generally-available/" target="_blank" rel="noopener noreferrer">Read our announcement</a>`,
             isCloseable: true,
             backgroundColor: '#515cc6',
             textColor: '#fff'
