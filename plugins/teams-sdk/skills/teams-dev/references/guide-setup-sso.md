@@ -4,7 +4,7 @@ Configure Single Sign-On so your bot can acquire access tokens silently — no l
 
 ## Prerequisites for SSO
 
-- **`az` CLI installed and authenticated:** Run `az --version` and `az account show`. Log in with `az login` using the **same Microsoft account** used for `teams login`. If you have multiple subscriptions, confirm the active one is the subscription containing your bot's resource group — list all with `az account list --query "[].{name:name, id:id}" -o table` and switch using `az account set --subscription <subscription-id>`.
+- **`az` CLI installed and authenticated:** Run `az --version` and `az account show`. Log in with `az login` using the **same Microsoft account** used for `teams login`. If you have multiple subscriptions, confirm the active one is the subscription you want to operate in — list all with `az account list --query "[].{name:name, id:id}" -o table` and switch using `az account set --subscription <subscription-id>`.
 - **`teamsAppId` and `botId`** from bot creation output (or run `teams app get <teamsAppId> --json` to retrieve them).
 - **`TENANT_ID`** from your `.env` file (or `TenantId` from `appsettings.json` for C# projects).
 
@@ -25,7 +25,7 @@ Look at the `Location` in the output:
 To migrate, you need an Azure resource group. List existing ones with `az group list --query "[].name" -o tsv`, or create one:
 
 ```bash
-az group create --name <your-resource-group> --location eastus
+az group create --name <your-resource-group> --location <azureRegion>
 ```
 
 Then run the migration:
