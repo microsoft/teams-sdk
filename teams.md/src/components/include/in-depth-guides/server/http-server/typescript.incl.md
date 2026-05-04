@@ -48,6 +48,17 @@ await app.initialize();
 httpServer.listen(3978, () => console.log('Server ready on http://localhost:3978'));
 ```
 
+> **Note:** `app.initialize()` runs each plugin's `onInit` hook but not its `onStart` hook —
+> `onStart` only fires from `app.start()`. When you take over the HTTP lifecycle with a custom
+> adapter, plugins that do their setup in `onStart` won't run. If you're using such a plugin,
+> either call `app.start()` (and let it manage the server) or invoke that plugin's `onStart`
+> yourself after `app.initialize()`:
+>
+> ```ts
+> await app.initialize();
+> await myPlugin.onStart({ port: 3978 });
+> ```
+
 > See the full [Express adapter example](https://github.com/microsoft/teams.ts/tree/main/examples/http-adapters/express)
 
 <!-- custom-adapter -->
