@@ -3,7 +3,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import pc from 'picocolors';
 import { confirm } from '@inquirer/prompts';
-import { downloadAppPackage, uploadManifest, type TeamsManifest } from '../../../apps/index.js';
+import {
+  appMetadataFromManifest,
+  downloadAppPackage,
+  uploadManifest,
+  validateAppMetadata,
+  type TeamsManifest,
+} from '../../../apps/index.js';
 import { CliError } from '../../../utils/errors.js';
 import { isAutoConfirm } from '../../../utils/interactive.js';
 import { logger } from '../../../utils/logger.js';
@@ -115,6 +121,11 @@ export async function uploadManifestFromFile(
       const proceed = await confirm({ message: 'Upload anyway?', default: false });
       if (!proceed) return undefined;
     }
+  }
+
+  const validationIssues = validateAppMetadata(appMetadataFromManifest(manifest), 'manifest');
+  if (validationIssues.length > 0) {
+    throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
   }
 
   // Auto-bump version if enabled and version is parseable

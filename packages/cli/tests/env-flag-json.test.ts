@@ -16,29 +16,33 @@ const FAKE_TEAMS_APP_ID = 'fake-teams-app-id';
 
 // ─── mocks (top-level, as vitest requires) ───────────────────────────
 
-vi.mock('../src/apps/index.js', () => ({
-  fetchApp: vi.fn().mockResolvedValue({
-    bots: [{ botId: 'fake-client-id' }],
-  }),
-  getAadAppByClientId: vi.fn().mockResolvedValue({
-    id: 'aad-object-id',
-    appId: 'fake-client-id',
-    displayName: 'TestAadApp',
-  }),
-  createClientSecret: vi.fn().mockResolvedValue({ secretText: 'fake-secret-text' }),
-  createAadAppViaTdp: vi.fn().mockResolvedValue({
-    id: 'aad-object-id',
-    appId: 'fake-client-id',
-    displayName: 'TestAadApp',
-  }),
-  createManifestZip: vi.fn().mockReturnValue(Buffer.from('fake-zip')),
-  importAppPackage: vi.fn().mockResolvedValue({ teamsAppId: 'fake-teams-app-id' }),
-  createTdpBotHandler: vi.fn().mockReturnValue({
-    createBot: vi.fn().mockResolvedValue(undefined),
-  }),
-  installLink: vi.fn((id: string, tenantId: string) => `https://teams.microsoft.com/l/app/${id}?installAppPackage=true&appTenantId=${tenantId}`),
-  portalLink: vi.fn((id: string) => `https://dev.teams.microsoft.com/apps/${id}`),
-}));
+vi.mock('../src/apps/index.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../src/apps/index.js')>();
+  return {
+    ...actual,
+    fetchApp: vi.fn().mockResolvedValue({
+      bots: [{ botId: 'fake-client-id' }],
+    }),
+    getAadAppByClientId: vi.fn().mockResolvedValue({
+      id: 'aad-object-id',
+      appId: 'fake-client-id',
+      displayName: 'TestAadApp',
+    }),
+    createClientSecret: vi.fn().mockResolvedValue({ secretText: 'fake-secret-text' }),
+    createAadAppViaTdp: vi.fn().mockResolvedValue({
+      id: 'aad-object-id',
+      appId: 'fake-client-id',
+      displayName: 'TestAadApp',
+    }),
+    createManifestZip: vi.fn().mockReturnValue(Buffer.from('fake-zip')),
+    importAppPackage: vi.fn().mockResolvedValue({ teamsAppId: 'fake-teams-app-id' }),
+    createTdpBotHandler: vi.fn().mockReturnValue({
+      createBot: vi.fn().mockResolvedValue(undefined),
+    }),
+    installLink: vi.fn((id: string, tenantId: string) => `https://teams.microsoft.com/l/app/${id}?installAppPackage=true&appTenantId=${tenantId}`),
+    portalLink: vi.fn((id: string) => `https://dev.teams.microsoft.com/apps/${id}`),
+  };
+});
 
 vi.mock('../src/auth/index.js', () => ({
   getAccount: vi.fn().mockResolvedValue({ tenantId: 'fake-tenant-id' }),

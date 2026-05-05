@@ -12,6 +12,7 @@ import {
   type BotScope,
   createTdpBotHandler,
   createAzureBotHandler,
+  validateAppMetadata,
   validateEndpoint,
   type AzureContext,
   type BotLocation,
@@ -109,53 +110,6 @@ export const appCreateCommand = new Command('create')
       const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
       const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
 
-      const account = await getAccount();
-      if (!account) {
-        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
-      }
-
-      // Resolve bot location: explicit flag > config > default (teams-managed)
-      let location: BotLocation;
-      if (options.azure) location = 'azure';
-      else if (options.teamsManaged) location = 'tm';
-      else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
-
-      // Gather Azure context if needed
-      let azureContext: AzureContext | undefined;
-      if (location === 'azure') {
-        await ensureAz();
-        await ensureTenantMatch(account.tenantId);
-        const subscription = await resolveSubscription(options.subscription);
-        const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
-
-        if (options.createResourceGroup) {
-          const rgRegion = options.region ?? 'westus2';
-          const rgSpinner = createSilentSpinner(
-            `Creating resource group ${resourceGroup}...`,
-            silent
-          ).start();
-          await runAz([
-            'group',
-            'create',
-            '--name',
-            resourceGroup,
-            '--location',
-            rgRegion,
-            '--subscription',
-            subscription,
-          ]);
-          rgSpinner.success({ text: `Resource group ${resourceGroup} ready` });
-        }
-
-        // Bot Service location is always "global"
-        azureContext = {
-          subscription,
-          resourceGroup,
-          region: 'global',
-          tenantId: account.tenantId,
-        };
-      }
-
       // ===== Gather all inputs upfront =====
       const interactive = isInteractive();
 
@@ -233,6 +187,71 @@ export const appCreateCommand = new Command('create')
       const outlineIcon = outlineIconPath
         ? (earlyOutlineIcon ?? readAndValidateIcon(outlineIconPath, 32))
         : undefined;
+
+      const validationIssues = validateAppMetadata(
+        {
+          shortName: name,
+          longName: name,
+          shortDescription: descriptionOpts?.short ?? name,
+          longDescription: descriptionOpts?.full ?? descriptionOpts?.short ?? name,
+          developerName: developerOpts?.name ?? 'Developer',
+          websiteUrl: developerOpts?.websiteUrl ?? 'https://www.example.com',
+          privacyUrl: developerOpts?.privacyUrl ?? 'https://www.example.com/privacy',
+          termsOfUseUrl: developerOpts?.termsOfUseUrl ?? 'https://www.example.com/terms',
+          endpoint,
+        },
+        'create'
+      );
+      if (validationIssues.length > 0) {
+        throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
+      }
+
+      const account = await getAccount();
+      if (!account) {
+        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
+      }
+
+      // Resolve bot location: explicit flag > config > default (teams-managed)
+      let location: BotLocation;
+      if (options.azure) location = 'azure';
+      else if (options.teamsManaged) location = 'tm';
+      else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
+
+      // Gather Azure context if needed
+      let azureContext: AzureContext | undefined;
+      if (location === 'azure') {
+        await ensureAz();
+        await ensureTenantMatch(account.tenantId);
+        const subscription = await resolveSubscription(options.subscription);
+        const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
+
+        if (options.createResourceGroup) {
+          const rgRegion = options.region ?? 'westus2';
+          const rgSpinner = createSilentSpinner(
+            `Creating resource group ${resourceGroup}...`,
+            silent
+          ).start();
+          await runAz([
+            'group',
+            'create',
+            '--name',
+            resourceGroup,
+            '--location',
+            rgRegion,
+            '--subscription',
+            subscription,
+          ]);
+          rgSpinner.success({ text: `Resource group ${resourceGroup} ready` });
+        }
+
+        // Bot Service location is always "global"
+        azureContext = {
+          subscription,
+          resourceGroup,
+          region: 'global',
+          tenantId: account.tenantId,
+        };
+      }
 
       // ===== All inputs gathered — confirm before proceeding =====
       const summaryLines: [string, string][] = [['App name', name]];

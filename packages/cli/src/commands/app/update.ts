@@ -14,6 +14,7 @@ import {
   createAzureBotHandler,
   discoverAzureBot,
   extractDomain,
+  validateAppMetadata,
   validateEndpoint,
   uploadIcon,
 } from '../../apps/index.js';
@@ -416,38 +417,22 @@ export const appUpdateCommand = new Command('update')
           throw new CliError('VALIDATION_FORMAT', 'At least one scope is required.');
         }
       }
-      if (options.endpoint !== undefined) {
-        const trimmedEndpoint = options.endpoint.trim();
-        if (!trimmedEndpoint) {
-          throw new CliError('VALIDATION_FORMAT', 'Endpoint URL cannot be empty.');
-        }
-        const endpointError = validateEndpoint(trimmedEndpoint);
-        if (endpointError) {
-          throw new CliError('VALIDATION_FORMAT', endpointError);
-        }
-        options.endpoint = trimmedEndpoint;
-      }
-      if (options.name !== undefined && options.name.length > 30) {
-        throw new CliError('VALIDATION_FORMAT', 'Short name must be 30 characters or less.');
-      }
-      if (options.longName !== undefined && options.longName.length > 100) {
-        throw new CliError('VALIDATION_FORMAT', 'Long name must be 100 characters or less.');
-      }
-      if (options.shortDescription !== undefined && options.shortDescription.length > 80) {
-        throw new CliError('VALIDATION_FORMAT', 'Short description must be 80 characters or less.');
-      }
-      if (options.longDescription !== undefined && options.longDescription.length > 4000) {
-        throw new CliError('VALIDATION_FORMAT', 'Long description must be 4000 characters or less.');
-      }
-      const httpsUrlRegex = /^https:\/\/\S+$/i;
-      if (options.website !== undefined && !httpsUrlRegex.test(options.website)) {
-        throw new CliError('VALIDATION_FORMAT', 'Website URL must start with https:// and include a domain.');
-      }
-      if (options.privacyUrl !== undefined && !httpsUrlRegex.test(options.privacyUrl)) {
-        throw new CliError('VALIDATION_FORMAT', 'Privacy URL must start with https:// and include a domain.');
-      }
-      if (options.termsUrl !== undefined && !httpsUrlRegex.test(options.termsUrl)) {
-        throw new CliError('VALIDATION_FORMAT', 'Terms of use URL must start with https:// and include a domain.');
+      const validationIssues = validateAppMetadata(
+        {
+          endpoint: options.endpoint,
+          shortName: options.name,
+          longName: options.longName,
+          shortDescription: options.shortDescription,
+          longDescription: options.longDescription,
+          developerName: options.developer,
+          websiteUrl: options.website,
+          privacyUrl: options.privacyUrl,
+          termsOfUseUrl: options.termsUrl,
+        },
+        'update'
+      );
+      if (validationIssues.length > 0) {
+        throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
       }
 
       // Interactive mode (no appId, no mutation flags): picker loop
