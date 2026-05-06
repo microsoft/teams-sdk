@@ -7,7 +7,7 @@ summary: Use the Slack + Teams expert system to build bots that run on both Slac
 
 [microsoft/slack-plus-teams](https://github.com/microsoft/slack-plus-teams) is a knowledge base for AI coding agents (Claude Code, Cursor, GitHub Copilot) that build bots targeting **both Slack and Microsoft Teams**. It's not a library — it's a collection of micro-expert files that teach your agent how to bridge the two platforms: Block Kit ↔ Adaptive Cards, identity and SSO mapping, divergent event and file APIs, and transport and deploy targets that work for both.
 
-The Teams side targets `@microsoft/teams-ai` v2 — the same SDK these docs cover.
+The Teams side targets `@microsoft/teams.apps` — the same SDK these docs cover.
 
 ## When to use it
 
