@@ -3,6 +3,12 @@ import pc from 'picocolors';
 import { createSpinner } from 'nanospinner';
 import type { AppDetails } from './types.js';
 import { updateAppDetails } from './api.js';
+import {
+  getAppMetadataFieldRule,
+  isAppMetadataField,
+  validateAppMetadataField,
+  type AppMetadataField,
+} from './validation.js';
 import { logger } from '../utils/logger.js';
 
 interface FieldConfig {
@@ -13,28 +19,26 @@ interface FieldConfig {
   validate?: (value: string) => string | true;
 }
 
-const HTTPS_URL_REGEX = /^https:\/\/.+/i;
-
-function validateHttpsUrl(value: string): string | true {
-  if (!value.trim()) {
-    return true; // Empty is handled by required check
-  }
-  if (!HTTPS_URL_REGEX.test(value)) {
-    return 'URL must start with https://';
-  }
-  return true;
+function buildMetadataFieldConfig(field: AppMetadataField): FieldConfig {
+  const rule = getAppMetadataFieldRule(field);
+  return {
+    key: field,
+    label: rule.label,
+    maxLength: rule.maxLength,
+    required: rule.requiredIn.includes('manifest'),
+  };
 }
 
 const FIELDS: FieldConfig[] = [
-  { key: 'shortName', label: 'Short name', maxLength: 30, required: true },
-  { key: 'longName', label: 'Long name', maxLength: 100, required: false },
-  { key: 'shortDescription', label: 'Short description', maxLength: 80, required: true },
-  { key: 'longDescription', label: 'Long description', maxLength: 4000, required: true },
+  buildMetadataFieldConfig('shortName'),
+  buildMetadataFieldConfig('longName'),
+  buildMetadataFieldConfig('shortDescription'),
+  buildMetadataFieldConfig('longDescription'),
   { key: 'version', label: 'Version', required: true },
-  { key: 'developerName', label: 'Developer name', required: true },
-  { key: 'websiteUrl', label: 'Website URL', required: true, validate: validateHttpsUrl },
-  { key: 'privacyUrl', label: 'Privacy URL', required: true, validate: validateHttpsUrl },
-  { key: 'termsOfUseUrl', label: 'Terms of Use URL', required: true, validate: validateHttpsUrl },
+  buildMetadataFieldConfig('developerName'),
+  buildMetadataFieldConfig('websiteUrl'),
+  buildMetadataFieldConfig('privacyUrl'),
+  buildMetadataFieldConfig('termsOfUseUrl'),
 ];
 
 function truncateValue(value: string | undefined | null, maxLength: number = 40): string {
@@ -75,6 +79,10 @@ async function editField(
     message: `Enter new ${field.label.toLowerCase()}${maxLengthHint}:`,
     default: currentValue,
     validate: (value) => {
+      if (isAppMetadataField(field.key)) {
+        return validateAppMetadataField(field.key, value, 'manifest') ?? true;
+      }
+
       // Check required
       if (field.required && !value.trim()) {
         return `${field.label} is required`;

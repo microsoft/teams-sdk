@@ -12,6 +12,9 @@ import {
   type BotScope,
   createTdpBotHandler,
   createAzureBotHandler,
+  normalizeAppMetadata,
+  validateAppMetadata,
+  validateAppMetadataField,
   validateEndpoint,
   type AzureContext,
   type BotLocation,
@@ -92,69 +95,8 @@ export const appCreateCommand = new Command('create')
           'Cannot specify both --azure and --teams-managed.'
         );
       }
-      if (options.endpoint !== undefined) {
-        const trimmedEndpoint = options.endpoint.trim();
-        if (!trimmedEndpoint) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Bot messaging endpoint URL cannot be empty.'
-          );
-        }
-        const endpointError = validateEndpoint(trimmedEndpoint);
-        if (endpointError) {
-          throw new CliError('VALIDATION_FORMAT', endpointError);
-        }
-        options.endpoint = trimmedEndpoint;
-      }
       const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
       const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
-
-      const account = await getAccount();
-      if (!account) {
-        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
-      }
-
-      // Resolve bot location: explicit flag > config > default (teams-managed)
-      let location: BotLocation;
-      if (options.azure) location = 'azure';
-      else if (options.teamsManaged) location = 'tm';
-      else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
-
-      // Gather Azure context if needed
-      let azureContext: AzureContext | undefined;
-      if (location === 'azure') {
-        await ensureAz();
-        await ensureTenantMatch(account.tenantId);
-        const subscription = await resolveSubscription(options.subscription);
-        const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
-
-        if (options.createResourceGroup) {
-          const rgRegion = options.region ?? 'westus2';
-          const rgSpinner = createSilentSpinner(
-            `Creating resource group ${resourceGroup}...`,
-            silent
-          ).start();
-          await runAz([
-            'group',
-            'create',
-            '--name',
-            resourceGroup,
-            '--location',
-            rgRegion,
-            '--subscription',
-            subscription,
-          ]);
-          rgSpinner.success({ text: `Resource group ${resourceGroup} ready` });
-        }
-
-        // Bot Service location is always "global"
-        azureContext = {
-          subscription,
-          resourceGroup,
-          region: 'global',
-          tenantId: account.tenantId,
-        };
-      }
 
       // ===== Gather all inputs upfront =====
       const interactive = isInteractive();
@@ -169,7 +111,13 @@ export const appCreateCommand = new Command('create')
       // Get name
       const name =
         options.name ??
-        (interactive && !hasFlags ? await input({ message: 'App name:' }) : undefined);
+        (interactive && !hasFlags
+          ? await input({
+              message: 'App name:',
+              validate: (value) =>
+                validateAppMetadataField('shortName', value, 'create') ?? true,
+            })
+          : undefined);
 
       if (!name?.trim()) {
         throw new CliError('VALIDATION_MISSING', 'App name cannot be empty.');
@@ -234,18 +182,98 @@ export const appCreateCommand = new Command('create')
         ? (earlyOutlineIcon ?? readAndValidateIcon(outlineIconPath, 32))
         : undefined;
 
+      const createMetadata = normalizeAppMetadata({
+        shortName: name,
+        longName: name,
+        shortDescription: descriptionOpts?.short ?? name,
+        longDescription: descriptionOpts?.full ?? descriptionOpts?.short ?? name,
+        developerName: developerOpts?.name ?? 'Developer',
+        websiteUrl: developerOpts?.websiteUrl ?? 'https://www.example.com',
+        privacyUrl: developerOpts?.privacyUrl ?? 'https://www.example.com/privacy',
+        termsOfUseUrl: developerOpts?.termsOfUseUrl ?? 'https://www.example.com/terms',
+        endpoint,
+      });
+      const validationIssues = validateAppMetadata(createMetadata, 'create');
+      if (validationIssues.length > 0) {
+        throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
+      }
+
+      const normalizedName = createMetadata.shortName!;
+      const normalizedEndpoint = createMetadata.endpoint;
+      const normalizedDescriptionOpts = descriptionOpts
+        ? {
+            short: createMetadata.shortDescription!,
+            full: createMetadata.longDescription!,
+          }
+        : undefined;
+      const normalizedDeveloperOpts = developerOpts
+        ? {
+            name: createMetadata.developerName!,
+            websiteUrl: createMetadata.websiteUrl!,
+            privacyUrl: createMetadata.privacyUrl!,
+            termsOfUseUrl: createMetadata.termsOfUseUrl!,
+          }
+        : undefined;
+
+      const account = await getAccount();
+      if (!account) {
+        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
+      }
+
+      // Resolve bot location: explicit flag > config > default (teams-managed)
+      let location: BotLocation;
+      if (options.azure) location = 'azure';
+      else if (options.teamsManaged) location = 'tm';
+      else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
+
+      // Gather Azure context if needed
+      let azureContext: AzureContext | undefined;
+      if (location === 'azure') {
+        await ensureAz();
+        await ensureTenantMatch(account.tenantId);
+        const subscription = await resolveSubscription(options.subscription);
+        const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
+
+        if (options.createResourceGroup) {
+          const rgRegion = options.region ?? 'westus2';
+          const rgSpinner = createSilentSpinner(
+            `Creating resource group ${resourceGroup}...`,
+            silent
+          ).start();
+          await runAz([
+            'group',
+            'create',
+            '--name',
+            resourceGroup,
+            '--location',
+            rgRegion,
+            '--subscription',
+            subscription,
+          ]);
+          rgSpinner.success({ text: `Resource group ${resourceGroup} ready` });
+        }
+
+        // Bot Service location is always "global"
+        azureContext = {
+          subscription,
+          resourceGroup,
+          region: 'global',
+          tenantId: account.tenantId,
+        };
+      }
+
       // ===== All inputs gathered — confirm before proceeding =====
-      const summaryLines: [string, string][] = [['App name', name]];
+      const summaryLines: [string, string][] = [['App name', normalizedName]];
       if (azureContext) {
         summaryLines.push(['Subscription', azureContext.subscription]);
         summaryLines.push(['Resource group', azureContext.resourceGroup]);
       }
-      if (endpoint) summaryLines.push(['Endpoint', endpoint]);
-      if (descriptionOpts?.short.trim())
-        summaryLines.push(['Description', descriptionOpts.short.trim()]);
+      if (normalizedEndpoint) summaryLines.push(['Endpoint', normalizedEndpoint]);
+      if (normalizedDescriptionOpts?.short)
+        summaryLines.push(['Description', normalizedDescriptionOpts.short]);
       if (scopeChoices && scopeChoices.length > 0)
         summaryLines.push(['Scopes', scopeChoices.join(', ')]);
-      if (developerOpts?.name.trim()) summaryLines.push(['Developer', developerOpts.name.trim()]);
+      if (normalizedDeveloperOpts?.name) summaryLines.push(['Developer', normalizedDeveloperOpts.name]);
       if (colorIconPath) summaryLines.push(['Color icon', colorIconPath]);
       if (outlineIconPath) summaryLines.push(['Outline icon', outlineIconPath]);
       if (!generateSecret) summaryLines.push(['Secret', 'Skipped']);
@@ -293,18 +321,18 @@ export const appCreateCommand = new Command('create')
 
       // Create AAD app via TDP (creates service principal server-side)
       spinner = createSilentSpinner('Creating Azure AD app...', silent).start();
-      const aadApp = await createAadAppViaTdp(tdpToken, name!);
+      const aadApp = await createAadAppViaTdp(tdpToken, normalizedName);
       const clientId = aadApp.appId;
       spinner.success({ text: `Created Azure AD app (${clientId})` });
 
       // Generate manifest
       const manifestOpts: ManifestOptions = {
         botId: clientId,
-        botName: name!,
-        endpoint,
-        description: descriptionOpts,
+        botName: normalizedName,
+        endpoint: normalizedEndpoint,
+        description: normalizedDescriptionOpts,
         scopes: scopeChoices,
-        developer: developerOpts,
+        developer: normalizedDeveloperOpts,
         colorIconBuffer: colorIcon?.buffer,
         outlineIconBuffer: outlineIcon?.buffer,
       };
@@ -342,7 +370,7 @@ export const appCreateCommand = new Command('create')
       spinner = createSilentSpinner('Registering bot...', silent).start();
       const handler =
         location === 'tm' ? createTdpBotHandler(tdpToken) : createAzureBotHandler(azureContext!);
-      await handler.createBot({ botId: clientId, name: name!, endpoint });
+      await handler.createBot({ botId: clientId, name: normalizedName, endpoint: normalizedEndpoint });
       spinner.success({ text: 'Bot registered' });
 
       // Output results
@@ -366,10 +394,10 @@ export const appCreateCommand = new Command('create')
         }
 
         const result: AppCreateOutput = {
-          appName: name!,
+          appName: normalizedName,
           teamsAppId,
           botId: clientId,
-          endpoint: endpoint ?? null,
+          endpoint: normalizedEndpoint ?? null,
           installLink: install,
           portalLink: portal,
           botLocation: location === 'tm' ? 'teams-managed' : 'azure',
@@ -381,11 +409,11 @@ export const appCreateCommand = new Command('create')
         outputJson(result);
       } else {
         logger.info(pc.bold(pc.green('\nApp created successfully!')));
-        logger.info(`${pc.dim('Name:')} ${name!}`);
+        logger.info(`${pc.dim('Name:')} ${normalizedName}`);
         logger.info(`${pc.dim('Teams App ID:')} ${teamsAppId}`);
         logger.info(`${pc.dim('Bot ID:')} ${clientId}`);
-        if (endpoint) {
-          logger.info(`${pc.dim('Endpoint:')} ${endpoint}`);
+        if (normalizedEndpoint) {
+          logger.info(`${pc.dim('Endpoint:')} ${normalizedEndpoint}`);
         }
         logger.info('');
         printLinkBanner('Install in Teams', install);
