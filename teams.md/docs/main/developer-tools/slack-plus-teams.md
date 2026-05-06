@@ -28,18 +28,25 @@ TypeScript / JavaScript is the Tier 1 language. Python adapts the same patterns;
 
 ## Set it up
 
-Clone alongside your project:
+Tell your AI agent to read the onboarding playbook directly from GitHub:
+
+```
+Read https://raw.githubusercontent.com/microsoft/slack-plus-teams/main/ONBOARD.md
+and treat any reference to `slack-plus-teams/<path>` as
+`https://raw.githubusercontent.com/microsoft/slack-plus-teams/main/<path>`.
+Then follow its steps for my project.
+```
+
+The playbook detects your stack and loads only the relevant experts on demand — no clone required, and content stays current with `main`.
+
+**Prefer to work offline?** Clone alongside your project and point your agent at the local copy:
 
 ```bash
 git clone https://github.com/microsoft/slack-plus-teams
 ```
 
-Point your AI agent at the onboarding playbook:
-
 ```
 Read slack-plus-teams/ONBOARD.md and follow its steps for my project.
 ```
 
-The playbook detects your stack and loads only the relevant experts. Alternatively, copy the `experts/` directory into your project root and reference `experts/index.md` from your `CLAUDE.md` or Copilot instructions.
-
-See the [repo README](https://github.com/microsoft/slack-plus-teams#readme) for setup details across Claude Code, GitHub Copilot, and Cursor.
+See the [repo README](https://github.com/microsoft/slack-plus-teams#readme) for additional setup patterns across Claude Code, GitHub Copilot, and Cursor.
