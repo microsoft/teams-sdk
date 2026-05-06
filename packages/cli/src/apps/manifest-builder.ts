@@ -3,6 +3,15 @@ import pc from 'picocolors';
 import { isInteractive } from '../utils/interactive.js';
 import { logger } from '../utils/logger.js';
 import type { BotScope } from './manifest.js';
+import { validateAppMetadataField, type AppMetadataField } from './validation.js';
+
+/**
+ * Wraps `validateAppMetadataField` for inquirer's `validate` callback.
+ * Returns `true` when valid, or the error message string when invalid.
+ */
+function validateField(field: AppMetadataField, value: string): string | true {
+  return validateAppMetadataField(field, value, 'create') ?? true;
+}
 
 /**
  * Placeholder bot ID for manifest generation when no real bot ID is available.
@@ -43,8 +52,14 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
   const result: ManifestCustomization = {};
 
   if (customizeFields.includes('description')) {
-    const shortDesc = await input({ message: 'Short description:' });
-    const fullDesc = await input({ message: 'Full description (leave empty to use short):' });
+    const shortDesc = await input({
+      message: 'Short description:',
+      validate: (value) => validateField('shortDescription', value),
+    });
+    const fullDesc = await input({
+      message: 'Full description (leave empty to use short):',
+      validate: (value) => validateField('longDescription', value),
+    });
     result.description = { short: shortDesc, full: fullDesc || undefined };
   }
 
@@ -82,10 +97,22 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
   }
 
   if (customizeFields.includes('developer')) {
-    const devName = await input({ message: 'Developer name:' });
-    const websiteUrl = await input({ message: 'Website URL:' });
-    const privacyUrl = await input({ message: 'Privacy URL:' });
-    const termsUrl = await input({ message: 'Terms of use URL:' });
+    const devName = await input({
+      message: 'Developer name:',
+      validate: (value) => validateField('developerName', value),
+    });
+    const websiteUrl = await input({
+      message: 'Website URL:',
+      validate: (value) => validateField('websiteUrl', value),
+    });
+    const privacyUrl = await input({
+      message: 'Privacy URL:',
+      validate: (value) => validateField('privacyUrl', value),
+    });
+    const termsUrl = await input({
+      message: 'Terms of use URL:',
+      validate: (value) => validateField('termsOfUseUrl', value),
+    });
     result.developer = {
       name: devName,
       websiteUrl,

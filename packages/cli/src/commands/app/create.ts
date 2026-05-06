@@ -14,6 +14,7 @@ import {
   createAzureBotHandler,
   normalizeAppMetadata,
   validateAppMetadata,
+  validateAppMetadataField,
   validateEndpoint,
   type AzureContext,
   type BotLocation,
@@ -110,7 +111,13 @@ export const appCreateCommand = new Command('create')
       // Get name
       const name =
         options.name ??
-        (interactive && !hasFlags ? await input({ message: 'App name:' }) : undefined);
+        (interactive && !hasFlags
+          ? await input({
+              message: 'App name:',
+              validate: (value) =>
+                validateAppMetadataField('shortName', value, 'create') ?? true,
+            })
+          : undefined);
 
       if (!name?.trim()) {
         throw new CliError('VALIDATION_MISSING', 'App name cannot be empty.');
