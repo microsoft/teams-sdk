@@ -3,7 +3,12 @@ import pc from 'picocolors';
 import { createSpinner } from 'nanospinner';
 import type { AppDetails } from './types.js';
 import { updateAppDetails } from './api.js';
-import { validateAppMetadataField, type AppMetadataField } from './validation.js';
+import {
+  getAppMetadataFieldRule,
+  isAppMetadataField,
+  validateAppMetadataField,
+  type AppMetadataField,
+} from './validation.js';
 import { logger } from '../utils/logger.js';
 
 interface FieldConfig {
@@ -14,33 +19,32 @@ interface FieldConfig {
   validate?: (value: string) => string | true;
 }
 
-const FIELDS: FieldConfig[] = [
-  { key: 'shortName', label: 'Short name', maxLength: 30, required: true },
-  { key: 'longName', label: 'Long name', maxLength: 100, required: false },
-  { key: 'shortDescription', label: 'Short description', maxLength: 80, required: true },
-  { key: 'longDescription', label: 'Long description', maxLength: 4000, required: true },
-  { key: 'version', label: 'Version', required: true },
-  { key: 'developerName', label: 'Developer name', required: true },
-  { key: 'websiteUrl', label: 'Website URL', required: true },
-  { key: 'privacyUrl', label: 'Privacy URL', required: true },
-  { key: 'termsOfUseUrl', label: 'Terms of Use URL', required: true },
+const BASIC_INFO_FIELD_ORDER: AppMetadataField[] = [
+  'shortName',
+  'longName',
+  'shortDescription',
+  'longDescription',
+  'developerName',
+  'websiteUrl',
+  'privacyUrl',
+  'termsOfUseUrl',
 ];
 
-function isMetadataField(key: keyof AppDetails): key is AppMetadataField {
-  switch (key) {
-    case 'shortName':
-    case 'longName':
-    case 'shortDescription':
-    case 'longDescription':
-    case 'developerName':
-    case 'websiteUrl':
-    case 'privacyUrl':
-    case 'termsOfUseUrl':
-      return true;
-    default:
-      return false;
-  }
+function buildMetadataFieldConfig(field: AppMetadataField): FieldConfig {
+  const rule = getAppMetadataFieldRule(field);
+  return {
+    key: field,
+    label: rule.label,
+    maxLength: rule.maxLength,
+    required: rule.requiredIn.includes('manifest'),
+  };
 }
+
+const FIELDS: FieldConfig[] = [
+  ...BASIC_INFO_FIELD_ORDER.slice(0, 4).map(buildMetadataFieldConfig),
+  { key: 'version', label: 'Version', required: true },
+  ...BASIC_INFO_FIELD_ORDER.slice(4).map(buildMetadataFieldConfig),
+];
 
 function truncateValue(value: string | undefined | null, maxLength: number = 40): string {
   const str = value ?? '';
@@ -80,7 +84,7 @@ async function editField(
     message: `Enter new ${field.label.toLowerCase()}${maxLengthHint}:`,
     default: currentValue,
     validate: (value) => {
-      if (isMetadataField(field.key)) {
+      if (isAppMetadataField(field.key)) {
         return validateAppMetadataField(field.key, value, 'manifest') ?? true;
       }
 

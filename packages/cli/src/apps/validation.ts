@@ -17,12 +17,24 @@ export interface AppMetadataInput {
 
 export type AppMetadataField = keyof AppMetadataInput;
 
+export const APP_METADATA_FIELDS = [
+  'shortName',
+  'longName',
+  'shortDescription',
+  'longDescription',
+  'developerName',
+  'websiteUrl',
+  'privacyUrl',
+  'termsOfUseUrl',
+  'endpoint',
+] as const satisfies readonly AppMetadataField[];
+
 export interface ValidationIssue {
   field: AppMetadataField;
   message: string;
 }
 
-interface FieldRule {
+export interface AppMetadataFieldRule {
   label: string;
   maxLength?: number;
   requiredIn: ValidationMode[];
@@ -33,7 +45,7 @@ interface FieldRule {
 
 const HTTPS_URL_REGEX = /^https:\/\/\S+$/i;
 
-const FIELD_RULES: Record<AppMetadataField, FieldRule> = {
+const FIELD_RULES: Record<AppMetadataField, AppMetadataFieldRule> = {
   shortName: {
     label: 'Short name',
     maxLength: 30,
@@ -81,6 +93,14 @@ const FIELD_RULES: Record<AppMetadataField, FieldRule> = {
     validate: (value) => validateEndpoint(value),
   },
 };
+
+export function getAppMetadataFieldRule(field: AppMetadataField): AppMetadataFieldRule {
+  return FIELD_RULES[field];
+}
+
+export function isAppMetadataField(field: PropertyKey): field is AppMetadataField {
+  return typeof field === 'string' && APP_METADATA_FIELDS.some((candidate) => candidate === field);
+}
 
 export function normalizeAppMetadata(input: AppMetadataInput): AppMetadataInput {
   return {
@@ -133,7 +153,7 @@ export function validateAppMetadata(
   const normalized = normalizeAppMetadata(input);
   const issues: ValidationIssue[] = [];
 
-  for (const field of Object.keys(FIELD_RULES) as AppMetadataField[]) {
+  for (const field of APP_METADATA_FIELDS) {
     const value = normalized[field];
     if (mode === 'update' && value === undefined) {
       continue;
