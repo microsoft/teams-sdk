@@ -94,20 +94,6 @@ export const appCreateCommand = new Command('create')
           'Cannot specify both --azure and --teams-managed.'
         );
       }
-      if (options.endpoint !== undefined) {
-        const trimmedEndpoint = options.endpoint.trim();
-        if (!trimmedEndpoint) {
-          throw new CliError(
-            'VALIDATION_FORMAT',
-            'Bot messaging endpoint URL cannot be empty.'
-          );
-        }
-        const endpointError = validateEndpoint(trimmedEndpoint);
-        if (endpointError) {
-          throw new CliError('VALIDATION_FORMAT', endpointError);
-        }
-        options.endpoint = trimmedEndpoint;
-      }
       const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
       const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
 

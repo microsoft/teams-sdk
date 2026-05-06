@@ -26,6 +26,22 @@ const FIELDS: FieldConfig[] = [
   { key: 'termsOfUseUrl', label: 'Terms of Use URL', required: true },
 ];
 
+function isMetadataField(key: keyof AppDetails): key is AppMetadataField {
+  switch (key) {
+    case 'shortName':
+    case 'longName':
+    case 'shortDescription':
+    case 'longDescription':
+    case 'developerName':
+    case 'websiteUrl':
+    case 'privacyUrl':
+    case 'termsOfUseUrl':
+      return true;
+    default:
+      return false;
+  }
+}
+
 function truncateValue(value: string | undefined | null, maxLength: number = 40): string {
   const str = value ?? '';
   if (str.length > maxLength) {
@@ -64,19 +80,8 @@ async function editField(
     message: `Enter new ${field.label.toLowerCase()}${maxLengthHint}:`,
     default: currentValue,
     validate: (value) => {
-      if (
-        field.key === 'shortName' ||
-        field.key === 'longName' ||
-        field.key === 'shortDescription' ||
-        field.key === 'longDescription' ||
-        field.key === 'developerName' ||
-        field.key === 'websiteUrl' ||
-        field.key === 'privacyUrl' ||
-        field.key === 'termsOfUseUrl'
-      ) {
-        return (
-          validateAppMetadataField(field.key as AppMetadataField, value, 'manifest') ?? true
-        );
+      if (isMetadataField(field.key)) {
+        return validateAppMetadataField(field.key, value, 'manifest') ?? true;
       }
 
       // Check required
