@@ -101,12 +101,6 @@ export async function uploadManifestFromFile(
   if (!manifest.id) missing.push('id');
   if (!manifest.version) missing.push('version');
   if (!manifest.manifestVersion) missing.push('manifestVersion');
-  if (!manifest.name?.short) missing.push('name.short');
-  if (!manifest.description?.short) missing.push('description.short');
-  if (!manifest.developer?.name) missing.push('developer.name');
-  if (!manifest.developer?.websiteUrl) missing.push('developer.websiteUrl');
-  if (!manifest.developer?.privacyUrl) missing.push('developer.privacyUrl');
-  if (!manifest.developer?.termsOfUseUrl) missing.push('developer.termsOfUseUrl');
 
   if (missing.length > 0) {
     if (silent) {
@@ -125,7 +119,21 @@ export async function uploadManifestFromFile(
 
   const validationIssues = validateAppMetadata(appMetadataFromManifest(manifest), 'manifest');
   if (validationIssues.length > 0) {
-    throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
+    if (silent) {
+      throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
+    }
+
+    logger.warn(
+      pc.yellow(
+        `Manifest metadata validation failed: ${validationIssues
+          .map((issue) => issue.message)
+          .join('; ')}`
+      )
+    );
+    if (!isAutoConfirm()) {
+      const proceed = await confirm({ message: 'Upload anyway?', default: false });
+      if (!proceed) return undefined;
+    }
   }
 
   // Auto-bump version if enabled and version is parseable

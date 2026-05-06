@@ -80,4 +80,41 @@ describe('manifest upload shared validation', () => {
     ).rejects.toThrow('Short name must be 30 characters or less.');
     expect(mockUploadManifest).not.toHaveBeenCalled();
   });
+
+  it('allows interactive upload to proceed when metadata validation fails and auto-confirm is enabled', async () => {
+    const file = path.join(
+      os.tmpdir(),
+      `teams-cli-manifest-${Date.now()}-${Math.random().toString(36).slice(2)}.json`
+    );
+    files.push(file);
+
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        id: 'test-app-id',
+        version: '1.0.0',
+        manifestVersion: '1.25',
+        name: { short: 'Valid short name', full: 'Valid full name' },
+        description: { short: 'Short description' },
+        developer: {
+          name: 'Developer',
+          websiteUrl: 'https://example.com',
+          privacyUrl: 'https://example.com/privacy',
+          termsOfUseUrl: 'https://example.com/terms',
+        },
+      })
+    );
+
+    const { uploadManifestFromFile } = await import('../src/commands/app/manifest/actions.js');
+
+    await expect(uploadManifestFromFile('token', 'teams-app-id', file, false)).resolves.toEqual({
+      version: '1.0.0',
+      versionBumped: false,
+    });
+    expect(mockUploadManifest).toHaveBeenCalledWith(
+      'token',
+      'teams-app-id',
+      expect.stringContaining('"manifestVersion": "1.25"')
+    );
+  });
 });
