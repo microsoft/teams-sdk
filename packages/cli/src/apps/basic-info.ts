@@ -19,17 +19,6 @@ interface FieldConfig {
   validate?: (value: string) => string | true;
 }
 
-const BASIC_INFO_FIELD_ORDER: AppMetadataField[] = [
-  'shortName',
-  'longName',
-  'shortDescription',
-  'longDescription',
-  'developerName',
-  'websiteUrl',
-  'privacyUrl',
-  'termsOfUseUrl',
-];
-
 function buildMetadataFieldConfig(field: AppMetadataField): FieldConfig {
   const rule = getAppMetadataFieldRule(field);
   return {
@@ -41,9 +30,15 @@ function buildMetadataFieldConfig(field: AppMetadataField): FieldConfig {
 }
 
 const FIELDS: FieldConfig[] = [
-  ...BASIC_INFO_FIELD_ORDER.slice(0, 4).map(buildMetadataFieldConfig),
+  buildMetadataFieldConfig('shortName'),
+  buildMetadataFieldConfig('longName'),
+  buildMetadataFieldConfig('shortDescription'),
+  buildMetadataFieldConfig('longDescription'),
   { key: 'version', label: 'Version', required: true },
-  ...BASIC_INFO_FIELD_ORDER.slice(4).map(buildMetadataFieldConfig),
+  buildMetadataFieldConfig('developerName'),
+  buildMetadataFieldConfig('websiteUrl'),
+  buildMetadataFieldConfig('privacyUrl'),
+  buildMetadataFieldConfig('termsOfUseUrl'),
 ];
 
 function truncateValue(value: string | undefined | null, maxLength: number = 40): string {
