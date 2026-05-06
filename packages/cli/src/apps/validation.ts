@@ -83,12 +83,17 @@ const FIELD_RULES: Record<AppMetadataField, FieldRule> = {
 };
 
 export function normalizeAppMetadata(input: AppMetadataInput): AppMetadataInput {
-  return Object.fromEntries(
-    Object.entries(input).map(([key, value]) => [
-      key,
-      typeof value === 'string' ? value.trim() : value,
-    ])
-  ) as AppMetadataInput;
+  return {
+    shortName: normalizeString(input.shortName),
+    longName: normalizeString(input.longName),
+    shortDescription: normalizeString(input.shortDescription),
+    longDescription: normalizeString(input.longDescription),
+    developerName: normalizeString(input.developerName),
+    websiteUrl: normalizeString(input.websiteUrl),
+    privacyUrl: normalizeString(input.privacyUrl),
+    termsOfUseUrl: normalizeString(input.termsOfUseUrl),
+    endpoint: normalizeString(input.endpoint),
+  };
 }
 
 export function validateAppMetadataField(
@@ -154,6 +159,10 @@ export function appMetadataFromManifest(manifest: TeamsManifest): AppMetadataInp
     privacyUrl: manifest.developer?.privacyUrl,
     termsOfUseUrl: manifest.developer?.termsOfUseUrl,
   };
+}
+
+function normalizeString(value: string | undefined): string | undefined {
+  return typeof value === 'string' ? value.trim() : value;
 }
 
 function validateHttpsUrl(value: string, label: string): string | null {

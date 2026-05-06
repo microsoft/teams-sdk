@@ -12,6 +12,7 @@ import {
   type BotScope,
   createTdpBotHandler,
   createAzureBotHandler,
+  normalizeAppMetadata,
   validateAppMetadata,
   validateEndpoint,
   type AzureContext,
@@ -188,23 +189,38 @@ export const appCreateCommand = new Command('create')
         ? (earlyOutlineIcon ?? readAndValidateIcon(outlineIconPath, 32))
         : undefined;
 
-      const validationIssues = validateAppMetadata(
-        {
-          shortName: name,
-          longName: name,
-          shortDescription: descriptionOpts?.short ?? name,
-          longDescription: descriptionOpts?.full ?? descriptionOpts?.short ?? name,
-          developerName: developerOpts?.name ?? 'Developer',
-          websiteUrl: developerOpts?.websiteUrl ?? 'https://www.example.com',
-          privacyUrl: developerOpts?.privacyUrl ?? 'https://www.example.com/privacy',
-          termsOfUseUrl: developerOpts?.termsOfUseUrl ?? 'https://www.example.com/terms',
-          endpoint,
-        },
-        'create'
-      );
+      const createMetadata = normalizeAppMetadata({
+        shortName: name,
+        longName: name,
+        shortDescription: descriptionOpts?.short ?? name,
+        longDescription: descriptionOpts?.full ?? descriptionOpts?.short ?? name,
+        developerName: developerOpts?.name ?? 'Developer',
+        websiteUrl: developerOpts?.websiteUrl ?? 'https://www.example.com',
+        privacyUrl: developerOpts?.privacyUrl ?? 'https://www.example.com/privacy',
+        termsOfUseUrl: developerOpts?.termsOfUseUrl ?? 'https://www.example.com/terms',
+        endpoint,
+      });
+      const validationIssues = validateAppMetadata(createMetadata, 'create');
       if (validationIssues.length > 0) {
         throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
       }
+
+      const normalizedName = createMetadata.shortName!;
+      const normalizedEndpoint = createMetadata.endpoint;
+      const normalizedDescriptionOpts = descriptionOpts
+        ? {
+            short: createMetadata.shortDescription!,
+            full: createMetadata.longDescription!,
+          }
+        : undefined;
+      const normalizedDeveloperOpts = developerOpts
+        ? {
+            name: createMetadata.developerName!,
+            websiteUrl: createMetadata.websiteUrl!,
+            privacyUrl: createMetadata.privacyUrl!,
+            termsOfUseUrl: createMetadata.termsOfUseUrl!,
+          }
+        : undefined;
 
       const account = await getAccount();
       if (!account) {
@@ -254,17 +270,17 @@ export const appCreateCommand = new Command('create')
       }
 
       // ===== All inputs gathered — confirm before proceeding =====
-      const summaryLines: [string, string][] = [['App name', name]];
+      const summaryLines: [string, string][] = [['App name', normalizedName]];
       if (azureContext) {
         summaryLines.push(['Subscription', azureContext.subscription]);
         summaryLines.push(['Resource group', azureContext.resourceGroup]);
       }
-      if (endpoint) summaryLines.push(['Endpoint', endpoint]);
-      if (descriptionOpts?.short.trim())
-        summaryLines.push(['Description', descriptionOpts.short.trim()]);
+      if (normalizedEndpoint) summaryLines.push(['Endpoint', normalizedEndpoint]);
+      if (normalizedDescriptionOpts?.short)
+        summaryLines.push(['Description', normalizedDescriptionOpts.short]);
       if (scopeChoices && scopeChoices.length > 0)
         summaryLines.push(['Scopes', scopeChoices.join(', ')]);
-      if (developerOpts?.name.trim()) summaryLines.push(['Developer', developerOpts.name.trim()]);
+      if (normalizedDeveloperOpts?.name) summaryLines.push(['Developer', normalizedDeveloperOpts.name]);
       if (colorIconPath) summaryLines.push(['Color icon', colorIconPath]);
       if (outlineIconPath) summaryLines.push(['Outline icon', outlineIconPath]);
       if (!generateSecret) summaryLines.push(['Secret', 'Skipped']);
@@ -312,18 +328,18 @@ export const appCreateCommand = new Command('create')
 
       // Create AAD app via TDP (creates service principal server-side)
       spinner = createSilentSpinner('Creating Azure AD app...', silent).start();
-      const aadApp = await createAadAppViaTdp(tdpToken, name!);
+      const aadApp = await createAadAppViaTdp(tdpToken, normalizedName);
       const clientId = aadApp.appId;
       spinner.success({ text: `Created Azure AD app (${clientId})` });
 
       // Generate manifest
       const manifestOpts: ManifestOptions = {
         botId: clientId,
-        botName: name!,
-        endpoint,
-        description: descriptionOpts,
+        botName: normalizedName,
+        endpoint: normalizedEndpoint,
+        description: normalizedDescriptionOpts,
         scopes: scopeChoices,
-        developer: developerOpts,
+        developer: normalizedDeveloperOpts,
         colorIconBuffer: colorIcon?.buffer,
         outlineIconBuffer: outlineIcon?.buffer,
       };
@@ -361,7 +377,7 @@ export const appCreateCommand = new Command('create')
       spinner = createSilentSpinner('Registering bot...', silent).start();
       const handler =
         location === 'tm' ? createTdpBotHandler(tdpToken) : createAzureBotHandler(azureContext!);
-      await handler.createBot({ botId: clientId, name: name!, endpoint });
+      await handler.createBot({ botId: clientId, name: normalizedName, endpoint: normalizedEndpoint });
       spinner.success({ text: 'Bot registered' });
 
       // Output results
@@ -385,10 +401,10 @@ export const appCreateCommand = new Command('create')
         }
 
         const result: AppCreateOutput = {
-          appName: name!,
+          appName: normalizedName,
           teamsAppId,
           botId: clientId,
-          endpoint: endpoint ?? null,
+          endpoint: normalizedEndpoint ?? null,
           installLink: install,
           portalLink: portal,
           botLocation: location === 'tm' ? 'teams-managed' : 'azure',
@@ -400,11 +416,11 @@ export const appCreateCommand = new Command('create')
         outputJson(result);
       } else {
         logger.info(pc.bold(pc.green('\nApp created successfully!')));
-        logger.info(`${pc.dim('Name:')} ${name!}`);
+        logger.info(`${pc.dim('Name:')} ${normalizedName}`);
         logger.info(`${pc.dim('Teams App ID:')} ${teamsAppId}`);
         logger.info(`${pc.dim('Bot ID:')} ${clientId}`);
-        if (endpoint) {
-          logger.info(`${pc.dim('Endpoint:')} ${endpoint}`);
+        if (normalizedEndpoint) {
+          logger.info(`${pc.dim('Endpoint:')} ${normalizedEndpoint}`);
         }
         logger.info('');
         printLinkBanner('Install in Teams', install);

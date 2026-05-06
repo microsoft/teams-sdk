@@ -14,6 +14,7 @@ import {
   createAzureBotHandler,
   discoverAzureBot,
   extractDomain,
+  normalizeAppMetadata,
   validateAppMetadata,
   validateEndpoint,
   uploadIcon,
@@ -417,23 +418,30 @@ export const appUpdateCommand = new Command('update')
           throw new CliError('VALIDATION_FORMAT', 'At least one scope is required.');
         }
       }
-      const validationIssues = validateAppMetadata(
-        {
-          endpoint: options.endpoint,
-          shortName: options.name,
-          longName: options.longName,
-          shortDescription: options.shortDescription,
-          longDescription: options.longDescription,
-          developerName: options.developer,
-          websiteUrl: options.website,
-          privacyUrl: options.privacyUrl,
-          termsOfUseUrl: options.termsUrl,
-        },
-        'update'
-      );
+      const normalizedMetadata = normalizeAppMetadata({
+        endpoint: options.endpoint,
+        shortName: options.name,
+        longName: options.longName,
+        shortDescription: options.shortDescription,
+        longDescription: options.longDescription,
+        developerName: options.developer,
+        websiteUrl: options.website,
+        privacyUrl: options.privacyUrl,
+        termsOfUseUrl: options.termsUrl,
+      });
+      const validationIssues = validateAppMetadata(normalizedMetadata, 'update');
       if (validationIssues.length > 0) {
         throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
       }
+      options.endpoint = normalizedMetadata.endpoint;
+      options.name = normalizedMetadata.shortName;
+      options.longName = normalizedMetadata.longName;
+      options.shortDescription = normalizedMetadata.shortDescription;
+      options.longDescription = normalizedMetadata.longDescription;
+      options.developer = normalizedMetadata.developerName;
+      options.website = normalizedMetadata.websiteUrl;
+      options.privacyUrl = normalizedMetadata.privacyUrl;
+      options.termsUrl = normalizedMetadata.termsOfUseUrl;
 
       // Interactive mode (no appId, no mutation flags): picker loop
       if (!appIdArg && !hasMutationFlags) {
