@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 summary: Documentation files optimized for AI coding assistants to give them context about the Teams SDK.
 ---
 
