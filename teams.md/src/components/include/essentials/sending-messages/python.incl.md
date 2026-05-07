@@ -92,26 +92,6 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 <!-- reactions-preview-note -->
 N/A
 
-<!-- get-quoted-messages-method-name -->
-
-`get_quoted_messages()`
-
-<!-- reply-method-name -->
-
-`reply()`
-
-<!-- quote-reply-method-name -->
-
-`quote()`
-
-<!-- app-send-method-name -->
-
-`app.send()`
-
-<!-- add-quoted-reply-method-name -->
-
-`add_quote()`
-
 <!-- quoted-replies-receive-example -->
 
 ```python

@@ -109,26 +109,6 @@ app.OnMessage(async (context, cancellationToken) =>
 });
 ```
 
-<!-- get-quoted-messages-method-name -->
-
-`GetQuotedMessages()`
-
-<!-- reply-method-name -->
-
-`Reply()`
-
-<!-- quote-reply-method-name -->
-
-`Quote()`
-
-<!-- app-send-method-name -->
-
-`app.Send()`
-
-<!-- add-quoted-reply-method-name -->
-
-`AddQuote()`
-
 <!-- quoted-replies-receive-example -->
 
 ```csharp

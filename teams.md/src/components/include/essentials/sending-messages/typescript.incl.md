@@ -86,26 +86,6 @@ app.on('message', async ({ send, reply }) => {
 });
 ```
 
-<!-- get-quoted-messages-method-name -->
-
-`getQuotedMessages()`
-
-<!-- reply-method-name -->
-
-`reply()`
-
-<!-- quote-reply-method-name -->
-
-`quote()`
-
-<!-- app-send-method-name -->
-
-`app.send()`
-
-<!-- add-quoted-reply-method-name -->
-
-`addQuote()`
-
 <!-- quoted-replies-receive-example -->
 
 ```typescript
