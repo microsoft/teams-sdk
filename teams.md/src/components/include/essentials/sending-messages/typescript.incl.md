@@ -135,7 +135,8 @@ app.on('message', async ({ reply }) => {
 ```typescript
 app.on('message', async ({ quote }) => {
   // Quote a specific message by its ID
-  await quote('1772050244572', 'Referencing an earlier message');
+  const parentMessageId = '1772050244572';
+  await quote(parentMessageId, 'Referencing an earlier message');
 });
 ```
 
@@ -144,21 +145,25 @@ app.on('message', async ({ quote }) => {
 ```typescript
 import { MessageActivity } from '@microsoft/teams.api';
 
+const parentMessageId = '1772050244572';
+const firstMessageId = '1772050244573';
+const secondMessageId = '1772050244574';
+
 // Single quote with response below it
 let msg = new MessageActivity()
-  .addQuote('1772050244572', 'Here is my response');
+  .addQuote(parentMessageId, 'Here is my response');
 await app.send(conversationId, msg);
 
 // Multiple quotes with interleaved responses
 msg = new MessageActivity()
-  .addQuote('msg-1', 'response to first')
-  .addQuote('msg-2', 'response to second');
+  .addQuote(firstMessageId, 'response to first')
+  .addQuote(secondMessageId, 'response to second');
 await app.send(conversationId, msg);
 
 // Grouped quotes — omit response to group quotes together
 msg = new MessageActivity('see below for previous messages')
-  .addQuote('msg-1')
-  .addQuote('msg-2', 'response to both');
+  .addQuote(firstMessageId)
+  .addQuote(secondMessageId, 'response to both');
 await app.send(conversationId, msg);
 ```
 

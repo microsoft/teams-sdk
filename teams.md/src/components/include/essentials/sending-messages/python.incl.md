@@ -141,7 +141,8 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     # Quote a specific message by its ID
-    await ctx.quote("1772050244572", "Referencing an earlier message")
+    parent_message_id = "1772050244572"
+    await ctx.quote(parent_message_id, "Referencing an earlier message")
 ```
 
 <!-- quoted-replies-builder-example -->
@@ -149,21 +150,25 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 ```python
 from microsoft_teams.api.activities.message import MessageActivityInput
 
+parent_message_id = "1772050244572"
+first_message_id = "1772050244573"
+second_message_id = "1772050244574"
+
 # Single quote with response below it
 msg = (MessageActivityInput()
-    .add_quote("1772050244572", "Here is my response"))
+    .add_quote(parent_message_id, "Here is my response"))
 await app.send(conversation_id, msg)
 
 # Multiple quotes with interleaved responses
 msg = (MessageActivityInput()
-    .add_quote("msg-1", "response to first")
-    .add_quote("msg-2", "response to second"))
+    .add_quote(first_message_id, "response to first")
+    .add_quote(second_message_id, "response to second"))
 await app.send(conversation_id, msg)
 
 # Grouped quotes — omit response to group quotes together
 msg = (MessageActivityInput(text="see below for previous messages")
-    .add_quote("msg-1")
-    .add_quote("msg-2", "response to both"))
+    .add_quote(first_message_id)
+    .add_quote(second_message_id, "response to both"))
 await app.send(conversation_id, msg)
 ```
 

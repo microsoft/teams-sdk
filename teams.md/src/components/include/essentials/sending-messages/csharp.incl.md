@@ -161,28 +161,33 @@ app.OnMessage(async context =>
 app.OnMessage(async context =>
 {
     // Quote a specific message by its ID
-    await context.Quote("1772050244572", "Referencing an earlier message");
+    var parentMessageId = "1772050244572";
+    await context.Quote(parentMessageId, "Referencing an earlier message");
 });
 ```
 
 <!-- quoted-replies-builder-example -->
 
 ```csharp
+var parentMessageId = "1772050244572";
+var firstMessageId = "1772050244573";
+var secondMessageId = "1772050244574";
+
 // Single quote with response below it
 var msg = new MessageActivity()
-    .AddQuote("1772050244572", "Here is my response");
+    .AddQuote(parentMessageId, "Here is my response");
 await app.Send(conversationId, msg);
 
 // Multiple quotes with interleaved responses
 msg = new MessageActivity()
-    .AddQuote("msg-1", "response to first")
-    .AddQuote("msg-2", "response to second");
+    .AddQuote(firstMessageId, "response to first")
+    .AddQuote(secondMessageId, "response to second");
 await app.Send(conversationId, msg);
 
 // Grouped quotes — omit response to group quotes together
 msg = new MessageActivity("see below for previous messages")
-    .AddQuote("msg-1")
-    .AddQuote("msg-2", "response to both");
+    .AddQuote(firstMessageId)
+    .AddQuote(secondMessageId, "response to both");
 await app.Send(conversationId, msg);
 ```
 
