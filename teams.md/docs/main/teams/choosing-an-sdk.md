@@ -126,5 +126,5 @@ If you're migrating from the **Bot Framework SDK** (the `Microsoft.Bot.*` packag
 - **Already using Bot Framework or TeamsFx?** See [Bot Framework migration](#bot-framework-migration) above; both SDKs offer migration paths.
 
 :::tip Build for Teams *and* M365 Copilot at once
-Both SDKs reach Microsoft 365 Copilot through the same Teams client surface. Once your bot works in Teams, [enable it in M365 Copilot](./enabling-in-copilot) with a single CLI command. No code change required.
+Both SDKs reach Microsoft 365 Copilot through the same Teams client surface. Once your bot works in Teams, [enable it in M365 Copilot](./enabling-in-copilot) with a single CLI command, then republish or reload the app. No code change required.
 :::
