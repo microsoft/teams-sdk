@@ -3,72 +3,29 @@ sidebar_class_name: 'sidebar-hidden'
 summary: Pick the right SDK for your Teams agent. Compares the Microsoft 365 Agents SDK and the Microsoft Teams SDK by Teams depth, channel reach, and migration story.
 ---
 
-# Picking the right SDK for your Teams agent
+# Pick the right SDK for your Teams agent
 
 Microsoft offers two supported, actively-developed SDKs that can build a bot or agent for Microsoft Teams:
 
-- **[Microsoft 365 Agents SDK](https://github.com/Microsoft/Agents)**: a multi-channel agent runtime
-- **Microsoft Teams SDK**: the SDK these docs cover, a Teams-first application framework
+- **[Microsoft Teams SDK](https://github.com/microsoft/teams-sdk)**: the SDK these docs cover, a Teams-first application framework
+- **[Microsoft 365 Agents SDK](https://github.com/Microsoft/Agents)**: a multi-channel agent runtime that reaches Teams, M365 Copilot, Microsoft Copilot Studio, WebChat, and other surfaces
 
-Both ship for **C#, TypeScript, and Python**. Both speak the Activity Protocol, both interoperate with Microsoft Entra, both support agentic identity via Agent365 (shipped in the M365 Agents SDK; coming soon to Teams SDK), and both reach Microsoft 365 Copilot. Microsoft positions both as first-class. Work done in either is portable in shape, and you are not locked into one path.
+Both ship for **C#, TypeScript, and Python**. Both speak the Activity Protocol (the JSON wire format for bot/agent activities such as messages and events), both interoperate with Microsoft Entra, both support agentic identity via Agent365 (shipped in the M365 Agents SDK; coming soon to Teams SDK), and both reach Microsoft 365 Copilot. Microsoft positions both as first-class. You are not locked into one path; see [Bot Framework migration](#bot-framework-migration) below for what switching between them entails.
 
-This page helps you pick the SDK whose **defaults** match the bot or agent you're building. The criteria are about *fit*, not gates: the two SDKs are converging on most capabilities, so we focus on durable differences.
-
-## How they relate
-
-The two SDKs target different backends (**Teams Bot Service** for the Microsoft Teams SDK, **Azure Bot Service** for the M365 Agents SDK), but speak the same **Activity Protocol** to reach them.
-
-```mermaid
-flowchart TB
-    Code([Your bot / agent code])
-    A["**M365 Agents SDK**<br/>AgentApplication<br/>(Microsoft.Agents.Builder)"]
-    T["**Microsoft Teams SDK**<br/>TeamsBotApplication<br/>(Microsoft.Teams.Apps)"]
-    ABS["Azure Bot Service"]
-    TBS["Teams Bot Service"]
-
-    MTeams(["&nbsp;&nbsp;&nbsp;&nbsp;Microsoft Teams&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"])
-    M365C(["Microsoft 365 Copilot&nbsp;&nbsp;&nbsp;"])
-    MCS([Microsoft Copilot Studio])
-    WCD(["&nbsp;&nbsp;WebChat / DirectLine&nbsp;"])
-    TWD(["Twilio, WhatsApp, etc."])
-
-    Code --> T
-    Code --> A
-    T -- "Activity Protocol" --> TBS
-    A -- "Activity Protocol" --> ABS
-
-    TBS --> MTeams
-    TBS --> M365C
-
-    ABS --> MTeams
-    ABS --> M365C
-    ABS --> MCS
-    ABS --> WCD
-    ABS --> TWD
-
-    classDef both fill:#5B5FC7,color:#fff,stroke:none
-    classDef agentsOptimized fill:#E8AB14,color:#000,stroke:none
-    class MTeams,M365C both
-    class MCS,WCD,TWD agentsOptimized
-```
-
-The channels then split into two groups:
-
-- **Purple** (Microsoft Teams, Microsoft 365 Copilot): reachable from both SDKs. Basic features are at parity; for the premier Teams experience, use the Teams SDK.
-- **Amber** (Microsoft Copilot Studio, WebChat / DirectLine, …): reachable from either SDK in principle, but the M365 Agents SDK is the recommended, optimized path.
+This doc helps you pick the SDK whose **defaults** match the bot or agent you're building. The criteria are about *fit*, not gates: the two SDKs are converging on most capabilities, so we focus on durable differences.
 
 ## Which SDK for your Teams scenario
 
 How Teams-deep does your bot need to go? Two paths:
 
-- **Basic** is **breadth-focused**: Activity Protocol primitives that work uniformly across Teams, M365 Copilot, Copilot Studio, WebChat, and other channels. Best fit: the **M365 Agents SDK**.
-- **Premier** is **depth-focused**: Teams-specific surfaces (mentions, message extensions, dialogs, tabs, meeting events, AI affordances, …) with dedicated handlers, schema types, and ergonomics. Best fit: the **Microsoft Teams SDK**.
+- **Cross-channel essentials** are **breadth-focused**: Activity Protocol primitives that work uniformly across Teams, M365 Copilot, Copilot Studio, WebChat, and other channels. Best fit: the **M365 Agents SDK**.
+- **Teams-native collaboration** is **depth-focused**: the surfaces a bot needs to participate in group conversations the way Teams users expect (mentions, reactions, quoted replies, threaded replies, channel events, meetings experiences, citations, …). Best fit: the **Microsoft Teams SDK**.
 
 ![M365 Agents SDK on Teams (breadth) vs Microsoft Teams SDK (depth)](/img/sdk-feature-comparison.png)
 
-### Basic experience: what you get with the M365 Agents SDK on Teams
+### Cross-channel essentials: what you get with the M365 Agents SDK on Teams
 
-The basic experience: Activity Protocol primitives that work uniformly across channels.
+Activity Protocol primitives that work uniformly across channels.
 
 | Feature | Description |
 |---|---|
@@ -80,28 +37,77 @@ The basic experience: Activity Protocol primitives that work uniformly across ch
 | Proactive messaging | Send unsolicited messages to a saved conversation |
 | Adaptive Cards (basic) | Send cards and handle simple action callbacks |
 
-### Premier experience: what you get with the Microsoft Teams SDK on Teams
+### Teams-native collaboration: what you get with the Microsoft Teams SDK on Teams
 
-Everything in the basic experience above, **plus** the premier Teams surface: dedicated handlers, schema types, and ergonomics for Teams-specific features.
+Everything in the cross-channel essentials above, **plus** the Teams-native surface for **collaboration in group conversations**: the affordances your bot needs to participate in channels, chats, and meetings the way Teams users expect.
 
-| Feature | Description / API |
+| Feature | Description |
 |---|---|
-| @Mentions | `MessageActivity.addMention(...)`; `mention` activity route |
-| Slash commands | Manifest-registered command lists invoked from the Teams compose box |
+| @Mentions | Mention a specific user in a message; receive a `mention` activity when the bot is mentioned |
 | Reactions | Add / remove emoji reactions on messages |
-| Targeted (ephemeral) messages *(preview)* | `withRecipient(...)` to deliver to a specific user in a shared conversation |
-| Quoted replies | Inbound parsing (`GetQuotedMessages()`), outbound auto-quote (`Reply()`), and quote-by-message-id (`Quote()`); see [`core/samples/Quoting`](https://github.com/microsoft/teams-sdk/tree/main/core/samples/Quoting) |
+| Targeted (ephemeral) messages *(preview)* | Deliver a message to a specific user in a shared conversation; other participants don't see it |
+| Quoted replies | Parse incoming quoted-reply context; send replies that auto-quote the user's message or quote a specific message by ID |
 | Threaded replies | Reply to a specific message in a channel; channel reply chains |
-| Message extensions | Search commands, link unfurling, action commands |
-| Task modules / dialogs | `dialog.open` / `dialog.submit` (`task/fetch`, `task/submit`) |
-| Tabs | Embedded SPAs with tab-to-bot RPC; configuration via `tab.open` / `tab.submit` |
-| Meeting events | Start / end / participant join / leave |
-| AI affordances | "Generated by AI" label, feedback loop, citation rendering |
+| Channel events | Channel created / renamed / deleted; team member changes |
+| Meetings experiences | Meeting start / end and participant join / leave events |
+| Citations | Render source citations on AI-generated messages |
+| "Generated by AI" label | Show a visual indicator that a message came from an AI |
+| Feedback loop | Capture user feedback (👍 / 👎) on AI messages |
 | SSO / silent token exchange | Sign-in token exchange invokes |
-| Channel events | Channel created / renamed / deleted, team member changes |
+| Slash commands | Manifest-registered command lists invoked from the Teams compose box |
+| Task modules | Show a form in a pop-up; `dialog.open` / `dialog.submit` (`task/fetch`, `task/submit`) invokes |
 | File consent, read receipts, suggested actions, O365 connector card actions | Additional Teams-specific invokes |
+| Message extensions | Search commands, link unfurling, action commands |
 
-> Rule of thumb: if your bot uses **most** of the Premier set, the Teams SDK is the right home; handlers and types are first-class. If it uses **few or none**, the M365 Agents SDK is sufficient.
+> Rule of thumb: if your bot uses **most** of the Teams-native set above, the Teams SDK is the right home. If it uses **few or none**, the M365 Agents SDK is sufficient.
+
+## How they relate
+
+The two SDKs target different backends, but speak the same Activity Protocol to reach them.
+
+- **Teams Bot Service** (Microsoft Teams SDK): the Teams-native runtime that handles bot traffic for Microsoft Teams and the M365 Copilot client surface directly.
+- **Azure Bot Service** (M365 Agents SDK): the broader Bot Framework infrastructure that routes to Teams plus other channels (WebChat, DirectLine, etc.).
+
+Messages flow in both directions along the lines shown: a user's turn rises from the channel up through the backend and SDK to your code, and your reply travels back down the same path.
+
+```mermaid
+flowchart TB
+    Code([Your bot / agent code])
+    A["**M365 Agents SDK**"]
+    T["**Microsoft Teams SDK**"]
+    ABS["Azure Bot Service"]
+    TBS["Teams Bot Service"]
+
+    MTeams(["&nbsp;&nbsp;&nbsp;&nbsp;Microsoft Teams&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"])
+    M365C(["Microsoft 365 Copilot&nbsp;&nbsp;&nbsp;"])
+    MCS([Microsoft Copilot Studio])
+    WCD(["&nbsp;&nbsp;WebChat / DirectLine&nbsp;"])
+    TWD(["Twilio, WhatsApp, etc."])
+
+    Code --> T
+    Code --> A
+    T <-- "Activity Protocol" --> TBS
+    A <-- "Activity Protocol" --> ABS
+
+    TBS <--> MTeams
+    TBS <--> M365C
+
+    ABS <--> MTeams
+    ABS <--> M365C
+    ABS <--> MCS
+    ABS <--> WCD
+    ABS <--> TWD
+
+    classDef both fill:#5B5FC7,color:#fff,stroke:#fff,stroke-width:2px
+    classDef agentsOptimized fill:#E8AB14,color:#000,stroke:#000,stroke-width:2px,stroke-dasharray:5 4
+    class MTeams,M365C both
+    class MCS,WCD,TWD agentsOptimized
+```
+
+The channels then split into two groups:
+
+- **Microsoft Teams and Microsoft 365 Copilot** (solid borders in the diagram) are reachable from both SDKs. Cross-channel essentials are at parity; for Teams-native collaboration, use the Teams SDK.
+- **Microsoft Copilot Studio, WebChat / DirectLine, and other Bot Framework Connector channels** (dashed borders in the diagram) are reachable from either SDK in principle, but the M365 Agents SDK is the recommended, optimized path.
 
 ## Bot Framework migration
 
@@ -111,7 +117,7 @@ If you're migrating from the **Bot Framework SDK** (the `Microsoft.Bot.*` packag
 |---|---|---|
 | **What changes** | Package + namespace rename, `Program.cs` modernization, drop deprecated services | Add the compat package, register the adapter; existing handler unchanged |
 | **Effort** | Medium (modernization scope, not a one-line swap) | Minimal (install + a few lines of registration) |
-| **When to pick** | You want the modern SDK as your end state; you may need cross-channel reach later | You want legacy code running unchanged while you migrate incrementally (or never) |
+| **When to pick** | You want primitives preserved across a clean SDK switch; you may need cross-channel reach later | You want existing BotBuilder code running unchanged while you rewrite handlers piece by piece (or not at all) |
 
 ## Next steps
 
