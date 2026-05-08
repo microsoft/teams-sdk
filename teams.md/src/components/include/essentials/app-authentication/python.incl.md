@@ -1,6 +1,6 @@
 <!-- configure-application -->
 
-Your application should automatically use User Managed Identity authentication when you provide the `CLIENT_ID` environment variable without a `CLIENT_SECRET`.
+Your application should automatically use User Assigned Managed Identity authentication when you provide the `CLIENT_ID` environment variable without a `CLIENT_SECRET`.
 
 ## Configuration
 
