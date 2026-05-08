@@ -11,15 +11,16 @@ The reaction APIs are marked with `[Experimental("ExperimentalTeamsReactions")]`
 :::
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Send("Hello! I'll react to this message.");
+    await context.Send("Hello! I'll react to this message.", cancellationToken);
 
     // Add a reaction to the incoming message
     await context.Api.Conversations.Reactions.AddAsync(
         context.Activity.Conversation.Id,
         context.Activity.Id,
-        ReactionType.Like
+        ReactionType.Like,
+        cancellationToken: cancellationToken
     );
 });
 ```
@@ -27,21 +28,23 @@ app.OnMessage(async context =>
 <!-- removing-reaction -->
 
 ```csharp
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
     // First, add a reaction
     await context.Api.Conversations.Reactions.AddAsync(
         context.Activity.Conversation.Id,
         context.Activity.Id,
-        ReactionType.Heart
+        ReactionType.Heart,
+        cancellationToken: cancellationToken
     );
 
     // Wait a bit, then remove it
-    await Task.Delay(2000);
+    await Task.Delay(2000, cancellationToken);
     await context.Api.Conversations.Reactions.DeleteAsync(
         context.Activity.Conversation.Id,
         context.Activity.Id,
-        ReactionType.Heart
+        ReactionType.Heart,
+        cancellationToken: cancellationToken
     );
 });
 ```
@@ -60,7 +63,7 @@ app.OnMessage(async context =>
 .NET exposes a single `OnMessageReaction` handler plus dedicated `OnMessageReactionAdded` / `OnMessageReactionRemoved` sub-handlers.
 
 ```csharp
-app.OnMessageReactionAdded(async context =>
+app.OnMessageReactionAdded(async (context, cancellationToken) =>
 {
     foreach (var reaction in context.Activity.ReactionsAdded ?? [])
     {
@@ -68,7 +71,7 @@ app.OnMessageReactionAdded(async context =>
     }
 });
 
-app.OnMessageReactionRemoved(async context =>
+app.OnMessageReactionRemoved(async (context, cancellationToken) =>
 {
     foreach (var reaction in context.Activity.ReactionsRemoved ?? [])
     {
