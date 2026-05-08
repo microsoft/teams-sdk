@@ -1,5 +1,15 @@
 <!-- adding-reaction -->
 
+:::tip[.NET]
+The reaction APIs are marked with `[Experimental("ExperimentalTeamsReactions")]` and produce a compiler error until you opt in. Suppress the diagnostic inline with `#pragma warning disable ExperimentalTeamsReactions` or project-wide in your `.csproj`:
+
+```xml
+<PropertyGroup>
+  <NoWarn>$(NoWarn);ExperimentalTeamsReactions</NoWarn>
+</PropertyGroup>
+```
+:::
+
 ```csharp
 app.OnMessage(async context =>
 {
@@ -38,43 +48,33 @@ app.OnMessage(async context =>
 
 <!-- reaction-types -->
 
-The following reaction types are available:
-
 - `ReactionType.Like` — 👍
 - `ReactionType.Heart` — ❤️
-- `ReactionType.Checkmark` — ✅
-- `ReactionType.Hourglass` — ⏳
+- `ReactionType.Eyes` — 👀
+- `ReactionType.CheckMark` — ✅
+- `ReactionType.Launch` — 🚀
 - `ReactionType.Pushpin` — 📌
-- `ReactionType.Exclamation` — ❗
-- `ReactionType.Laugh` — 😆
-- `ReactionType.Surprise` — 😮
-- `ReactionType.Sad` — 🙁
-- `ReactionType.Angry` — 😠
 
-You can also use custom reaction types by creating a new `ReactionType` instance:
+<!-- receiving-reactions -->
+
+.NET exposes a single `OnMessageReaction` handler plus dedicated `OnMessageReactionAdded` / `OnMessageReactionRemoved` sub-handlers.
 
 ```csharp
-// Use a custom emoji reaction
-var customReaction = new ReactionType("1f44b_wavinghand-tone4");
+app.OnMessageReactionAdded(async context =>
+{
+    foreach (var reaction in context.Activity.ReactionsAdded ?? [])
+    {
+        Console.WriteLine($"User added reaction: {reaction.Type}");
+    }
+});
 
-await context.Api.Conversations.Reactions.AddAsync(
-    context.Activity.Conversation.Id,
-    context.Activity.Id,
-    customReaction
-);
+app.OnMessageReactionRemoved(async context =>
+{
+    foreach (var reaction in context.Activity.ReactionsRemoved ?? [])
+    {
+        Console.WriteLine($"User removed reaction: {reaction.Type}");
+    }
+});
 ```
 
-<!-- advanced-usage -->
-
-For advanced scenarios where you need to use a custom service URL or access the HTTP client directly, you can use the `ApiClient.Client` property:
-
-```csharp
-// Access the underlying HTTP client for custom requests
-var api = new ApiClient(context.Activity.ServiceUrl, context.Api.Client);
-
-await api.Conversations.Reactions.AddAsync(
-    context.Activity.Conversation.Id,
-    context.Activity.Id,
-    ReactionType.Like
-);
-```
+If you only need a single handler that runs for both adds and removes, use `app.OnMessageReaction` instead.

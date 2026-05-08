@@ -5,7 +5,7 @@ app.on('message', async ({ activity, api, send }) => {
   await send("Hello! I'll react to this message.");
 
   // Add a reaction to the incoming message
-  await api.conversations.reactions.add(activity.conversation.id, activity.id, 'like');
+  await api.reactions.add(activity.conversation.id, activity.id, 'like');
 });
 ```
 
@@ -14,48 +14,33 @@ app.on('message', async ({ activity, api, send }) => {
 ```typescript
 app.on('message', async ({ activity, api }) => {
   // First, add a reaction
-  await api.conversations.reactions.add(activity.conversation.id, activity.id, 'heart');
+  await api.reactions.add(activity.conversation.id, activity.id, 'heart');
 
   // Wait a bit, then remove it
   await new Promise((resolve) => setTimeout(resolve, 2000));
-  await api.conversations.reactions.delete(activity.conversation.id, activity.id, 'heart');
+  await api.reactions.delete(activity.conversation.id, activity.id, 'heart');
 });
 ```
 
 <!-- reaction-types -->
 
-The following reaction types are available:
-
 - `'like'` — 👍
 - `'heart'` — ❤️
-- `'checkmark'` — ✅
-- `'hourglass'` — ⏳
-- `'pushpin'` — 📌
-- `'exclamation'` — ❗
-- `'laugh'` — 😆
-- `'surprise'` — 😮
-- `'sad'` — 🙁
-- `'angry'` — 😠
+- `'1f440_eyes'` — 👀
+- `'2705_whiteheavycheckmark'` — ✅
+- `'launch'` — 🚀
+- `'1f4cc_pushpin'` — 📌
 
-You can also use custom emoji reactions by providing the emoji code:
+<!-- receiving-reactions -->
 
 ```typescript
-// Use a custom emoji reaction
-await api.conversations.reactions.add(
-  activity.conversation.id,
-  activity.id,
-  '1f44b_wavinghand-tone4'
-);
-```
+app.on('messageReaction', async ({ activity }) => {
+  for (const reaction of activity.reactionsAdded ?? []) {
+    console.log(`User added reaction: ${reaction.type}`);
+  }
 
-<!-- advanced-usage -->
-
-For advanced scenarios, you can access the underlying HTTP client or create a custom API client instance:
-
-```typescript
-// The API client is available through the context
-const { api } = context;
-
-// Use reactions API
-await api.conversations.reactions.add(conversationId, activityId, 'like');
+  for (const reaction of activity.reactionsRemoved ?? []) {
+    console.log(`User removed reaction: ${reaction.type}`);
+  }
+});
 ```

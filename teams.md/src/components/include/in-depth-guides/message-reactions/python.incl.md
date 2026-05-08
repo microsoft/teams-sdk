@@ -6,7 +6,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     await ctx.send("Hello! I'll react to this message.")
 
     # Add a reaction to the incoming message
-    await ctx.api.conversations.reactions.add(
+    await ctx.api.reactions.add(
         ctx.activity.conversation.id,
         ctx.activity.id,
         'like'
@@ -21,7 +21,7 @@ import asyncio
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     # First, add a reaction
-    await ctx.api.conversations.reactions.add(
+    await ctx.api.reactions.add(
         ctx.activity.conversation.id,
         ctx.activity.id,
         'heart'
@@ -29,7 +29,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
     # Wait a bit, then remove it
     await asyncio.sleep(2)
-    await ctx.api.conversations.reactions.delete(
+    await ctx.api.reactions.delete(
         ctx.activity.conversation.id,
         ctx.activity.id,
         'heart'
@@ -38,42 +38,21 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 <!-- reaction-types -->
 
-The following reaction types are available:
-
 - `'like'` — 👍
 - `'heart'` — ❤️
-- `'checkmark'` — ✅
-- `'hourglass'` — ⏳
-- `'pushpin'` — 📌
-- `'exclamation'` — ❗
-- `'laugh'` — 😆
-- `'surprise'` — 😮
-- `'sad'` — 🙁
-- `'angry'` — 😠
+- `'1f440_eyes'` — 👀
+- `'2705_whiteheavycheckmark'` — ✅
+- `'launch'` — 🚀
+- `'1f4cc_pushpin'` — 📌
 
-You can also use custom emoji reactions by providing the emoji code:
+<!-- receiving-reactions -->
 
 ```python
-# Use a custom emoji reaction
-await ctx.api.conversations.reactions.add(
-    ctx.activity.conversation.id,
-    ctx.activity.id,
-    '1f44b_wavinghand-tone4'
-)
-```
+@app.on_message_reaction
+async def handle_reaction(ctx: ActivityContext[MessageReactionActivity]):
+    for reaction in ctx.activity.reactions_added or []:
+        print(f"User added reaction: {reaction.type}")
 
-<!-- advanced-usage -->
-
-For advanced scenarios, you can access the API client from the context:
-
-```python
-# The API client is available through the context
-api = ctx.api
-
-# Use reactions API
-await api.conversations.reactions.add(
-    conversation_id,
-    activity_id,
-    'like'
-)
+    for reaction in ctx.activity.reactions_removed or []:
+        print(f"User removed reaction: {reaction.type}")
 ```
