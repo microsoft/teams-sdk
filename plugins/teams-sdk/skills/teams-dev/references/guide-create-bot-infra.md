@@ -8,9 +8,9 @@ This guide walks through setting up the infrastructure for a Microsoft Teams bot
 
 Before creating a Teams bot, verify these prerequisites:
 
-### Step 1: Check Teams CLI Installation
+### Step 1: Check Teams Developer CLI Installation
 
-Verify the Teams CLI is installed:
+Verify the Teams Developer CLI is installed:
 
 ```bash
 teams --version
@@ -20,7 +20,7 @@ teams --version
 
 **If not installed:**
 
-Install the Teams CLI using npm:
+Install the Teams Developer CLI using npm:
 
 ```bash
 npm install -g @microsoft/teams.cli@preview
@@ -30,7 +30,7 @@ npm install -g @microsoft/teams.cli@preview
 - Verify: Run `teams --version` to confirm installation
 - You should see the version number
 
-**Checkpoint:** Teams CLI is installed.
+**Checkpoint:** Teams Developer CLI is installed.
 
 ### Step 2: Check Authentication
 

@@ -141,4 +141,4 @@ Continue with the [Python guide](/python/getting-started) for events, sending me
 
 - **Essentials** — events, activities, sending messages, authentication: [TypeScript](/typescript/essentials) · [C#](/csharp/essentials) · [Python](/python/essentials)
 - **In-depth guides** — Adaptive Cards, AI, MCP, dialogs, tabs, and more: [TypeScript](/typescript/in-depth-guides) · [C#](/csharp/in-depth-guides) · [Python](/python/in-depth-guides)
-- [Quickstart: Register your app](./quickstart-register) — set up bot infrastructure with the Teams CLI
+- [Quickstart: Register your app](./quickstart-register) — set up bot infrastructure with the Teams Developer CLI

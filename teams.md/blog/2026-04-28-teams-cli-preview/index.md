@@ -16,7 +16,7 @@ authors:
     url: https://github.com/umangsehgal
     image_url: https://github.com/umangsehgal.png
 tags: [teams-sdk, cli, preview, announcement, skills]
-description: Introducing the teams-dev agent skill and the Teams CLI v3 Preview for registering and building Teams agents.
+description: Introducing the teams-dev agent skill and the Teams Developer CLI v3 Preview for registering and building Teams agents.
 ---
 
 :::info
@@ -49,7 +49,7 @@ The [`teams-dev` agent skill](/developer-tools/agent-skills) works with AI codin
 
 The skill uses the CLI under the hood to handle the full infrastructure workflow, from login to a working agent in Teams, and troubleshooting when something breaks. Beyond infrastructure, it also helps your coding agent write application logic following best practices from the Teams SDK documentation.
 
-## Under the Hood: The Teams CLI
+## Under the Hood: The Teams Developer CLI
 
 For developers who want direct control, the skill is powered by the next iteration of our CLI. Install it and log in:
 

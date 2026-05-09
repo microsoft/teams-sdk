@@ -1,6 +1,6 @@
 # @microsoft/teams.cli
 
-CLI for managing Microsoft Teams apps.
+Teams Developer CLI for managing Microsoft Teams apps.
 
 ## Install
 
