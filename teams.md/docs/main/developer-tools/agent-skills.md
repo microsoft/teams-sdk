@@ -99,7 +99,7 @@ You: Help me create a Teams bot that echoes what I'm saying back to me
 
 Agent: I'll create an echo bot for you.
 
-       [checks teams developer CLI installation and authentication]
+       [checks Teams Developer CLI installation and authentication]
        [creates development tunnel: https://abc123.ngrok.io]
        [runs teams app create with endpoint]
        ✓ Bot registered, credentials saved to .env
