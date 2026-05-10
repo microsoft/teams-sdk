@@ -180,12 +180,15 @@ class AzureBotHandler implements BotHandler {
   }
 
   async updateEndpoint(botId: string, endpoint: string): Promise<void> {
-    logger.debug(`Updating Azure bot endpoint: ${botId} → ${endpoint}`);
+    // Use the discovered Azure resource name when available; falls back to
+    // botId for fresh deployments where the convention still holds.
+    const resourceName = this.azure.name ?? botId;
+    logger.debug(`Updating Azure bot endpoint: ${resourceName} → ${endpoint}`);
     await runAz([
       'bot',
       'update',
       '--name',
-      botId,
+      resourceName,
       '--resource-group',
       this.azure.resourceGroup,
       '--endpoint',
@@ -278,7 +281,12 @@ async function findBotByMsaAppId(botId: string): Promise<BotResource | null> {
   return findBotByMsaAppIdViaList(botId);
 }
 
+// Bot ids are AAD client ids (GUIDs). Reject anything else before using them
+// in interpolated contexts (e.g. KQL queries) to keep the surface tight.
+const BOT_ID_PATTERN = /^[0-9a-fA-F-]{36}$/;
+
 async function findBotByMsaAppIdViaGraph(botId: string): Promise<BotResource | null> {
+  if (!BOT_ID_PATTERN.test(botId)) return null;
   try {
     const query =
       "Resources | where type =~ 'microsoft.botservice/botservices' " +
@@ -313,18 +321,25 @@ async function findBotByMsaAppIdViaList(botId: string): Promise<BotResource | nu
       '--resource-type',
       'Microsoft.BotService/botServices',
     ]);
-    const detailed = await Promise.all(
-      all.map(async (bot) => {
-        try {
-          const full = await runAz<BotResource>(['resource', 'show', '--ids', bot.id]);
-          return { ...bot, properties: full.properties };
-        } catch {
-          return null;
-        }
-      })
-    );
-    for (const b of detailed) {
-      if (b && b.properties?.msaAppId === botId) return b;
+    // Bounded concurrency + early exit: walk the list in small batches and
+    // stop as soon as a match is found. Avoids spawning N `az` processes at
+    // once for users with many bots.
+    const BATCH = 5;
+    for (let i = 0; i < all.length; i += BATCH) {
+      const batch = all.slice(i, i + BATCH);
+      const results = await Promise.all(
+        batch.map(async (bot) => {
+          try {
+            const full = await runAz<BotResource>(['resource', 'show', '--ids', bot.id]);
+            return { ...bot, properties: full.properties };
+          } catch {
+            return null;
+          }
+        })
+      );
+      for (const b of results) {
+        if (b && b.properties?.msaAppId === botId) return b;
+      }
     }
     return null;
   } catch {
