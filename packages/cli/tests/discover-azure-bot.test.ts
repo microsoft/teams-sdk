@@ -64,17 +64,18 @@ describe('discoverAzureBot', () => {
         return Promise.resolve({
           data: [
             {
-              id: '/subs/x/rg/rg-2/.../my-bot',
+              id: '/subscriptions/sub-from-graph/resourceGroups/rg-2/providers/Microsoft.BotService/botServices/my-bot',
               name: 'my-bot',
               resourceGroup: 'rg-2',
               location: 'global',
+              subscriptionId: 'sub-from-graph',
               msaAppId: BOT_ID,
             },
           ],
         });
       }
       if (args[0] === 'account') {
-        return Promise.resolve({ id: 'sub-2', tenantId: 'tenant-2' });
+        return Promise.resolve({ id: 'sub-active', tenantId: 'tenant-2' });
       }
       throw new Error(`unexpected az call: ${args.join(' ')}`);
     });
@@ -82,7 +83,7 @@ describe('discoverAzureBot', () => {
     const ctx = await discoverAzureBot(BOT_ID, true);
 
     expect(ctx).toEqual({
-      subscription: 'sub-2',
+      subscription: 'sub-from-graph',
       resourceGroup: 'rg-2',
       region: 'global',
       tenantId: 'tenant-2',
@@ -91,6 +92,35 @@ describe('discoverAzureBot', () => {
     // Should not fall through to per-resource show
     const calls = mockRunAz.mock.calls.map((c) => c[0] as string[]);
     expect(calls.some((a) => a[0] === 'resource' && a[1] === 'show')).toBe(false);
+  });
+
+  it('parses subscription from ARM id when graph result omits subscriptionId', async () => {
+    mockRunAz.mockImplementation((args: string[]) => {
+      if (args[0] === 'resource' && args[1] === 'list' && args.includes('--name')) {
+        return Promise.resolve([]);
+      }
+      if (args[0] === 'graph' && args[1] === 'query') {
+        return Promise.resolve({
+          data: [
+            {
+              id: '/subscriptions/sub-from-id/resourceGroups/rg-9/providers/Microsoft.BotService/botServices/my-bot',
+              name: 'my-bot',
+              resourceGroup: 'rg-9',
+              location: 'global',
+              msaAppId: BOT_ID,
+            },
+          ],
+        });
+      }
+      if (args[0] === 'account') {
+        return Promise.resolve({ id: 'sub-active', tenantId: 'tenant-x' });
+      }
+      throw new Error(`unexpected az call: ${args.join(' ')}`);
+    });
+
+    const ctx = await discoverAzureBot(BOT_ID, true);
+
+    expect(ctx?.subscription).toBe('sub-from-id');
   });
 
   it('falls back to list+show when Resource Graph fails', async () => {

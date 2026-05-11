@@ -229,7 +229,9 @@ export async function discoverAzureBot(
     const account = await runAz<{ id: string; tenantId: string }>(['account', 'show']);
     spinner.success({ text: 'Azure bot discovered' });
     return {
-      subscription: account.id,
+      // Discovered bot may live in a different subscription than the active
+      // one (graph queries cross subs); prefer what we found.
+      subscription: bot.subscription ?? account.id,
       resourceGroup: bot.resourceGroup,
       region: bot.location,
       tenantId: account.tenantId,
@@ -246,7 +248,15 @@ interface BotResource {
   name: string;
   resourceGroup: string;
   location: string;
+  /** Subscription containing the bot. Parsed from the ARM id when needed. */
+  subscription?: string;
   properties?: { msaAppId?: string } | null;
+}
+
+/** Extract the subscription GUID from an ARM resource id. */
+function subscriptionFromArmId(id: string): string | undefined {
+  const m = /\/subscriptions\/([^/]+)\//i.exec(id);
+  return m?.[1];
 }
 
 /** Fast path: assume Azure resource name == MicrosoftAppId. */
@@ -291,14 +301,11 @@ async function findBotByMsaAppIdViaGraph(botId: string): Promise<BotResource | n
     const query =
       "Resources | where type =~ 'microsoft.botservice/botservices' " +
       `| where properties.msaAppId =~ '${botId}' ` +
-      '| project id, name, resourceGroup, location, msaAppId=properties.msaAppId ' +
+      '| project id, name, resourceGroup, location, subscriptionId, msaAppId=properties.msaAppId ' +
       '| limit 1';
-    const result = await runAz<{ data: Array<BotResource & { msaAppId: string }> }>([
-      'graph',
-      'query',
-      '-q',
-      query,
-    ]);
+    const result = await runAz<{
+      data: Array<BotResource & { msaAppId: string; subscriptionId?: string }>;
+    }>(['graph', 'query', '-q', query]);
     const hit = result?.data?.[0];
     if (!hit) return null;
     return {
@@ -306,6 +313,7 @@ async function findBotByMsaAppIdViaGraph(botId: string): Promise<BotResource | n
       name: hit.name,
       resourceGroup: hit.resourceGroup,
       location: hit.location,
+      subscription: hit.subscriptionId ?? subscriptionFromArmId(hit.id),
       properties: { msaAppId: hit.msaAppId },
     };
   } catch {
