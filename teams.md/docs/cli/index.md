@@ -1,15 +1,15 @@
 ---
-title: Teams CLI
+title: Teams Developer CLI
 slug: /
 ---
 
-# Teams CLI
+# Teams Developer CLI
 
 :::warning[Preview]
-The Teams CLI v3 is currently in **preview**. Commands, options, and behavior may change between releases.
+The Teams Developer CLI v3 is currently in **preview**. Commands, options, and behavior may change between releases.
 :::
 
-CLI for managing Microsoft Teams apps. Create, manage, and configure Teams apps from the command line.
+Teams Developer CLI for managing Microsoft Teams apps. Create, manage, and configure Teams apps from the command line.
 
 ## Features
 

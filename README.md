@@ -24,7 +24,7 @@ You can find a set of open-source agent accelerator templates in the [Teams Agen
 
 ### Quick start
 
-The Teams SDK CLI makes it easy to bootstrap your first agent. First, install the CLI via NPM:
+The Teams Developer CLI makes it easy to bootstrap your first agent. First, install the CLI via NPM:
 
 ```sh
 npm install -g @microsoft/teams.cli@preview

@@ -19,7 +19,7 @@ The Teams SDK handles the webhook plumbing, authentication, and message parsing 
 
 ## Prerequisites
 
-### Step 1: Verify Teams CLI Installation
+### Step 1: Verify Teams Developer CLI Installation
 
 ```bash
 teams --version

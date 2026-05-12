@@ -1,12 +1,12 @@
 ---
 name: teams-dev
-description: Use this skill whenever the user mentions Microsoft Teams in a development context — whether they're building, integrating, configuring, debugging, or just asking questions. Covers bots, message extensions, embedded web apps, Adaptive Cards, dialogs, SSO, infrastructure, the Teams CLI/SDK, and general Teams platform queries. If the word "Teams" appears, err on the side of invoking this skill.
+description: Use this skill whenever the user mentions Microsoft Teams in a development context — whether they're building, integrating, configuring, debugging, or just asking questions. Covers bots, message extensions, embedded web apps, Adaptive Cards, dialogs, SSO, infrastructure, the Teams Developer CLI/SDK, and general Teams platform queries. If the word "Teams" appears, err on the side of invoking this skill.
 teams_cli_version: 3.0.0-preview.*
 ---
 
 # Teams Bot Development & Infrastructure
 
-This skill helps you create and manage Microsoft Teams bots using the Teams CLI. Covers both bot application development (creating bot code) and infrastructure management (bot registration, SSO, credentials).
+This skill helps you create and manage Microsoft Teams bots using the Teams Developer CLI. Covers both bot application development (creating bot code) and infrastructure management (bot registration, SSO, credentials).
 
 **IMPORTANT:** Use information and guidance provided within this skill and its reference guides. You may also use external public documentation only when it is explicitly linked from this skill or those guides. Do NOT perform arbitrary web searches or rely on unlisted external sources.
 
@@ -82,9 +82,9 @@ teams app update <teamsAppId> --endpoint "https://new-endpoint-url/api/messages"
 
 > **Note:** If the endpoint domain changed (not just the path), the CLI automatically updates `validDomains` in the manifest. This requires the user to reinstall the app in Teams for the change to take effect.
 
-### Update Teams CLI
+### Update Teams Developer CLI
 
-**Use case:** Update the Teams CLI to the latest version (recommended to stay current with new features and bug fixes)
+**Use case:** Update the Teams Developer CLI to the latest version (recommended to stay current with new features and bug fixes)
 
 **Command:**
 

@@ -18,7 +18,7 @@ teams app bot migrate <appId> --subscription <id> --resource-group <your-resourc
 
 ### Required Tools and Authentication
 
-1. **Teams CLI** — Log in with `teams login`
+1. **Teams Developer CLI** — Log in with `teams login`
 2. **Azure CLI** — Install and authenticate with `az login`
 3. **Bot Context** — You'll need these values for all operations:
    - `botId` — Your bot's client ID

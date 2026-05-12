@@ -5,7 +5,7 @@ summary: Understand Teams app architecture including app registration, Azure Bot
 
 # Teams Core Concepts
 
-Running an agent on Teams involves several moving pieces — an app registration, an Azure or Teams-managed bot, a public messaging endpoint, and a sideloaded app package. Understanding these components helps you debug and deploy your agent confidently. The [Teams CLI](/cli/) automates all of them with a single `teams app create` command, but it's worth knowing what it sets up underneath.
+Running an agent on Teams involves several moving pieces — an app registration, an Azure or Teams-managed bot, a public messaging endpoint, and a sideloaded app package. Understanding these components helps you debug and deploy your agent confidently. The [Teams Developer CLI](/cli/) automates all of them with a single `teams app create` command, but it's worth knowing what it sets up underneath.
 
 ## Basic Flow
 
@@ -97,7 +97,7 @@ Before your agent can interact with Teams, it needs to be properly registered an
 
 - Creates an App ID (i.e. Client ID) in the Teams platform
 - Sets up a bot registration with the Bot Framework
-- Creates a client secret that your agent can use to authenticate to send and receive messages. The [Teams CLI](/cli/) writes this value to `.env` (or `appsettings.json` for C#) automatically when you run `teams app create`.
+- Creates a client secret that your agent can use to authenticate to send and receive messages. The [Teams Developer CLI](/cli/) writes this value to `.env` (or `appsettings.json` for C#) automatically when you run `teams app create`.
 
 ### Azure Bot
 
