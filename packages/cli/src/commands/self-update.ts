@@ -8,7 +8,7 @@ import {
   readInstalledTeamsVersion,
   runSelfUpdateCommand,
 } from '../utils/self-update.js';
-import { compareVersions, fetchLatestVersion, getCurrentVersion, isNewerVersion } from '../utils/update-info.js';
+import { compareCliVersions, fetchLatestVersion, getCurrentVersion, isNewerVersion } from '../utils/update-info.js';
 
 interface SelfUpdateOptions {
   force?: boolean;
@@ -42,11 +42,6 @@ async function getSelfUpdatePlan(force: boolean): Promise<SelfUpdatePlan> {
  * Run the self-update. Returns true on success, false on failure.
  */
 export async function runSelfUpdate(options: SelfUpdateOptions = {}): Promise<boolean> {
-  const plan = await getSelfUpdatePlan(!!options.force);
-  if (!plan.shouldRun) {
-    return true;
-  }
-
   const command = getSelfUpdateCommand();
 
   if (!command) {
@@ -61,6 +56,11 @@ export async function runSelfUpdate(options: SelfUpdateOptions = {}): Promise<bo
     return false;
   }
 
+  const plan = await getSelfUpdatePlan(!!options.force);
+  if (!plan.shouldRun) {
+    return true;
+  }
+
   logger.info(pc.dim(`Updating teams with ${command.display}...`));
 
   try {
@@ -71,7 +71,7 @@ export async function runSelfUpdate(options: SelfUpdateOptions = {}): Promise<bo
     if (version) {
       logger.info(`${pc.dim('Version:')} ${version}`);
 
-      if (plan.latestVersion && compareVersions(version, plan.latestVersion) < 0) {
+      if (plan.latestVersion && compareCliVersions(version, plan.latestVersion) < 0) {
         logger.error(
           pc.red(
             `Update command completed, but this teams executable still reports ${version} instead of ${plan.latestVersion}.`

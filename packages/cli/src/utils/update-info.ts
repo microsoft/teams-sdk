@@ -68,7 +68,7 @@ function compareIdentifiers(left: string, right: string): number {
   return 0;
 }
 
-export function compareVersions(leftVersion: string, rightVersion: string): number {
+export function compareCliVersions(leftVersion: string, rightVersion: string): number {
   const left = parseVersion(leftVersion);
   const right = parseVersion(rightVersion);
 
@@ -101,5 +101,5 @@ export function compareVersions(leftVersion: string, rightVersion: string): numb
 }
 
 export function isNewerVersion(latest: string, current = getCurrentVersion()): boolean {
-  return compareVersions(latest, current) > 0;
+  return compareCliVersions(latest, current) > 0;
 }
