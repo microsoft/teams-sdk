@@ -275,7 +275,7 @@ All three scenarios share the same registration step.
 
 Teams needs to reach your bot over HTTPS. For local development, [Dev tunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) is the recommended option — it's built into VS Code and the Azure CLI. [ngrok](https://ngrok.com) works too. Either way, you'll get a URL like `https://abc123.devtunnels.ms` that forwards to your local port.
 
-**Step 2: Register your bot using the Teams SDK CLI.**
+**Step 2: Register your bot using the Teams Developer CLI.**
 
 ```bash
 npm install -g @microsoft/teams.cli@preview

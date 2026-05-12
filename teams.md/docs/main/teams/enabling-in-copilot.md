@@ -7,7 +7,7 @@ summary: Learn how to enable your Teams app to work in M365 Copilot by updating 
 
 If you've built a Teams app or agent and want to make it available in M365 Copilot, you can do so with a single CLI command that handles the manifest update automatically.
 
-## Using the Teams CLI
+## Using the Teams Developer CLI
 
 ```bash
 teams app update <appId> --scopes personal,team,copilot
@@ -34,7 +34,7 @@ Once the updated app is installed:
 
 ## Manual Manifest Editing
 
-If you are not using the Teams CLI, you can update the manifest by hand. Add the following to your `manifest.json`:
+If you are not using the Teams Developer CLI, you can update the manifest by hand. Add the following to your `manifest.json`:
 
 ```json
 "bots": [

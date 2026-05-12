@@ -1,12 +1,12 @@
 ---
 sidebar_position: 1
 title: "Quickstart: Register your app"
-summary: Register a Teams app and bot using the Teams CLI, then sideload into Teams.
+summary: Register a Teams app and bot using the Teams Developer CLI, then sideload into Teams.
 ---
 
 # Quickstart: Register your app
 
-Register a Teams app and its bot infrastructure with the [Teams CLI](/cli/) (`@microsoft/teams.cli`). At the end you'll have a running agent installed in Teams.
+Register a Teams app and its bot infrastructure with the [Teams Developer CLI](/cli/) (`@microsoft/teams.cli`). At the end you'll have a running agent installed in Teams.
 
 If you don't have an agent yet, step 3 scaffolds one using the Teams SDK. If you already have a server, skip step 3 and pass your endpoint to step 4.
 

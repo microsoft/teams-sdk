@@ -5,7 +5,7 @@ summary: Give AI coding assistants (Claude Code, Cursor, GitHub Copilot) relevan
 
 # Agent Skills
 
-[Agent Skills](https://aka.ms/teams-agent-skills) give AI coding assistants relevant context for specific development tasks. The `teams-dev` skill is the go-to agent skill for Teams bot development. It gives AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) relevant context to assist in developing Teams bots and use the Teams CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
+[Agent Skills](https://aka.ms/teams-agent-skills) give AI coding assistants relevant context for specific development tasks. The `teams-dev` skill is the go-to agent skill for Teams bot development. It gives AI coding assistants (Claude Code, Cursor, GitHub Copilot, and others) relevant context to assist in developing Teams bots and use the Teams Developer CLI to manage your bot infrastructure. Instead of running CLI commands manually, you describe what you want and your AI assistant handles the rest.
 
 :::note Alternative: Use llms.txt directly
 If you'd rather not install a skill, you can provide the same context by pointing your AI tool to the llms.txt URL:
@@ -99,7 +99,7 @@ You: Help me create a Teams bot that echoes what I'm saying back to me
 
 Agent: I'll create an echo bot for you.
 
-       [checks teams CLI installation and authentication]
+       [checks Teams Developer CLI installation and authentication]
        [creates development tunnel: https://abc123.ngrok.io]
        [runs teams app create with endpoint]
        ✓ Bot registered, credentials saved to .env
@@ -116,7 +116,7 @@ Agent: I'll create an echo bot for you.
 
 ## Requirements
 
-- Teams CLI installed (`npm install -g @microsoft/teams.cli@preview`)
+- Teams Developer CLI installed (`npm install -g @microsoft/teams.cli@preview`)
 - Node.js 20 or later
 - Microsoft 365 account with sideloading enabled
 

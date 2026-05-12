@@ -19,7 +19,7 @@ The [`teams-dev` skill](/developer-tools/agent-skills) can orchestrate the full 
 Before starting SSO configuration, ensure you have:
 
 - An **Azure-managed** Azure Bot Service resource and its associated Entra App Registration (Application ID / Client ID and Tenant ID).
-- To setup using CLIs: the [`az` CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and the [Teams CLI](/cli/getting-started/installation) installed and authenticated.
+- To set up using CLIs: the [`az` CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and the [Teams Developer CLI](/cli/getting-started/installation) installed and authenticated.
 
   :::note CLI users: migrate first if your bot is Teams-managed
   SSO requires an Azure-managed bot because the OAuth connection lives in Azure Bot Service. If you registered with `teams app create` (default Teams-managed), migrate your bot first:
@@ -53,7 +53,7 @@ You need an Entra ID App Registration to configure the OAuth Connection in Azure
 </TabItem>
 <TabItem value="cli" label="Azure CLI">
 
-The full SSO setup involves several steps the Teams CLI doesn't handle directly (creating the `access_as_user` scope, pre-authorizing Teams clients, configuring the OAuth connection in Azure Bot Service, updating `webApplicationInfo` in the manifest). The [`teams-dev` skill](/developer-tools/agent-skills) orchestrates all of this for you — install it in your AI coding assistant and say *"set up SSO for my Teams bot"*.
+The full SSO setup involves several steps the Teams Developer CLI doesn't handle directly (creating the `access_as_user` scope, pre-authorizing Teams clients, configuring the OAuth connection in Azure Bot Service, updating `webApplicationInfo` in the manifest). The [`teams-dev` skill](/developer-tools/agent-skills) orchestrates all of this for you — install it in your AI coding assistant and say *"set up SSO for my Teams bot"*.
 
 ### Step 1: Look Up the AAD App Object ID
 
@@ -192,8 +192,8 @@ To include additional permissions (Graph, SharePoint, etc.), space-delimit them:
 
 The Teams application manifest needs to be updated to include `webApplicationInfo` with the `Application Id` and `Application ID URI`.
 
-<Tabs groupId="sso-setup">
-<TabItem value="portal" label="Manifest JSON">
+<Tabs groupId="sso-manifest">
+<TabItem value="manifest" label="Manifest JSON">
 
 Add `*.botframework.com` to `validDomains` and add the `webApplicationInfo` section to your `manifest.json`:
 
@@ -212,10 +212,10 @@ Add `*.botframework.com` to `validDomains` and add the `webApplicationInfo` sect
 ```
 
 </TabItem>
-<TabItem value="cli" label="Teams CLI">
+<TabItem value="teams-cli" label="Teams Developer CLI">
 
 :::note
-This option is available if your app was created using the Teams CLI.
+This option is available if your app was created using the Teams Developer CLI.
 :::
 
 You can set the `webApplicationInfo` fields directly without downloading and re-uploading the manifest:

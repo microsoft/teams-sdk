@@ -34,6 +34,7 @@ interface BotMigrateOutput {
 interface MigrateOptions {
   subscription?: string;
   resourceGroup?: string;
+  azureName?: string;
   createResourceGroup?: boolean;
   region?: string;
   json?: boolean;
@@ -44,6 +45,7 @@ export const botMigrateCommand = new Command('migrate')
   .argument('[appId]', 'App ID')
   .option('--subscription <id>', '[OPTIONAL] Azure subscription ID')
   .option('--resource-group <name>', 'Azure resource group (required)')
+  .option('--azure-name <name>', '[OPTIONAL] Azure Bot resource name (default: bot id)')
   .option('--create-resource-group', "[OPTIONAL] Create the resource group if it doesn't exist")
   .option('--region <name>', '[OPTIONAL] Azure region for resource group (default: westus2)')
   .option('--json', '[OPTIONAL] Output as JSON')
@@ -192,6 +194,7 @@ export const botMigrateCommand = new Command('migrate')
         name: botName,
         endpoint: botEndpoint || undefined,
         description: botDetails.description,
+        azureName: options.azureName,
       };
 
       // Step 1: Validate Azure deployment with what-if (no resources created)

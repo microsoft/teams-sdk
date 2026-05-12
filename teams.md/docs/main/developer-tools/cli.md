@@ -2,8 +2,8 @@
 sidebar_position: 1
 ---
 
-# Teams CLI
+# Teams Developer CLI
 
-The Teams CLI documentation has moved to its own section.
+The Teams Developer CLI documentation has moved to its own section.
 
 **[Go to CLI Documentation](/cli)**
