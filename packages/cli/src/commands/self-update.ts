@@ -8,33 +8,42 @@ import {
   readInstalledTeamsVersion,
   runSelfUpdateCommand,
 } from '../utils/self-update.js';
-import { fetchLatestVersion, getCurrentVersion, isNewerVersion } from '../utils/update-info.js';
+import { compareVersions, fetchLatestVersion, getCurrentVersion, isNewerVersion } from '../utils/update-info.js';
 
 interface SelfUpdateOptions {
   force?: boolean;
 }
 
-async function shouldRunUpdate(force: boolean): Promise<boolean> {
-  if (force) return true;
+interface SelfUpdatePlan {
+  latestVersion?: string;
+  shouldRun: boolean;
+}
+
+async function getSelfUpdatePlan(force: boolean): Promise<SelfUpdatePlan> {
+  const latestVersion = await fetchLatestVersion();
+
+  if (force) return { latestVersion: latestVersion ?? undefined, shouldRun: true };
 
   const currentVersion = getCurrentVersion();
-  const latestVersion = await fetchLatestVersion();
 
   // If the registry check fails, still try the package-manager update. A manual
   // self-update should not be blocked by a best-effort preflight network check.
-  if (!latestVersion) return true;
+  if (!latestVersion) return { shouldRun: true };
 
-  if (isNewerVersion(latestVersion, currentVersion)) return true;
+  if (isNewerVersion(latestVersion, currentVersion)) {
+    return { latestVersion, shouldRun: true };
+  }
 
   logger.info(pc.green(`teams is already up to date (${currentVersion})`));
-  return false;
+  return { latestVersion, shouldRun: false };
 }
 
 /**
  * Run the self-update. Returns true on success, false on failure.
  */
 export async function runSelfUpdate(options: SelfUpdateOptions = {}): Promise<boolean> {
-  if (!(await shouldRunUpdate(!!options.force))) {
+  const plan = await getSelfUpdatePlan(!!options.force);
+  if (!plan.shouldRun) {
     return true;
   }
 
@@ -61,6 +70,16 @@ export async function runSelfUpdate(options: SelfUpdateOptions = {}): Promise<bo
     const version = readInstalledTeamsVersion();
     if (version) {
       logger.info(`${pc.dim('Version:')} ${version}`);
+
+      if (plan.latestVersion && compareVersions(version, plan.latestVersion) < 0) {
+        logger.error(
+          pc.red(
+            `Update command completed, but this teams executable still reports ${version} instead of ${plan.latestVersion}.`
+          )
+        );
+        logger.info(`\nTry manually: ${pc.cyan(command.display)}`);
+        return false;
+      }
     }
 
     return true;

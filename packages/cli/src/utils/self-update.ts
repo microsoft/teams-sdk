@@ -165,7 +165,10 @@ function getSelfUpdateCommandForMethod(method: InstallMethod): SelfUpdateCommand
       return makeStep('npm', [...prefixArgs, 'install', '-g', UPDATE_SPEC]);
     }
     case 'pnpm':
-      return makeStep('pnpm', ['install', '-g', UPDATE_SPEC], makePnpmEnvironment());
+      // pnpm can report "Already up to date" from its global lockfile even when the
+      // package contents on disk are stale or manually patched. Force makes the
+      // self-update repair the active global install instead of no-oping.
+      return makeStep('pnpm', ['install', '-g', '--force', UPDATE_SPEC], makePnpmEnvironment());
     case 'yarn':
       return makeStep('yarn', ['global', 'add', UPDATE_SPEC]);
     case 'bun':
@@ -290,6 +293,11 @@ export async function runSelfUpdateCommand(command: SelfUpdateCommand): Promise<
 }
 
 export function readInstalledTeamsVersion(): string | undefined {
+  const executableLocation = getExecutableLocation();
+  if (executableLocation) {
+    return readCommandOutput(process.execPath, [executableLocation, '--version']);
+  }
+
   return readCommandOutput('teams', ['--version']);
 }
 
