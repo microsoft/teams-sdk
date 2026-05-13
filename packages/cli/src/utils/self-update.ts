@@ -1,7 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { basename, delimiter, dirname, join, resolve, sep, win32 } from 'node:path';
+import { basename, dirname, join, resolve, sep, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PACKAGE_NAME, UPDATE_SPEC } from './update-info.js';
 
@@ -11,7 +11,6 @@ interface SelfUpdateCommandStep {
   command: string;
   args: string[];
   display: string;
-  env?: Record<string, string>;
 }
 
 export interface SelfUpdateCommand extends SelfUpdateCommandStep {
@@ -25,27 +24,11 @@ function quoteArg(arg: string): string {
   return /\s/.test(arg) ? `"${arg}"` : arg;
 }
 
-function formatEnvForDisplay(env?: Record<string, string>): string[] {
-  if (!env) return [];
-
-  const assignments: string[] = [];
-  if (env.PNPM_HOME) assignments.push(`PNPM_HOME=${quoteArg(env.PNPM_HOME)}`);
-
-  const pathKey = getPathEnvironmentKey();
-  const pathValue = env[pathKey];
-  if (pathValue && env.PNPM_HOME && pathValue.startsWith(`${env.PNPM_HOME}${delimiter}`)) {
-    assignments.push(`${pathKey}=${quoteArg(`${env.PNPM_HOME}${delimiter}$${pathKey}`)}`);
-  }
-
-  return assignments;
-}
-
-function makeStep(command: string, args: string[], env?: Record<string, string>): SelfUpdateCommandStep {
+function makeStep(command: string, args: string[]): SelfUpdateCommandStep {
   return {
     command,
     args,
-    env,
-    display: [...formatEnvForDisplay(env), command, ...args].map(quoteArg).join(' '),
+    display: [command, ...args].map(quoteArg).join(' '),
   };
 }
 
@@ -72,28 +55,6 @@ function readCommandOutput(
 
 function shouldUseWindowsShell(command: string): boolean {
   return process.platform === 'win32' && !command.includes('/') && !command.includes('\\');
-}
-
-function getPathEnvironmentKey(): string {
-  if (process.platform !== 'win32') return 'PATH';
-  return Object.keys(process.env).find((key) => key.toLowerCase() === 'path') ?? 'Path';
-}
-
-function makePnpmEnvironment(): Record<string, string> | undefined {
-  const pnpmHome = process.env.PNPM_HOME || getInferredPnpmHome();
-  if (!pnpmHome) return undefined;
-
-  const pathKey = getPathEnvironmentKey();
-  const currentPath = process.env[pathKey] ?? '';
-  const pathEntries = currentPath.split(delimiter).filter(Boolean);
-  const nextPath = pathEntries.includes(pnpmHome)
-    ? currentPath
-    : [pnpmHome, currentPath].filter(Boolean).join(delimiter);
-
-  return {
-    PNPM_HOME: pnpmHome,
-    [pathKey]: nextPath,
-  };
 }
 
 export function getPackageDir(): string {
@@ -140,23 +101,6 @@ function getInferredNpmInstall(): { root: string; prefix: string } | undefined {
   return undefined;
 }
 
-function getInferredPnpmHome(): string | undefined {
-  const root = readCommandOutput('pnpm', ['root', '-g']);
-  if (root && basename(root) === 'node_modules') {
-    const candidate = dirname(dirname(dirname(root)));
-    if (existsSync(candidate)) return candidate;
-  }
-
-  const parts = resolve(getPackageDir()).split(sep);
-  const globalIndex = parts.lastIndexOf('global');
-  if (globalIndex > 0 && parts[globalIndex + 1]) {
-    const candidate = parts.slice(0, globalIndex).join(sep) || sep;
-    if (existsSync(candidate)) return candidate;
-  }
-
-  return undefined;
-}
-
 function getSelfUpdateCommandForMethod(method: InstallMethod): SelfUpdateCommand | undefined {
   switch (method) {
     case 'npm': {
@@ -165,10 +109,7 @@ function getSelfUpdateCommandForMethod(method: InstallMethod): SelfUpdateCommand
       return makeStep('npm', [...prefixArgs, 'install', '-g', UPDATE_SPEC]);
     }
     case 'pnpm':
-      // pnpm can report "Already up to date" from its global lockfile even when the
-      // package contents on disk are stale or manually patched. Force makes the
-      // self-update repair the active global install instead of no-oping.
-      return makeStep('pnpm', ['install', '-g', '--force', UPDATE_SPEC], makePnpmEnvironment());
+      return makeStep('pnpm', ['install', '-g', UPDATE_SPEC]);
     case 'yarn':
       return makeStep('yarn', ['global', 'add', UPDATE_SPEC]);
     case 'bun':
@@ -275,7 +216,6 @@ export async function runSelfUpdateCommand(command: SelfUpdateCommand): Promise<
       const child = spawn(step.command, step.args, {
         stdio: 'inherit',
         shell: shouldUseWindowsShell(step.command),
-        env: step.env ? { ...process.env, ...step.env } : process.env,
       });
 
       child.on('error', reject);
@@ -290,15 +230,6 @@ export async function runSelfUpdateCommand(command: SelfUpdateCommand): Promise<
       });
     });
   }
-}
-
-export function readInstalledTeamsVersion(): string | undefined {
-  const executableLocation = getExecutableLocation();
-  if (executableLocation) {
-    return readCommandOutput(process.execPath, [executableLocation, '--version']);
-  }
-
-  return readCommandOutput('teams', ['--version']);
 }
 
 export function getPackageName(): string {
