@@ -18,10 +18,9 @@ interface SelfUpdatePlan {
 }
 
 async function getSelfUpdatePlan(force: boolean): Promise<SelfUpdatePlan> {
-  const latestVersion = await fetchLatestVersion();
-
   if (force) return { shouldRun: true };
 
+  const latestVersion = await fetchLatestVersion();
   const currentVersion = getCurrentVersion();
 
   // If the registry check fails, still try the package-manager update. A manual
