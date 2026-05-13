@@ -13,7 +13,7 @@ The reaction APIs are marked with `[Experimental("ExperimentalTeamsReactions")]`
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Send("Hello! I'll react to this message.", cancellationToken);
+    await context.Send("Hello! I'll react to your message.", cancellationToken);
 
     // Add a reaction to the incoming message
     await context.Api.Conversations.Reactions.AddAsync(

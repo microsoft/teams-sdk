@@ -2,7 +2,7 @@
 
 ```typescript
 app.on('message', async ({ activity, api, send }) => {
-  await send("Hello! I'll react to this message.");
+  await send("Hello! I'll react to your message.");
 
   // Add a reaction to the incoming message
   await api.reactions.add(activity.conversation.id, activity.id, 'like');

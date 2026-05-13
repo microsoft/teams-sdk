@@ -3,7 +3,7 @@
 ```python
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
-    await ctx.send("Hello! I'll react to this message.")
+    await ctx.send("Hello! I'll react to your message.")
 
     # Add a reaction to the incoming message
     await ctx.api.reactions.add(
