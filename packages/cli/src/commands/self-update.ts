@@ -75,7 +75,7 @@ export async function runSelfUpdate(options: SelfUpdateOptions = {}): Promise<bo
 
 export const selfUpdateCommand = new Command('self-update')
   .description('Update teams to the latest version')
-  .option('--force', 'Run update even when the current version is already up to date')
+  .option('--force', '[OPTIONAL] Run update even when the current version is already up to date')
   .action(async (options: SelfUpdateOptions) => {
     if (!(await runSelfUpdate(options))) {
       process.exit(1);
