@@ -85,3 +85,67 @@ app.on('message', async ({ send, reply }) => {
   await reply('Got it!');
 });
 ```
+
+<!-- quoted-replies-receive-example -->
+
+```typescript
+app.on('message', async ({ activity, reply }) => {
+  const quotes = activity.getQuotedMessages();
+
+  if (quotes.length > 0) {
+    const quote = quotes[0].quotedReply;
+    await reply(
+      `You quoted message ${quote.messageId} from ${quote.senderName}: "${quote.preview}"`
+    );
+  }
+});
+```
+
+<!-- quoted-replies-reply-example -->
+
+```typescript
+app.on('message', async ({ reply }) => {
+  // reply() automatically quotes the inbound message
+  await reply('Got it!');
+});
+```
+
+<!-- quoted-replies-quote-reply-example -->
+
+```typescript
+app.on('message', async ({ quote }) => {
+  // Quote a specific message by its ID
+  const parentMessageId = '1772050244572';
+  await quote(parentMessageId, 'Referencing an earlier message');
+});
+```
+
+<!-- quoted-replies-builder-example -->
+
+```typescript
+import { MessageActivity } from '@microsoft/teams.api';
+
+const parentMessageId = '1772050244572';
+const firstMessageId = '1772050244573';
+const secondMessageId = '1772050244574';
+
+// Single quote with response below it
+let msg = new MessageActivity()
+  .addQuote(parentMessageId, 'Here is my response');
+await app.send(conversationId, msg);
+
+// Multiple quotes with interleaved responses
+msg = new MessageActivity()
+  .addQuote(firstMessageId, 'response to first')
+  .addQuote(secondMessageId, 'response to second');
+await app.send(conversationId, msg);
+
+// Grouped quotes — omit response to group quotes together
+msg = new MessageActivity('see below for previous messages')
+  .addQuote(firstMessageId)
+  .addQuote(secondMessageId, 'response to both');
+await app.send(conversationId, msg);
+```
+
+<!-- quoted-replies-preview-note -->
+N/A
