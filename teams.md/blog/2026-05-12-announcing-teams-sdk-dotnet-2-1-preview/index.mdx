@@ -11,7 +11,20 @@ tags: [teams-sdk, dotnet, preview, announcement]
 description: Teams SDK for .NET 2.1 preview brings native ASP.NET Core integration, typed activity routing, and agentic identity support to Teams bot development.
 ---
 
-Teams SDK for .NET 2.1 preview is here. Building on the [v2.0 foundation](https://microsoft.github.io/teams-sdk/csharp/getting-started/quickstart), this release brings deeper ASP.NET Core integration, a layered architecture, and first-class support for agentic identities. If you're building bots for Microsoft Teams in .NET, this is the SDK designed to feel native to how you already write ASP.NET Core applications.
+Teams SDK for .NET 2.1 preview is available today:
+
+```bash
+dotnet add package Microsoft.Teams.Apps --prerelease
+```
+
+Here's what changes for you:
+
+- **[Your bot is just an ASP.NET Core app.](#native-aspnet-core-integration)** Standard DI, `ILogger`, and `IConfiguration` throughout, with typed activity handlers and a rich context object that replaces `OnTurn` + activity-type switching. A working bot is 15 lines.
+- **[Authenticate the way your infrastructure already does.](#msal-authentication)** MSAL replaces the legacy auth stack — client secrets, managed identities, and federated identity credentials all work from a single `AzureAd` config block, with no code changes between them.
+- **[Act on behalf of users — including AI teammates — without writing a line of token plumbing.](/blog/bring-agentic-identities-to-teams-sdk-dotnet-2-1)** The SDK reads the agentic identity off each incoming activity and asks MSAL for the right token, so your handler code looks the same whether you're acting as the bot or as a user.
+- **[Migrate your existing Bot Framework v4 bot in two lines.](#migration-from-bot-framework-v4)** A compatibility package runs your existing `IBot` implementation on the new infrastructure unchanged, so you can adopt native handlers at your own pace.
+
+The rest of this post walks through each of these.
 
 <!-- truncate -->
 
