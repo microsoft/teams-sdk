@@ -1,15 +1,5 @@
 <!-- adding-reaction -->
 
-:::tip[.NET]
-The reaction APIs are marked with `[Experimental("ExperimentalTeamsReactions")]` and produce a compiler error until you opt in. Suppress the diagnostic inline with `#pragma warning disable ExperimentalTeamsReactions` or project-wide in your `.csproj`:
-
-```xml
-<PropertyGroup>
-  <NoWarn>$(NoWarn);ExperimentalTeamsReactions</NoWarn>
-</PropertyGroup>
-```
-:::
-
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
 {
