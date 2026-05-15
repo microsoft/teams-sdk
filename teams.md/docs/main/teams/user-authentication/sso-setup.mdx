@@ -98,8 +98,10 @@ az rest \
       \"requestedAccessTokenVersion\": 2,
       \"oauth2PermissionScopes\": [{
         \"id\": \"$scopeId\",
-        \"adminConsentDescription\": \"Access as user\",
+        \"adminConsentDescription\": \"Allow the application to access the bot on behalf of the signed-in user.\",
         \"adminConsentDisplayName\": \"Access as user\",
+        \"userConsentDescription\": \"Allow the application to access the bot on your behalf.\",
+        \"userConsentDisplayName\": \"Access as user\",
         \"isEnabled\": true,
         \"type\": \"User\",
         \"value\": \"access_as_user\"
@@ -124,8 +126,10 @@ az rest \
     \"api\": {
       \"oauth2PermissionScopes\": [{
         \"id\": \"$scopeId\",
-        \"adminConsentDescription\": \"Access as user\",
+        \"adminConsentDescription\": \"Allow the application to access the bot on behalf of the signed-in user.\",
         \"adminConsentDisplayName\": \"Access as user\",
+        \"userConsentDescription\": \"Allow the application to access the bot on your behalf.\",
+        \"userConsentDisplayName\": \"Access as user\",
         \"isEnabled\": true,
         \"type\": \"User\",
         \"value\": \"access_as_user\"

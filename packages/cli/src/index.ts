@@ -41,6 +41,7 @@ program
   .version(version)
   .option('-v, --verbose', '[OPTIONAL] Enable verbose logging')
   .option('-y, --yes', '[OPTIONAL] Auto-confirm prompts (for CI/agent use)')
+  .option('--disable-auto-update', '[OPTIONAL] Disable automatic update checks')
   .helpOption('-h, --help', 'Display help (use with --json for structured output)')
   .addHelpText('after', () => {
     const status = isInteractive() ? pc.green('on') : pc.yellow('off');
@@ -54,7 +55,7 @@ program
     if (opts.yes) {
       setAutoConfirm(true);
     }
-    if (actionCommand.name() !== 'self-update') {
+    if (!opts.disableAutoUpdate && actionCommand.name() !== 'self-update') {
       await checkForUpdates();
     }
   });
