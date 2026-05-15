@@ -9,6 +9,7 @@ This guide walks through creating a new Microsoft Teams bot application using th
 A Teams bot is a web application that receives messages from Teams via webhooks. When a user messages your bot, Teams sends an HTTP POST to your application's endpoint. Your app processes the message and responds.
 
 Three things need to exist:
+
 1. **Your web application** — runs locally or deployed, listening for HTTP requests
 2. **A bot registration** — an app identity in Azure with a client ID/secret, pointing to your application's URL
 3. **A public HTTPS endpoint** — so Teams can reach your app (use a dev tunnel for local development)
@@ -25,7 +26,7 @@ The Teams SDK handles the webhook plumbing, authentication, and message parsing 
 teams --version
 ```
 
-**Expected:** Version number displayed (e.g., `2.1.0-preview.3` or similar)
+**Expected:** Version number displayed (e.g., `3.0.0` or later)
 
 **If not installed:** See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) for installation instructions.
 
@@ -46,16 +47,19 @@ Have your credentials ready before proceeding (`.env` for TypeScript/Python, `ap
 The `teams project new` command supports three languages:
 
 **TypeScript:**
+
 ```bash
 teams project new ts <name>
 ```
 
 **Python:**
+
 ```bash
 teams project new py <name>
 ```
 
 **C#:**
+
 ```bash
 teams project new cs <name>
 ```
@@ -68,15 +72,16 @@ All languages support the same template options via `-t, --template <template>`:
 
 **Available Templates:**
 
-| Template | Description | Use Case |
-|----------|-------------|----------|
-| `echo` | Simple echo bot (default) | Learning, testing, basic message handling |
-| `ai` | AI-powered bot with LLM integration | Intelligent responses, chat completion, AI features |
-| `graph` | Microsoft Graph integration | Access user data, calendar, mail, SharePoint |
+| Template | Description                         | Use Case                                            |
+| -------- | ----------------------------------- | --------------------------------------------------- |
+| `echo`   | Simple echo bot (default)           | Learning, testing, basic message handling           |
+| `ai`     | AI-powered bot with LLM integration | Intelligent responses, chat completion, AI features |
+| `graph`  | Microsoft Graph integration         | Access user data, calendar, mail, SharePoint        |
 
 **Note:** Template availability varies by language. Check `teams project new <language> --help` for the actual list of available templates for each language.
 
 **Recommendations:**
+
 - **First bot?** Start with `echo` to learn the basics
 - **AI features?** Use `ai` for LLM-powered responses
 - **Microsoft 365 data?** Use `graph` for accessing user/org data
@@ -90,6 +95,7 @@ teams project new typescript MyBot -t echo
 ```
 
 Copy credentials from the [Bot Infrastructure Setup guide](guide-create-bot-infra.md) into the project:
+
 - **TypeScript / Python:** Copy the `.env` file into the project root
 - **C#:** Add a `Teams` section to `appsettings.json` with `ClientId`, `ClientSecret`, and `TenantId` (the `--env appsettings.json` flag does this automatically during infrastructure setup)
 
@@ -104,11 +110,13 @@ Follow the instructions printed by `teams project new` to install dependencies a
 Your bot needs to be accessible from the internet for Teams to send messages to it.
 
 **For tunnel setup instructions**, see the [Bot Infrastructure Setup guide - Step 3: Set Up Bot Endpoint](guide-create-bot-infra.md#step-3-set-up-bot-endpoint). This covers:
+
 - Creating a persistent devtunnel (recommended)
 - Alternative options (ngrok, existing endpoints)
 - Proper configuration (port 3978, protocol auto, anonymous access)
 
 **Update your bot endpoint** (if you already created infrastructure):
+
 ```bash
 teams app update <teamsAppId> --endpoint "https://<tunnel-id>.devtunnels.ms/api/messages"
 ```
@@ -122,6 +130,7 @@ teams app update <teamsAppId> --endpoint "https://<tunnel-id>.devtunnels.ms/api/
 If you completed [Bot Infrastructure Setup guide](guide-create-bot-infra.md), you have an install link.
 
 **Get the install link:**
+
 ```bash
 teams app get <teamsAppId> --json
 ```
@@ -143,6 +152,7 @@ Look for `installLink` in the output and open it in your browser.
 The scaffolded project's entry point (`src/index.ts` for TypeScript, `src/main.py` for Python) contains inline message handlers. Customize your bot by editing these handlers directly.
 
 For code patterns, API reference, and advanced features (adaptive cards, AI integration, dialogs, proactive messaging, etc.), refer to the SDK docs:
+
 - TypeScript: https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript.txt
 - Python: https://microsoft.github.io/teams-sdk/llms_docs/llms_python.txt
 - C#: https://microsoft.github.io/teams-sdk/llms_docs/llms_csharp.txt

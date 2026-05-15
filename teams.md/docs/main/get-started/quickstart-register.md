@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: "Quickstart: Register your app"
+title: 'Quickstart: Register your app'
 summary: Register a Teams app and bot using the Teams Developer CLI, then sideload into Teams.
 ---
 
@@ -11,7 +11,7 @@ Register a Teams app and its bot infrastructure with the [Teams Developer CLI](/
 If you don't have an agent yet, step 3 scaffolds one using the Teams SDK. If you already have a server, skip step 3 and pass your endpoint to step 4.
 
 :::tip Let your AI assistant do this for you
-Install the [`teams-dev` skill](/developer-tools/agent-skills) in Claude Code, GitHub Copilot, Cursor, or VS Code, then say *"create a Teams bot"* — your assistant runs every step on this page for you, including the tunnel setup and sideload link.
+Install the [`teams-dev` skill](/developer-tools/agent-skills) in Claude Code, GitHub Copilot, Cursor, or VS Code, then say _"create a Teams bot"_ — your assistant runs every step on this page for you, including the tunnel setup and sideload link.
 :::
 
 ## Prerequisites
@@ -23,7 +23,7 @@ Install the [`teams-dev` skill](/developer-tools/agent-skills) in Claude Code, G
 ## 1. Install the CLI
 
 ```bash
-npm install -g @microsoft/teams.cli@preview
+npm install -g @microsoft/teams.cli
 teams --version
 ```
 
