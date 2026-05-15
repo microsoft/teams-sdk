@@ -217,7 +217,18 @@ async function checkBotRegistration(
         detail: 'Run az login',
       });
     } else {
-      azure = await discoverAzureBot(botId, silent);
+      let discoveryFailed = false;
+      try {
+        azure = await discoverAzureBot(botId, silent);
+      } catch (e) {
+        discoveryFailed = true;
+        results.push({
+          category: cat,
+          label: 'Could not discover Azure bot',
+          status: 'fail',
+          detail: e instanceof Error ? e.message : undefined,
+        });
+      }
       if (azure) {
         results.push({
           category: cat,
@@ -288,7 +299,7 @@ async function checkBotRegistration(
             detail: e instanceof Error ? e.message : undefined,
           });
         }
-      } else {
+      } else if (!discoveryFailed) {
         results.push({
           category: cat,
           label: 'Azure bot not found',

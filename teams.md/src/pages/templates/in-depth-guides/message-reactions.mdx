@@ -1,0 +1,72 @@
+---
+sidebar_position: 9
+title: Message Reactions
+sidebar_label: Message Reactions
+summary: Guide to adding, removing, and receiving message reactions in Teams agents, including available reaction types, skin tones, rate limits, and best practices.
+---
+
+# Message Reactions
+
+![Reaction emoji sent by bot](/screenshots/reaction-emoji.png)
+
+Message reactions allow your agent to add or remove emoji reactions on messages in a Teams conversation, and to react to reactions added by users. This gives your agent a quick, low-friction way to acknowledge messages or signal status without sending a full text reply.
+
+## Adding a Reaction
+
+To add a reaction to a message, use the reactions client through the API client:
+
+<LanguageInclude section="adding-reaction" />
+
+## Removing a Reaction
+
+You can also remove reactions that your agent has previously added:
+
+<LanguageInclude section="removing-reaction" />
+
+## Receiving Reactions
+
+Your agent can also listen for reactions that users add or remove on messages in conversations it participates in. The activity carries <LanguageInclude content={{"typescript": "`reactionsAdded` and `reactionsRemoved` arrays", "python": "`reactions_added` and `reactions_removed` lists", "csharp": "`ReactionsAdded` and `ReactionsRemoved` collections"}} />.
+
+<LanguageInclude section="receiving-reactions" />
+
+## Available Reaction Types
+
+The SDK ships a small set of named reaction constants for the most common reactions<LanguageInclude content={{"typescript": ".", "python": ".", "csharp": ", exposed via the `ReactionType` class."}} />
+
+{/* TODO: restore with correct URL once Learn reactions reference is published (see msteams-docs PR #13991)
+Any string-valued reaction ID is accepted, so you can pass any reaction ID from the [Teams reactions reference](#TODO-learn-reactions-reference).
+*/}
+
+<LanguageInclude section="reaction-types" />
+
+## Skin Tones
+
+Reactions tagged **Diverse** in the Teams reactions reference support five skin-tone variants. Append `-tone1` through `-tone5` to the reaction ID to select a variant:
+
+```text
+1f44b_wavinghand-tone4
+```
+
+{/* TODO: restore once Learn reactions reference is published (see msteams-docs PR #13991)
+See the [Teams reactions reference](#TODO-learn-reactions-reference) for the full list of reactions that support skin tones.
+*/}
+
+## Rate Limits
+
+Agents are limited to **two reactions per second**. Calls that exceed this limit are throttled and return a `429` response. Implement exponential backoff and honor the `Retry-After` header.
+
+## Best Practices
+
+- **Use reactions sparingly.** Reactions work best when they signal something specific (acknowledgement, completion, an error). Reacting to every message creates noise.
+- **Match the reaction to the context.** Different reactions carry different meanings. Choose one that aligns with your agent's purpose.
+- **Replace, don't stack.** If your agent has already added a reaction and needs to update it, remove the existing reaction first, then add the new one. Adding a reaction that's already present is a no-op.
+- **Handle errors.** Reaction operations can fail if the message no longer exists or the agent isn't a member of the conversation. Handle exceptions appropriately.
+
+## Differences from Feedback
+
+Message reactions are different from the [feedback](./feedback) feature:
+
+- **Reactions** are quick emoji responses your agent adds to or removes from messages programmatically, and reactions users add to messages your agent can listen for.
+- **Feedback** are interactive UI components (like/dislike buttons) that users can click to provide structured feedback on agent responses.
+
+Use reactions when your agent wants to acknowledge or respond to a message with emoji. Use feedback when you want to collect user opinions about your agent's responses.

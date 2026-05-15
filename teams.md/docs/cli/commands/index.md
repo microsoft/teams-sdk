@@ -8,6 +8,7 @@ All teams commands. Run any command with `--help` for inline usage.
 |------|-------------|
 | `-v, --verbose` | Enable verbose logging |
 | `-y, --yes` | Auto-confirm prompts (for CI/agent use) |
+| `--disable-auto-update` | Disable automatic update checks |
 | `-V, --version` | Show version |
 | `-h, --help` | Show help (use with `--json` for structured output) |
 
