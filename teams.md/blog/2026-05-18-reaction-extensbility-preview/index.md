@@ -47,6 +47,7 @@ Agent reacts with one emoji while processing, then swaps to another on completio
 
 ```csharp
 // Signal processing started
+// Add reaction to message
 await client.Send(
     new MessageReactionActivity()
         .AddReaction(new Reaction() { Type = "happyface" })
@@ -55,11 +56,13 @@ await client.Send(
 // ... task completes ...
 
 // Swap to celebration
+// Remove previoulsy added reaction
 await client.Send(
     new MessageReactionActivity()
         .RemoveReaction(new Reaction() { Type = "happyface" })
         .WithReplyToId(activity.Id));
 
+// Add new reaction to replace removed reaction
 await client.Send(
     new MessageReactionActivity()
         .AddReaction(new Reaction() { Type = "like" })
@@ -166,7 +169,7 @@ app.on('messageReaction', async ({ activity }) => {
   for (const reaction of activity.reactionsAdded ?? []) {
     console.log(`User added reaction: ${reaction.type}`);
   }
-// Listen for reaction removed from agent message
+// Listen for a reaction removed from agent message
   for (const reaction of activity.reactionsRemoved ?? []) {
     console.log(`User removed reaction: ${reaction.type}`);
   }
@@ -190,12 +193,12 @@ app.OnMessageReactionRemoved(async (context, cancellationToken) =>{
 
 ### Python
 ```python
-# Listen for reaction added to agent message
+# Listen for a reaction added to agent message
 @app.on_message_reaction
 async def handle_reaction(ctx: ActivityContext[MessageReactionActivity]):
     for reaction in ctx.activity.reactions_added or []:
         print(f"User added reaction: {reaction.type}")
-# Listen for reaction removed from agent message
+# Listen for a reaction removed from agent message
     for reaction in ctx.activity.reactions_removed or []:
         print(f"User removed reaction: {reaction.type}")
 ```
