@@ -228,7 +228,7 @@ Skin-tone variants are supported via suffix modifiers:
 
 ## Teams Reactions Reference
 
-Alongside this preview, we're publishing the **Teams Reactions Reference** - the canonical developer resource for discovering valid EmojiIDs supported by Teams.
+Alongside this preview, we're publishing the [**Teams Reactions Reference**](https://learn.microsoft.com/en-us/microsoftteams/platform/agents-in-teams/teams-reactions-reference) - the canonical developer resource for discovering valid EmojiIDs supported by Teams.
 
 The reference includes:
 
@@ -236,7 +236,7 @@ The reference includes:
 - Skin-tone variations for diverse emojis
 - EmojiID string format documentation
 
-👉 **Explore the Teams Reactions Reference**
+👉 [**Explore the Teams Reactions Reference**](https://learn.microsoft.com/en-us/microsoftteams/platform/agents-in-teams/teams-reactions-reference)
 
 ## Prerequisites
 
