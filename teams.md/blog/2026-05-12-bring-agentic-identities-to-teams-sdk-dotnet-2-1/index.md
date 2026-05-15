@@ -11,53 +11,140 @@ tags: [teams-sdk, dotnet, agentic-identity, agents-365]
 description: Build bots that act on behalf of users with agentic identities in Teams SDK for .NET 2.1 preview — user-delegated tokens with zero manual plumbing.
 ---
 
-Your bot can now act on behalf of users, not just as itself. [Teams SDK for .NET 2.1 preview](/blog/announcing-teams-sdk-dotnet-2-1-preview) has built-in support for agentic identities, enabling bots to acquire user-delegated tokens and perform actions with the user's permissions. The SDK handles identity extraction and token acquisition transparently — you focus on what your bot does, not on token plumbing.
+Your bot can call Microsoft Graph and Teams APIs as itself — or as someone else entirely. When a message arrives from an AI teammate or in a user-delegated context, [Teams SDK for .NET 2.1 preview](/blog/announcing-teams-sdk-dotnet-2-1-preview) gives your handlers the identity bits they need to act *as that user*, with that user's permissions. The SDK reads the identity off the incoming activity and acquires the right token through MSAL transparently — your handler code looks the same either way.
 
-For the full conceptual background on agentic identities and Agents 365, see the [Agents 365 documentation](https://learn.microsoft.com/agents-365).
+This post is about that second case: when your bot needs to act on behalf of someone else rather than as itself.
 
 <!-- truncate -->
 
-## What Is an Agentic Identity?
+## Two scenarios your bot needs to handle
 
-Traditional bots authenticate as themselves using app-only tokens. They can send messages and call APIs, but only with the permissions granted to the app registration. An agentic identity changes this: the bot acts **on behalf of a specific user**, using that user's permissions and identity.
+Microsoft's [Agent 365](https://learn.microsoft.com/agents-365) program distinguishes two kinds of agents your bot will interact with:
 
-Three fields on `ConversationAccount` make this work:
+| Agent type | Identity | Example |
+|---|---|---|
+| **Agent** | Acts on behalf of a signed-in user (delegated), or as the app itself (application). | A help-desk bot a user installs in their Teams client. |
+| **AI teammate** | Has its own user identity in Microsoft 365 — own mailbox, Teams presence, directory entry, manager relationship. | An onboarding agent named *Pat* who lives in the directory. People @mention Pat, email Pat, and invite Pat to meetings. |
+
+For your bot, the question on every incoming message is: *who is on the other end of this conversation, and whose permissions should I use to do the work?*
+
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two scenarios: bot acts as itself versus bot acts on behalf of someone else" style={{maxWidth: '100%', height: 'auto', fontFamily: 'system-ui, -apple-system, sans-serif'}}>
+  <defs>
+    <marker id="arr-scenarios" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <text x="30" y="28" fill="currentColor" fontSize="13" fontWeight="600">Scenario A — bot acts as itself</text>
+  <text x="30" y="208" fill="currentColor" fontSize="13" fontWeight="600">Scenario B — bot acts on behalf of someone else</text>
+
+  <g fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="30" y="64" width="140" height="48" rx="6"/>
+    <rect x="290" y="64" width="140" height="48" rx="6"/>
+    <rect x="550" y="64" width="140" height="48" rx="6"/>
+    <line x1="170" y1="88" x2="282" y2="88" markerEnd="url(#arr-scenarios)"/>
+    <line x1="430" y1="88" x2="542" y2="88" markerEnd="url(#arr-scenarios)"/>
+
+    <rect x="30" y="240" width="140" height="64" rx="6"/>
+    <rect x="290" y="252" width="140" height="48" rx="6"/>
+    <rect x="550" y="252" width="140" height="48" rx="6"/>
+    <line x1="170" y1="276" x2="282" y2="276" markerEnd="url(#arr-scenarios)"/>
+    <line x1="430" y1="276" x2="542" y2="276" markerEnd="url(#arr-scenarios)"/>
+  </g>
+
+  <g fill="currentColor" fontSize="14" textAnchor="middle">
+    <text x="100" y="93">Human user</text>
+    <text x="360" y="93">Your bot</text>
+    <text x="620" y="93">Microsoft Graph</text>
+    <text x="100" y="268">AI teammate</text>
+    <text x="100" y="288" fontSize="12" opacity="0.7">or delegating user</text>
+    <text x="360" y="281">Your bot</text>
+    <text x="620" y="281">Microsoft Graph</text>
+  </g>
+
+  <g fill="currentColor" fontSize="11" opacity="0.75" textAnchor="middle">
+    <text x="226" y="80">sends message</text>
+    <text x="486" y="80">app-only token</text>
+    <text x="226" y="258">sends message</text>
+    <text x="226" y="270" fontSize="10">with agentic identity</text>
+    <text x="486" y="258">user-delegated token</text>
+    <text x="486" y="270" fontSize="10">scoped to the teammate</text>
+  </g>
+</svg>
+
+In **Scenario A**, your bot calls APIs with its own app-only token — the tenant-wide consent your bot was granted at install time. Audit logs attribute every action to the bot.
+
+In **Scenario B**, your bot calls APIs with a token that represents the user on the other side of the conversation — scoped to what *they* can access. If Pat doesn't have access to a SharePoint site, the call fails, even when your bot does. Actions show up as Pat's in audit logs.
+
+The SDK recognizes Scenario B by reading three fields on `activity.From`:
 
 | Field | Purpose |
-|-------|---------|
+|---|---|
 | `agenticAppId` | The app ID of the agent acting on behalf of the user |
 | `agenticUserId` | The user whose identity the agent is delegating |
 | `agenticAppBlueprintId` | The blueprint ID for the agentic app configuration |
 
-When Teams delivers an activity from an agentic context, these fields are populated on `activity.From`. The SDK reads them automatically and uses them to acquire user-delegated tokens via MSAL.
+When any of these are set, the SDK switches to user-delegated token acquisition automatically. For the deeper conceptual background, see the [Agents 365 identity documentation](https://learn.microsoft.com/agents-365/identity).
 
-For a deeper explanation of how agentic identities work in the Agents 365 ecosystem, see the [Agents 365 identity documentation](https://learn.microsoft.com/agents-365/identity).
+## How the identity flows through the SDK
 
-## How It Works in the SDK
+You don't extract the identity, look up a token, or thread anything through to MSAL — the SDK does all of that. From the moment an activity arrives to the moment your `context.Api.*` call leaves the wire:
 
-The SDK handles the full agentic identity flow automatically. Here's what happens when an activity arrives:
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="How agentic identity flows through the SDK" style={{maxWidth: '100%', height: 'auto', fontFamily: 'system-ui, -apple-system, sans-serif'}}>
+  <defs>
+    <marker id="arr-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
 
-```
-Incoming activity
-  → activity.From contains agenticAppId, agenticUserId, agenticAppBlueprintId
-  → AgenticIdentity.FromAccount(activity.From) extracts them
-  → API clients thread the identity into every outbound call
-  → MSAL acquires a user-delegated token transparently
-  → The API call executes with the user's permissions
-```
+  <g fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="20" y="30" width="200" height="130" rx="6"/>
+    <rect x="260" y="30" width="200" height="130" rx="6"/>
+    <rect x="500" y="30" width="200" height="130" rx="6"/>
+    <line x1="220" y1="95" x2="252" y2="95" markerEnd="url(#arr-flow)"/>
+    <line x1="460" y1="95" x2="492" y2="95" markerEnd="url(#arr-flow)"/>
+  </g>
 
-In code, the `AgenticIdentity` is extracted from the `ConversationAccount`:
+  <g fill="currentColor" fontSize="14" fontWeight="600" textAnchor="middle">
+    <text x="120" y="55">activity.From</text>
+    <text x="360" y="55">SDK</text>
+    <text x="600" y="55">context.Api.*</text>
+  </g>
+
+  <g fill="currentColor" fontSize="11" opacity="0.65" textAnchor="middle">
+    <text x="120" y="72">(from incoming activity)</text>
+    <text x="360" y="72">(no code from you)</text>
+    <text x="600" y="72">(outbound call)</text>
+  </g>
+
+  <g fontSize="11" fill="currentColor" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <text x="35" y="100">agenticAppId</text>
+    <text x="35" y="118">agenticUserId</text>
+    <text x="35" y="136">agenticAppBlueprintId</text>
+
+    <text x="275" y="100">AgenticIdentity</text>
+    <text x="275" y="118">  .FromAccount</text>
+    <text x="275" y="136">MSAL token cache</text>
+
+    <text x="515" y="100">acts as</text>
+    <text x="515" y="118">  agenticUserId</text>
+    <text x="515" y="136">(delegated token)</text>
+  </g>
+</svg>
+
+Every API client in the SDK — `ActivityClient`, `ReactionClient`, `MemberClient`, `MeetingClient`, `TeamClient` — accepts an `AgenticIdentity` and threads it through to MSAL. When you call `context.Api` from a handler, the identity is already attached.
+
+If you ever need the raw bits — for logging, custom checks, or out-of-band API calls — pull them off the activity directly:
 
 ```csharp
-// The SDK does this internally — you don't need to call it manually
-AgenticIdentity? identity = AgenticIdentity.FromAccount(activity.From);
+AgenticIdentity? identity = activity.From?.GetAgenticIdentity();
 
-// identity.AgenticAppId       → "app-id-123"
-// identity.AgenticUserId      → "user-id-456"
-// identity.AgenticAppBlueprintId → "blueprint-id-789"
+// identity.AgenticAppId           → "app-id-123"
+// identity.AgenticUserId          → "user-id-456"
+// identity.AgenticAppBlueprintId  → "blueprint-id-789"
 ```
 
-Every API client in the SDK — `ActivityClient`, `ReactionClient`, `MemberClient`, `MeetingClient`, `TeamClient` — accepts an `AgenticIdentity` and threads it through to MSAL for token acquisition. When you use `context.Api` in a handler, this happens automatically.
+(`GetAgenticIdentity()` is the extension-method form of `AgenticIdentity.FromAccount(activity.From)`. Either works; the extension method reads more naturally inside a handler.)
 
 ## Tutorial: Build a Bot That Acts on Behalf of an Agentic User
 
