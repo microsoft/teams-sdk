@@ -5,29 +5,27 @@ date: 2026-05-19
 authors:
   - name: Ricardo Minguez (Rido)
     title: Microsoft
-    url: https://github.com/author
-    image_url: https://github.com/author.png
+    url: https://github.com/rido-min
 tags: [teams-sdk, dotnet, preview, announcement]
-description: Teams SDK for .NET 2.1 preview brings native ASP.NET Core integration, typed activity routing, and agentic identity support to Teams bot development.
+description: Teams SDK for .NET 2.1 preview lets your bot run as an AI teammate in Microsoft 365 — with native ASP.NET Core integration, redesigned SSO, and agentic identity support.
 ---
 
-Teams SDK for .NET 2.1 preview is available today:
+Build [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) solutions with the Teams SDK for .NET 2.1 preview, available today:
 
 ```bash
 dotnet add package Microsoft.Teams.Apps --prerelease
 ```
 
-Here's what changes for you:
+Here's what changes for your bot apps:
 
-- **[Your bot is just an ASP.NET Core app.](#native-aspnet-core-integration)** Standard DI, `ILogger`, and `IConfiguration` throughout, with typed activity handlers and a rich context object that replaces `OnTurn` + activity-type switching. A working bot is 15 lines.
-- **[Authenticate the way your infrastructure already does.](#msal-authentication)** MSAL replaces the legacy auth stack — client secrets, managed identities, and federated identity credentials all work from a single `AzureAd` config block, with no code changes between them.
-- **[Act on behalf of users — including AI teammates — without writing a line of token plumbing.](#agentic-identity)** The SDK reads the agentic identity off each incoming activity and asks MSAL for the right token, so your handler code looks the same whether you're acting as the bot or as a user.
-- **[Migrate your existing Bot Framework v4 bot in two lines.](#migration-from-bot-framework-v4)** A compatibility package runs your existing `IBot` implementation on the new infrastructure unchanged, so you can adopt native handlers at your own pace.
-- **[Coming from Teams SDK 2.0?](#migration-from-teams-sdk-20)** Most of the API surface is unchanged. A few namespaces moved and some types tightened up — see what's different and what stays the same.
-
-The rest of this post walks through each of these.
+- **[Your app is just an ASP.NET Core app.](#native-aspnet-core-integration)** Standard DI, `ILogger`, and `IConfiguration` throughout, with typed activity handlers and a rich context object. A working bot is 15 lines.
+- **[Run your bot on behalf of a user using a redesigned SSO flow.](#oauth-and-sso)** Access private documents, calendars, and other user-scoped resources — the SDK handles the sign-in and consent experience automatically.
+- **[Run your bot as an AI teammate with its own identity.](#agentic-identity)** The SDK supports agentic identities from the Agent 365 program, so your bot can act on behalf of the AI teammate, also known as _Agentic User_, with their permissions, no extra plumbing needed.
+- **[Migrate your existing Bot Framework v4 bot in two lines.](#migration-from-bot-framework-v4)** A compatibility package runs your existing `IBot` implementation on the new infrastructure unchanged, so you can adopt all new features at your own pace, including Agentic scenarios.
 
 <!-- truncate -->
+
+> **Coming from Teams SDK 2.0?** Most of the API surface is unchanged — `context.Send()`, `context.Reply()`, `context.Log`, handler registration, and `App.Builder()` all work as before. See [what changed](#migration-from-teams-sdk-20) for the short list of breaking changes.
 
 ## Native ASP.NET Core Integration
 
@@ -36,7 +34,7 @@ The 2.1 preview is built around the patterns .NET developers already know. There
 - **Dependency injection** — All services register via `IServiceCollection` using `AddTeamsBotApplication()`
 - **Logging** — Standard `ILogger` throughout, configured with `builder.Logging`
 - **Configuration** — Standard `IConfiguration` via `appsettings.json`
-- **Authentication** — MSAL-based via Microsoft Identity Web, with built-in support for multiple credential types
+- **Authentication** — Configured through the standard `AzureAd` section, with built-in support for client secrets, managed identities, and federated identity credentials
 
 Here's a minimal bot that handles messages in about 15 lines:
 
@@ -59,19 +57,7 @@ app.Run();
 
 `AddTeamsBotApplication()` registers everything the SDK needs into DI. `UseTeamsBotApplication()` wires it into the ASP.NET Core pipeline. From there, you register handlers for the activity types you care about.
 
-### MSAL Authentication
-
-The SDK uses [MSAL (Microsoft Authentication Library)](https://learn.microsoft.com/entra/msal/) for all authentication, replacing the legacy Bot Framework authentication stack. This brings several benefits: automatic token caching, support for modern credential types, and compatibility with the broader Microsoft Identity platform.
-
-Authentication is configured through the standard `AzureAd` section in `appsettings.json`. The SDK auto-detects the credential type based on which fields are present:
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-<Tabs>
-<TabItem value="secret" label="Client Secret" default>
-
-The simplest option for development and testing:
+Authentication is configured through the standard `AzureAd` section in `appsettings.json`:
 
 ```json
 {
@@ -89,68 +75,11 @@ The simplest option for development and testing:
 }
 ```
 
-</TabItem>
-<TabItem value="system-mi" label="System-Assigned Managed Identity">
-
-Uses the identity of the hosting resource itself, no secrets to manage:
-
-```json
-{
-  "AzureAd": {
-    "Instance": "https://login.microsoftonline.com/",
-    "TenantId": "your-tenant-id",
-    "ClientId": "your-client-id",
-    "ClientCredentials": [
-      {
-        "SourceType": "SignedAssertionFromManagedIdentity"
-      }
-    ]
-  }
-}
-```
-
-</TabItem>
-<TabItem value="user-mi" label="User-Assigned Managed Identity">
-
-Recommended for Azure-hosted bots where you need explicit control over the identity:
-
-```json
-{
-  "AzureAd": {
-    "Instance": "https://login.microsoftonline.com/",
-    "TenantId": "your-tenant-id",
-    "ClientId": "your-client-id"
-  }
-}
-```
-
-</TabItem>
-<TabItem value="fic" label="Federated Identity Credentials">
-
-For workload identity federation scenarios such as Kubernetes pods or GitHub Actions deploying to Azure. Uses the `SignedAssertionFromManagedIdentity` source type with the managed identity that backs the federation:
-
-```json
-{
-  "AzureAd": {
-    "Instance": "https://login.microsoftonline.com/",
-    "TenantId": "your-tenant-id",
-    "ClientId": "your-client-id",
-    "ClientCredentials": [
-      {
-        "SourceType": "SignedAssertionFromManagedIdentity",
-        "ManagedIdentityClientId": "managed-identity-client-id-for-federation"
-      }
-    ]
-  }
-}
-```
-
-</TabItem>
-</Tabs>
+The SDK auto-detects the credential type based on which fields are present — client secrets, system-assigned managed identities, user-assigned managed identities, and federated identity credentials all work from this same config block with no code changes between them.
 
 ## Typed Activity Routing
 
-Instead of a single `OnTurn` callback that switches on activity type, the SDK provides typed handlers that give you the right activity shape and a rich context object:
+Register a handler for each activity type you care about. The SDK gives you the right activity shape and a rich context object for each one:
 
 ```csharp
 // Message handling with regex routing
@@ -187,12 +116,11 @@ await context.SendTypingActivityAsync(cancellationToken);         // Typing indi
 context.Log.Info("Processing message");               // Structured logging via ILogger
 ```
 
-The context also provides lazy-initialized API clients scoped to the current activity's service URL, so you can call Teams APIs directly:
+The context also provides scoped API clients for calling Teams APIs directly:
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    // Update a previously sent activity via the scoped API client
     var updated = TeamsActivity.CreateBuilder()
         .WithType(TeamsActivityType.Message)
         .WithText("This message was updated!")
@@ -206,100 +134,49 @@ teams.OnMessage(async (context, cancellationToken) =>
 });
 ```
 
-## Three-Layer Architecture
-
-The SDK is organized into three NuGet packages, each with a clear responsibility:
-
-| Package | Purpose |
-|---------|---------|
-| **Microsoft.Teams.Core** | Foundation: Activity Protocol implementation, authentication, middleware pipeline, HTTP clients |
-| **Microsoft.Teams.Apps** | Framework: typed handlers, activity routing, OAuth flows, Teams API clients, streaming |
-| **Microsoft.Teams.Apps.BotBuilder** | Compatibility: drop-in adapter for existing Bot Framework v4 bots |
-
-Most developers will work with `Microsoft.Teams.Apps`, which provides the `TeamsBotApplication` and typed handlers. The Core layer implements the [Activity Protocol specification](https://github.com/microsoft/Agents/blob/main/specs/activity/protocol-activity.md), making the SDK standards-based rather than tied to a specific framework.
-
-## Performance and Modern .NET
-
-The SDK uses `System.Text.Json` with source-generated serialization contexts throughout:
-
-```csharp
-[JsonSerializable(typeof(CoreActivity))]
-[JsonSerializable(typeof(TeamsActivity))]
-internal partial class TeamsActivityJsonContext : JsonSerializerContext { }
-```
-
-This means zero-reflection serialization, reduced allocations, and full AOT (Ahead-of-Time) compilation compatibility. The activity model uses a loose schema design — core protocol fields are typed properties, while channel-specific or evolving fields live in a `JsonExtensionData` dictionary. This keeps the model extensible without requiring SDK updates for every new Teams feature.
-
 ## OAuth and SSO
 
-The SDK provides a redesigned OAuth flow system built around named connections. Each connection is an independent `OAuthFlow` instance with its own sign-in and failure callbacks, which means your bot can authenticate users against multiple providers — for example, Microsoft Graph and a third-party API — without any routing logic on your part.
+The SDK provides a redesigned OAuth flow system built around named connections. Each connection is an independent `OAuthFlow` instance with its own sign-in and failure callbacks, which means your bot can authenticate users against multiple providers without any routing logic on your part.
 
 ```csharp
-// Register multiple OAuth connections
 var graphFlow = teams.AddOAuthFlow("graph-connection");
-var salesforceFlow = teams.AddOAuthFlow("salesforce-connection");
 
-// Each connection has independent sign-in and failure callbacks
 graphFlow.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
 {
     await context.SendActivityAsync("Signed in to Microsoft Graph!", cancellationToken);
 });
-
-salesforceFlow.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
-{
-    await context.SendActivityAsync("Signed in to Salesforce!", cancellationToken);
-});
 ```
 
-Within a handler, initiate sign-in by calling `SignInAsync` on the flow. The SDK handles the full SSO sequence automatically: it attempts silent token acquisition first, and if no cached token is available, it sends an OAuthCard that triggers the Teams SSO flow. Duplicate token exchanges from multiple Teams endpoints (mobile, desktop, web) are deduplicated automatically.
+Within a handler, initiate sign-in by calling `SignInAsync` on the flow. The SDK handles the full SSO sequence automatically — silent authentication first, falling back to an OAuthCard if needed. Duplicate sign-in requests from multiple Teams endpoints (mobile, desktop, web) are deduplicated automatically.
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    // Try silent token acquisition; falls back to OAuthCard if needed
     string? token = await graphFlow.SignInAsync(context, cancellationToken);
 
     if (token is not null)
     {
-        // Token available — call the API
         await context.SendActivityAsync("You're already signed in.", cancellationToken);
     }
     // else: OAuthCard was sent, result arrives via OnSignInComplete
 });
 ```
 
-You can also check sign-in status, get tokens silently, or sign the user out:
-
-```csharp
-bool isSignedIn = await graphFlow.IsSignedInAsync(context, cancellationToken);
-string? token = await graphFlow.GetTokenAsync(context, cancellationToken);
-await graphFlow.SignOutAsync(context, cancellationToken);
-```
-
 ## Agentic Identity
 
-Your bot can call Microsoft Graph and Teams APIs as itself — or as someone else entirely. When a message arrives from an AI teammate or in a user-delegated context, the SDK gives your handlers the identity bits they need to act *as that user*, with that user's permissions. The SDK reads the identity off the incoming activity and acquires the right token through MSAL transparently — your handler code looks the same either way.
+With the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program, your bot can run as an **AI teammate** — a first-class identity in Microsoft 365 with its own mailbox, Teams presence, directory entry, and manager relationship. People @mention it, email it, and invite it to meetings, just like a human colleague.
 
-### Two scenarios your bot needs to handle
+This changes how your bot interacts with APIs. A traditional bot calls APIs with its own app permissions. An AI teammate can call APIs on behalf of users — scoped to what *they* can access, with actions attributed to them in audit logs.
 
-Microsoft's [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program distinguishes two kinds of agents your bot will interact with:
-
-| Agent type | Identity | Example |
-|---|---|---|
-| **Agent** | Acts on behalf of a signed-in user (delegated), or as the app itself (application). | A help-desk bot a user installs in their Teams client. |
-| **AI teammate** | Has its own user identity in Microsoft 365 — own mailbox, Teams presence, directory entry, manager relationship. | An onboarding agent named *Pat* who lives in the directory. People @mention Pat, email Pat, and invite Pat to meetings. |
-
-For your bot, the question on every incoming message is: *who is on the other end of this conversation, and whose permissions should I use to do the work?*
-
-<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two scenarios: bot acts as itself versus bot acts on behalf of someone else" style={{maxWidth: '100%', height: 'auto', fontFamily: 'system-ui, -apple-system, sans-serif'}}>
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two scenarios: bot acts as itself versus bot acts as AI teammate on behalf of a user" style={{maxWidth: '100%', height: 'auto', fontFamily: 'system-ui, -apple-system, sans-serif'}}>
   <defs>
     <marker id="arr-scenarios" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
     </marker>
   </defs>
 
-  <text x="30" y="28" fill="currentColor" fontSize="13" fontWeight="600">Scenario A — bot acts as itself</text>
-  <text x="30" y="208" fill="currentColor" fontSize="13" fontWeight="600">Scenario B — bot acts on behalf of someone else</text>
+  <text x="30" y="28" fill="currentColor" fontSize="13" fontWeight="600">Traditional bot — acts as itself</text>
+  <text x="30" y="208" fill="currentColor" fontSize="13" fontWeight="600">AI teammate — acts on behalf of a user</text>
 
   <g fill="none" stroke="currentColor" strokeWidth="1.5">
     <rect x="30" y="64" width="140" height="48" rx="6"/>
@@ -319,39 +196,23 @@ For your bot, the question on every incoming message is: *who is on the other en
     <text x="100" y="93">Human user</text>
     <text x="360" y="93">Your bot</text>
     <text x="620" y="93">Microsoft Graph</text>
-    <text x="100" y="268">AI teammate</text>
-    <text x="100" y="288" fontSize="12" opacity="0.7">or delegating user</text>
+    <text x="100" y="268">Human user</text>
+    <text x="100" y="288" fontSize="12" opacity="0.7">or AI teammate</text>
     <text x="360" y="281">Your bot</text>
     <text x="620" y="281">Microsoft Graph</text>
   </g>
 
   <g fill="currentColor" fontSize="11" opacity="0.75" textAnchor="middle">
     <text x="226" y="80">sends message</text>
-    <text x="486" y="80">app-only token</text>
+    <text x="486" y="80">app permissions</text>
     <text x="226" y="258">sends message</text>
     <text x="226" y="270" fontSize="10">with agentic identity</text>
-    <text x="486" y="258">user-delegated token</text>
-    <text x="486" y="270" fontSize="10">scoped to the teammate</text>
+    <text x="486" y="258">user's permissions</text>
+    <text x="486" y="270" fontSize="10">scoped to the user</text>
   </g>
 </svg>
 
-In **Scenario A**, your bot calls APIs with its own app-only token — the tenant-wide consent your bot was granted at install time. Audit logs attribute every action to the bot.
-
-In **Scenario B**, your bot calls APIs with a token that represents the user on the other side of the conversation — scoped to what *they* can access. If Pat doesn't have access to a SharePoint site, the call fails, even when your bot does. Actions show up as Pat's in audit logs.
-
-The SDK recognizes Scenario B by reading three fields on `activity.From`:
-
-| Field | Purpose |
-|---|---|
-| `agenticAppId` | The app ID of the agent acting on behalf of the user |
-| `agenticUserId` | The user whose identity the agent is delegating |
-| `agenticAppBlueprintId` | The blueprint ID for the agentic app configuration |
-
-When any of these are set, the SDK switches to user-delegated token acquisition automatically. For the deeper conceptual background, see the [Agent 365 identity documentation](https://learn.microsoft.com/microsoft-agent-365/identity).
-
-### How the identity flows through the SDK
-
-You don't extract the identity, look up a token, or thread anything through to MSAL — the SDK does all of that. From the moment an activity arrives to the moment your `context.Api.*` call leaves the wire:
+The SDK handles this automatically. It reads the agentic identity off each incoming activity and uses the right permissions for outbound API calls. Your handler code doesn't change — `context.Api` calls work the same either way.
 
 <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="How agentic identity flows through the SDK" style={{maxWidth: '100%', height: 'auto', fontFamily: 'system-ui, -apple-system, sans-serif'}}>
   <defs>
@@ -375,7 +236,7 @@ You don't extract the identity, look up a token, or thread anything through to M
   </g>
 
   <g fill="currentColor" fontSize="11" opacity="0.65" textAnchor="middle">
-    <text x="120" y="72">(from incoming activity)</text>
+    <text x="120" y="72">(incoming activity)</text>
     <text x="360" y="72">(no code from you)</text>
     <text x="600" y="72">(outbound call)</text>
   </g>
@@ -387,85 +248,19 @@ You don't extract the identity, look up a token, or thread anything through to M
 
     <text x="275" y="100">AgenticIdentity</text>
     <text x="275" y="118">  .FromAccount</text>
-    <text x="275" y="136">MSAL token cache</text>
+    <text x="275" y="136">auto-configured auth</text>
 
     <text x="515" y="100">acts as</text>
     <text x="515" y="118">  agenticUserId</text>
-    <text x="515" y="136">(delegated token)</text>
+    <text x="515" y="136">(user's permissions)</text>
   </g>
 </svg>
 
-Every API client in the SDK — `ActivityClient`, `ReactionClient`, `MemberClient`, `MeetingClient`, `TeamClient` — accepts an `AgenticIdentity` and threads it through to MSAL. When you call `context.Api` from a handler, the identity is already attached.
-
-If you ever need the raw bits — for logging, custom checks, or out-of-band API calls — pull them off the activity directly:
+If you need to check whether you're in an agentic context — for logging or conditional logic — pull the identity off the activity:
 
 ```csharp
-AgenticIdentity? identity = activity.From?.GetAgenticIdentity();
-
-// identity.AgenticAppId           → "app-id-123"
-// identity.AgenticUserId          → "user-id-456"
-// identity.AgenticAppBlueprintId  → "blueprint-id-789"
-```
-
-(`GetAgenticIdentity()` is the extension-method form of `AgenticIdentity.FromAccount(activity.From)`. Either works; the extension method reads more naturally inside a handler.)
-
-### Tutorial: Build a Bot That Acts on Behalf of an Agentic User
-
-Let's build a bot that receives a message in an agentic context and performs actions using the user's identity.
-
-#### Prerequisites
-
-Before writing code, you need:
-
-1. **An app registration** configured for agentic scenarios. See the [Agent 365 setup guide](https://learn.microsoft.com/microsoft-agent-365/setup) for the required permissions and configuration.
-2. **MSAL credentials** — client secret or managed identity for your bot's app registration.
-3. **.NET 8 or higher** installed.
-
-#### Set up the project
-
-Create a new project and install the SDK:
-
-```bash
-dotnet new web -n AgenticBot
-cd AgenticBot
-dotnet add package Microsoft.Teams.Apps --prerelease
-```
-
-Configure your app credentials in `appsettings.json`. The `ClientId` is your Agent Blueprint ID from the Agent 365 app registration:
-
-```json
-{
-  "AzureAd": {
-    "Instance": "https://login.microsoftonline.com/",
-    "TenantId": "your-tenant-id",
-    "ClientId": "your-agent-blueprint-id",
-    "ClientCredentials": [
-      {
-        "SourceType": "ClientSecret",
-        "ClientSecret": "your-client-secret"
-      }
-    ]
-  }
-}
-```
-
-#### Write the bot
-
-Create a `Program.cs` that handles messages and uses the agentic identity to call Teams APIs on behalf of the user:
-
-```csharp
-using Microsoft.Teams.Apps;
-using Microsoft.Teams.Apps.Schema;
-
-var builder = WebApplication.CreateSlimBuilder(args);
-builder.Services.AddTeamsBotApplication();
-var app = builder.Build();
-
-var teams = app.UseTeamsBotApplication();
-
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    // Check if this message came from an agentic context
     var agenticIdentity = context.Activity.From?.GetAgenticIdentity();
 
     if (agenticIdentity is not null)
@@ -473,117 +268,17 @@ teams.OnMessage(async (context, cancellationToken) =>
         context.Log.Info(
             $"Acting on behalf of user {agenticIdentity.AgenticUserId} " +
             $"via app {agenticIdentity.AgenticAppId}");
-
-        // Send a reply — the SDK automatically uses the user-delegated token
-        // because the agentic identity is on the incoming activity's From field
-        await context.SendActivityAsync(
-            "I'm responding on your behalf with your permissions.",
-            cancellationToken);
-
-        // Call Teams APIs with the user's identity
-        // The API client extracts the AgenticIdentity from the activity
-        // and acquires a user-delegated token via MSAL
-        var updated = TeamsActivity.CreateBuilder()
-            .WithType(TeamsActivityType.Message)
-            .WithText("This message was updated on your behalf!")
-            .Build();
-
-        await context.Api.Conversations.Activities.UpdateAsync(
-            context.Activity.Conversation.Id,
-            context.Activity.Id!,
-            updated,
-            cancellationToken);
     }
-    else
-    {
-        // Standard bot-identity response
-        await context.SendActivityAsync(
-            "I'm responding as the bot (app-only identity).",
-            cancellationToken);
-    }
-});
 
-app.Run();
-```
-
-#### Understand the flow
-
-When your bot receives a message from an agentic context, here's what happens step by step:
-
-1. **Teams delivers the activity** with `From.AgenticAppId`, `From.AgenticUserId`, and `From.AgenticAppBlueprintId` populated.
-
-2. **Your handler runs.** The `context.Activity.From` has the agentic fields available via `GetAgenticIdentity()`.
-
-3. **You call `context.Api`** to perform a Teams API operation. The SDK's `ActivityClient` (or `MemberClient`, `ReactionClient`, etc.) internally calls `AgenticIdentity.FromAccount(activity.From)` to extract the identity.
-
-4. **MSAL acquires a user-delegated token** using the agentic identity fields. This happens transparently — no manual token code.
-
-5. **The API call executes** with the user's permissions, not the bot's app-only permissions.
-
-#### Using agentic identity with specific API clients
-
-The agentic identity flows automatically through most operations. Here are some examples:
-
-**Updating an activity on behalf of the user:**
-
-```csharp
-teams.OnMessage(async (context, cancellationToken) =>
-{
-    // Update a previous message — the SDK extracts the agentic identity
-    // from the activity and uses it for user-delegated token acquisition
-    var updatedActivity = TeamsActivity.CreateBuilder()
-        .WithType(TeamsActivityType.Message)
-        .WithText("Updated message content")
-        .Build();
-
-    await context.Api.Conversations.Activities.UpdateAsync(
-        context.Activity.Conversation.Id,
-        previousActivityId,
-        updatedActivity,
-        cancellationToken);
-});
-```
-
-**Adding a reaction on behalf of the user:**
-
-```csharp
-teams.OnMessage(async (context, cancellationToken) =>
-{
-    // Add a reaction — pass the agentic identity explicitly
-    // for operations where the identity comes from the recipient
-    await context.Api.Conversations.Reactions.AddAsync(
-        context.Activity.Conversation.Id,
-        targetMessageId,
-        "1f44d_thumbsup",
-        context.Activity.Recipient?.GetAgenticIdentity(),
-        cancellationToken);
-});
-```
-
-**Getting meeting details with user permissions:**
-
-```csharp
-teams.OnMessage(async (context, cancellationToken) =>
-{
-    var meeting = await context.Api.Meetings
-        .GetByIdAsync(meetingId, cancellationToken: cancellationToken);
-
+    // context.Api calls automatically use the right permissions
+    // whether or not an agentic identity is present
     await context.SendActivityAsync(
-        $"Meeting: {meeting?.Details?.Title ?? "Unknown"}",
+        $"You said: {context.Activity.Text}",
         cancellationToken);
 });
 ```
 
-### What the SDK handles for you
-
-The agentic identity support is designed to be transparent. Here's what you don't need to do:
-
-- **No manual identity extraction** — `AgenticIdentity.FromAccount()` is called internally by every API client that needs it.
-- **No token management** — MSAL handles user-delegated token acquisition, caching, and refresh. You never see a token string.
-- **No per-client configuration** — All API clients (`ActivityClient`, `ReactionClient`, `MemberClient`, `MeetingClient`, `TeamClient`) support agentic identity. It flows through automatically.
-- **No conditional logic for token type** — The SDK determines whether to use app-only or user-delegated tokens based on whether an `AgenticIdentity` is present on the activity.
-
-The only thing you need to set up is the app registration and MSAL credentials in your configuration. The SDK does the rest.
+To get started with agentic scenarios, configure your [app registration for Agent 365](https://learn.microsoft.com/microsoft-agent-365/setup). For the deeper conceptual background, see the [Agent 365 identity documentation](https://learn.microsoft.com/microsoft-agent-365/identity).
 
 ## What You Can Build Today
 
@@ -593,34 +288,22 @@ The preview supports the following scenarios:
 - **Adaptive Cards** — action submissions with typed value access
 - **Task modules** — fetch and submit dialogs
 - **Message extensions** — search queries
-- **OAuth and SSO** — per-flow sign-in with token exchange support
+- **OAuth and SSO** — per-flow sign-in with automatic SSO
 - **Conversation events** — members added/removed, install/uninstall
 - **Streaming** — progressive message updates with rate limiting
 - **Proactive messaging** — send messages and replies outside of a turn
-- **Agentic identity** — user-delegated tokens for bots acting on behalf of users
+- **Agentic identity** — act on behalf of users with their permissions
 - **Targeted messages** — messages visible only to a specific user
 
 ## Migration from Bot Framework v4
 
 If you have an existing Bot Framework v4 bot, you don't need to rewrite it. The `Microsoft.Teams.Apps.BotBuilder` package provides a compatibility layer that lets your current `IBot` implementation run on the new SDK infrastructure with minimal changes. Once you're running, you can convert to native handlers at your own pace.
 
-### What the compatibility layer does
+Your bot's business logic stays exactly the same — `ConversationState`, `UserState`, `Dialogs`, `WaterfallDialogs`, and middleware all work as-is. Only the hosting and infrastructure layer changes.
 
-The `Microsoft.Teams.Apps.BotBuilder` package provides a bridge between your existing Bot Framework v4 code and the new Teams SDK:
-
-- **`TeamsBotFrameworkHttpAdapter`** implements `IBotFrameworkHttpAdapter`, so your existing `IBot` works unchanged
-- **Under the hood**, the Core SDK handles authentication (MSAL), connections, and the activity pipeline
-- **Wrapper clients** (`CompatConnectorClient`, `CompatUserTokenClient`) bridge Bot Framework interfaces to the new infrastructure
-
-Your bot's business logic stays exactly the same. Only the hosting and infrastructure layer changes. All Bot Framework v4 features are supported through the compatibility layer, including `ConversationState`, `UserState`, `Dialogs`, `WaterfallDialogs`, and middleware — anything that runs on top of `IBotFrameworkHttpAdapter` and `IBot` works as-is.
-
-### Step 1: Drop-in migration
-
-This gets your existing bot running on the new SDK in minutes.
+### Drop-in migration
 
 #### Replace NuGet packages
-
-Remove your existing Bot Framework packages and add the compatibility layer:
 
 ```xml
 <!-- Remove these -->
@@ -630,11 +313,9 @@ Remove your existing Bot Framework packages and add the compatibility layer:
 <PackageReference Include="Microsoft.Teams.Apps.BotBuilder" Version="2.1.0-preview.*" />
 ```
 
-> **Note:** `Microsoft.Teams.Apps.BotBuilder` references Bot Framework SDK v4.22.3. If your bot depends on a specific Bot Framework version, verify compatibility before upgrading.
-
 #### Update your startup code
 
-The only code change is how you register services. Your `IBot` implementation stays untouched.
+Your `IBot` implementation stays untouched. Only the service registration changes:
 
 **Before (Bot Framework v4):**
 
@@ -659,13 +340,11 @@ using Microsoft.Teams.Apps.BotBuilder;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// One line replaces the adapter registration
 builder.AddTeamsBotFrameworkHttpAdapter();
 builder.Services.AddTransient<IBot, EchoBot>();
 
 var app = builder.Build();
 
-// Wire up the messages endpoint
 app.MapPost("/api/messages", async (HttpContext context, IBotFrameworkHttpAdapter adapter, IBot bot) =>
 {
     await adapter.ProcessAsync(context.Request, context.Response, bot, context.RequestAborted);
@@ -676,9 +355,9 @@ app.Run();
 
 #### Update your configuration
 
-Bot Framework v4 uses flat configuration keys for authentication. The new SDK uses the standard `AzureAd` section from Microsoft Identity Web.
+Replace the flat Bot Framework keys with the standard `AzureAd` section:
 
-**Before (`appsettings.json` or environment variables):**
+**Before:**
 
 ```json
 {
@@ -688,7 +367,7 @@ Bot Framework v4 uses flat configuration keys for authentication. The new SDK us
 }
 ```
 
-**After (`appsettings.json`):**
+**After:**
 
 ```json
 {
@@ -706,27 +385,11 @@ Bot Framework v4 uses flat configuration keys for authentication. The new SDK us
 }
 ```
 
-The `AzureAd` section is the standard format used across all Microsoft Identity Web libraries. Moving to it unlocks support for managed identities and federated credentials without code changes — see the [MSAL Authentication](#msal-authentication) section for all supported credential types.
+That's it. Run `dotnet run` and your bot responds to the same messages on the same endpoint.
 
-> **Note:** The SDK auto-detects configuration format. During migration, the legacy `MicrosoftAppId` / `MicrosoftAppPassword` keys will still work, but we recommend moving to the `AzureAd` section to take advantage of modern credential types.
+### Convert to native handlers
 
-That's it. Your `EchoBot` class, your `OnMessageActivityAsync`, your `OnTurnAsync` — all unchanged. The new SDK handles authentication, token validation, and the activity pipeline under the hood.
-
-#### Run and verify
-
-```bash
-dotnet run
-```
-
-Your bot starts on the same endpoint and responds to the same messages. The difference is invisible to users — but under the hood you're running on MSAL authentication, `System.Text.Json` serialization, and the new layered architecture.
-
-### Step 2: Convert to native handlers
-
-Once your bot is running on the compatibility layer, you can incrementally convert to native Teams SDK handlers. This is optional — the compatibility layer is fully supported — but native handlers give you a better developer experience.
-
-#### Replace your IBot with TeamsBotApplication
-
-Instead of a class that inherits from `ActivityHandler` and overrides methods, you register typed handlers on `TeamsBotApplication`:
+Once running on the compatibility layer, you can incrementally convert to native Teams SDK handlers. This is optional — the compatibility layer is fully supported — but native handlers give you typed activity routing, scoped API clients, and a richer context object.
 
 **Before (Bot Framework v4 `ActivityHandler`):**
 
@@ -740,18 +403,6 @@ public class EchoBot : ActivityHandler
         var replyText = $"Echo: {turnContext.Activity.Text}";
         await turnContext.SendActivityAsync(
             MessageFactory.Text(replyText), cancellationToken);
-    }
-
-    protected override async Task OnMembersAddedAsync(
-        IList<ChannelAccount> membersAdded,
-        ITurnContext<IConversationUpdateActivity> turnContext,
-        CancellationToken cancellationToken)
-    {
-        foreach (var member in membersAdded)
-        {
-            await turnContext.SendActivityAsync(
-                MessageFactory.Text($"Welcome {member.Name}!"), cancellationToken);
-        }
     }
 }
 ```
@@ -772,132 +423,22 @@ teams.OnMessage(async (context, cancellationToken) =>
     await context.SendActivityAsync($"Echo: {context.Activity.Text}", cancellationToken);
 });
 
-teams.OnMembersAdded(async (context, cancellationToken) =>
-{
-    foreach (var member in context.Activity.MembersAdded ?? [])
-    {
-        await context.SendActivityAsync($"Welcome {member.Name}!", cancellationToken);
-    }
-});
-
 app.Run();
 ```
 
-No base class to inherit from. No method overrides to remember. Each handler is a standalone function with a typed activity and rich context.
-
-#### Convert invoke handlers
-
-Bot Framework v4 invoke handlers map directly to named Teams SDK handlers:
-
-**Before:**
-
-```csharp
-protected override async Task<InvokeResponse> OnAdaptiveCardActionExecuteAsync(
-    ITurnContext<IInvokeActivity> turnContext,
-    CancellationToken cancellationToken)
-{
-    var data = turnContext.Activity.Value;
-    // process...
-    return CreateInvokeResponse(/* ... */);
-}
-
-protected override async Task<TaskModuleResponse> OnTeamsTaskModuleFetchAsync(
-    ITurnContext<IInvokeActivity> turnContext,
-    TaskModuleRequest taskModuleRequest,
-    CancellationToken cancellationToken)
-{
-    // return task module...
-}
-```
-
-**After:**
-
-```csharp
-teams.OnAdaptiveCardAction(async (context, cancellationToken) =>
-{
-    var data = context.Activity.Value?.Action?.Data;
-    // process...
-    return AdaptiveCardResponse.CreateMessageResponse("Done!");
-});
-
-teams.OnTaskFetch(async (context, cancellationToken) =>
-{
-    return TaskModuleResponse.CreateBuilder()
-        .WithType(TaskModuleResponseType.Continue)
-        .WithTitle("My Task Module")
-        .WithCard(myCard)
-        .Build();
-});
-```
-
-#### Key API differences
+### Key API differences
 
 | Bot Framework v4 | Teams SDK 2.1 | Notes |
 |---|---|---|
 | `turnContext.SendActivityAsync(MessageFactory.Text("hi"))` | `context.SendActivityAsync("hi", ct)` | Convenience method on context |
-| `turnContext.Activity.Text` | `context.Activity.Text` | Same property, typed activity |
 | `ITurnContext<IMessageActivity>` | `Context<MessageActivity>` | Strongly typed context |
-| `turnContext.Activity.From.Name` | `context.Activity.From?.Name` | Teams-typed account |
 | `MessageFactory.Text("hi")` | `new MessageActivity("hi")` | Direct construction |
 | `TeamsInfo.GetMembersAsync(turnContext)` | `context.Api.Conversations.Members.GetAsync(convId, ct)` | Scoped API client |
 | `turnContext.Activity.CreateReply("text")` | `context.Reply("text", ct)` | Threaded reply |
 
-#### Convert OAuth flows
-
-**Before:**
-
-```csharp
-protected override async Task OnTokenResponseEventAsync(
-    ITurnContext<IEventActivity> turnContext,
-    CancellationToken cancellationToken)
-{
-    var token = turnContext.Activity.Value as TokenResponse;
-    // use token...
-}
-```
-
-**After:**
-
-```csharp
-var flow = teams.GetOAuthFlow("graph");
-flow.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
-{
-    // use tokenResponse.Token — passed directly as a parameter
-});
-flow.OnSignInFailure(async (context, failure, cancellationToken) =>
-{
-    await context.SendActivityAsync("Sign-in failed. Please try again.", cancellationToken);
-});
-```
-
-OAuth flows are now per-connection, which is cleaner when your bot uses multiple OAuth connections.
-
-### What you gain
-
-Even with the drop-in compatibility layer, your existing bot immediately benefits from the new SDK infrastructure. But completing the migration to native handlers unlocks the full developer experience:
-
-- **Typed activity routing** — Compile-time safety instead of runtime activity type checks. Regex-based message routing built in.
-- **Rich context object** — `context.SendActivityAsync()`, `context.Reply()`, `context.SendTypingActivityAsync()`, and `context.Log` replace verbose `turnContext.SendActivityAsync(MessageFactory.Text(...))` calls.
-- **Scoped API clients** — `context.Api` provides Teams-specific APIs (conversations, members, meetings, teams) scoped to the current request, instead of static `TeamsInfo` helper methods.
-- **Modern serialization** — `System.Text.Json` with source generation for AOT support and faster performance.
-- **Agentic identity support** — Your bot can act on behalf of users with user-delegated tokens. The SDK handles identity extraction and token acquisition transparently.
-- **Reactions API** — Add and remove message reactions programmatically via `context.Api.Conversations.Reactions`, a capability not available in Bot Framework v4.
-- **Targeted messages** — Send messages visible only to a specific user in a conversation, useful for confirmations, errors, or sensitive content that shouldn't be shared with the full group.
-
 ## Migration from Teams SDK 2.0
 
-If you're already using Teams SDK 2.0, most of your code works unchanged — the 2.1 preview preserves the core API surface (`context.Send()`, `context.Reply()`, `context.Log`, handler registration, `App.Builder()`). Here's what to watch for.
-
-### What stays the same
-
-These APIs are backward-compatible with no changes needed:
-
-- **Context methods** — `context.Send()`, `context.Reply()`, `context.Typing()`, `context.Log.*`, `context.AppId`
-- **Handler registration** — `teams.OnMessage()`, `teams.OnMeetingJoin()` / `teams.OnMeetingLeave()` (aliases for `OnMeetingParticipantJoin` / `OnMeetingParticipantLeave`)
-- **Proactive messaging** — `teams.Send(conversationId, ...)` and `teams.Reply(conversationId, messageId, ...)`
-- **Builder pattern** — `App.Builder().AddOAuth("graph")` and `builder.AddTeams()`
-- **`InvokeResponse`** — constructor still works; new factory methods `InvokeResponse.Ok(body)` and `InvokeResponse.Error(400, body)` also available
-- **`MessageActivity` fluent methods** — `.WithSuggestedActions()`, `.WithAttachmentLayout()`, `.AddAttachment()`, `.AddAIGenerated()`, `.AddCitation()`
+Most of your code works unchanged. Here's the short list of breaking changes.
 
 ### Breaking changes
 
@@ -948,7 +489,7 @@ For the full list of API changes, see the [Migration Guide](https://github.com/m
 
 ## Roadmap
 
-We're actively working on completing the integration with the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program for the GA release. This includes full support for agentic identity flows, user-delegated token scenarios, and alignment with the broader Agent 365 ecosystem.
+We're actively working on completing the integration with the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program for the GA release. This includes full support for agentic identity flows and alignment with the broader Agent 365 ecosystem.
 
 We'd love your feedback on the preview. File issues and feature requests on the [GitHub repository](https://github.com/microsoft/teams-sdk).
 
@@ -964,4 +505,4 @@ dotnet add package Microsoft.Teams.Apps --prerelease
 dotnet add package Microsoft.Teams.Apps.BotBuilder --prerelease
 ```
 
-Explore the [samples](https://github.com/microsoft/teams,NET/tree/main/core/samples) to see the SDK in action, or start from the [v2.0 quickstart](https://microsoft.github.io/teams-sdk/csharp/getting-started/quickstart) and upgrade to 2.1. For the full list of API changes when migrating from Bot Framework v4, see the [Migration Guide](https://github.com/microsoft/teams-sdk/blob/main/dotnet/core/docs/MigrationGuide.md).
+Explore the [samples](https://github.com/microsoft/teams,NET/tree/main/core/samples) to see the SDK in action, or start from the [v2.0 quickstart](https://microsoft.github.io/teams-sdk/csharp/getting-started/quickstart) and upgrade to 2.1.
