@@ -334,6 +334,6 @@ The preview supports the following scenarios:
 
 ## Roadmap
 
-We're actively working on completing the integration with the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program for the GA release. This includes full support for agentic identity flows, lifecycle events, and alignment with the broader Agent 365 ecosystem such as OpenTelemetry integration for enhanced observability.
+We're actively working on completing the integration with [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) for the GA release. This includes full support for agentic identity flows, lifecycle events, and alignment with the broader Agent 365 ecosystem such as OpenTelemetry integration for enhanced observability.
 
 We'd love your feedback on the preview. File issues and feature requests on the [GitHub repository](https://github.com/microsoft/teams-sdk).
