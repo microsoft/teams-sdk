@@ -80,7 +80,7 @@ dotnet run -- --urls http://*:3978
 
 ## Agentic Identity
 
-With the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program, your bot can run as an **AI teammate** — a first-class identity in Microsoft 365 with its own mailbox, Teams presence, directory entry, and manager relationship. People @mention it, email it, and invite it to meetings, just like a human colleague.
+With [Agent 365](https://learn.microsoft.com/microsoft-agent-365/), your bot can run as an **AI teammate** — a first-class identity in Microsoft 365 with its own mailbox, Teams presence, directory entry, and manager relationship. People @mention it, email it, and invite it to meetings, just like a human colleague.
 
 This changes how your bot interacts with APIs. A traditional bot calls APIs with its own app permissions. An AI teammate can call APIs with its own identity — scoped to what *they* can access, with actions attributed to them in audit logs.
 
