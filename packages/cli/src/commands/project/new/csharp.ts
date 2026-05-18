@@ -32,7 +32,7 @@ export const projectNewCsharpCommand = new Command('csharp')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (rawName: string, options: ProjectNewCsOptions) => {
-      const name = pascalCase(rawName.trim(), { delimiter: '.' });
+      const name = pascalCase(rawName.trim());
 
       if (!templates.includes(options.template)) {
         throw new CliError(
