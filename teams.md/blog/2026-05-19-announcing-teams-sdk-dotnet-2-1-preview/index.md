@@ -19,7 +19,7 @@ dotnet add package Microsoft.Teams.Apps --prerelease
 Here's what changes for your Teams bot apps:
 
 - **[Your app is just an ASP.NET Core app.](#native-aspnet-core-integration)** Standard DI, `ILogger`, and `IConfiguration` throughout, with typed activity handlers and a rich context object. A working bot is about 15 lines.
-- **[Run your bot as an AI teammate with its own identity.](#agentic-identity)** The SDK supports agentic identities from the Agent 365 program, so your bot can act as the AI teammate, also known as _Agentic User_, with their permissions, no extra plumbing needed.
+- **[Run your bot as an AI teammate with its own identity.](#agentic-identity)** The SDK supports agentic identities from Agent 365, so your bot can act as the AI teammate, also known as _Agentic User_, with their permissions, no extra plumbing needed.
 - **[Run your bot on behalf of a user using a redesigned SSO flow.](#oauth-and-sso)** Access private documents, calendars, and other user-scoped resources — the SDK handles the sign-in and consent experience automatically.
 - **[Migrate your existing Bot Framework v4 bot in two lines.](#migration-from-bot-framework-v4)** A compatibility package runs your existing `IBot` implementation on the new infrastructure unchanged, so you can adopt all new features at your own pace, including Agentic scenarios.
 
