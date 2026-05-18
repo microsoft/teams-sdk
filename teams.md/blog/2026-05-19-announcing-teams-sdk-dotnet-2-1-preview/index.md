@@ -5,7 +5,7 @@ date: 2026-05-19
 authors:
   - name: Ricardo Minguez (Rido)
     title: Microsoft
-    url: https://github.com/rido-min
+    url: https://avatars.githubusercontent.com/u/14916339
 tags: [teams-sdk, dotnet, preview, announcement]
 description: Teams SDK for .NET 2.1 preview lets your bot run as an AI teammate in Microsoft 365 — with native ASP.NET Core integration, redesigned SSO, and agentic identity support.
 ---
@@ -334,6 +334,6 @@ The preview supports the following scenarios:
 
 ## Roadmap
 
-We're actively working on completing the integration with the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program for the GA release. This includes full support for agentic identity flows, lifecycle events, and alignment with the broader Agent 365 ecosystem such as Open Telemetry integration for enhanced observability.
+We're actively working on completing the integration with the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program for the GA release. This includes full support for agentic identity flows, lifecycle events, and alignment with the broader Agent 365 ecosystem such as OpenTelemetry integration for enhanced observability.
 
 We'd love your feedback on the preview. File issues and feature requests on the [GitHub repository](https://github.com/microsoft/teams-sdk).
