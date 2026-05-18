@@ -195,7 +195,7 @@ Your bot's business logic stays exactly the same — `ConversationState`, `UserS
 <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.22.3" />
 
 <!-- Add this -->
-<PackageReference Include="Microsoft.Teams.Apps.BotBuilder" Version="2.1.0-preview.*" />
+<PackageReference Include="Microsoft.Teams.Apps.BotBuilder" Version="1.0.*" />
 ```
 
 #### Update your startup code
