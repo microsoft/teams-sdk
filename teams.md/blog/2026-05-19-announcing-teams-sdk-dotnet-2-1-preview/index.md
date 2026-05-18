@@ -18,7 +18,7 @@ dotnet add package Microsoft.Teams.Apps --prerelease
 
 Here's what changes for your Teams bot apps:
 
-- **[Your app is just an ASP.NET Core app.](#native-aspnet-core-integration)** Standard DI, `ILogger`, and `IConfiguration` throughout, with typed activity handlers and a rich context object. A working bot is 15 lines.
+- **[Your app is just an ASP.NET Core app.](#native-aspnet-core-integration)** Standard DI, `ILogger`, and `IConfiguration` throughout, with typed activity handlers and a rich context object. A working bot is about 15 lines.
 - **[Run your bot as an AI teammate with its own identity.](#agentic-identity)** The SDK supports agentic identities from the Agent 365 program, so your bot can act as the AI teammate, also known as _Agentic User_, with their permissions, no extra plumbing needed.
 - **[Run your bot on behalf of a user using a redesigned SSO flow.](#oauth-and-sso)** Access private documents, calendars, and other user-scoped resources — the SDK handles the sign-in and consent experience automatically.
 - **[Migrate your existing Bot Framework v4 bot in two lines.](#migration-from-bot-framework-v4)** A compatibility package runs your existing `IBot` implementation on the new infrastructure unchanged, so you can adopt all new features at your own pace, including Agentic scenarios.
@@ -29,7 +29,7 @@ Here's what changes for your Teams bot apps:
 
 ## Native ASP.NET Core Integration
 
-The 2.1 preview is built around the patterns .NET developers already know: **Dependency injection**, all services register using `AddTeamsBotApplication()` including **Logging**, **Configuration** and incoming and outgoing authentication based on MSAL with support for client secrets, managed identities, and federated identity credentials.
+The 2.1 preview is built around the patterns .NET developers already know. All services register through `AddTeamsBotApplication()` — **Dependency injection**, **Logging**, and **Configuration** are all standard. Incoming and outgoing authentication is built on MSAL, with support for client secrets, managed identities, and federated identity credentials.
 
 Here's a minimal bot that handles messages in about 15 lines:
 
@@ -72,19 +72,17 @@ Authentication is configured through the standard `AzureAd` section in `appsetti
 
 The SDK auto-detects the credential type based on which fields are present — client secrets, system-assigned managed identities, user-assigned managed identities, and federated identity credentials all work from this same config block with no code changes between them.
 
-To run the application to listen in a given port:
+To run the application listening on a given port:
 
 ```bash
 dotnet run -- --urls http://*:3978
 ```
 
-
-
 ## Agentic Identity
 
 With the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program, your bot can run as an **AI teammate** — a first-class identity in Microsoft 365 with its own mailbox, Teams presence, directory entry, and manager relationship. People @mention it, email it, and invite it to meetings, just like a human colleague.
 
-This changes how your bot interacts with APIs. A traditional bot calls APIs with its own app permissions. An AI teammate can call APIs with it's own identity — scoped to what *they* can access, with actions attributed to them in audit logs.
+This changes how your bot interacts with APIs. A traditional bot calls APIs with its own app permissions. An AI teammate can call APIs with its own identity — scoped to what *they* can access, with actions attributed to them in audit logs.
 
 <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two scenarios: bot acts as itself versus bot acts as AI teammate on behalf of a user" style={{maxWidth: '100%', height: 'auto', fontFamily: 'system-ui, -apple-system, sans-serif'}}>
   <defs>
@@ -94,7 +92,7 @@ This changes how your bot interacts with APIs. A traditional bot calls APIs with
   </defs>
 
   <text x="30" y="28" fill="currentColor" fontSize="13" fontWeight="600">Traditional bot — acts as itself</text>
-  <text x="30" y="208" fill="currentColor" fontSize="13" fontWeight="600">AI teammate — acts with it's own identity</text>
+  <text x="30" y="208" fill="currentColor" fontSize="13" fontWeight="600">AI teammate — acts with its own identity</text>
 
   <g fill="none" stroke="currentColor" strokeWidth="1.5">
     <rect x="30" y="64" width="140" height="48" rx="6"/>
@@ -125,7 +123,7 @@ This changes how your bot interacts with APIs. A traditional bot calls APIs with
     <text x="226" y="80">sends message</text>
     <text x="486" y="80">app permissions</text>
     <text x="226" y="258">sends message</text>
-    <text x="486" y="258">agent user's </text>
+    <text x="486" y="258">agentic user's </text>
     <text x="486" y="270" fontSize="10">permissions</text>
   </g>
 </svg>
@@ -232,9 +230,8 @@ builder.Services.AddTransient<IBot, EchoBot>();
 
 var app = builder.Build();
 
-app.MapPost("/api/messages", (HttpContext context, IBotFrameworkHttpAdapter adapter, IBot bot) 
-  => adapter.ProcessAsync(context.Request, context.Response, bot);
-);
+app.MapPost("/api/messages", async (IBotFrameworkHttpAdapter adapter, IBot bot, HttpRequest request, HttpResponse response, CancellationToken ct)
+    => await adapter.ProcessAsync(request, response, bot, ct));
 
 app.Run();
 ```
@@ -277,11 +274,11 @@ That's it. Run `dotnet run` and your bot responds to the same messages on the sa
 
 | Bot Framework v4 | Teams SDK 2.1 | Notes |
 |---|---|---|
-| `turnContext.SendActivityAsync(MessageFactory.Text("hi"))` | `context.SendActivityAsync("hi", ct)` | Convenience method on context |
+| `turnContext.SendActivityAsync(MessageFactory.Text("hi"))` | `context.Send("hi", ct)` | Convenience method on context |
 | `ITurnContext<IMessageActivity>` | `Context<MessageActivity>` | Strongly typed context |
 | `MessageFactory.Text("hi")` | `new MessageActivity("hi")` | Direct construction |
-| `TeamsInfo.GetMembersAsync(turnContext)` | `context.Api.Conversations.Members.GetAsync(convId, ct)` | Scoped API client |
-| `turnContext.Activity.CreateReply("text")` | `context.Reply("text", ct)` | Threaded reply |
+| `TeamsInfo` | replace with `TeamsApiClient` |
+| `turnContext.Activity.CreateReply("text")` | `context.Reply("text", ct)` | Auto-quotes the inbound message |
 
 ## Migration from Teams SDK 2.0
 
@@ -304,7 +301,6 @@ flow.OnSignInComplete(async (context, token, cancellationToken) => { ... });
 
 **Namespace changes** — Activity types moved from `Microsoft.Teams.Api.Activities` to `Microsoft.Teams.Apps.Schema`. Member access (`.Text`, `.From`, `.Conversation`) stays the same — only `using` statements need updating.
 
-
 ### Packages no longer available
 
 The 2.1 preview consolidates into three packages. The following 2.0 packages have no equivalent and must be replaced:
@@ -318,7 +314,7 @@ The 2.1 preview consolidates into three packages. The following 2.0 packages hav
 | `Microsoft.Teams.Common` (logging, HTTP) | Use `Microsoft.Extensions.Logging` and `HttpClient` via DI |
 | `Microsoft.Teams.Plugins.*` | Plugin architecture removed — use standard ASP.NET Core middleware and DI |
 
-For the full list of API changes, see the [Migration Guide](https://github.com/microsoft/teams-sdk/blob/main/dotnet/core/docs/MigrationGuide.md).
+For the full list of API changes, see the [Migration Guide](https://github.com/microsoft/teams.net/blob/main/core/docs/MigrationGuide.md).
 
 ## What You Can Build Today
 
@@ -338,6 +334,6 @@ The preview supports the following scenarios:
 
 ## Roadmap
 
-We're actively working on completing the integration with the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program for the GA release. This includes full support for agentic identity flows and alignment with the broader Agent 365 ecosystem.
+We're actively working on completing the integration with the [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) program for the GA release. This includes full support for agentic identity flows, lifecycle events, and alignment with the broader Agent 365 ecosystem such as Open Telemetry integration for enhanced observability.
 
 We'd love your feedback on the preview. File issues and feature requests on the [GitHub repository](https://github.com/microsoft/teams-sdk).
