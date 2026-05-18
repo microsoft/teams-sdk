@@ -191,7 +191,7 @@ Your bot's business logic stays exactly the same — `ConversationState`, `UserS
 #### Replace NuGet packages
 
 ```xml
-<!-- Remove these -->
+<!-- Remove this -->
 <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.22.3" />
 
 <!-- Add this -->
