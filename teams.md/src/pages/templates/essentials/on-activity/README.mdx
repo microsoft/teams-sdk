@@ -38,7 +38,7 @@ Here is an example of a basic message handler:
 Slash commands are coming soon in May 2026.
 :::
 
-Slash commands are manifest-declared commands users run from the compose box. To enable slash commands, set `supportsTargetedMessages: true` in your app manifest under the `bots` section, and optionally declare specific commands using `commandLists`.
+Slash commands are manifest-declared commands users run from the compose box. To enable slash commands, set `supportsTargetedMessages: true` in your app manifest under the `bots` section and declare specific commands using `commandLists` with `triggers: ["slash"]`.
 
 When a user sends a slash command, it appears as a private message visible only to them. Your agent can reply privately or, when appropriate, share a response with the broader group or channel.
 
