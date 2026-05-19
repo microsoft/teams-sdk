@@ -17,7 +17,7 @@ Your Teams agents can now react to messages with emojis - acknowledge, confirm, 
 
 <!-- truncate -->
 
-## The Problem: Agents Are Too Noisy
+## The Problem: Messages Can Be Too Noisy
 
 Every interaction your agent has today requires a full message. A user submits a request? Your bot sends "Got it." A task completes? Another message. Someone asks a yes/no question? Yet another reply cluttering the thread.
 
