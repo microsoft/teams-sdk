@@ -16,7 +16,7 @@ description: Your Teams agents can now react to messages with emoji - acknowledg
 Your Teams agents can now react to messages with emojis - acknowledge, confirm, celebrate, and listen without sending a single extra reply. Available today in public preview across .NET, TypeScript, and Python.
 
 <div style={{textAlign: 'center'}}>
-<img src={require('./agent-reactions-desktop.png').default} alt="Contoso agent identified as the sender of a reaction on a user message" style={{maxHeight: '400px'}} />
+<img src='./agent-reactions-desktop.png' alt="Contoso agent identified as the sender of a reaction on a user message" style={{maxHeight: '400px'}} />
 </div>
 
 <!-- truncate -->
