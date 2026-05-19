@@ -127,7 +127,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 ## Removing a Reaction
 
-The pattern is identical across languages - swap `AddReaction` for `RemoveReaction`:
+The pattern is similar across languages: remove the reaction using each SDK's removal API (`RemoveReaction` in .NET, and the reactions `delete` APIs in TypeScript and Python).
 
 ### TypeScript
 
