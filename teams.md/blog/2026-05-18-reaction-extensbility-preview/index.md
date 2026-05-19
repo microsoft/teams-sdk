@@ -56,7 +56,7 @@ await client.Send(
 // ... task completes ...
 
 // Swap to celebration
-// Remove previoulsy added reaction
+// Remove previously added reaction
 await client.Send(
     new MessageReactionActivity()
         .RemoveReaction(new Reaction() { Type = "happyface" })
