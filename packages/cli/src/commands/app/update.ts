@@ -18,6 +18,8 @@ import {
   validateAppMetadata,
   validateEndpoint,
   uploadIcon,
+  formatVersionBumpReinstallHint,
+  logVersionBumpReinstallHint,
 } from '../../apps/index.js';
 import { ensureAz } from '../../utils/az.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
@@ -213,9 +215,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       const scopeSpinner = createSilentSpinner('Updating scopes...').start();
       const result = await updateAppDetails(token, app.teamsAppId, scopeUpdates);
       scopeSpinner.success({ text: `Scopes updated: ${(scopeUpdates.bots?.[0]?.scopes ?? []).join(', ')}` });
-      if (result.versionBumped) {
-        logger.info(pc.dim(`Version auto-bumped: ${result.previousVersion} → ${result.version} — reinstall may be needed`));
-      }
+      logVersionBumpReinstallHint(result);
 
       // Refresh appDetails
       appDetails = await fetchAppDetailsV2(token, app.teamsAppId);
@@ -288,9 +288,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
             const domainSpinner = createSilentSpinner('Updating valid domains...').start();
             const domainResult = await updateAppDetails(token, app.teamsAppId, { validDomains: [...domains, domain] });
             domainSpinner.success({ text: `Added ${domain} to valid domains` });
-            if (domainResult.versionBumped) {
-              logger.info(pc.dim(`Version auto-bumped: ${domainResult.previousVersion} → ${domainResult.version} — reinstall may be needed`));
-            }
+            logVersionBumpReinstallHint(domainResult);
           }
         }
         continue;
@@ -324,9 +322,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
             const domainSpinner = createSilentSpinner('Updating valid domains...').start();
             const domainResult = await updateAppDetails(token, app.teamsAppId, { validDomains: [...domains, domain] });
             domainSpinner.success({ text: `Added ${domain} to valid domains` });
-            if (domainResult.versionBumped) {
-              logger.info(pc.dim(`Version auto-bumped: ${domainResult.previousVersion} → ${domainResult.version} — reinstall may be needed`));
-            }
+            logVersionBumpReinstallHint(domainResult);
           }
         }
         continue;
@@ -639,7 +635,7 @@ export const appUpdateCommand = new Command('update')
             versionBumped = true;
             allUpdates.version = bumped;
             if (!silent) {
-              logger.info(pc.dim(`Version auto-bumped: ${detailsAfter.version} → ${bumped} — reinstall may be needed`));
+              logger.info(pc.dim(formatVersionBumpReinstallHint(detailsAfter.version, bumped)));
             }
           }
         }

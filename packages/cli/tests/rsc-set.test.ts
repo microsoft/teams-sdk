@@ -125,6 +125,7 @@ const mockDetails: AppDetails = {
 
 let capturedUpdate: Partial<AppDetails> | null = null;
 let currentPerms: RscPermissionEntry[] = [];
+let versionBumped = false;
 
 vi.mock('../src/apps/api.js', () => ({
   fetchAppDetailsV2: vi.fn(async () => {
@@ -134,7 +135,13 @@ vi.mock('../src/apps/api.js', () => ({
   }),
   updateAppDetails: vi.fn(async (_token: string, _id: string, update: Partial<AppDetails>) => {
     capturedUpdate = update;
-    return { ...mockDetails, ...update };
+    return {
+      ...mockDetails,
+      ...update,
+      version: versionBumped ? '1.0.1' : mockDetails.version,
+      versionBumped,
+      previousVersion: versionBumped ? mockDetails.version : undefined,
+    };
   }),
 }));
 
@@ -183,6 +190,7 @@ describe('rsc set command', () => {
     capturedUpdate = null;
     currentPerms = [];
     jsonOutput = null;
+    versionBumped = false;
     mockExit.mockClear();
   });
 
@@ -204,6 +212,25 @@ describe('rsc set command', () => {
       added: [{ name: 'TeamSettings.ReadWrite.Group', type: 'Application' }],
       removed: [{ name: 'ChannelMessage.Read.Group', type: 'Application' }],
       unchanged: [],
+    });
+  });
+
+  it('includes needsReinstall in JSON when the app version is bumped', async () => {
+    versionBumped = true;
+    currentPerms = [];
+
+    const { rscCommand } = await import('../src/commands/app/rsc/index.js');
+
+    await rscCommand.parseAsync(
+      ['set', 'test-teams-app-id', '--permissions', 'TeamSettings.ReadWrite.Group', '--json'],
+      { from: 'user' }
+    );
+
+    expect(jsonOutput).toEqual({
+      added: [{ name: 'TeamSettings.ReadWrite.Group', type: 'Application' }],
+      removed: [],
+      unchanged: [],
+      needsReinstall: true,
     });
   });
 
