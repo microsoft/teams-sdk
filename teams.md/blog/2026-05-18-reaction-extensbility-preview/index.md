@@ -236,7 +236,7 @@ The reference includes:
 - Skin-tone variations for diverse emojis
 - EmojiID string format documentation
 
-👉 [**Explore the Teams Reactions Reference**](https://learn.microsoft.com/en-us/microsoftteams/platform/agents-in-teams/teams-reactions-reference)
+👉 [**Explore the Teams Reactions Reference**](https://learn.microsoft.com/microsoftteams/platform/agents-in-teams/teams-reactions-reference)
 
 ## Prerequisites
 
