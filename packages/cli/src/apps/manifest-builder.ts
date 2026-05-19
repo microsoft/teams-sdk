@@ -14,6 +14,13 @@ function validateField(field: AppMetadataField, value: string): string | true {
 }
 
 /**
+ * Validates an optional field. Empty values are accepted so callers can apply a fallback.
+ */
+function validateOptionalField(field: AppMetadataField, value: string): string | true {
+  return value.trim() ? validateField(field, value) : true;
+}
+
+/**
  * Placeholder bot ID for manifest generation when no real bot ID is available.
  */
 export const PLACEHOLDER_BOT_ID = '00000000-0000-0000-0000-000000000000';
@@ -58,9 +65,9 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
     });
     const fullDesc = await input({
       message: 'Full description (leave empty to use short):',
-      validate: (value) => validateField('longDescription', value),
+      validate: (value) => validateOptionalField('longDescription', value),
     });
-    result.description = { short: shortDesc, full: fullDesc || undefined };
+    result.description = { short: shortDesc, full: fullDesc.trim() || undefined };
   }
 
   if (customizeFields.includes('icons')) {
