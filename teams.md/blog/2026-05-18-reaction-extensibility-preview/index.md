@@ -52,25 +52,30 @@ Agent reacts with one emoji while processing, then swaps to another on completio
 ```csharp
 // Signal processing started with an hourglass "holdon" emoji
 // Add reaction to message
-await client.Send(
-    new MessageReactionActivity()
-        .AddReaction(new Reaction() { Type = "holdon" })
-        .WithReplyToId(activity.Id));
-
+    await context.Api.Conversations.Reactions.AddAsync(
+        context.Activity.Conversation.Id,
+        context.Activity.Id,
+        new ReactionType("holdon"),
+        cancellationToken
+    );
 // ... task completes ...
 
 // Swap to checkmark emoji to indicate task completion
 // Remove previously added hourglass "holdon" emoji
-await client.Send(
-    new MessageReactionActivity()
-        .RemoveReaction(new Reaction() { Type = "holdon" })
-        .WithReplyToId(activity.Id));
+    await context.Api.Conversations.Reactions.DeleteAsync(
+        context.Activity.Conversation.Id,
+        context.Activity.Id,
+        new ReactionType("holdon"),
+        cancellationToken
+    );
 
 // Add new checkmark '2705_whiteheavycheckmark" reaction to signal work is complete
-await client.Send(
-    new MessageReactionActivity()
-        .AddReaction(new Reaction() { Type = "2705_whiteheavycheckmark" })
-        .WithReplyToId(activity.Id));
+    await context.Api.Conversations.Reactions.AddAsync(
+        context.Activity.Conversation.Id,
+        context.Activity.Id,
+        new ReactionType("2705_whiteheavycheckmark"),
+        cancellationToken
+    );
 ```
 
 ### 3. Silent Celebrations
