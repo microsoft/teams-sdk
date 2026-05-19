@@ -246,36 +246,6 @@ The reference includes:
 
 👉 [**Explore the Teams Reactions Reference**](https://learn.microsoft.com/microsoftteams/platform/agents-in-teams/teams-reactions-reference)
 
-## Prerequisites
-
-| Requirement | Details |
-| --- | --- |
-| SDK version | Latest Teams SDK - NuGet (.NET), npm (TS), PyPI (Python) |
-| Bot registration | Azure Bot Service registration |
-| Conversation access | Agent must be installed in the target chat/channel |
-| Permissions | No additional manifest permissions beyond standard bot capabilities |
-
-## Preview Boundaries
-
-This is a public preview. Here's what's in scope:
-
-**Supported**
-
-- Standard Teams emoji reactions (full EmojiID catalog)
-- 1:1 chats, group chats, channels
-- Add, remove, and receive reaction events
-- Skin-tone variants for diverse emojis
-
-## What's Next
-
-We're tracking toward general availability with:
-
-- Expanded emoji support (custom emojis)
-- Reaction analytics for agent developers
-- Richer event payloads for feedback-driven workflows
-- Reaction discovery APIs
-
-Your feedback during preview directly shapes the GA release.
 
 ## Share Your Feedback
 
