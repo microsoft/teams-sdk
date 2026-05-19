@@ -23,7 +23,7 @@ Every interaction your agent has today requires a full message. A user submits a
 
 Meanwhile, humans communicate volumes with a single 👍.
 
-Reaction Extensibility bridges that gap. Your agent can now participate in the lightweight, non-verbal layer of conversation that makes Teams collaboration feel natural.
+Agent reactions bridge that gap. Your agent can now participate in the lightweight, non-verbal layer of conversation that makes Teams collaboration feel natural.
 
 ## What You Can Do
 
