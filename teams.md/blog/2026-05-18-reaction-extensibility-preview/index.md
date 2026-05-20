@@ -130,7 +130,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 ## Removing a Reaction
 
-The pattern is standardized across languages: remove the reaction using each SDK's removal API. Below are examples of removing the 👍 ```like``` reaction from a message in each language:
+The pattern for reaction removal is standardized across languages. Below are examples of removing the 👍 ```like``` reaction from a message in each language:
 
 ### TypeScript
 
@@ -171,7 +171,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 ## Listening to Reactions
 
-You can also listen for reacionts being added or removed from messages your agent has sent. Below are examples of listening for incoming and removed reactions in each language: 
+You can also listen for reactions being added or removed from messages your agent has sent. Below are examples of listening for incoming and removed reactions in each language: 
 
 ### TypeScript
 
