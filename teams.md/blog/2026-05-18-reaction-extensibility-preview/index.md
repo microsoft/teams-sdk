@@ -51,7 +51,7 @@ Agents can react to acknowledge a request, then swap their reaction to a differe
 
 Below is an example of an agent reacting to a message with ⌛ ```holdon```, then swapping that for a ✅ ```2705_whiteheavycheckmark``` when the task is complete.
 
-:::tip
+:::tip Teams Reaction Reference
 You can find the complete list of emojis for use on Teams and their associated EmojiID on the [**Teams Reactions Reference page**](https://learn.microsoft.com/microsoftteams/platform/agents-in-teams/teams-reactions-reference)
 :::
 
