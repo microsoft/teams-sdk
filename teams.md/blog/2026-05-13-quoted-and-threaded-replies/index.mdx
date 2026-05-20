@@ -11,9 +11,9 @@ tags: [teams-sdk, typescript, dotnet, python, features, messaging]
 description: A deep dive into how the Teams SDK handles quoted replies and proactive threading across TypeScript, .NET, and Python. What problems they solve, how to use them, and how they look on the wire.
 ---
 
-Your agent has a comment to make. The channel has moved on. By the time you reply, nobody remembers what you're answering, or your bot finishes a long-running job an hour later, posts the result at the channel root, and it shows up nowhere near the request that started it.
+Your agent has a comment to make. The channel has moved on. By the time you reply, nobody remembers what you're answering, or your bot finishes a long-running job and posts the result at the channel root, nowhere near the request that started it.
 
-Quoted replies and threaded replies are how agents stay legible in busy conversations. They've been in the Teams SDK for a while in some form; what's new is that both are now first-class APIs across TypeScript, .NET, and Python with matching shapes. This post is a tour of the *why*, the *when*, and the *how*.
+Quoted replies and threaded replies are how agents stay legible in busy conversations. Both are now first-class APIs across TypeScript, .NET, and Python with matching shapes. This post is a tour of the *why*, the *when*, and the *how*.
 
 <!-- truncate -->
 
@@ -25,32 +25,33 @@ Every reply your agent sends competes for attention in a channel. Three failure 
 2. **The misplaced async result.** A background job finishes and posts at the channel root. Whoever asked has to scroll up to find the request. Whoever else is in the channel sees a result with no context.
 3. **The notification with no signal.** Mobile and desktop notifications show a snippet of the reply, not the original question. Without quoted context, the recipient has to open Teams just to know whether they care.
 
-Quoted replies fix the first and third by carrying a snippet of the referenced message. Threaded replies fix the second by anchoring the reply to its parent thread. Together they let your agent participate in conversations the way a thoughtful human does.
+Quoted replies fix the first and third by carrying a snippet of the referenced message. Threaded replies fix the second by anchoring the reply to its parent thread.
 
 ## What You Can Do
 
-| Capability | API surface |
-| --- | --- |
-| Reply with auto-quote of the inbound message | `context.reply()` |
-| Quote a message your bot sent earlier | `context.quote(messageId, text)` |
-| Build a message with one or more quotes | `MessageActivity.addQuote(messageId, response?)` |
-| Read quoted-reply metadata from an inbound message | `activity.getQuotedMessages()` |
-| Send proactively into a thread | `app.reply(conversationId, rootMessageId, ...)` |
-| Construct a threaded conversation ID by hand | `toThreadedConversationId()` |
+| Capability | TypeScript | .NET | Python |
+| --- | --- | --- | --- |
+| Send a message | `context.send()` | `Context.Send()` | `ctx.send()` |
+| Reply, auto-quoting the inbound message | `context.reply()` | `Context.Reply()` | `ctx.reply()` |
+| Quote a message your bot sent earlier | `context.quote()` | `Context.Quote()` | `ctx.quote()` |
+| Build a message with one or more quotes | `MessageActivity.addQuote()` | `MessageActivity.AddQuote()` | `MessageActivityInput.add_quote()` |
+| Read quoted-reply metadata from an inbound message | `activity.getQuotedMessages()` | `Activity.GetQuotedMessages()` | `activity.get_quoted_messages()` |
+| Send proactively into a thread | `app.reply()` | `teams.Reply()` | `app.reply()` |
+| Construct a threaded conversation ID by hand | `toThreadedConversationId()` | `Conversation.ToThreadedConversationId()` | `to_threaded_conversation_id()` |
 
-All of the above are available in TypeScript, .NET, and Python with the same shape. Quoting APIs are marked experimental; threading is stable.
+If you build something in one language and port it later, you shouldn't need to relearn the shape.
 
 ## Real-World Scenarios
 
 ### 1. Answering a Question After the Channel Moved On
 
-A user asked a question in a busy channel. By the time your agent has the answer, ten more messages have arrived. A plain reply at the bottom of the channel is correct but useless. With `context.reply()`, the SDK automatically quotes the inbound message: the answer carries the question with it, and the mobile notification shows the question in the toast.
+A user asked a question in a busy channel. By the time your agent has the answer, ten more messages have arrived. A plain reply at the bottom of the channel is correct but useless. With `context.reply()`, the SDK auto-quotes the inbound message. The answer carries the question with it, and notifications show the question in the toast.
 
 This is the most common case, and it's free. No extra arguments, no extra builders.
 
 ### 2. Posting an Async Result Back Into Its Thread
 
-A user kicks off a deployment with a slash command. Your agent acknowledges, then forty minutes later the deployment finishes. If the result lands at the channel root, nobody can tell which deployment it's about. If it lands in the thread of the original request, it shows up grouped with the command that started it, collapsed under the same root, mutable as a unit.
+A user kicks off a deployment with a slash command. Your agent acknowledges, then forty minutes later the deployment finishes. If the result lands at the channel root, nobody can tell which deployment it's about. If it lands in the thread of the original request, it shows up grouped with the command that started it, collapsed under the same root.
 
 `app.reply(conversationId, rootMessageId, ...)` is the API for this. You store the IDs when the request comes in, then post back into the same thread when the work completes, even if your inbound activity is long gone.
 
@@ -69,7 +70,7 @@ await app.reply(conversationId, rootMessageId, msg);
 
 ### 4. Routing Based on What Was Quoted
 
-A user quotes an old bot message and asks "is this still correct?" Your agent needs to know what they're pointing at. `activity.getQuotedMessages()` returns the metadata for every quoted-reply entity on the inbound activity: message ID, sender, preview text, timestamp, validation flag, and whether the original was deleted. From there, route to the right handler.
+A user quotes an old bot message and asks "is this still correct?" Your agent needs to know what they're pointing at. `activity.getQuotedMessages()` returns the metadata for every quoted-reply on the activity: message ID, sender, preview text, timestamp, validation flag, and whether the original was deleted. From there, route to the right handler.
 
 This is the inbound side of quoting. Most agents won't need it; the ones that do tend to need it deeply.
 
@@ -79,7 +80,7 @@ This is the inbound side of quoting. Most agents won't need it; the ones that do
 <img src={require('./quoted-reply-bot-response.png').default} alt="A bot's quoted reply in Teams: a grey quote bubble showing the user's original 'test reply' message above the bot's response 'This is a threaded reply to your message.'" style={{maxHeight: '400px'}} />
 </div>
 
-Before the API tour, a quick note on what's actually serialized. A quoted reply travels as two pieces of data inside one message activity:
+A quoted reply travels as two pieces of data inside one message activity:
 
 1. A `<quoted messageId="..."/>` placeholder embedded in the message text
 2. A `QuotedReply` entity in `activity.entities` carrying the metadata
@@ -235,7 +236,7 @@ if quotes:
 <img src={require('./threaded-reply-channel.png').default} alt="A threaded reply in a Teams channel: a root message at the top, with two nested replies underneath indented under the same thread, plus a 'Reply in thread' button at the bottom" style={{maxHeight: '400px'}} />
 </div>
 
-Threading isn't a body-level annotation. It's a conversation ID shape. A threaded conversation ID looks like `<baseConversationId>;messageid=<rootMessageId>`. Send into that ID and the message lands in the thread rooted at `<rootMessageId>`. The SDK gives you a high-level `app.reply()` for the common case and a low-level `toThreadedConversationId()` helper for advanced cases.
+Threading isn't a body-level annotation. It's a conversation ID shape. A threaded conversation ID looks like `<baseConversationId>;messageid=<rootMessageId>`. Send into that ID and the message lands in the thread rooted at `<rootMessageId>`. The SDK gives you a high-level `app.reply()` for the common case and a low-level `toThreadedConversationId()` helper.
 
 ### Proactive thread send: `app.reply()`
 
@@ -344,27 +345,13 @@ await app.send(thread_id, "Sent via manual threading.")
 
 ### Reactive vs proactive
 
-If you have an inbound activity in hand, reach for `context.reply()` and `context.quote()`. The SDK has the conversation ID, message ID, and sender from the activity; there's no boilerplate to write.
+If you have an inbound activity in hand, reach for `context.reply()` and `context.quote()`. The SDK has everything it needs from the activity, so there's no boilerplate.
 
-Drop down to `app.reply()` only when there's no inbound activity to react to: a background job, a webhook from another system, a scheduled task, a cross-conversation broadcast. In those cases you have to have stored the conversation ID and root message ID from an earlier turn.
-
-## Cross-SDK parity
-
-| Concept | TypeScript | .NET | Python |
-| --- | --- | --- | --- |
-| Reactive reply | `context.reply()` | `Context.Reply()` | `ctx.reply()` |
-| Reactive send | `context.send()` | `Context.Send()` | `ctx.send()` |
-| Proactive thread send | `app.reply()` | `teams.Reply()` | `app.reply()` |
-| Threaded conv. ID helper | `toThreadedConversationId()` | `Conversation.ToThreadedConversationId()` | `to_threaded_conversation_id()` |
-| Quote previously sent | `context.quote()` | `Context.Quote()` | `ctx.quote()` |
-| Quote builder | `MessageActivity.addQuote()` | `MessageActivity.AddQuote()` | `MessageActivityInput.add_quote()` |
-| Read inbound quotes | `activity.getQuotedMessages()` | `Activity.GetQuotedMessages()` | `activity.get_quoted_messages()` |
-
-If you build something in one language and port it later, you shouldn't need to relearn the shape.
+Drop down to `app.reply()` only when there's no inbound activity to react to: a background job, an external webhook, a scheduled task, a cross-conversation broadcast. In those cases you'll have stored the conversation ID and root message ID from an earlier turn.
 
 ## What ships next
 
-Both features are merged and available in all three SDKs today. The quoting APIs are marked experimental and may evolve; threading is stable.
+Both features are available in all three SDKs today.
 
 Runnable examples in each SDK:
 
