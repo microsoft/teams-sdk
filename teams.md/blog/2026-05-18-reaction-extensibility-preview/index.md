@@ -16,7 +16,7 @@ description: Teams agents can partitipate in lightweight conversation by reactin
 Your Teams agents can now react to messages with emojis. You can acknowledge, confirm, celebrate, and listen without sending an extra message reply. Agent message reactions are available today in public preview across [.NET](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/message-reactions), [TypeScript](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/message-reactions), and [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/message-reactions).
 
 <div style={{textAlign: 'center'}}>
-<img src='./agent-reactions-desktop.png' alt="Contoso agent identified as the sender of a reaction on a user message" style={{maxHeight: '400px'}} />
+<img src={require('./agent-reactions-desktop.png').default} alt="Contoso agent identified as the sender of a reaction on a user message" style={{maxHeight: '400px'}} />
 </div>
 
 <!-- truncate -->
