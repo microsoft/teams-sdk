@@ -1,0 +1,384 @@
+---
+slug: quoted-and-threaded-replies
+title: "Quoted Replies and Threaded Replies in the Teams SDK"
+date: 2026-05-13
+authors:
+  - name: Corina Gum
+    title: Microsoft
+    url: https://github.com/corinagum
+    image_url: https://github.com/corinagum.png
+tags: [teams-sdk, typescript, dotnet, python, features, messaging]
+description: A deep dive into how the Teams SDK handles quoted replies and proactive threading across TypeScript, .NET, and Python. What problems they solve, how to use them, and how they look on the wire.
+---
+
+Your agent has a comment to make. The channel has moved on. By the time you reply, nobody remembers what you're answering, or your bot finishes a long-running job an hour later, posts the result at the channel root, and it shows up nowhere near the request that started it.
+
+Quoted replies and threaded replies are how agents stay legible in busy conversations. They've been in the Teams SDK for a while in some form; what's new is that both are now first-class APIs across TypeScript, .NET, and Python with matching shapes. This post is a tour of the *why*, the *when*, and the *how*.
+
+<!-- truncate -->
+
+## The Problem: Agent Messages Get Lost
+
+Every reply your agent sends competes for attention in a channel. Three failure modes show up over and over:
+
+1. **The orphan reply.** An agent answers a question that scrolled off-screen ten messages ago. The answer is correct; nobody knows what it's answering.
+2. **The misplaced async result.** A background job finishes and posts at the channel root. Whoever asked has to scroll up to find the request. Whoever else is in the channel sees a result with no context.
+3. **The notification with no signal.** Mobile and desktop notifications show a snippet of the reply, not the original question. Without quoted context, the recipient has to open Teams just to know whether they care.
+
+Quoted replies fix the first and third by carrying a snippet of the referenced message. Threaded replies fix the second by anchoring the reply to its parent thread. Together they let your agent participate in conversations the way a thoughtful human does.
+
+## What You Can Do
+
+| Capability | API surface |
+     … +186 lines (ctrl+o to expand)
+| --- | --- |
+| Reply with auto-quote of the inbound message | `context.reply()` |
+| Quote a message your bot sent earlier | `context.quote(messageId, text)` |
+| Build a message with one or more quotes | `MessageActivity.addQuote(messageId, response?)` |
+| Read quoted-reply metadata from an inbound message | `activity.getQuotedMessages()` |
+| Send proactively into a thread | `app.reply(conversationId, rootMessageId, ...)` |
+| Construct a threaded conversation ID by hand | `toThreadedConversationId()` |
+
+All of the above are available in TypeScript, .NET, and Python with the same shape. Quoting APIs are marked experimental; threading is stable.
+
+## Real-World Scenarios
+
+### 1. Answering a Question After the Channel Moved On
+
+A user asked a question in a busy channel. By the time your agent has the answer, ten more messages have arrived. A plain reply at the bottom of the channel is correct but useless. With `context.reply()`, the SDK automatically quotes the inbound message: the answer carries the question with it, and the mobile notification shows the question in the toast.
+
+This is the most common case, and it's free. No extra arguments, no extra builders.
+
+### 2. Posting an Async Result Back Into Its Thread
+
+A user kicks off a deployment with a slash command. Your agent acknowledges, then forty minutes later the deployment finishes. If the result lands at the channel root, nobody can tell which deployment it's about. If it lands in the thread of the original request, it shows up grouped with the command that started it, collapsed under the same root, mutable as a unit.
+
+`app.reply(conversationId, rootMessageId, ...)` is the API for this. You store the IDs when the request comes in, then post back into the same thread when the work completes, even if your inbound activity is long gone.
+
+### 3. A Multi-Item Status Digest, Anchored to Its Items
+
+A release-status bot posts a digest: three open PRs, two CI runs, one design review. A flat list of bullet points works, but a digest that *quotes each item* gives the reader something to click and jumps them into the relevant thread. Combine the multi-quote builder with `app.reply()` and the whole digest lands in a single thread, with each item linkable.
+
+```typescript
+const msg = new MessageActivity()
+  .addQuote(prMessageId, 'Approved, merging now.')
+  .addQuote(ciMessageId, 'Build is green.')
+  .addQuote(designMessageId);
+
+await app.reply(conversationId, rootMessageId, msg);
+```
+
+### 4. Routing Based on What Was Quoted
+
+A user quotes an old bot message and asks "is this still correct?" Your agent needs to know what they're pointing at. `activity.getQuotedMessages()` returns the metadata for every quoted-reply entity on the inbound activity: message ID, sender, preview text, timestamp, validation flag, and whether the original was deleted. From there, route to the right handler.
+
+This is the inbound side of quoting. Most agents won't need it; the ones that do tend to need it deeply.
+
+## Quoted Replies on the Wire
+
+<div style={{textAlign: 'center'}}>
+<img src={require('./quoted-reply-bot-response.png').default} alt="A bot's quoted reply in Teams: a grey quote bubble showing the user's original 'test reply' message above the bot's response 'This is a threaded reply to your message.'" style={{maxHeight: '400px'}} />
+</div>
+
+Before the API tour, a quick note on what's actually serialized. A quoted reply travels as two pieces of data inside one message activity:
+
+1. A `<quoted messageId="..."/>` placeholder embedded in the message text
+2. A `QuotedReply` entity in `activity.entities` carrying the metadata
+
+The server correlates the two by `messageId`. Three placeholders means three entities, matched by ID and not by array order. The builder methods take care of this for you: each `addQuote()` call appends both a placeholder and an entity, in the order you call them.
+
+### Reactive auto-quote: `context.reply()`
+
+#### TypeScript
+
+```typescript
+app.on('message', async ({ reply }) => {
+  await reply('Thanks for your message! This reply auto-quotes it using reply().');
+});
+```
+
+#### .NET
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    await context.Reply("Thanks for your message! This reply auto-quotes it using Reply().", cancellationToken);
+});
+```
+
+#### Python
+
+```python
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    await ctx.reply("Thanks for your message! This reply auto-quotes it using reply().")
+```
+
+### Quote a message you sent earlier: `context.quote()`
+
+#### TypeScript
+
+```typescript
+const sent = await send('The meeting has been moved to 3 PM tomorrow.');
+await quote(sent.id, 'Just to confirm, does the new time work for everyone?');
+```
+
+#### .NET
+
+```csharp
+var sent = await context.Send("The meeting has been moved to 3 PM tomorrow.", cancellationToken);
+await context.Quote(sent.Id, "Just to confirm, does the new time work for everyone?", cancellationToken);
+```
+
+#### Python
+
+```python
+sent = await ctx.send("The meeting has been moved to 3 PM tomorrow.")
+await ctx.quote(sent.id, "Just to confirm, does the new time work for everyone?")
+```
+
+### Multi-quote builder
+
+#### TypeScript
+
+```typescript
+const sentA = await send('We need to update the API docs before launch.');
+const sentB = await send('The design mockups are ready for review.');
+const sentC = await send('CI pipeline is green on main.');
+
+const msg = new MessageActivity()
+  .addQuote(sentA.id, 'I can take the docs, will have a draft by Thursday.')
+  .addQuote(sentB.id, 'Looks great, approved!')
+  .addQuote(sentC.id);
+
+await send(msg);
+```
+
+#### .NET
+
+```csharp
+var sentA = await context.Send("We need to update the API docs before launch.", cancellationToken);
+var sentB = await context.Send("The design mockups are ready for review.", cancellationToken);
+var sentC = await context.Send("CI pipeline is green on main.", cancellationToken);
+
+var msg = new MessageActivity()
+    .AddQuote(sentA.Id, "I can take the docs, will have a draft by Thursday.")
+    .AddQuote(sentB.Id, "Looks great, approved!")
+    .AddQuote(sentC.Id);
+
+await context.Send(msg, cancellationToken);
+```
+
+#### Python
+
+```python
+sent_a = await ctx.send("We need to update the API docs before launch.")
+sent_b = await ctx.send("The design mockups are ready for review.")
+sent_c = await ctx.send("CI pipeline is green on main.")
+
+msg = (
+    MessageActivityInput()
+    .add_quote(sent_a.id, "I can take the docs, will have a draft by Thursday.")
+    .add_quote(sent_b.id, "Looks great, approved!")
+    .add_quote(sent_c.id)
+)
+
+await ctx.send(msg)
+```
+
+### Reading inbound quotes
+
+#### TypeScript
+
+```typescript
+const quotes = activity.getQuotedMessages();
+if (quotes.length > 0) {
+  const quote = quotes[0].quotedReply;
+  console.log({
+    messageId: quote.messageId,
+    sender: quote.senderName,
+    preview: quote.preview,
+    deleted: quote.isReplyDeleted,
+    validated: quote.validatedMessageReference,
+  });
+}
+```
+
+#### .NET
+
+```csharp
+var quotes = activity.GetQuotedMessages();
+if (quotes.Count > 0)
+{
+    var quote = quotes[0].QuotedReply!;
+    context.Log.Info($"Quoted message ID: {quote.MessageId}");
+    context.Log.Info($"From: {quote.SenderName}");
+    context.Log.Info($"Preview: {quote.Preview}");
+    context.Log.Info($"Deleted: {quote.IsReplyDeleted}");
+    context.Log.Info($"Validated: {quote.ValidatedMessageReference}");
+}
+```
+
+#### Python
+
+```python
+quotes = ctx.activity.get_quoted_messages()
+if quotes:
+    quote = quotes[0].quoted_reply
+    logger.info("messageId=%s sender=%s preview=%s deleted=%s validated=%s",
+                quote.message_id, quote.sender_name, quote.preview,
+                quote.is_reply_deleted, quote.validated_message_reference)
+```
+
+## Threaded Replies on the Wire
+
+<div style={{textAlign: 'center'}}>
+<img src={require('./threaded-reply-channel.png').default} alt="A threaded reply in a Teams channel: a root message at the top, with two nested replies underneath indented under the same thread, plus a 'Reply in thread' button at the bottom" style={{maxHeight: '400px'}} />
+</div>
+
+Threading isn't a body-level annotation. It's a conversation ID shape. A threaded conversation ID looks like `<baseConversationId>;messageid=<rootMessageId>`. Send into that ID and the message lands in the thread rooted at `<rootMessageId>`. The SDK gives you a high-level `app.reply()` for the common case and a low-level `toThreadedConversationId()` helper for advanced cases.
+
+### Proactive thread send: `app.reply()`
+
+#### TypeScript
+
+```typescript
+await app.reply(conversationId, rootMessageId, 'This is a proactive threaded reply using app.reply().');
+```
+
+#### .NET
+
+```csharp
+await teams.Reply(conversationId, rootMessageId, "This is a proactive threaded reply using teams.Reply().", cancellationToken);
+```
+
+#### Python
+
+```python
+await app.reply(conversation_id, root_message_id, "This is a proactive threaded reply using app.reply().")
+```
+
+### Extracting the thread root from an inbound activity
+
+When you receive an inbound message from inside an existing thread, the conversation ID is already in the `<conversationId>;messageid=<rootId>` form. To send back into the *same* thread from a background job later, extract the root ID and stash both pieces. This is the pattern in the threading example bot:
+
+#### TypeScript
+
+```typescript
+const conversationId = ref.conversation.id;
+const messageId = activity.id!;
+
+// When inside a thread, conversationId contains ;messageid=<rootId>.
+// Extract the root ID for threading; for top-level messages, use activity.id.
+const threadParts = conversationId.split(';messageid=');
+const threadRootId = threadParts.length > 1 ? threadParts[1] : messageId;
+
+await app.reply(conversationId, threadRootId, 'Background job complete.');
+```
+
+#### .NET
+
+```csharp
+var conversationId = context.Ref.Conversation.Id;
+var messageId = context.Activity.Id!;
+
+// When inside a thread, conversationId contains ;messageid=<rootId>.
+// Extract the root ID for threading; for top-level messages, use activity.id.
+var threadParts = conversationId.Split(";messageid=");
+var threadRootId = threadParts.Length > 1 ? threadParts[1] : messageId;
+
+await teams.Reply(conversationId, threadRootId, "Background job complete.", cancellationToken);
+```
+
+#### Python
+
+```python
+conversation_id = ctx.conversation_ref.conversation.id
+message_id = ctx.activity.id
+
+# When inside a thread, conversation_id contains ;messageid=<rootId>.
+# Extract the root ID for threading; for top-level messages, use activity.id.
+parts = conversation_id.split(";messageid=")
+thread_root_id = parts[1] if len(parts) > 1 else message_id
+
+await app.reply(conversation_id, thread_root_id, "Background job complete.")
+```
+
+### Manual control: `toThreadedConversationId()` + `app.send()`
+
+#### TypeScript
+
+```typescript
+import { toThreadedConversationId } from '@microsoft/teams.apps';
+
+const threadId = toThreadedConversationId(conversationId, rootMessageId);
+await app.send(threadId, 'Sent via manual threading.');
+```
+
+#### .NET
+
+```csharp
+var threadId = Microsoft.Teams.Api.Conversation.ToThreadedConversationId(conversationId, rootMessageId);
+await teams.Send(threadId, "Sent via manual threading.", cancellationToken: cancellationToken);
+```
+
+#### Python
+
+```python
+from microsoft_teams.apps import to_threaded_conversation_id
+
+thread_id = to_threaded_conversation_id(conversation_id, root_message_id)
+await app.send(thread_id, "Sent via manual threading.")
+```
+
+## At a Glance: Which One Do I Reach For?
+
+| Situation | Reach for |
+| --- | --- |
+| You're answering an inbound message in a chat or channel | `context.reply()` (does both, auto-quotes and threads) |
+| Background job needs to post a result into a request's thread | `app.reply(conversationId, rootMessageId, ...)` |
+| Multi-item digest where each item references something | `MessageActivity.addQuote(...)` plus `app.reply(...)` to land in a thread |
+| You sent a message earlier and want a follow-up that references it | `context.quote(sentId, text)` |
+| Inbound message quoted something and you need to know what | `activity.getQuotedMessages()` |
+| Top-level channel announcement, no context to anchor to | Plain `context.send()` (neither quote nor thread) |
+| Building a fully custom activity, need to land in a thread | `toThreadedConversationId()` + `app.send()` |
+
+### Reactive vs proactive
+
+If you have an inbound activity in hand, reach for `context.reply()` and `context.quote()`. The SDK has the conversation ID, message ID, and sender from the activity; there's no boilerplate to write.
+
+Drop down to `app.reply()` only when there's no inbound activity to react to: a background job, a webhook from another system, a scheduled task, a cross-conversation broadcast. In those cases you have to have stored the conversation ID and root message ID from an earlier turn.
+
+## Cross-SDK parity
+
+| Concept | TypeScript | .NET | Python |
+| --- | --- | --- | --- |
+| Reactive reply | `context.reply()` | `Context.Reply()` | `ctx.reply()` |
+| Reactive send | `context.send()` | `Context.Send()` | `ctx.send()` |
+| Proactive thread send | `app.reply()` | `teams.Reply()` | `app.reply()` |
+| Threaded conv. ID helper | `toThreadedConversationId()` | `Conversation.ToThreadedConversationId()` | `to_threaded_conversation_id()` |
+| Quote previously sent | `context.quote()` | `Context.Quote()` | `ctx.quote()` |
+| Quote builder | `MessageActivity.addQuote()` | `MessageActivity.AddQuote()` | `MessageActivityInput.add_quote()` |
+| Read inbound quotes | `activity.getQuotedMessages()` | `Activity.GetQuotedMessages()` | `activity.get_quoted_messages()` |
+| Experimental marker | `@experimental` JSDoc | `[Experimental("ExperimentalTeamsQuotedReplies")]` | `@experimental` |
+
+If you build something in one language and port it later, you shouldn't need to relearn the shape.
+
+## What ships next
+
+Both features are merged and available in all three SDKs today. The quoting APIs are marked experimental and may evolve; threading is stable.
+
+Runnable examples in each SDK:
+
+- TypeScript: [`examples/quoting`](https://github.com/microsoft/teams.ts/tree/main/examples/quoting) and [`examples/threading`](https://github.com/microsoft/teams.ts/tree/main/examples/threading)
+- .NET: [`Samples/Samples.Quoting`](https://github.com/microsoft/teams.net/tree/main/Samples/Samples.Quoting) and [`Samples/Samples.Threading`](https://github.com/microsoft/teams.net/tree/main/Samples/Samples.Threading)
+- Python: [`examples/quoting`](https://github.com/microsoft/teams.py/tree/main/examples/quoting) and [`examples/threading`](https://github.com/microsoft/teams.py/tree/main/examples/threading)
+
+Merged docs and feature PRs:
+
+- [Threading and quoted replies documentation](https://github.com/microsoft/teams-sdk/pull/2742)
+- [teams.ts #482](https://github.com/microsoft/teams.ts/pull/482), [#523](https://github.com/microsoft/teams.ts/pull/523)
+- [teams.net #389](https://github.com/microsoft/teams.net/pull/389), [#425](https://github.com/microsoft/teams.net/pull/425), [#477](https://github.com/microsoft/teams.net/pull/477)
+- [teams.py #321](https://github.com/microsoft/teams.py/pull/321), [#389](https://github.com/microsoft/teams.py/pull/389)
+
+If you hit a rough edge, please open an issue against the relevant SDK repo.
