@@ -13,7 +13,7 @@ description: Teams agents can partitipate in lightweight conversation by reactin
 
 **Public Preview | May 2026**
 
-Your Teams agents can now react to messages with emojis. You can acknowledge, confirm, celebrate, and listen without sending an extra message reply. Agent message reactions are available today in public preview across .NET, TypeScript, and Python.
+Your Teams agents can now react to messages with emojis. You can acknowledge, confirm, celebrate, and listen without sending an extra message reply. Agent message reactions are available today in public preview across [.NET](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/message-reactions), [TypeScript](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/message-reactions), and [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/message-reactions).
 
 <div style={{textAlign: 'center'}}>
 <img src='./agent-reactions-desktop.png' alt="Contoso agent identified as the sender of a reaction on a user message" style={{maxHeight: '400px'}} />
@@ -51,6 +51,9 @@ Agents can react to acknowledge a request, then swap their reaction to a differe
 
 Below is an example of an agent reacting to a message with ⌛ ```holdon```, then swapping that for a ✅ ```2705_whiteheavycheckmark``` when the task is complete.
 
+[!TIP]
+ You can find the complete list of emojis for use on Teams and their associated EmojiID on the [**Teams Reactions Reference page**](https://learn.microsoft.com/microsoftteams/platform/agents-in-teams/teams-reactions-reference)
+
 ```csharp
 // Acknowledge user request and notify them work has commenced with an hourglass "holdon" emoji
 // Add reaction to message
@@ -87,15 +90,17 @@ Agent monitors a channel for deployments, launches, or other celebratory events 
 
 ## Adding a Reaction
 
-Below are examples of adding 👍 ```like``` reactions to messages in each language:
+You can utilize lightweight communication with reactions to acknowledge a message with a simple 👍 ```like```, below are examples of doing so in each language: 
 
 ### TypeScript
 
 ```typescript
 // Add a reaction
 app.on('message', async ({ activity, api, send }) => {
-  await send("Hello! I'll react to this message.");
-  await api.conversations.reactions.add(activity.conversation.id, activity.id, 'like');
+  await send("Hello! I'll react to your message.");
+
+  // Add a reaction to the incoming message
+  await api.reactions.add(activity.conversation.id, activity.id, 'like');
 });
 ```
 
@@ -103,16 +108,18 @@ app.on('message', async ({ activity, api, send }) => {
 
 ```csharp
 // Add a reaction
-app.OnMessage(async context =>
+app.OnMessage(async (context, cancellationToken) =>
 {
-    // First, add a reaction
+    await context.Send("Hello! I'll react to your message.", cancellationToken);
+
+    // Add a reaction to the incoming message
     await context.Api.Conversations.Reactions.AddAsync(
         context.Activity.Conversation.Id,
         context.Activity.Id,
-        new ReactionType("like")
+        ReactionType.Like,
+        cancellationToken: cancellationToken
     );
 });
-
 ```
 
 ### Python
@@ -121,7 +128,10 @@ app.OnMessage(async context =>
 # Add a reaction
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
-    await ctx.api.conversations.reactions.add(
+    await ctx.send("Hello! I'll react to your message.")
+
+    # Add a reaction to the incoming message
+    await ctx.api.reactions.add(
         ctx.activity.conversation.id,
         ctx.activity.id,
         'like'
@@ -171,21 +181,24 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 ## Listening to Reactions
 
-You can also listen for reactions being added or removed from messages your agent has sent. Below are examples of listening for incoming and removed reactions in each language: 
+Listening to reactions in conjunction with sending reactions can help you create complete end-to-end scenarios. In the following examples, agents listen for a 👍 ```like``` reaction and take action when that reaction has been added to an agent's message:
 
 ### TypeScript
 
 ```typescript
-// Listen for a reaction added to agent message
 app.on('messageReaction', async ({ activity }) => {
+  // Listen for a reaction added to agent message
   for (const reaction of activity.reactionsAdded ?? []) {
-    console.log(`User added reaction: ${reaction.type}`);
+    if (reaction.type === 'like') {
+      // Complete some task here
+    } 
   }
-```
-```typescript
-// Listen for a reaction removed from agent message
+
+  // Listen for a reaction removed from agent message
   for (const reaction of activity.reactionsRemoved ?? []) {
-    console.log(`User removed reaction: ${reaction.type}`);
+    if (reaction.type === 'like') {
+      // Complete some task here
+    } 
   }
 });
 ```
@@ -194,18 +207,20 @@ app.on('messageReaction', async ({ activity }) => {
 
 ```csharp
 // Listen for a reaction added to agent message
-app.OnMessageReactionAdded(async (context, cancellationToken) =>{
-    foreach (var reaction in context.Activity.ReactionsAdded ?? []){
-        Console.WriteLine($"User added reaction: {reaction.Type}");
+app.OnMessageReactionAdded(async (context, cancellationToken) => {
+    foreach (var reaction in context.Activity.ReactionsAdded ?? []) {
+        if (reaction.Type == "like") {
+            // Complete some task here
+        }
     }
 });
-```
-```csharp
 
 // Listen for a reaction removed from agent message
-app.OnMessageReactionRemoved(async (context, cancellationToken) =>{
-    foreach (var reaction in context.Activity.ReactionsRemoved ?? []){
-        Console.WriteLine($"User removed reaction: {reaction.Type}");
+app.OnMessageReactionRemoved(async (context, cancellationToken) => {
+    foreach (var reaction in context.Activity.ReactionsRemoved ?? []) {
+        if (reaction.Type == "like") {
+            // Complete some task here
+        } 
     }
 });
 ```
@@ -215,17 +230,21 @@ app.OnMessageReactionRemoved(async (context, cancellationToken) =>{
 ```python
 # Listen for a reaction added to agent message
 @app.on_message_reaction
-async def handle_reaction(ctx: ActivityContext[MessageReactionActivity]):
+async def handle_reaction_added(ctx: ActivityContext[MessageReactionActivity]):
     for reaction in ctx.activity.reactions_added or []:
-        print(f"User added reaction: {reaction.type}")
-```
-```python
+        if reaction.type == "like":
+            # Complete some task here
+            pass
+
+
 # Listen for a reaction removed from agent message
 @app.on_message_reaction
-async def handle_reaction(ctx: ActivityContext[MessageReactionActivity]):
-# Listen for a reaction removed from agent message
+async def handle_reaction_removed(ctx: ActivityContext[MessageReactionActivity]):
     for reaction in ctx.activity.reactions_removed or []:
-        print(f"User removed reaction: {reaction.type}")
+        if reaction.type == "like":
+            # Complete some task here
+            pass
+
 ```
 
 ## Reaction IDs (EmojiIDs)
