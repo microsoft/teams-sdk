@@ -19,8 +19,7 @@ dotnet add package Microsoft.Teams.Apps --prerelease
 Here's what changes for your Teams bot apps:
 
 - **[Your app is just an ASP.NET Core app.](#native-aspnet-core-integration)** Standard DI, `ILogger`, and `IConfiguration` throughout, with typed activity handlers and a rich context object. A working bot is about 15 lines.
-- **[Run your bot as an AI teammate with its own identity.](#agentic-identity)** The SDK supports agentic identities from Agent 365, so your bot can act as the AI teammate, also known as _Agentic User_, with their permissions, no extra plumbing needed.
-- **[Run your bot on behalf of a user using a redesigned SSO flow.](#oauth-and-sso)** Access private documents, calendars, and other user-scoped resources — the SDK handles the sign-in and consent experience automatically.
+- **[Run your bot as an AI teammate with its own identity.](#agentic-identity)** The SDK supports agentic identities from Agent 365, so your bot can act as the AI teammate with their permissions, no extra plumbing needed.
 - **[Migrate your existing Bot Framework v4 bot in two lines.](#migration-from-bot-framework-v4)** A compatibility package runs your existing `IBot` implementation on the new infrastructure unchanged, so you can adopt all new features at your own pace, including Agentic scenarios.
 
 <!-- truncate -->
@@ -123,7 +122,7 @@ This changes how your bot interacts with APIs. A traditional bot calls APIs with
     <text x="226" y="80">sends message</text>
     <text x="486" y="80">app permissions</text>
     <text x="226" y="258">sends message</text>
-    <text x="486" y="258">agentic user's </text>
+    <text x="486" y="258">AI Teammate's </text>
     <text x="486" y="270" fontSize="10">permissions</text>
   </g>
 </svg>
@@ -152,39 +151,12 @@ teams.OnMessage(async (context, cancellationToken) =>
 
 To get started with agentic scenarios, configure your [app registration for Agent 365](https://learn.microsoft.com/microsoft-agent-365/get-started). For the deeper conceptual background, see the [Agent 365 identity documentation](https://learn.microsoft.com/microsoft-agent-365/use).
 
-## OAuth and SSO
-
-The SDK provides a redesigned OAuth flow system built around named connections. Each connection is an independent `OAuthFlow` instance with its own sign-in and failure callbacks, which means your bot can authenticate users against multiple providers without any routing logic on your part.
-
-```csharp
-var graphFlow = teams.AddOAuthFlow("graph-connection");
-
-graphFlow.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
-{
-    await context.SendActivityAsync("Signed in to Microsoft Graph!", cancellationToken);
-});
-```
-
-Within a handler, initiate sign-in by calling `SignInAsync` on the flow. The SDK handles the full SSO sequence automatically — silent authentication first, falling back to an OAuthCard if needed. Duplicate sign-in requests from multiple Teams endpoints (mobile, desktop, web) are deduplicated automatically.
-
-```csharp
-teams.OnMessage(async (context, cancellationToken) =>
-{
-    string? token = await graphFlow.SignInAsync(context, cancellationToken);
-
-    if (token is not null)
-    {
-        await context.SendActivityAsync("You're already signed in.", cancellationToken);
-    }
-    // else: OAuthCard was sent, result arrives via OnSignInComplete
-});
-```
 
 ## Migration from Bot Framework v4
 
 If you have an existing Bot Framework v4 bot, you don't need to rewrite it. The `Microsoft.Teams.Apps.BotBuilder` package provides a compatibility layer that lets your current `IBot` implementation run on the new SDK infrastructure with minimal changes.
 
-Your bot's business logic stays exactly the same — `ConversationState`, `UserState`, `Dialogs`, `WaterfallDialogs`, `SSO`, and middleware all work as-is. Only the hosting and infrastructure layer changes.
+Your bot's business logic stays exactly the same — `ConversationState`, `UserState`, `Dialogs`, `WaterfallDialogs`, `SSO`, and `Middleware` all work as-is. Only the hosting and infrastructure layer changes.
 
 ### Drop-in migration
 
