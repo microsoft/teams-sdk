@@ -34,10 +34,10 @@ Quoted replies fix the first and third by carrying a snippet of the referenced m
 | Send a message | `context.send()` | `Context.Send()` | `ctx.send()` |
 | Reply, auto-quoting the inbound message | `context.reply()` | `Context.Reply()` | `ctx.reply()` |
 | Quote a message your bot sent earlier | `context.quote()` | `Context.Quote()` | `ctx.quote()` |
-| Build a message with one or more quotes | `MessageActivity.addQuote()` | `MessageActivity.AddQuote()` | `MessageActivityInput.add_quote()` |
-| Read quoted-reply metadata from an inbound message | `activity.getQuotedMessages()` | `Activity.GetQuotedMessages()` | `activity.get_quoted_messages()` |
+| Build a message with one or more quotes | `addQuote()` | `AddQuote()` | `add_quote()` |
+| Read quoted-reply metadata from an inbound message | `getQuotedMessages()` | `GetQuotedMessages()` | `get_quoted_messages()` |
 | Send proactively into a thread | `app.reply()` | `teams.Reply()` | `app.reply()` |
-| Construct a threaded conversation ID by hand | `toThreadedConversationId()` | `Conversation.ToThreadedConversationId()` | `to_threaded_conversation_id()` |
+| Construct a threaded conversation ID by hand | `toThreadedConversationId()` | `ToThreadedConversationId()` | `to_threaded_conversation_id()` |
 
 If you build something in one language and port it later, you shouldn't need to relearn the shape.
 
