@@ -64,28 +64,30 @@ And included in the app like any other plugin:
 
 ```typescript
 import { App } from '@microsoft/teams.apps';
-import { DevtoolsPlugin } from '@microsoft/teams.dev';
 import { McpPlugin } from '@microsoft/teams.mcp';
 // ...
 
 const app = new App({
   plugins: [
-    new DevtoolsPlugin(),
-    // Add this plugin
     mcpServerPlugin,
   ],
 });
 ```
 
-<!-- devtools-tip -->
+<!-- inspector-tip -->
 
 :::tip
-Enabling mcp request inspection and the `DevtoolsPlugin` allows you to see all the requests and responses to and from your MCP server (similar to how the **Activities** tab works).
+To inspect the requests and responses going to and from your MCP server, point an external MCP client at it. The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is the canonical option:
+
+```sh
+npx @modelcontextprotocol/inspector
+```
+
+Set the URL to `http://localhost:3978/mcp` and connect.
 :::
 
-<!-- devtools-gif -->
+<!-- inspector-image -->
 
-![MCP Server in Devtools](/screenshots/mcp-devtools.gif)
 
 <!-- proactive-messaging -->
 

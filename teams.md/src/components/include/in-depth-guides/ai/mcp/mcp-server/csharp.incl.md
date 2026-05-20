@@ -10,9 +10,9 @@ WIP
 
 <!-- app-integration -->
 
-<!-- devtools-tip -->
+<!-- inspector-tip -->
 
-<!-- devtools-gif -->
+<!-- inspector-image -->
 
 <!-- proactive-messaging -->
 

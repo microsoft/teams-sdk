@@ -20,7 +20,7 @@ quote-agent/
 
 ```python title="src/main.py"
 from microsoft_teams.api import MessageActivity, TypingActivityInput
-from microsoft_teams.apps import ActivityContext, App
+from microsoft_teams.apps import ActivityContext, App, AppOptions
 
 app = App()
 
@@ -29,6 +29,10 @@ app = App()
 <!-- plugin-events -->
 
 (on_activity, on_activity_sent, etc.)
+
+<!-- local-test-note -->
+
+To test your agent locally without sideloading into Teams, run the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)** alongside your agent. The playground is a separate CLI tool and does not require any plugin in your app code.
 
 <!-- message-handling-code -->
 
