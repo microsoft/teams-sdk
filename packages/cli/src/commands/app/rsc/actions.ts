@@ -1,4 +1,8 @@
-import { fetchAppDetailsV2, updateAppDetails } from '../../../apps/api.js';
+import {
+  fetchAppDetailsV2,
+  updateAppDetails,
+  type UpdateAppDetailsResult,
+} from '../../../apps/api.js';
 import type { RscPermissionEntry, AppAuthorization } from '../../../apps/types.js';
 
 /** Composite key for deduplication: "name|type" */
@@ -99,7 +103,11 @@ export async function addRscPermissions(
   token: string,
   teamsAppId: string,
   permissions: RscPermissionEntry[]
-): Promise<{ added: RscPermissionEntry[]; skipped: RscPermissionEntry[] }> {
+): Promise<{
+  added: RscPermissionEntry[];
+  skipped: RscPermissionEntry[];
+  updateResult?: UpdateAppDetailsResult;
+}> {
   const current = await listRscPermissions(token, teamsAppId);
   const existingKeys = new Set(current.map(permKey));
 
@@ -114,13 +122,14 @@ export async function addRscPermissions(
     }
   }
 
+  let updateResult: UpdateAppDetailsResult | undefined;
   if (added.length > 0) {
     const merged = [...current, ...added];
     const update = await buildAuthorizationUpdate(token, teamsAppId, merged);
-    await updateAppDetails(token, teamsAppId, update);
+    updateResult = await updateAppDetails(token, teamsAppId, update);
   }
 
-  return { added, skipped };
+  return { added, skipped, updateResult };
 }
 
 /**
@@ -131,7 +140,7 @@ export async function removeRscPermissions(
   token: string,
   teamsAppId: string,
   permissionNames: string[]
-): Promise<{ removed: string[]; notFound: string[] }> {
+): Promise<{ removed: string[]; notFound: string[]; updateResult?: UpdateAppDetailsResult }> {
   const current = await listRscPermissions(token, teamsAppId);
   const currentNames = new Set(current.map((p) => p.name));
 
@@ -146,14 +155,15 @@ export async function removeRscPermissions(
     }
   }
 
+  let updateResult: UpdateAppDetailsResult | undefined;
   if (removed.length > 0) {
     const removedSet = new Set(removed);
     const filtered = current.filter((p) => !removedSet.has(p.name));
     const update = await buildAuthorizationUpdate(token, teamsAppId, filtered);
-    await updateAppDetails(token, teamsAppId, update);
+    updateResult = await updateAppDetails(token, teamsAppId, update);
   }
 
-  return { removed, notFound };
+  return { removed, notFound, updateResult };
 }
 
 /**
@@ -164,7 +174,7 @@ export async function setRscPermissions(
   token: string,
   teamsAppId: string,
   permissions: RscPermissionEntry[]
-): Promise<void> {
+): Promise<UpdateAppDetailsResult> {
   const update = await buildAuthorizationUpdate(token, teamsAppId, permissions);
-  await updateAppDetails(token, teamsAppId, update);
+  return updateAppDetails(token, teamsAppId, update);
 }
