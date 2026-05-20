@@ -25,6 +25,37 @@ winget install agentsplayground
 
 For other platforms and full install options, see the [Microsoft Learn guide](https://learn.microsoft.com/en-us/microsoft-365/agents-sdk/test-with-toolkit-project).
 
+## Migrating from DevTools
+
+If your agent previously used `DevtoolsPlugin` from `@microsoft/teams.dev`, remove it from your `App` configuration. The Playground is a separate CLI tool and does not need a plugin in your code.
+
+The Playground talks to your agent in `emulator` channel mode, which sends no JWT. Your agent therefore needs to accept unauthenticated requests on `/api/messages`. There are two ways to do this.
+
+### Recommended: run anonymously
+
+For local development, leave `CLIENT_ID` / `CLIENT_SECRET` / `TENANT_ID` unset (for example, comment them out of your `.env`). With no credentials configured, the bot does not enforce JWT validation. The SDK logs a warning at startup confirming the bot is in anonymous mode:
+
+```
+[WARN] No credentials configured (CLIENT_ID / CLIENT_SECRET / TENANT_ID). Bot will accept unauthenticated requests on /api/messages.
+```
+
+This is the cleanest migration path: nothing to add to your code, and the startup warning makes the mode explicit.
+
+### Alternative: `skipAuth: true`
+
+If you need to keep credentials configured for local dev (for example, to match a production config), set `skipAuth: true` on your `App` instead:
+
+```typescript
+const app = new App({
+  // ...
+  skipAuth: true,  // local development only; do not enable in production
+});
+```
+
+### Why this is needed
+
+`DevtoolsPlugin` previously bypassed JWT validation implicitly because it ran in-process and never went through `/api/messages` over HTTP. The Playground sends real HTTP requests, so the bot's JWT validator fires unless one of the two options above is in effect.
+
 ## Launch
 
 Start your agent locally (default port `3978`), then run:
