@@ -18,7 +18,7 @@ Your Teams agents can now react to messages with emojis. You can acknowledge, co
 <!-- truncate -->
 
 <div style={{textAlign: 'center'}}>
-<img src='https://github.com/microsoft/teams-sdk/blob/main/teams.md/blog/2026-05-18-reaction-extensibility-preview/agent-reactions-desktop.png' alt="Contoso agent identified as the sender of a reaction on a user message" style={{maxHeight: '400px'}} />
+<img src={require('./agent-reactions-desktop.png').default} alt="Contoso agent identified as the sender of a reaction on a user message" style={{maxHeight: '400px'}} />
 </div>
 
 ## The Problem: Messages Can Be Too Noisy
