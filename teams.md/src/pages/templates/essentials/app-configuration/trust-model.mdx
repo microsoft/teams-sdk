@@ -1,0 +1,71 @@
+---
+sidebar_position: 2
+title: Trust Model
+summary: How the Teams SDK validates inbound tokens and what you can rely on downstream
+languages: ['typescript','python','csharp']
+---
+
+# Trust Model
+
+The Teams SDK enforces a layered authentication model. Inbound JSON Web Tokens are validated once, at the HTTP boundary, before any handler in your application sees them. Everything downstream — your activity handlers, the parsed token accessor on the context, and any custom routes that opt into the same policy — operates on tokens that have already passed signature, issuer, audience, and expiry checks.
+
+This page describes where validation happens, what you can trust afterwards, and how to extend the model when you add your own protected surfaces.
+
+## What the SDK validates automatically
+
+For every inbound request on `/api/messages`, the SDK validates the bearer token before invoking any activity handler. Validation includes:
+
+- **Signature verification** against the authoritative JSON Web Key Set (JWKS). The signing keys are discovered from the OpenID Configuration endpoint for the configured cloud environment, so key rotation requires no action from you.
+- **Issuer check** against the set of expected issuers for your cloud (commercial, US Government, DoD, or China).
+- **Audience check** against your bot's application identifier.
+- **Lifetime check** with default clock skew tolerance.
+- **Signing algorithm check** — only `RS256` is accepted.
+
+Requests that fail any of these checks are rejected with HTTP 401 before reaching your code. If your application observes an inbound activity at all, the underlying token has been verified.
+
+## What you can rely on downstream
+
+Once the request is past the validator, the SDK exposes selected token claims through typed accessors on the activity context. The accessor classes (`JsonWebToken` in each SDK) are payload views over an already-validated token — they perform no validation of their own. You can read fields like the tenant ID, application ID, service URL, and expiration directly without re-checking the token.
+
+The same pattern applies to tokens the SDK acquires on your behalf — for example, when MSAL returns an access token for an outbound API call, or when an OAuth user-token exchange completes. Those tokens originate from Microsoft identity infrastructure and are wrapped in the same accessor type so your code reads them with a consistent API.
+
+## Adding custom authentication to your own surfaces
+
+If your bot exposes additional HTTP surfaces beyond the default Teams activity endpoint — such as a Model Context Protocol server, a callback endpoint for an external system, or a webhook handler — you are responsible for authenticating those requests yourself. The SDK provides hooks that let you reuse the same trust posture.
+
+For example, the MCP plugin accepts an authentication callback that runs before each inbound MCP request. Returning `false` (or throwing) rejects the request with HTTP 401 before the handler runs:
+
+```typescript
+new McpPlugin({
+  requireAuth: (req) => req.headers.authorization === `Bearer ${process.env.MCP_TOKEN}`,
+});
+```
+
+```python
+async def require_auth(request: Request) -> bool:
+    return request.headers.get("authorization") == f"Bearer {os.environ['MCP_TOKEN']}"
+
+McpServerPlugin(name="my-mcp", require_auth=require_auth)
+```
+
+```csharp
+builder.AddTeamsMcp(options =>
+{
+    options.RequireAuth = ctx =>
+        Task.FromResult(ctx.Request.Headers.Authorization.ToString() == $"Bearer {Environment.GetEnvironmentVariable("MCP_TOKEN")}");
+});
+```
+
+For custom routes registered directly against the SDK's HTTP adapter, apply your own middleware. The Teams activity validator can be reused — see the [App Authentication](/teams/app-authentication) guide for how to compose validators.
+
+## What not to do
+
+The accessor types described above are not safe to construct against arbitrary input. They expose claims from a parsed token; they do not check whether the token was signed by a party you trust.
+
+Do not:
+
+- Read a token from an untrusted HTTP request and construct a `JsonWebToken` from it as a basis for any authorization decision.
+- Pass user-supplied tokens directly to downstream services without first running them through the SDK's validator (or your own equivalent).
+- Disable the SDK's automatic validation on `/api/messages`. The default-deny posture relies on it.
+
+If you need to validate a token outside the activity pipeline, use the validator components directly rather than the accessor. Each SDK exposes a token validator that performs the full signature-verification flow against the same JWKS endpoint the activity pipeline uses.
