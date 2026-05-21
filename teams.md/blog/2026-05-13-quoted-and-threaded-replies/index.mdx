@@ -67,7 +67,7 @@ A user asked a question in a busy conversation. By the time your agent has the a
 
 *Above: a user asks a question and the agent replies. The agent's response carries the original question in a grey quote bubble, so the answer stays tied to what was asked even if the conversation has moved on.*
 
-This is the most common case, and it's free. No extra arguments, no extra builders.
+This is the most common case, and it's free. No extra arguments, no extra builders. For the full reference, see [Sending messages](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/) on the docs site.
 
 #### TypeScript
 
@@ -102,7 +102,7 @@ A user kicks off a deployment with a slash command. Your agent acknowledges, the
 <img src={require('./threaded-reply-channel.png').default} alt="A threaded reply in a Teams channel: a root message at the top, with two nested replies underneath indented under the same thread, plus a 'Reply in thread' button at the bottom" style={{maxHeight: '400px'}} />
 </div>
 
-Threading already exists on the service for channels, and is coming to chats and meetings. The gap the SDK is filling here is the proactive case. `app.reply(conversationId, rootMessageId, ...)` lets you post into the thread of the original request when there's no inbound activity to react to. You store the IDs when the request comes in, then post back into the same thread when the work completes.
+Threading already exists on the service for channels, and is coming to chats and meetings. The gap the SDK is filling here is the proactive case. `app.reply(conversationId, rootMessageId, ...)` lets you post into the thread of the original request when there's no inbound activity to react to. You store the IDs when the request comes in, then post back into the same thread when the work completes. For the full reference, see [Proactive messaging](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/proactive-messaging/) on the docs site.
 
 #### TypeScript
 
@@ -337,9 +337,14 @@ The proactive APIs (`context.quote()` and `addQuote()`) are possible because of 
 
 The cleanups mentioned in "Why now" follow from this too. `withReplyToId()` is gone because the service uses `replyToId` only for encryption purposes, not routing or threading, so the SDK had no reason to expose it. The .NET `Reply()` path no longer strips `;messageid=` from conversation IDs because the service normalizes that server-side. None of these change observable behavior in your bot code, but they're worth noting if you've seen the old shapes in the SDK source.
 
-## What ships next
+## Further reading
 
 Both features are available in all three SDKs today.
+
+Read the full documentation:
+
+- Sending messages: [TypeScript](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/) · [.NET](https://microsoft.github.io/teams-sdk/csharp/essentials/sending-messages/) · [Python](https://microsoft.github.io/teams-sdk/python/essentials/sending-messages/)
+- Proactive messaging: [TypeScript](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/proactive-messaging/) · [.NET](https://microsoft.github.io/teams-sdk/csharp/essentials/sending-messages/proactive-messaging/) · [Python](https://microsoft.github.io/teams-sdk/python/essentials/sending-messages/proactive-messaging/)
 
 Runnable examples in each SDK:
 
@@ -347,9 +352,8 @@ Runnable examples in each SDK:
 - .NET: [`Samples/Samples.Quoting`](https://github.com/microsoft/teams.net/tree/main/Samples/Samples.Quoting) and [`Samples/Samples.Threading`](https://github.com/microsoft/teams.net/tree/main/Samples/Samples.Threading)
 - Python: [`examples/quoting`](https://github.com/microsoft/teams.py/tree/main/examples/quoting) and [`examples/threading`](https://github.com/microsoft/teams.py/tree/main/examples/threading)
 
-Merged docs and feature PRs:
+Feature PRs:
 
-- [Threading and quoted replies documentation](https://github.com/microsoft/teams-sdk/pull/2742)
 - [teams.ts #482](https://github.com/microsoft/teams.ts/pull/482), [#523](https://github.com/microsoft/teams.ts/pull/523)
 - [teams.net #389](https://github.com/microsoft/teams.net/pull/389), [#425](https://github.com/microsoft/teams.net/pull/425), [#477](https://github.com/microsoft/teams.net/pull/477)
 - [teams.py #321](https://github.com/microsoft/teams.py/pull/321), [#389](https://github.com/microsoft/teams.py/pull/389)
