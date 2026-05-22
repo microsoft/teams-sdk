@@ -29,6 +29,8 @@ For other platforms and full install options, see the [Microsoft Learn guide](ht
 
 If your agent previously used `DevtoolsPlugin` from `@microsoft/teams.dev`, remove it from your `App` configuration. The Playground is a separate CLI tool and does not need a plugin in your code.
 
+You can also remove `@microsoft/teams.dev` from your `package.json` after deleting `DevtoolsPlugin`. The Playground is installed separately as a CLI tool, not as a project dependency.
+
 The Playground talks to your agent in `emulator` channel mode, which sends no JWT. Your agent therefore needs to accept unauthenticated requests on `/api/messages`. There are two ways to do this.
 
 ### Recommended: run anonymously
