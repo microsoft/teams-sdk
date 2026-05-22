@@ -88,6 +88,7 @@ Set the URL to `http://localhost:3978/mcp` and connect.
 
 <!-- inspector-image -->
 
+![MCP Server in MCP Inspector](/screenshots/mcp-inspector.gif)
 
 <!-- proactive-messaging -->
 
