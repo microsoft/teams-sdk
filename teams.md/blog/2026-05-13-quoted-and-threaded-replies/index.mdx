@@ -29,7 +29,7 @@ Quoted replies fix the first and third by carrying a snippet of the referenced m
 
 ## Why now
 
-Both features have been on agents' wish lists for a while. Two things changed.
+A bit of context on what changed and why. Neither quoted replies nor threading is brand-new in Teams: quoted replies have been usable from bots for years, and channel threading has been around for as long as channels have. What's changing is the SDK surface, plus some adjacent service-side moves worth knowing. This section is background, not a how-to. Skip to [Real-World Scenarios](#real-world-scenarios) if you just want to use the APIs.
 
 For quoted replies, a recent update to the Teams messaging service moved quoted content to a structured, server-validated representation. Agents now send a small `quotedReply` entity carrying just a message ID, and the service stamps the snippet on its way to recipients. That clean wire format is what made it safe and worthwhile to layer proactive APIs on top, so this release also adds `context.quote()` for follow-ups to messages your agent has already sent, plus an `addQuote()` builder for activities that quote one or more messages on their own.
 
@@ -40,6 +40,8 @@ There's also a small amount of cleanup landing in the same change that won't aff
 ## The SDK handles the conversation type for you
 
 One thing worth stating up front: `context.reply()`, `app.reply()`, and the quoting helpers are designed to work the same way in whatever conversation context you are in (e.g. channels v.s. chats). You don't have to branch on whether the inbound is from a channel post or a 1:1 chat, and you don't have to construct different conversation IDs for different scopes. The SDK picks the right wire mechanism based on the conversation it's targeting. As threading expands to more conversation types on the service side, the same `app.reply()` call absorbs that automatically.
+
+The intent is that you can use these methods without thinking about the conversation type, because the vast majority of the time that's what you want.
 
 ## What You Can Do
 
@@ -96,13 +98,13 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 ### 2. Posting an Async Result Back Into Its Thread
 
-A user kicks off a deployment with a slash command. Your agent acknowledges, then forty minutes later the deployment finishes. If the result lands at the top level of the conversation (not nested under a parent message), nobody can tell which deployment it's about. If it lands in the thread of the original request, it shows up grouped with the command that started it, collapsed under the same root.
+A user kicks off a deployment with a slash command. Your agent acknowledges, then forty minutes later the deployment finishes. The result needs to land in the thread of the original request so it shows up grouped with the command that started it, collapsed under the same root. If it lands at the top level of the conversation instead (not nested under a parent message), nobody can tell which deployment it's about.
 
 <div style={{textAlign: 'center'}}>
 <img src={require('./threaded-reply-channel.png').default} alt="A threaded reply in a Teams channel: a root message at the top, with two nested replies underneath indented under the same thread, plus a 'Reply in thread' button at the bottom" style={{maxHeight: '400px'}} />
 </div>
 
-Threading already exists on the service for channels, and is coming to chats and meetings. The gap the SDK is filling here is the proactive case. `app.reply(conversationId, rootMessageId, ...)` lets you post into the thread of the original request when there's no inbound activity to react to. You store the IDs when the request comes in, then post back into the same thread when the work completes. For the full reference, see [Proactive messaging](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/proactive-messaging/) on the docs site.
+Threading already exists on the service for channels, and is coming to chats and meetings. The gap the SDK is filling here is the proactive case. `app.reply(conversationId, rootMessageId, ...)` lets you post into the thread of the original request when there's no inbound activity to react to. You store the IDs when the request comes in, then post back into the same thread when the work completes. For the full reference, see [Send proactive messages](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/send-proactive-messages) on Learn.
 
 #### TypeScript
 
@@ -158,7 +160,7 @@ await app.reply(conversation_id, thread_root_id, "Deployment complete.")
 
 ### 3. A Multi-Item Status Digest, Anchored to Its Items
 
-A release-status bot posts a digest: three open PRs, two CI runs, one design review. A flat list of bullet points works, but a digest that *quotes each item* gives the reader something to click and jumps them into the relevant thread. Combine the multi-quote builder with `app.reply()` and the whole digest lands in a single thread, with each item linkable. Multiple `addQuote()` calls produce stacked quotes at the top of the message followed by your response; `addText()` between calls lets you interleave instead.
+A release-status bot posts a digest that points at existing Teams messages in the channel: three open PRs, two CI runs, one design review. A flat list of bullet points works, but a digest that *quotes each item* gives the reader something to click and jumps them into the relevant thread. Combine the multi-quote builder with `app.reply()` and the whole digest lands in a single thread, with each item linkable. Multiple `addQuote()` calls produce stacked quotes at the top of the message followed by your response; `addText()` between calls lets you interleave instead.
 
 <div style={{textAlign: 'center'}}>
 <img src={require('./multi-quote-message.png').default} alt="A bot message in Teams that quotes three prior user messages with response text interleaved between each quote bubble. Each grey bubble shows the original message; the bot's response appears between the bubbles." style={{maxHeight: '500px'}} />
@@ -253,7 +255,7 @@ if quotes:
 
 ## Additional helpers
 
-Two operations don't tie neatly to one of the scenarios above but are worth knowing about.
+There are two other operations that don't tie neatly to one of the scenarios above but are worth knowing about.
 
 ### Quote a message you sent earlier: `context.quote()`
 
@@ -282,7 +284,7 @@ await ctx.quote(sent.id, "Just to confirm, does the new time work for everyone?"
 
 ### Manual control: `toThreadedConversationId()` + `app.send()`
 
-If you want to build the threaded conversation ID yourself (for example, to send a fully-customized activity via the generic `app.send()` instead of a string through `app.reply()`), the helper is exposed.
+`app.reply()` covers the common cases: it takes a string or a `MessageActivity` and lands it in the thread you point it at. If you need to send something else into a thread (a card, a streaming chunk through `app.stream()`, or any activity shape that `app.reply()` doesn't accept), construct the threaded conversation ID yourself with `toThreadedConversationId()` and pass it to whichever lower-level send you're using. Same threading mechanism; you just take over from the helper.
 
 #### TypeScript
 
@@ -344,7 +346,7 @@ Both features are available in all three SDKs today.
 Read the full documentation:
 
 - Sending messages: [TypeScript](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/) · [.NET](https://microsoft.github.io/teams-sdk/csharp/essentials/sending-messages/) · [Python](https://microsoft.github.io/teams-sdk/python/essentials/sending-messages/)
-- Proactive messaging: [TypeScript](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/proactive-messaging/) · [.NET](https://microsoft.github.io/teams-sdk/csharp/essentials/sending-messages/proactive-messaging/) · [Python](https://microsoft.github.io/teams-sdk/python/essentials/sending-messages/proactive-messaging/)
+- Proactive messaging: [Send proactive messages](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/send-proactive-messages)
 
 Runnable examples in each SDK:
 
