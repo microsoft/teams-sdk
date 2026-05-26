@@ -32,32 +32,43 @@ The same pattern applies to tokens the SDK acquires on your behalf — for examp
 
 ## Adding custom authentication to your own surfaces
 
-If your bot exposes additional HTTP surfaces beyond the default Teams activity endpoint — such as a Model Context Protocol server, a callback endpoint for an external system, or a webhook handler — you are responsible for authenticating those requests yourself. The SDK provides hooks that let you reuse the same trust posture.
+If your bot exposes additional HTTP surfaces beyond the default Teams activity endpoint — for example a callback endpoint for an external system, a webhook handler, or any custom route you register — you are responsible for authenticating those requests yourself.
 
-For example, the MCP plugin accepts an authentication callback that runs before each inbound MCP request. Returning `false` (or throwing) rejects the request with HTTP 401 before the handler runs:
+The SDK's HTTP adapter is a thin layer over a standard web framework, so you attach your own auth middleware using that framework's conventions. The pattern is the same in all three SDKs: short-circuit the request with HTTP 401 when the credential check fails, otherwise call the next handler.
 
 ```typescript
-new McpPlugin({
-  requireAuth: (req) => req.headers.authorization === `Bearer ${process.env.MCP_TOKEN}`,
-});
+// Express middleware: gate a custom route with a shared secret.
+const requireWebhookAuth: express.RequestHandler = (req, res, next) => {
+  if (req.headers.authorization !== `Bearer ${process.env.WEBHOOK_SECRET}`) {
+    res.status(401).end();
+    return;
+  }
+  next();
+};
 ```
 
 ```python
-async def require_auth(request: Request) -> bool:
-    return request.headers.get("authorization") == f"Bearer {os.environ['MCP_TOKEN']}"
-
-McpServerPlugin(name="my-mcp", require_auth=require_auth)
+# FastAPI dependency: gate a custom route with a shared secret.
+async def require_webhook_auth(request: Request) -> None:
+    if request.headers.get("authorization") != f"Bearer {os.environ['WEBHOOK_SECRET']}":
+        raise HTTPException(status_code=401)
 ```
 
 ```csharp
-builder.AddTeamsMcp(options =>
+// ASP.NET middleware: gate a custom route with a shared secret.
+app.Use(async (ctx, next) =>
 {
-    options.RequireAuth = ctx =>
-        Task.FromResult(ctx.Request.Headers.Authorization.ToString() == $"Bearer {Environment.GetEnvironmentVariable("MCP_TOKEN")}");
+    if (ctx.Request.Path.StartsWithSegments("/webhooks/external") &&
+        ctx.Request.Headers.Authorization != $"Bearer {Environment.GetEnvironmentVariable("WEBHOOK_SECRET")}")
+    {
+        ctx.Response.StatusCode = 401;
+        return;
+    }
+    await next();
 });
 ```
 
-For custom routes registered directly against the SDK's HTTP adapter, apply your own middleware. The Teams activity validator can be reused — see the [App Authentication](/teams/app-authentication) guide for how to compose validators.
+If the route needs the same trust posture as `/api/messages` — Microsoft-issued bearer tokens rather than a shared secret — reuse the SDK's built-in validator instead. See the [App Authentication](/teams/app-authentication) guide for how to compose validators.
 
 ## What not to do
 
