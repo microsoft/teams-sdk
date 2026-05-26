@@ -106,8 +106,8 @@ describe('self-update safety checks', () => {
 
     expect(getSelfUpdateCommand()).toEqual({
       command: 'npm',
-      args: ['--prefix', '/opt/node', 'install', '-g', '@microsoft/teams.cli@preview'],
-      display: 'npm --prefix /opt/node install -g @microsoft/teams.cli@preview',
+      args: ['--prefix', '/opt/node', 'install', '-g', '@microsoft/teams.cli@latest'],
+      display: 'npm --prefix /opt/node install -g @microsoft/teams.cli@latest',
     });
   });
 
@@ -122,8 +122,8 @@ describe('self-update safety checks', () => {
 
     expect(getSelfUpdateCommand()).toEqual({
       command: 'pnpm',
-      args: ['install', '-g', '@microsoft/teams.cli@preview'],
-      display: 'pnpm install -g @microsoft/teams.cli@preview',
+      args: ['install', '-g', '@microsoft/teams.cli@latest'],
+      display: 'pnpm install -g @microsoft/teams.cli@latest',
     });
   });
 
