@@ -10,3 +10,4 @@ export * from './bot-location.js';
 export * from './bot-handler.js';
 export * from './links.js';
 export * from './validation.js';
+export * from './reinstall-hint.js';

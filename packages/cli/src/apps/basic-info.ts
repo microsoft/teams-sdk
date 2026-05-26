@@ -3,6 +3,7 @@ import pc from 'picocolors';
 import { createSpinner } from 'nanospinner';
 import type { AppDetails } from './types.js';
 import { updateAppDetails } from './api.js';
+import { logVersionBumpReinstallHint } from './reinstall-hint.js';
 import {
   getAppMetadataFieldRule,
   isAppMetadataField,
@@ -110,9 +111,7 @@ async function editField(
       [fieldKey]: newValue.trim(),
     });
     spinner.success({ text: `${field.label} updated successfully` });
-    if (updated.versionBumped) {
-      logger.info(pc.dim(`Version auto-bumped: ${updated.previousVersion} → ${updated.version} — reinstall may be needed`));
-    }
+    logVersionBumpReinstallHint(updated);
     return updated;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

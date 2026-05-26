@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { CliError } from '../src/utils/errors.js';
 
 const mockRunAz = vi.fn();
 
@@ -215,11 +216,51 @@ describe('discoverAzureBot', () => {
     expect(ctx).toBeNull();
   });
 
-  it('returns null when az CLI throws', async () => {
-    mockRunAz.mockRejectedValue(new Error('az exploded'));
+  it('throws CliError when the fast-path az call fails (no silent null)', async () => {
+    const azError = Object.assign(new Error('Command failed: az resource list ...'), {
+      stderr: "ERROR: Please run 'az login' to setup account.",
+      code: 1,
+    });
+    mockRunAz.mockRejectedValueOnce(azError);
 
-    const ctx = await discoverAzureBot(BOT_ID, true);
+    await expect(discoverAzureBot(BOT_ID, true)).rejects.toBeInstanceOf(CliError);
+  });
 
-    expect(ctx).toBeNull();
+  it('preserves the underlying stderr in the thrown error message', async () => {
+    const azError = Object.assign(new Error('Command failed: az resource list ...'), {
+      stderr: "ERROR: Please run 'az login' to setup account.",
+      code: 1,
+    });
+    mockRunAz.mockRejectedValueOnce(azError);
+
+    try {
+      await discoverAzureBot(BOT_ID, true);
+      expect.fail('should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(CliError);
+      const cliError = error as CliError;
+      expect(cliError.code).toBe('API_ARM_ERROR');
+      expect(cliError.message).toContain('az login');
+    }
+  });
+
+  it('throws when the list-fallback az call fails (graph caught, list propagates)', async () => {
+    mockRunAz.mockImplementation((args: string[]) => {
+      if (args[0] === 'resource' && args[1] === 'list' && args.includes('--name')) {
+        return Promise.resolve([]); // fast-path: empty, fall through
+      }
+      if (args[0] === 'graph') return Promise.reject(new Error('extension blocked'));
+      if (args[0] === 'resource' && args[1] === 'list') {
+        return Promise.reject(
+          Object.assign(new Error('Command failed'), {
+            stderr: 'ERROR: (AuthorizationFailed) ...',
+            code: 1,
+          })
+        );
+      }
+      throw new Error(`unexpected az call: ${args.join(' ')}`);
+    });
+
+    await expect(discoverAzureBot(BOT_ID, true)).rejects.toBeInstanceOf(CliError);
   });
 });
