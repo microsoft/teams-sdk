@@ -8,4 +8,5 @@ export const externalBlogUrls: Record<string, string> = {
     'the-present-and-future-of-copilot-extensibility-top-10-takeaways-from-build-2024': 'https://devblogs.microsoft.com/microsoft365dev/the-present-and-future-of-copilot-extensibility-top-10-takeaways-from-build-2024/',
     'join-the-microsoft-365-copilot-developer-camp': 'https://devblogs.microsoft.com/microsoft365dev/join-the-microsoft-365-copilot-developer-camp/',
     'announcing-the-updated-teams-ai-library-and-mcp-support': 'https://devblogs.microsoft.com/microsoft365dev/announcing-the-updated-teams-ai-library-and-mcp-support/',
+    'python-support-for-the-microsoft-teams-sdk-is-now-generally-available': 'https://devblogs.microsoft.com/microsoft365dev/python-support-for-the-microsoft-teams-sdk-is-now-generally-available/',
 };

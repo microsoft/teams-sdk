@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { createSilentSpinner } from '../utils/spinner.js';
 import { registerBot, fetchBot, updateBot } from './tdp.js';
 import { runAz } from '../utils/az.js';
+import { CliError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 
 export interface CreateBotOpts {
@@ -237,9 +238,15 @@ export async function discoverAzureBot(
       tenantId: account.tenantId,
       name: bot.name,
     };
-  } catch {
+  } catch (error) {
     spinner.stop();
-    return null;
+    const err = error as { stderr?: unknown; message?: unknown };
+    const stderr = typeof err.stderr === 'string' ? err.stderr.trim() : '';
+    const message =
+      stderr ||
+      (typeof err.message === 'string' && err.message) ||
+      'Unknown error discovering Azure bot.';
+    throw new CliError('API_ARM_ERROR', `Failed to discover Azure bot: ${message}`);
   }
 }
 
@@ -261,19 +268,15 @@ function subscriptionFromArmId(id: string): string | undefined {
 
 /** Fast path: assume Azure resource name == MicrosoftAppId. */
 async function findBotByName(botId: string): Promise<BotResource | null> {
-  try {
-    const results = await runAz<BotResource[]>([
-      'resource',
-      'list',
-      '--resource-type',
-      'Microsoft.BotService/botServices',
-      '--name',
-      botId,
-    ]);
-    return results[0] ?? null;
-  } catch {
-    return null;
-  }
+  const results = await runAz<BotResource[]>([
+    'resource',
+    'list',
+    '--resource-type',
+    'Microsoft.BotService/botServices',
+    '--name',
+    botId,
+  ]);
+  return results[0] ?? null;
 }
 
 /**
@@ -322,35 +325,31 @@ async function findBotByMsaAppIdViaGraph(botId: string): Promise<BotResource | n
 }
 
 async function findBotByMsaAppIdViaList(botId: string): Promise<BotResource | null> {
-  try {
-    const all = await runAz<BotResource[]>([
-      'resource',
-      'list',
-      '--resource-type',
-      'Microsoft.BotService/botServices',
-    ]);
-    // Bounded concurrency + early exit: walk the list in small batches and
-    // stop as soon as a match is found. Avoids spawning N `az` processes at
-    // once for users with many bots.
-    const BATCH = 5;
-    for (let i = 0; i < all.length; i += BATCH) {
-      const batch = all.slice(i, i + BATCH);
-      const results = await Promise.all(
-        batch.map(async (bot) => {
-          try {
-            const full = await runAz<BotResource>(['resource', 'show', '--ids', bot.id]);
-            return { ...bot, properties: full.properties };
-          } catch {
-            return null;
-          }
-        })
-      );
-      for (const b of results) {
-        if (b && b.properties?.msaAppId === botId) return b;
-      }
+  const all = await runAz<BotResource[]>([
+    'resource',
+    'list',
+    '--resource-type',
+    'Microsoft.BotService/botServices',
+  ]);
+  // Bounded concurrency + early exit: walk the list in small batches and
+  // stop as soon as a match is found. Avoids spawning N `az` processes at
+  // once for users with many bots.
+  const BATCH = 5;
+  for (let i = 0; i < all.length; i += BATCH) {
+    const batch = all.slice(i, i + BATCH);
+    const results = await Promise.all(
+      batch.map(async (bot) => {
+        try {
+          const full = await runAz<BotResource>(['resource', 'show', '--ids', bot.id]);
+          return { ...bot, properties: full.properties };
+        } catch {
+          return null;
+        }
+      })
+    );
+    for (const b of results) {
+      if (b && b.properties?.msaAppId === botId) return b;
     }
-    return null;
-  } catch {
-    return null;
   }
+  return null;
 }
