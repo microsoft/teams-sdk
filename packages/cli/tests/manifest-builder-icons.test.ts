@@ -23,6 +23,30 @@ describe('collectManifestCustomization icons', () => {
     vi.clearAllMocks();
   });
 
+  it('allows an empty full description and falls back to the short description', async () => {
+    const { checkbox, input } = await import('@inquirer/prompts');
+    const mockedCheckbox = vi.mocked(checkbox);
+    const mockedInput = vi.mocked(input);
+
+    mockedCheckbox.mockResolvedValueOnce(['description'] as never);
+    mockedInput
+      .mockResolvedValueOnce('Handles projects for our team' as never)
+      .mockResolvedValueOnce('' as never);
+
+    const { collectManifestCustomization } = await import('../src/apps/manifest-builder.js');
+
+    const result = await collectManifestCustomization();
+
+    const fullDescriptionPrompt = mockedInput.mock.calls[1][0] as {
+      validate: (value: string) => string | true;
+    };
+    expect(fullDescriptionPrompt.validate('')).toBe(true);
+    expect(result.description).toEqual({
+      short: 'Handles projects for our team',
+      full: undefined,
+    });
+  });
+
   it('offers Icons as a checkbox choice and returns icon paths when selected', async () => {
     const { checkbox, input } = await import('@inquirer/prompts');
     const mockedCheckbox = vi.mocked(checkbox);

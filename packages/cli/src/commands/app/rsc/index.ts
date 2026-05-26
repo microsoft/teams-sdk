@@ -12,6 +12,7 @@ import {
   getPermissionsForScope,
   type RscScope,
 } from '../../../apps/rsc-catalog.js';
+import { logVersionBumpReinstallHint } from '../../../apps/reinstall-hint.js';
 import type { RscPermissionEntry, AppSummary } from '../../../apps/types.js';
 import {
   listRscPermissions,
@@ -175,12 +176,13 @@ async function editScopePermissions(
   const finalPerms = [...otherScopePerms, ...selected];
 
   const updateSpinner = createSilentSpinner('Updating RSC permissions...').start();
-  await setRscPermissions(token, teamsAppId, finalPerms);
+  const updateResult = await setRscPermissions(token, teamsAppId, finalPerms);
 
   const parts: string[] = [];
   if (toAdd.length > 0) parts.push(`added ${toAdd.length}`);
   if (toRemoveKeys.size > 0) parts.push(`removed ${toRemoveKeys.size}`);
   updateSpinner.success({ text: `RSC permissions updated (${parts.join(', ')}).` });
+  logVersionBumpReinstallHint(updateResult);
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -215,11 +217,13 @@ interface RscRemoveOptions {
 interface RscAddOutput {
   added: RscPermissionEntry[];
   skipped: RscPermissionEntry[];
+  needsReinstall?: boolean;
 }
 
 interface RscRemoveOutput {
   removed: string[];
   notFound: string[];
+  needsReinstall?: boolean;
 }
 
 const rscListCommand = new Command('list')
@@ -265,11 +269,15 @@ const rscAddCommand = new Command('add')
       const entry: RscPermissionEntry = { name: permission, type: options.type };
 
       const spinner = createSilentSpinner('Adding RSC permission...', options.json).start();
-      const { added, skipped } = await addRscPermissions(token, teamsAppId, [entry]);
+      const { added, skipped, updateResult } = await addRscPermissions(token, teamsAppId, [entry]);
       spinner.stop();
 
       if (options.json) {
-        const result: RscAddOutput = { added, skipped };
+        const result: RscAddOutput = {
+          added,
+          skipped,
+          ...(updateResult?.versionBumped ? { needsReinstall: true } : {}),
+        };
         outputJson(result);
         return;
       }
@@ -278,6 +286,7 @@ const rscAddCommand = new Command('add')
         logger.info(pc.yellow(`Permission "${permission}" already exists.`));
       } else {
         logger.info(pc.green(`Added ${permission} (${options.type}).`));
+        logVersionBumpReinstallHint(updateResult);
       }
     })
   );
@@ -292,11 +301,15 @@ const rscRemoveCommand = new Command('remove')
       const token = await requireToken();
 
       const spinner = createSilentSpinner('Removing RSC permission...', options.json).start();
-      const { removed, notFound } = await removeRscPermissions(token, teamsAppId, [permission]);
+      const { removed, notFound, updateResult } = await removeRscPermissions(token, teamsAppId, [permission]);
       spinner.stop();
 
       if (options.json) {
-        const result: RscRemoveOutput = { removed, notFound };
+        const result: RscRemoveOutput = {
+          removed,
+          notFound,
+          ...(updateResult?.versionBumped ? { needsReinstall: true } : {}),
+        };
         outputJson(result);
         return;
       }
@@ -309,6 +322,7 @@ const rscRemoveCommand = new Command('remove')
       }
 
       logger.info(pc.green(`Removed ${permission}.`));
+      logVersionBumpReinstallHint(updateResult);
     })
   );
 
@@ -321,6 +335,7 @@ interface RscSetOutput {
   added: RscPermissionEntry[];
   removed: RscPermissionEntry[];
   unchanged: RscPermissionEntry[];
+  needsReinstall?: boolean;
 }
 
 const rscSetCommand = new Command('set')
@@ -393,7 +408,7 @@ const rscSetCommand = new Command('set')
         return;
       }
 
-      await setRscPermissions(token, teamsAppId, diff.final);
+      const updateResult = await setRscPermissions(token, teamsAppId, diff.final);
       spinner.stop();
 
       if (options.json) {
@@ -401,6 +416,7 @@ const rscSetCommand = new Command('set')
           added: diff.added,
           removed: diff.removed,
           unchanged: diff.unchanged,
+          ...(updateResult.versionBumped ? { needsReinstall: true } : {}),
         };
         outputJson(result);
         return;
@@ -411,6 +427,7 @@ const rscSetCommand = new Command('set')
       if (diff.removed.length > 0) parts.push(`removed ${diff.removed.length}`);
       if (diff.unchanged.length > 0) parts.push(`unchanged ${diff.unchanged.length}`);
       logger.info(pc.green(`RSC permissions updated (${parts.join(', ')}).`));
+      logVersionBumpReinstallHint(updateResult);
     })
   );
 
