@@ -264,8 +264,10 @@ When your bot has already sent a message and wants a follow-up that quotes that 
 #### TypeScript
 
 ```typescript
-const sent = await send('The meeting has been moved to 3 PM tomorrow.');
-await quote(sent.id, 'Just to confirm, does the new time work for everyone?');
+app.on('message', async ({ send, quote }) => {
+  const sent = await send('The meeting has been moved to 3 PM tomorrow.');
+  await quote(sent.id, 'Just to confirm, does the new time work for everyone?');
+});
 ```
 
 #### .NET
