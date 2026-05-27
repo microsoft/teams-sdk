@@ -122,7 +122,7 @@ new McpClientPlugin()
 
 <!-- example-gif -->
 
-![Animated image of user typing a prompt ('Tell me about Charizard') to DevTools Chat window and multiple paragraphs of information being returned.](/screenshots/mcp-client-pokemon.gif)
+![Microsoft 365 Agents Playground showing the user prompt 'Tell me about Charizard' and the agent's multi-paragraph reply with details about the Pokemon.](/screenshots/agents-playground-mcp-client-pokemon.png)
 
 <!-- pokemon-example -->
 

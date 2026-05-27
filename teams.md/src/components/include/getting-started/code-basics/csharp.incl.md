@@ -22,7 +22,7 @@ using Microsoft.Teams.Apps.Extensions;
 using Microsoft.Teams.Plugins.AspNetCore.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.AddTeams().AddTeamsDevTools();
+builder.AddTeams();
 var app = builder.Build();
 var teams = app.UseTeams();
 
@@ -38,6 +38,10 @@ app.Run();
 <!-- plugin-events -->
 
 (onActivity, onActivitySent, etc.)
+
+<!-- local-test-note -->
+
+To test your agent locally without sideloading into Teams, run the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)** alongside your agent. The playground is a separate CLI tool and does not require a plugin in your app code.
 
 <!-- message-handling-code -->
 

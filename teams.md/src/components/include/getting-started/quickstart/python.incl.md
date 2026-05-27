@@ -43,6 +43,26 @@ INFO:     Application startup complete..
 INFO:     Uvicorn running on http://0.0.0.0:3978 (Press CTRL+C to quit)
 ```
 
+<!-- post-startup-explanation -->
+
+The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
+
+Install the playground globally:
+
+```sh
+npm install -g @microsoft/m365agentsplayground
+```
+
+Then, with your agent still running, open a second terminal and launch the playground pointed at your agent:
+
+```sh
+agentsplayground -e http://localhost:3978/api/messages -c emulator
+```
+
+The playground opens at [http://localhost:56150](http://localhost:56150). Send a message in the compose box and your agent's reply renders inline.
+
+![Microsoft 365 Agents Playground showing a user message 'hello!' and an agent reply 'you said "hello!"'.](/screenshots/agents-playground-echo-chat.png)
+
 <!-- manual-install -->
 
 ```sh
@@ -86,3 +106,7 @@ asyncio.run(main())
 <!-- manual-more -->
 
 See the [HTTP Server guide](../in-depth-guides/server/http-server) for full details on adapters and custom server setups.
+
+<!-- local-test-link -->
+
+- [Microsoft 365 Agents Playground](/developer-tools/agents-playground)
