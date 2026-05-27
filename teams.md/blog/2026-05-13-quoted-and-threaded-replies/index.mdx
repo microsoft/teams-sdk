@@ -39,7 +39,7 @@ There's also a small amount of cleanup landing in the same change that won't aff
 
 ## The SDK handles the conversation type for you
 
-One thing worth stating up front: `context.reply()`, `app.reply()`, and the quoting helpers are designed to work the same way in whatever conversation context you are in (e.g. channels v.s. chats). You don't have to branch on whether the inbound is from a channel post or a 1:1 chat, and you don't have to construct different conversation IDs for different scopes. The SDK picks the right wire mechanism based on the conversation it's targeting. As threading expands to more conversation types on the service side, the same `app.reply()` call absorbs that automatically.
+One thing worth stating up front: `context.reply()`, `app.reply()`, and the quoting helpers are designed to work the same way in whatever conversation context you are in (e.g. channels vs. chats). You don't have to branch on whether the inbound is from a channel post or a 1:1 chat, and you don't have to construct different conversation IDs for different scopes. The SDK picks the right wire mechanism based on the conversation it's targeting. As threading expands to more conversation types on the service side, the same `app.reply()` call absorbs that automatically.
 
 The intent is that you can use these methods without thinking about the conversation type, because the vast majority of the time that's what you want.
 
