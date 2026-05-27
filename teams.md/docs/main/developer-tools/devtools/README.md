@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 summary: Use DevTools to locally test Teams apps with chat, activity inspection, and card design features.
 llms: ignore
 ---
