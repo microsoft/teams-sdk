@@ -22,7 +22,7 @@ Quoted replies and threaded replies are how agents stay legible in busy conversa
 Every reply your agent sends competes for attention. Three failure modes show up over and over:
 
 1. **The orphan reply.** An agent answers a question that scrolled off-screen ten messages ago. The answer is correct; nobody knows what it's answering.
-2. **The misplaced async result.** A background job finishes and posts at the top of the conversation. Whoever asked has to scroll up to find the request. Whoever else in the conversation sees a result with no context.
+2. **The misplaced async result.** A background job finishes and posts at the top of the conversation. Whoever asked has to scroll up to find the request. Whoever else is in the conversation sees a result with no context.
 3. **The notification with no signal.** Mobile and desktop notifications show a snippet of the reply, not the original question. Without quoted context, the recipient has to open Teams just to know whether they care.
 
 Quoted replies fix the first and third by carrying a snippet of the referenced message. Threaded replies fix the second by anchoring the reply to its parent thread.
@@ -33,7 +33,7 @@ A bit of context on what changed and why. Neither quoted replies nor threading i
 
 For quoted replies, a recent update to the Teams messaging service moved quoted content to a structured, server-validated representation. Agents now send a small `quotedReply` entity carrying just a message ID, and the service stamps the snippet on its way to recipients. That clean wire format is what made it safe and worthwhile to layer proactive APIs on top, so this release also adds `context.quote()` for follow-ups to messages your agent has already sent, plus an `addQuote()` builder for activities that quote one or more messages on their own.
 
-For threaded replies, threading in channels has been supported on the service for a long time, but the SDK didn't have a helper for sending into a thread when there was no inbound activity in hand. Threading in chats and meetings is on the service roadmap, and we wanted a proactive thread-send API to be available everywhere ahead of those expansions. `app.reply(conversationId, rootMessageId, ...)` is that API.
+For threaded replies, threading in channels has been supported on the service for a long time, but the SDK didn't have a helper for sending into a thread when there was no inbound activity in hand. `app.reply(conversationId, rootMessageId, ...)` is that API.
 
 There's also a small amount of cleanup landing in the same change that won't affect bot code in any visible way: `withReplyToId()` is gone because it never had a routing effect, and the .NET `Reply()` path no longer strips `;messageid=` since the service normalizes it server-side.
 
