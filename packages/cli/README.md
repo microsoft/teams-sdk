@@ -5,7 +5,7 @@ Teams Developer CLI for managing Microsoft Teams apps.
 ## Install
 
 ```bash
-npm install -g @microsoft/teams.cli@preview
+npm install -g @microsoft/teams.cli
 ```
 
 ## Usage
@@ -43,12 +43,12 @@ teams self-update                    # Update to the latest version
 
 ## Global Options
 
-| Flag | Description |
-|------|-------------|
-| `-v, --verbose` | Enable verbose logging |
-| `--json` | Output results as JSON (structured output, recommended for agents) |
-| `--yes` / `-y` | Skip confirmation prompts (CI/agent use) |
-| `--disable-auto-update` | Disable automatic update checks |
+| Flag                    | Description                                                        |
+| ----------------------- | ------------------------------------------------------------------ |
+| `-v, --verbose`         | Enable verbose logging                                             |
+| `--json`                | Output results as JSON (structured output, recommended for agents) |
+| `--yes` / `-y`          | Skip confirmation prompts (CI/agent use)                           |
+| `--disable-auto-update` | Disable automatic update checks                                    |
 
 ## AI Agent Skills
 
