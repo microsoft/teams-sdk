@@ -149,7 +149,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 });
 ```
 
-To get started with agentic scenarios, configure your [app registration for Agent 365](https://learn.microsoft.com/microsoft-agent-365/get-started). For the deeper conceptual background, see the [Agent 365 identity documentation](https://learn.microsoft.com/microsoft-agent-365/use).
+To get started with agentic scenarios, configure your [app registration for Agent 365](https://learn.microsoft.com/microsoft-agent-365/developer/custom-client-app-registration). For the deeper conceptual background, see the [Entra Agent ID documentation](https://learn.microsoft.com/entra/agent-id/how-to-plan-agent-identity-architecture).
 
 
 ## Migration from Bot Framework v4
