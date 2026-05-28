@@ -4,16 +4,32 @@ WIP
 
 <!-- install -->
 
+N/A
+
 <!-- configuration -->
+
+N/A
 
 <!-- path-note -->
 
+N/A
+
 <!-- app-integration -->
 
-<!-- devtools-tip -->
+N/A
 
-<!-- devtools-gif -->
+<!-- inspector-tip -->
+
+N/A
+
+<!-- inspector-image -->
+
+N/A
 
 <!-- proactive-messaging -->
 
+N/A
+
 <!-- message-handler -->
+
+N/A

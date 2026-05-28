@@ -21,16 +21,17 @@ quote-agent/
 ```typescript title="src/index.ts"
 import { App } from '@microsoft/teams.apps';
 import { ConsoleLogger } from '@microsoft/teams.common/logging';
-import { DevtoolsPlugin } from '@microsoft/teams.dev';
 
-const app = new App({
-  plugins: [new DevtoolsPlugin()],
-});
+const app = new App();
 ```
 
 <!-- plugin-events -->
 
 (onActivity, onActivitySent, etc.)
+
+<!-- local-test-note -->
+
+To test your agent locally without sideloading into Teams, run the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)** alongside your agent. The playground is a separate CLI tool and does not require a plugin in your app code.
 
 <!-- message-handling-code -->
 

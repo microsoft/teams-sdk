@@ -8,10 +8,11 @@ import { CliError } from '../../../utils/errors.js';
 import { logger } from '../../../utils/logger.js';
 import { manifestDownloadCommand } from './download.js';
 import { manifestUploadCommand } from './upload.js';
+import { manifestUpdateCommand } from './update.js';
 import pc from 'picocolors';
 
 export const appManifestCommand = new Command('manifest')
-  .description('Download or upload app manifests')
+  .description('Download, upload, or update app manifests')
   .action(async function (this: Command) {
     if (!isInteractive()) {
       this.help();
@@ -82,3 +83,4 @@ export const appManifestCommand = new Command('manifest')
 
 appManifestCommand.addCommand(manifestDownloadCommand);
 appManifestCommand.addCommand(manifestUploadCommand);
+appManifestCommand.addCommand(manifestUpdateCommand);

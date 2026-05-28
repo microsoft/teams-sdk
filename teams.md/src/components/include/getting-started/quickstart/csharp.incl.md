@@ -40,11 +40,29 @@ dotnet run
 
 ```sh
 [INFO] Microsoft.Hosting.Lifetime Now listening on: http://localhost:3978
-[WARN] Echo.Microsoft.Teams.Plugins.AspNetCore.DevTools ⚠️  Devtools are not secure and should not be used production environments ⚠️
-[INFO] Echo.Microsoft.Teams.Plugins.AspNetCore.DevTools Available at http://localhost:3979/devtools
 [INFO] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
 [INFO] Microsoft.Hosting.Lifetime Hosting environment: Development
 ```
+
+<!-- post-startup-explanation -->
+
+The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
+
+Install the playground globally:
+
+```sh
+npm install -g @microsoft/m365agentsplayground
+```
+
+Then, with your agent still running, open a second terminal and launch the playground pointed at your agent:
+
+```sh
+agentsplayground -e http://localhost:3978/api/messages -c emulator
+```
+
+The playground opens at [http://localhost:56150](http://localhost:56150). Send a message in the compose box and your agent's reply renders inline.
+
+![Microsoft 365 Agents Playground showing a user message 'hello!' and an agent reply 'you said "hello!"'.](/screenshots/agents-playground-echo-chat.png)
 
 <!-- manual-install -->
 
@@ -57,3 +75,7 @@ N/A
 <!-- manual-more -->
 
 N/A
+
+<!-- local-test-link -->
+
+- [Microsoft 365 Agents Playground](/developer-tools/agents-playground)

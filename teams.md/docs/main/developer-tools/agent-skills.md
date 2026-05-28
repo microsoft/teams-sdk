@@ -13,6 +13,7 @@ If you'd rather not install a skill, you can provide the same context by pointin
 ```
 https://microsoft.github.io/teams-sdk/llms_docs/llms.txt
 ```
+
 :::
 
 ## Install the `teams-dev` skill
@@ -24,11 +25,13 @@ import TabItem from '@theme/TabItem';
 <TabItem value="copilot" label="GitHub Copilot CLI">
 
 Add the marketplace (first time only):
+
 ```
 /plugin marketplace add microsoft/teams-sdk
 ```
 
 Install the skill:
+
 ```
 /plugin install teams-sdk@teams-skills
 ```
@@ -39,11 +42,13 @@ After installing, restart GitHub Copilot for the skills to load.
 <TabItem value="claude" label="Claude Code">
 
 Add the marketplace (first time only):
+
 ```
 /plugin marketplace add microsoft/teams-sdk
 ```
 
 Install the skill:
+
 ```
 /plugin install teams-sdk@teams-skills
 ```
@@ -67,18 +72,19 @@ See [Cursor Skills documentation](https://cursor.com/docs/skills#installing-skil
 
 The `teams-dev` skill guides your AI assistant through:
 
-| Task | What it does |
-|---|---|
-| **Manage bot infrastructure** | Register your bot with Teams, manage credentials, and update configuration |
-| **Develop Teams bot** | Build bot applications from scratch or add Teams capabilities to existing servers |
-| **Set up SSO** | Enable Single Sign-On so users can authenticate seamlessly without login prompts |
-| **Troubleshoot** | Diagnose and resolve common bot setup and configuration issues |
+| Task                          | What it does                                                                      |
+| ----------------------------- | --------------------------------------------------------------------------------- |
+| **Manage bot infrastructure** | Register your bot with Teams, manage credentials, and update configuration        |
+| **Develop Teams bot**         | Build bot applications from scratch or add Teams capabilities to existing servers |
+| **Set up SSO**                | Enable Single Sign-On so users can authenticate seamlessly without login prompts  |
+| **Troubleshoot**              | Diagnose and resolve common bot setup and configuration issues                    |
 
 The skill does **not** cover hosting or deployment — it focuses on bot registration, development, and configuration.
 
 ## Invoke the skill
 
 **Using natural language:**
+
 - "I need a chatbot for my team's standup meetings"
 - "Help me build a Teams bot that can answer FAQs"
 - "My bot won't load in Teams, can you help?"
@@ -119,4 +125,3 @@ Agent: I'll create an echo bot for you.
 - Teams Developer CLI installed (`npm install -g @microsoft/teams.cli@preview`)
 - Node.js 20 or later
 - Microsoft 365 account with sideloading enabled
-

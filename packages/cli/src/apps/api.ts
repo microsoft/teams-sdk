@@ -288,6 +288,25 @@ function createDefaultZip(manifestJson: string): Buffer {
  * Downloads the current app package (preserving icons), replaces manifest.json,
  * and re-imports via TDP's import endpoint with overwrite.
  */
+export async function uploadManifestFromPackage(
+  token: string,
+  packageBuffer: Buffer,
+  manifestJson: string
+): Promise<void> {
+  // Build new zip: copy all entries except manifest.json, then add updated manifest
+  const oldZip = new AdmZip(packageBuffer);
+  const newZip = new AdmZip();
+
+  for (const entry of oldZip.getEntries()) {
+    if (entry.entryName === 'manifest.json') continue;
+    newZip.addFile(entry.entryName, entry.getData(), entry.comment, entry.attr);
+  }
+
+  newZip.addFile('manifest.json', Buffer.from(manifestJson, 'utf-8'));
+
+  await importAppPackage(token, newZip.toBuffer(), true);
+}
+
 export async function uploadManifest(
   token: string,
   teamsAppId: string,
@@ -307,16 +326,5 @@ export async function uploadManifest(
     throw error;
   }
 
-  // Build new zip: copy all entries except manifest.json, then add updated manifest
-  const oldZip = new AdmZip(zipBuffer);
-  const newZip = new AdmZip();
-
-  for (const entry of oldZip.getEntries()) {
-    if (entry.entryName === 'manifest.json') continue;
-    newZip.addFile(entry.entryName, entry.getData(), entry.comment, entry.attr);
-  }
-
-  newZip.addFile('manifest.json', Buffer.from(manifestJson, 'utf-8'));
-
-  await importAppPackage(token, newZip.toBuffer(), true);
+  await uploadManifestFromPackage(token, zipBuffer, manifestJson);
 }

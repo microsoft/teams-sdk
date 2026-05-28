@@ -6,10 +6,10 @@ Install the required AI packages to your application:
 npm install @microsoft/teams.apps @microsoft/teams.ai @microsoft/teams.openai
 ```
 
-For development, you may also want to install the DevTools plugin:
+For local testing, install the [Microsoft 365 Agents Playground](/developer-tools/agents-playground) CLI:
 
 ```bash
-npm install @microsoft/teams.dev --save-dev
+npm install -g @microsoft/m365agentsplayground
 ```
 
 <!-- config-method -->

@@ -1,15 +1,14 @@
 ---
 sidebar_position: 4
-summary: Overview of developer tools in Teams SDK including the Teams Developer CLI for project management and DevTools for testing and debugging agents.
+summary: Overview of developer tools in Teams SDK including the Teams Developer CLI for project management and the Microsoft 365 Agents Playground for local testing.
 ---
 
 # Developer Tools
 
-One of the main motivations for Teams SDK is to provide excellent tools that simplify and speed up building and testing agents. Because of this, we created the Teams Developer CLI for speedy agent initiation and project management, and DevTools as an accessible way to test your agent's behavior without jumping through deployment hoops. DevTools also provides crucial insight on activity payloads on the Activities page.
-
-Learn more about the developer tools that come with Teams SDK.
+Teams SDK ships with tools that simplify and speed up building and testing agents. Use the Teams Developer CLI to scaffold and manage projects, and the Microsoft 365 Agents Playground to test your agent locally without sideloading into Teams.
 
 1. [Teams Developer CLI](./cli)
-2. [Agent Skills](./agent-skills) — give AI coding assistants context for Teams development
-3. [llms.txt](./llms-txt) — documentation files optimized for AI coding assistants
-4. [DevTools](./devtools)
+2. [Microsoft 365 Agents Playground](./agents-playground)
+3. [Agent Skills](./agent-skills) — give AI coding assistants context for Teams development
+4. [llms.txt](./llms-txt) — documentation files optimized for AI coding assistants
+5. [DevTools](./devtools) (deprecated)

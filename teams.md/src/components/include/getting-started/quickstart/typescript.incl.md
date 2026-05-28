@@ -47,10 +47,28 @@ npm run dev
 [nodemon] watching path(s): src/**
 [nodemon] watching extensions: ts
 [nodemon] starting `node -r ts-node/register -r dotenv/config ./src/index.ts`
-[WARN] @teams/app/devtools ⚠️  Devtools are not secure and should not be used production environments ⚠️
 [INFO] @teams/app/http listening on port 3978 🚀
-[INFO] @teams/app/devtools available at http://localhost:3979/devtools
 ```
+
+<!-- post-startup-explanation -->
+
+The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
+
+Install the playground globally:
+
+```sh
+npm install -g @microsoft/m365agentsplayground
+```
+
+Then, with your agent still running, open a second terminal and launch the playground pointed at your agent:
+
+```sh
+agentsplayground -e http://localhost:3978/api/messages -c emulator
+```
+
+The playground opens at [http://localhost:56150](http://localhost:56150). Send a message in the compose box and your agent's reply renders inline.
+
+![Microsoft 365 Agents Playground showing a user message 'hello!' and an agent reply 'you said "hello!"'.](/screenshots/agents-playground-echo-chat.png)
 
 <!-- manual-install -->
 
@@ -90,3 +108,7 @@ server.listen(3978);
 <!-- manual-more -->
 
 See the [HTTP Server guide](../in-depth-guides/server/http-server) for full details on adapters and custom server setups.
+
+<!-- local-test-link -->
+
+- [Microsoft 365 Agents Playground](/developer-tools/agents-playground)
