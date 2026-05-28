@@ -10,6 +10,7 @@ export type ErrorCode =
   | 'VALIDATION_CONFLICT'
   | 'VALIDATION_MISSING'
   | 'VALIDATION_FORMAT'
+  | 'VALIDATION_SCHEMA'
   | 'INVALID_ICON'
   | 'TENANT_MISMATCH'
   // Not found

@@ -30,6 +30,10 @@ app = App()
 
 (on_activity, on_activity_sent, etc.)
 
+<!-- local-test-note -->
+
+To test your agent locally without sideloading into Teams, run the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)** alongside your agent. The playground is a separate CLI tool and does not require any plugin in your app code.
+
 <!-- message-handling-code -->
 
 ```python title="src/main.py"

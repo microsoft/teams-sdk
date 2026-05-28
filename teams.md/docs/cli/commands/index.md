@@ -27,7 +27,8 @@ teams
 │   ├── doctor [appId]             Run diagnostic checks
 │   ├── manifest
 │   │   ├── download [appId]       Download manifest
-│   │   └── upload [appId]         Upload manifest
+│   │   ├── upload [appId]         Upload manifest
+│   │   └── update [appId]         Update manifest fields
 │   ├── package
 │   │   └── download [appId]       Download app package
 │   ├── bot

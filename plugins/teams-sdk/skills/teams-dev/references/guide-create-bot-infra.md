@@ -16,7 +16,7 @@ Verify the Teams Developer CLI is installed:
 teams --version
 ```
 
-**Expected output:** Shows version number (e.g., `2.1.0-preview.3` or similar)
+**Expected output:** Shows version number (e.g., `3.0.0-preview.*` or later)
 
 **If not installed:**
 
@@ -27,6 +27,7 @@ npm install -g @microsoft/teams.cli@preview
 ```
 
 **After installation:**
+
 - Verify: Run `teams --version` to confirm installation
 - You should see the version number
 
@@ -43,6 +44,7 @@ teams status
 **Expected output:** Shows authenticated user information.
 
 **If not authenticated:**
+
 1. Run: `teams login`
 2. Follow the authentication flow
 3. Verify: Run `teams status` again and confirm you see your authenticated account
@@ -79,6 +81,7 @@ Replace `my-teams-bot` with your preferred tunnel name.
 **Important:** Port `3978` is the default Teams SDK port. Protocol `auto` allows both HTTP and HTTPS. The `--allow-anonymous` flag allows Teams to connect without authentication.
 
 **Expected output:**
+
 ```
 Created tunnel: my-teams-bot (<tunnel-id>)
 Hosting port: 3978
@@ -94,6 +97,7 @@ devtunnel host my-teams-bot
 Your persistent tunnel URL remains: `https://<tunnel-id>.devtunnels.ms`
 
 **Format your endpoint URL:**
+
 ```
 https://<tunnel-id>.devtunnels.ms/api/messages
 ```
@@ -190,6 +194,7 @@ teams app get <teamsAppId> --json
 ```
 
 **Expected output:** Returns app details matching what was created:
+
 - `teamsAppId` matches
 - `botId` matches
 - `endpoint` matches (or is empty if not configured)

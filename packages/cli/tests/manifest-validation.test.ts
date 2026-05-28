@@ -5,6 +5,27 @@ import path from 'node:path';
 
 const mockUploadManifest = vi.fn().mockResolvedValue(undefined);
 
+const schema = {
+  $schema: 'http://json-schema.org/draft-04/schema#',
+  type: 'object',
+  additionalProperties: true,
+  required: ['id', 'version', 'manifestVersion', 'name', 'description', 'developer', 'icons', 'accentColor'],
+  properties: {
+    id: { type: 'string' },
+    version: { type: 'string' },
+    manifestVersion: { type: 'string' },
+    name: { type: 'object', properties: { short: { type: 'string', maxLength: 30 }, full: { type: 'string' } } },
+    description: { type: 'object', properties: { short: { type: 'string' }, full: { type: 'string' } } },
+    developer: { type: 'object', properties: { websiteUrl: { type: 'string', format: 'uri' } } },
+    icons: { type: 'object' },
+    accentColor: { type: 'string' },
+  },
+};
+
+vi.mock('../src/utils/http.js', () => ({
+  apiFetch: vi.fn(async () => ({ ok: true, json: async () => schema })),
+}));
+
 vi.mock('../src/apps/index.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/apps/index.js')>();
   return {
@@ -81,6 +102,44 @@ describe('manifest upload shared validation', () => {
     expect(mockUploadManifest).not.toHaveBeenCalled();
   });
 
+  it('allows interactive upload to proceed when required manifest fields are missing and auto-confirm is enabled', async () => {
+    const file = path.join(
+      os.tmpdir(),
+      `teams-cli-manifest-${Date.now()}-${Math.random().toString(36).slice(2)}.json`
+    );
+    files.push(file);
+
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        version: '1.0.0',
+        manifestVersion: '1.25',
+        name: { short: 'Valid short name', full: 'Valid full name' },
+        description: { short: 'Short description', full: 'Long description' },
+        developer: {
+          name: 'Developer',
+          websiteUrl: 'https://example.com',
+          privacyUrl: 'https://example.com/privacy',
+          termsOfUseUrl: 'https://example.com/terms',
+        },
+        icons: { color: 'color.png', outline: 'outline.png' },
+        accentColor: '#FFFFFF',
+      })
+    );
+
+    const { uploadManifestFromFile } = await import('../src/commands/app/manifest/actions.js');
+
+    await expect(uploadManifestFromFile('token', 'teams-app-id', file, false)).resolves.toEqual({
+      version: '1.0.0',
+      versionBumped: false,
+    });
+    expect(mockUploadManifest).toHaveBeenCalledWith(
+      'token',
+      'teams-app-id',
+      expect.stringContaining('"manifestVersion": "1.25"')
+    );
+  });
+
   it('allows interactive upload to proceed when metadata validation fails and auto-confirm is enabled', async () => {
     const file = path.join(
       os.tmpdir(),
@@ -91,17 +150,19 @@ describe('manifest upload shared validation', () => {
     fs.writeFileSync(
       file,
       JSON.stringify({
-        id: 'test-app-id',
+        id: '00000000-0000-0000-0000-000000000000',
         version: '1.0.0',
         manifestVersion: '1.25',
         name: { short: 'Valid short name', full: 'Valid full name' },
-        description: { short: 'Short description' },
+        description: { short: 'Short description', full: 'Long description' },
         developer: {
           name: 'Developer',
-          websiteUrl: 'https://example.com',
+          websiteUrl: 'http://example.com',
           privacyUrl: 'https://example.com/privacy',
           termsOfUseUrl: 'https://example.com/terms',
         },
+        icons: { color: 'color.png', outline: 'outline.png' },
+        accentColor: '#FFFFFF',
       })
     );
 

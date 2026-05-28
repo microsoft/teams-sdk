@@ -20,7 +20,7 @@
     "glob": "^11.0.0",
     "webpack": "5.105.4",
     "prettier": "^3.5.3",
-    "turbo": "^2.5.0",
+    "turbo": "^2.9.14",
     "typescript": "5.8.2"
   },
   "engines": {
