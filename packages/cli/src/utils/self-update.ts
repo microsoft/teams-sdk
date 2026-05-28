@@ -1,7 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { basename, dirname, join, resolve, sep, win32 } from 'node:path';
+import { basename, dirname, join, resolve, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PACKAGE_NAME, UPDATE_SPEC } from './update-info.js';
 
@@ -145,13 +145,18 @@ function getGlobalPackageRoots(method: InstallMethod): string[] {
   }
 }
 
+function normalizePathForComparison(path: string): string {
+  const normalizedPath = path.replace(/\\/g, '/');
+  return process.platform === 'win32' ? normalizedPath.toLowerCase() : normalizedPath;
+}
+
 function normalizeExistingPathForComparison(path: string): string | undefined {
-  const resolvedPath = resolve(path);
-  if (!existsSync(resolvedPath)) return undefined;
+  const candidates = [path, resolve(path)];
+  const existingPath = candidates.find((candidate) => existsSync(candidate));
+  if (!existingPath) return undefined;
 
   try {
-    const realPath = realpathSync(resolvedPath);
-    return process.platform === 'win32' ? realPath.toLowerCase() : realPath;
+    return normalizePathForComparison(realpathSync(existingPath));
   } catch {
     return undefined;
   }
@@ -164,7 +169,7 @@ function isManagedByGlobalPackageManager(method: InstallMethod): boolean {
   return getGlobalPackageRoots(method).some((root) => {
     const normalizedRoot = normalizeExistingPathForComparison(root);
     if (!normalizedRoot) return false;
-    const rootWithSeparator = normalizedRoot.endsWith(sep) ? normalizedRoot : `${normalizedRoot}${sep}`;
+    const rootWithSeparator = normalizedRoot.endsWith('/') ? normalizedRoot : `${normalizedRoot}/`;
     return packageDir.startsWith(rootWithSeparator);
   });
 }
