@@ -1,7 +1,7 @@
 ---
 slug: quoted-and-threaded-replies
 title: "Quoted Replies and Threaded Replies in the Teams SDK"
-date: 2026-05-13
+date: 2026-05-28
 authors:
   - name: Corina Gum
     title: Microsoft
