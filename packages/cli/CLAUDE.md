@@ -37,6 +37,8 @@ Wrap command `.action()` handlers with `wrapAction()` — it catches `CliError` 
 
 **HTTP/API helper modules (for example, `src/apps/api.ts` and similar transport/helper code) must never log directly.** Functions like `updateAppDetails`, `uploadIcon`, and other API layer code should return metadata (e.g., `result.versionBumped`) instead of calling `logger`. Only command-layer code should log, because it knows whether the caller is in `--json` mode, has active spinners, etc. Logging from API helpers corrupts `--json` output and breaks spinner rendering. This restriction does not apply to interactive/UI modules that also live under `src/apps/`.
 
+**Shared app/service modules under `src/apps/` must not import from `src/commands/`.** Keep layering one-way: command modules parse CLI options, handle prompts/spinners/output, then call reusable app/service helpers. Put shared business logic (manifest mutation, validation, app update helpers, etc.) in `src/apps/` or `src/utils/` so interactive menus, scripted commands, and tests can reuse it without circular dependencies.
+
 ## Spinners
 
 Use `createSilentSpinner()` from `src/utils/spinner.ts` (not `createSpinner` from nanospinner directly). Pass `silent = true` when `--json` is active to suppress visual output. Always include descriptive text.

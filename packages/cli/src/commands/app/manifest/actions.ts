@@ -10,6 +10,10 @@ import {
   validateAppMetadata,
   type TeamsManifest,
 } from '../../../apps/index.js';
+import {
+  formatManifestValidationIssues,
+  validateTeamsManifestSchema,
+} from '../../../apps/manifest-validation.js';
 import { CliError } from '../../../utils/errors.js';
 import { isAutoConfirm } from '../../../utils/interactive.js';
 import { logger } from '../../../utils/logger.js';
@@ -102,6 +106,7 @@ export async function uploadManifestFromFile(
   if (!manifest.version) missing.push('version');
   if (!manifest.manifestVersion) missing.push('manifestVersion');
 
+  let skipSchemaValidation = false;
   if (missing.length > 0) {
     if (silent) {
       throw new CliError(
@@ -115,6 +120,7 @@ export async function uploadManifestFromFile(
       const proceed = await confirm({ message: 'Upload anyway?', default: false });
       if (!proceed) return undefined;
     }
+    skipSchemaValidation = true;
   }
 
   const validationIssues = validateAppMetadata(appMetadataFromManifest(manifest), 'manifest');
@@ -133,6 +139,17 @@ export async function uploadManifestFromFile(
     if (!isAutoConfirm()) {
       const proceed = await confirm({ message: 'Upload anyway?', default: false });
       if (!proceed) return undefined;
+    }
+  }
+
+  if (!skipSchemaValidation) {
+    const schemaValidation = await validateTeamsManifestSchema(manifest);
+    if (!schemaValidation.valid) {
+      throw new CliError(
+        'VALIDATION_SCHEMA',
+        `Manifest schema validation failed:\n${formatManifestValidationIssues(schemaValidation.issues)}`,
+        'No changes uploaded.'
+      );
     }
   }
 
