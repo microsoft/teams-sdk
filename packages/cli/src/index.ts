@@ -37,7 +37,7 @@ function teamsColor(text: string): string {
 program
   .name('teams')
   .description('Teams Developer CLI for managing Microsoft Teams apps')
-  .addHelpText('beforeAll', `${pc.bold(teamsColor('Teams Developer CLI'))} ${pc.bold(pc.yellow('[Beta]'))}\n`)
+  .addHelpText('beforeAll', `${pc.bold(teamsColor('Teams Developer CLI'))}\n`)
   .version(version)
   .option('-v, --verbose', '[OPTIONAL] Enable verbose logging')
   .option('-y, --yes', '[OPTIONAL] Auto-confirm prompts (for CI/agent use)')
