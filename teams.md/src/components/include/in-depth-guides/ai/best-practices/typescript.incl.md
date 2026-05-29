@@ -48,3 +48,41 @@ message.withSuggestedActions({
   ],
 });
 ```
+
+<!-- suggested-actions-submit-send-method -->
+
+Use the `Action.Submit` suggested action type when you want the click to deliver a structured payload to your bot without posting a visible message on the user's behalf.
+
+:::warning Experimental API
+The `Action.Submit` card action type and the `suggested-action.submit` route are marked `@experimental`. The platform feature will be generally available by end of summer 2026.
+:::
+
+<!-- suggested-actions-submit-send-code -->
+
+```typescript
+import { MessageActivity, SuggestedActions } from '@microsoft/teams.api';
+
+const reply = new MessageActivity('Approve or reject the request:');
+reply.suggestedActions = {
+  to: [],
+  actions: [
+    { type: 'Action.Submit', title: 'Approve', value: { vote: 'approve' } },
+    { type: 'Action.Submit', title: 'Reject', value: { vote: 'reject' } },
+  ],
+} satisfies SuggestedActions;
+
+await send(reply);
+```
+
+<!-- suggested-actions-submit-handle-method -->
+
+The click arrives as a typed `suggestedActions/submit` invoke. Register a handler with the `suggested-action.submit` route and read the payload from `activity.value`.
+
+<!-- suggested-actions-submit-handle-code -->
+
+```typescript
+app.on('suggested-action.submit', async ({ send, activity }) => {
+  const payload = activity.value != null ? JSON.stringify(activity.value) : '<none>';
+  await send(`Got vote: ${payload}`);
+});
+```
