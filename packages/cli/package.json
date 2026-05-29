@@ -1,7 +1,7 @@
 {
   "name": "@microsoft/teams.cli",
-  "version": "3.0.0-beta.0",
-  "description": "Teams Developer CLI for scaffolding Teams applications",
+  "version": "3.0.0",
+  "description": "Teams Developer CLI for managing Microsoft Teams apps",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -28,6 +28,15 @@
   ],
   "author": "Microsoft",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/microsoft/teams-sdk.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://aka.ms/teams-cli-issues"
+  },
+  "homepage": "https://microsoft.github.io/teams-sdk/cli/",
   "engines": {
     "node": ">=20"
   },
@@ -36,6 +45,7 @@
     "@azure/msal-node-extensions": "^5.0.4",
     "@inquirer/prompts": "^7.2.1",
     "adm-zip": "^0.5.16",
+    "ajv": "^8.20.0",
     "ajv-draft-04": "^1.0.0",
     "ajv-formats": "^3.0.1",
     "change-case": "^5.4.4",
