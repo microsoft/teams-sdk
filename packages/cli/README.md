@@ -5,7 +5,7 @@ Teams Developer CLI for managing Microsoft Teams apps.
 ## Install
 
 ```bash
-npm install -g @microsoft/teams.cli@preview
+npm install -g @microsoft/teams.cli
 ```
 
 ## Usage

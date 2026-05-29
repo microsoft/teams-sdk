@@ -8,8 +8,8 @@ Versions are computed automatically from git history based on `version.json`.
 
 - **Main branch**: active development.
 - **Preview branch**: preview releases.
-- **Release branch**: stable releases.
-- Versions without a prerelease suffix are stable releases, for example `3.0.{height}`.
+- **Release branch**: stable releases. For v3, use `release/v3`.
+- Versions without a prerelease suffix are stable releases, for example `3.0`.
 - Versions with a prerelease suffix are prereleases, for example `3.1-beta.{height}`.
 
 The publish pipeline determines the npm tag from the computed version:
@@ -23,8 +23,8 @@ The publish pipeline determines the npm tag from the computed version:
 
 1. **Prepare the release branch:**
 
-   - Create or update the `release` branch from the commit you want to ship.
-   - Set `version.json` to the stable version line, for example `"3.0.{height}"`.
+   - Create or update the stable release branch from the commit you want to ship. For v3, use `release/v3`.
+   - Set `version.json` to the stable version line, for example `"3.0"`.
    - Update package metadata if it still has a prerelease placeholder version.
    - Update docs and install instructions to use the stable package:
 
@@ -34,9 +34,9 @@ The publish pipeline determines the npm tag from the computed version:
 
    - Make sure CLI self-update points at npm `latest`.
 
-2. **Create a PR to `release`**, get approval, and merge.
+2. **Create a PR to the stable release branch** (`release/v3` for v3), get approval, and merge.
 
-3. **Trigger the publish pipeline** for `release` with **Public** publish type.
+3. **Trigger the publish pipeline** for the stable release branch (`release/v3` for v3) with **Public** publish type.
 
    The pipeline stamps versions, packs packages, signs them, and publishes stable packages to npm with the `latest` tag.
 
@@ -49,7 +49,7 @@ The publish pipeline determines the npm tag from the computed version:
 
 5. **Bump `main` for the next development cycle** if needed:
    - Edit `version.json` on `main`.
-   - For example, move from `"3.0.{height}"` to `"3.1-beta.{height}"`.
+   - For example, move from `"3.0"` to `"3.1-beta.{height}"`.
    - Commit and push via PR.
 
 ## Publishing
