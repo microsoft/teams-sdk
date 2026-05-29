@@ -1,0 +1,109 @@
+name: Teams Developer CLI issue
+description: Report a bug or packaging/install issue with @microsoft/teams.cli
+title: '[CLI]: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a Teams Developer CLI issue. Please include enough detail for us to reproduce the problem.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the issue and what you were trying to do.
+      placeholder: Tell us what went wrong.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Share the exact commands or actions that reproduce the issue.
+      placeholder: |
+        1. Run `npm install -g @microsoft/teams.cli`
+        2. Run `teams ...`
+        3. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Include error output, stack traces, or screenshots if useful.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: cli-version
+    attributes:
+      label: CLI version
+      description: Run `teams --version`.
+      placeholder: e.g., 3.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      description: Run `node --version`.
+      placeholder: e.g., v22.11.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Install method
+      description: How did you install or run the CLI?
+      options:
+        - npm global install
+        - pnpm global install
+        - yarn global install
+        - npx
+        - local repo checkout
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: package-manager
+    attributes:
+      label: Package manager version
+      description: Run `npm --version`, `pnpm --version`, or `yarn --version`.
+      placeholder: e.g., npm 10.9.2
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Windows
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add any other context, related links, logs, or screenshots here.
+    validations:
+      required: false
