@@ -1,16 +1,17 @@
 # Release Process
 
-This project uses [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) for automatic version management.
+This project uses [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) for automatic version management on prerelease branches. Stable release branches use explicit, manually-bumped versions.
 
 ## How Versioning Works
 
-Versions are computed automatically from git history based on `version.json`.
+Versions are computed from `version.json` and git history.
 
 - **Main branch**: active development.
-- **Preview branch**: preview releases.
+- **Preview branch**: public preview releases.
 - **Release branch**: stable releases. For v3, use `release/v3`.
-- Versions without a prerelease suffix are stable releases, for example `3.0`.
-- Versions with a prerelease suffix are prereleases, for example `3.1-beta.{height}`.
+- **Release refs** are configured in `version.json` via `publicReleaseRefSpec`; keep this in sync with any release branch name changes.
+- **Preview versions** use a prerelease suffix and automatic height, for example `3.1-preview.{height}`. This produces versions like `3.1.0-preview.12`.
+- **Stable versions** are hard-coded on the release branch, for example `3.0.0` or `3.0.1`.
 
 The publish pipeline determines the npm tag from the computed version:
 
@@ -19,12 +20,40 @@ The publish pipeline determines the npm tag from the computed version:
 - any other prerelease → `next`
 - stable versions → `latest`
 
+Do not use a stable-looking version such as `3.1.{height}` for preview releases. Without a prerelease suffix, the publish pipeline treats the package as stable and publishes it with the `latest` npm tag.
+
+## Creating a Preview Release
+
+1. **Prepare the `preview` branch:**
+
+   - Create or update the `preview` branch from the commit you want to ship.
+   - Set `version.json` to the preview version line, for example `"3.1-preview.{height}"`.
+   - Update docs and install instructions to use the preview package where appropriate:
+
+     ```bash
+     npm install -g @microsoft/teams.cli@preview
+     ```
+
+2. **Create a PR to `preview`**, get approval, and merge.
+
+3. **Trigger the publish pipeline** for `preview` with **Public** publish type.
+
+   The pipeline stamps versions, packs packages, signs them, and publishes preview packages to npm with the `preview` tag.
+
+4. **Verify the preview release:**
+
+   ```bash
+   npm view @microsoft/teams.cli dist-tags
+   npm view @microsoft/teams.cli@preview version
+   ```
+
 ## Creating a Stable Release
 
-1. **Prepare the release branch:**
+1. **Prepare the stable release branch:**
 
-   - Create or update the stable release branch from the commit you want to ship. For v3, use `release/v3`.
-   - Set `version.json` to the stable version line, for example `"3.0"`.
+   - Create or update `release/v3` from the commit you want to ship.
+   - Set `version.json` to an explicit stable version, for example `"3.0.0"`.
+   - For patches, bump the version manually, for example from `"3.0.0"` to `"3.0.1"`.
    - Update package metadata if it still has a prerelease placeholder version.
    - Update docs and install instructions to use the stable package:
 
@@ -34,13 +63,13 @@ The publish pipeline determines the npm tag from the computed version:
 
    - Make sure CLI self-update points at npm `latest`.
 
-2. **Create a PR to the stable release branch** (`release/v3` for v3), get approval, and merge.
+2. **Create a PR to `release/v3`**, get approval, and merge.
 
-3. **Trigger the publish pipeline** for the stable release branch (`release/v3` for v3) with **Public** publish type.
+3. **Trigger the publish pipeline** for `release/v3` with **Public** publish type.
 
    The pipeline stamps versions, packs packages, signs them, and publishes stable packages to npm with the `latest` tag.
 
-4. **Verify the release:**
+4. **Verify the stable release:**
 
    ```bash
    npm view @microsoft/teams.cli dist-tags
@@ -49,7 +78,7 @@ The publish pipeline determines the npm tag from the computed version:
 
 5. **Bump `main` for the next development cycle** if needed:
    - Edit `version.json` on `main`.
-   - For example, move from `"3.0"` to `"3.1-beta.{height}"`.
+   - For example, move to `"3.1-preview.{height}"` or `"3.1-beta.{height}"`.
    - Commit and push via PR.
 
 ## Publishing
