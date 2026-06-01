@@ -3,7 +3,7 @@ sidebar_position: 5
 sidebar_label: Best Practices
 title: Best Practices
 summary: Best practices for AI integration in Teams applications, including AI-generated message indicators, feedback collection for prompt improvement, and citation handling to ensure transparency and accuracy in AI responses.
-languages: ['typescript', 'csharp']
+languages: ['typescript', 'csharp', 'python']
 ---
 
 # Best Practices
@@ -38,6 +38,20 @@ Citations are added with a `position` property. This property value needs to als
 
 ## Suggested actions
 
-Suggested actions help users with ideas of what to ask next, based on the previous response or conversation. Teams recommends including suggested actions in your messages. <LanguageInclude section="suggested-actions-method" /> See [Suggested actions](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/prompt-suggestions) for more information on suggested actions.
+Suggested actions help users with ideas of what to ask next, based on the previous response or conversation. Teams recommends including suggested actions in your messages. <LanguageInclude section="suggested-actions-method" />
 
 <LanguageInclude section="suggested-actions-code" />
+
+### Sending an Action.Submit suggested action
+
+<LanguageInclude section="suggested-actions-submit-send-method" />
+
+<LanguageInclude section="suggested-actions-submit-send-code" />
+
+### Handling an Action.Submit suggested action
+
+<LanguageInclude section="suggested-actions-submit-handle-method" />
+
+<LanguageInclude section="suggested-actions-submit-handle-code" />
+
+See [Suggested actions](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/prompt-suggestions) for more information on suggested actions.
