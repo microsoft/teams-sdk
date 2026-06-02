@@ -76,6 +76,27 @@ In .NET, targeted message APIs are marked with `[Experimental("ExperimentalTeams
 ```
 :::
 
+<!-- prompt-preview-proactive-example -->
+
+```csharp
+var targetedMessageId = "1772050244572";
+var userAccount = new Account
+{
+    Id = "29:1AbCDef...",
+    Name = "Adele Vance"
+};
+
+var message = new MessageActivity("Here is the result!")
+    .AddTargetedMessageInfo(targetedMessageId);
+
+// Targeted reply (only the user sees it)
+message.WithRecipient(userAccount, isTargeted: true);
+await context.Send(message, cancellationToken);
+
+// OR public reply (everyone sees it)
+await context.Send(message, cancellationToken);
+```
+
 <!-- context-send-method-name -->
 
 `Send()`

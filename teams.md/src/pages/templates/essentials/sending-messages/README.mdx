@@ -52,6 +52,20 @@ To send a targeted message when responding to an incoming activity, use the <Lan
 
 <LanguageInclude section="targeted-preview-note" />
 
+### Prompt Preview
+
+:::info[Coming Soon]
+Prompt Preview is coming soon in June 2026.
+:::
+
+Prompt Preview shows a compact, collapsible preview of the targeted message your agent is replying to.
+
+In reactive scenarios, the SDK automatically includes targeted message info when you use <LanguageInclude section="context-send-method-name" /> or <LanguageInclude section="context-reply-method-name" /> from the inbound context.
+
+For proactive scenarios (using <LanguageInclude content={{"csharp": "`app.Send()`", "typescript": "`app.send()`", "python": "`app.send()`"}} />), attach targeted message info using the targeted message ID you are replying to.
+
+<LanguageInclude section="prompt-preview-proactive-example" />
+
 ## Reactions
 
 Reactions allow your agent to add or remove emoji reactions on messages in a conversation, and to receive reactions added by users. See the [Message Reactions guide](../../in-depth-guides/message-reactions.mdx) for full coverage.

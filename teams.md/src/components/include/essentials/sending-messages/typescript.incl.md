@@ -63,6 +63,27 @@ app.on('message', async ({ send, activity }) => {
 <!-- targeted-preview-note -->
 N/A
 
+<!-- prompt-preview-proactive-example -->
+
+```typescript
+import { Account, MessageActivity } from '@microsoft/teams.api';
+
+const targetedMessageId = '1772050244572';
+const userAccount: Account = {
+  id: '29:1AbCDef...',
+  name: 'Adele Vance',
+};
+
+const message = new MessageActivity('Here is the result!').addTargetedMessageInfo(targetedMessageId);
+
+// Targeted reply (only the user sees it)
+message.withRecipient(userAccount, true);
+await app.send(conversationId, message);
+
+// OR public reply (everyone sees it)
+await app.send(conversationId, message);
+```
+
 <!-- context-send-method-name -->
 
 `send()`
