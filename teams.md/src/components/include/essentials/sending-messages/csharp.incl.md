@@ -80,21 +80,25 @@ In .NET, targeted message APIs are marked with `[Experimental("ExperimentalTeams
 
 ```csharp
 var targetedMessageId = "1772050244572";
+var conversationId = "19:groupchat-id@thread.v2";
 var userAccount = new Account
 {
     Id = "29:1AbCDef...",
     Name = "Adele Vance"
 };
 
-var message = new MessageActivity("Here is the result!")
-    .AddTargetedMessageInfo(targetedMessageId);
+
+var targetedMessage = new MessageActivity("Here is the result!")
+    .AddTargetedMessageInfo(targetedMessageId)
+    .WithRecipient(userAccount, isTargeted: true);
 
 // Targeted reply (only the user sees it)
-message.WithRecipient(userAccount, isTargeted: true);
-await context.Send(message, cancellationToken);
+await app.Send(conversationId, targetedMessage);
 
 // OR public reply (everyone sees it)
-await context.Send(message, cancellationToken);
+var publicMessage = new MessageActivity("Here is the result!")
+    .AddTargetedMessageInfo(targetedMessageId);
+await app.Send(conversationId, publicMessage);
 ```
 
 <!-- context-send-method-name -->
