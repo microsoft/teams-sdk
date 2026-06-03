@@ -11,7 +11,7 @@ tags: [teams-sdk, devtools, agents-playground, local-development]
 description: DevTools is being deprecated in favor of Microsoft 365 Agents Playground. Here is what to install, what to remove from your bot, and how your local dev loop changes.
 ---
 
-DevTools is being retired across all three Teams SDK languages in favor of Microsoft 365 Agents Playground. It is now obsolete in TypeScript and .NET, and the package has already been removed in Python. If you use DevTools today, here is what to install, what to remove from your bot, and how the local dev loop changes.
+DevTools, a local set of development tools for testing Teams apps without sideloading, is being retired across all three Teams SDK languages in favor of Microsoft 365 Agents Playground. The DevTools integrations in code have been marked as obsolete in TypeScript and .NET, and for Python the package has already been removed from PyPI. If you use DevTools today, here is what to install, what to remove from your bot, and how the local dev loop changes.
 
 <!-- truncate -->
 
@@ -98,11 +98,22 @@ DevTools bypassed authentication implicitly because it ran in-process. Playgroun
 The easiest path is to leave your AAD credentials unset. Comment out `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` in `.env` (TypeScript and Python), or omit the equivalents from `appsettings.json` (.NET). The SDK detects there are no credentials and accepts unauthenticated requests, with a startup warning so the mode is explicit:
 
 ```
-[WARN] No credentials configured (CLIENT_ID / CLIENT_SECRET / TENANT_ID).
-       Bot will accept unauthenticated requests on /api/messages.
+[WARN] No credentials configured (CLIENT_ID / CLIENT_SECRET / TENANT_ID). Bot will accept unauthenticated requests on /api/messages.
 ```
 
 If you want to keep credentials configured (for example, to match a production environment), set the `skipAuth` option instead. In TypeScript that is `new App({ skipAuth: true })`; in Python, `App(skip_auth=True)`; in .NET, `builder.AddTeams(skipAuth: true)`. This option assumes your credentials are real and valid.
+
+## Want to test in Teams directly?
+
+Playground is the fastest way to iterate locally, but you can also run your agent inside Teams itself. The Teams Developer CLI registers your agent (identity, credentials, and manifest) in a single command, so you can test in the real client instead of an emulator:
+
+```bash
+npm install -g @microsoft/teams.cli@preview
+teams login
+teams app create --name "My Agent" --endpoint https://<your-tunnel>/api/messages --env .env
+```
+
+See the [CLI docs](/cli/) to get your agent running in Teams.
 
 ## What stays the same
 
