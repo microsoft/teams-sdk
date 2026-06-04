@@ -13,6 +13,8 @@ description: DevTools is being deprecated in favor of Microsoft 365 Agents Playg
 
 DevTools, a local set of development tools for testing Teams apps without sideloading, is being retired across all three Teams SDK languages in favor of Microsoft 365 Agents Playground. The DevTools integrations in code have been marked as obsolete in TypeScript and .NET, and for Python the package has already been removed from PyPI. If you use DevTools today, here is what to install, what to remove from your bot, and how the local dev loop changes.
 
+To make the development experience more streamlined, we've decided to adopt Agents Playground as our primary local development tool. This affords developers the robust feature set of Agents Playground while still streamlining being able to test your agent where it truly matters, in Teams.
+
 <!-- truncate -->
 
 ## What changes
