@@ -31,9 +31,7 @@ If your agent previously used `DevtoolsPlugin` from `@microsoft/teams.dev`, remo
 
 You can also remove `@microsoft/teams.dev` from your `package.json` after deleting `DevtoolsPlugin`. The Playground is installed separately as a CLI tool, not as a project dependency.
 
-The Playground talks to your agent in `emulator` channel mode, which sends no JWT. Your agent therefore needs to accept unauthenticated requests on `/api/messages`. There are two ways to do this.
-
-### Recommended: run anonymously
+The Playground sends requests without a Bot Framework JWT, so your agent needs to accept unauthenticated requests on `/api/messages`.
 
 For local development, leave `CLIENT_ID` / `CLIENT_SECRET` / `TENANT_ID` unset (for example, comment them out of your `.env`). With no credentials configured, the bot does not enforce JWT validation. The SDK logs a warning at startup confirming the bot is in anonymous mode:
 
@@ -43,27 +41,16 @@ For local development, leave `CLIENT_ID` / `CLIENT_SECRET` / `TENANT_ID` unset (
 
 This is the cleanest migration path: nothing to add to your code, and the startup warning makes the mode explicit.
 
-### Alternative: `skipAuth: true`
-
-If you need to keep credentials configured for local dev (for example, to match a production config), set `skipAuth: true` on your `App` instead:
-
-```typescript
-const app = new App({
-  // ...
-  skipAuth: true,  // local development only; do not enable in production
-});
-```
-
 ### Why this is needed
 
-`DevtoolsPlugin` previously bypassed JWT validation implicitly because it ran in-process and never went through `/api/messages` over HTTP. The Playground sends real HTTP requests, so the bot's JWT validator fires unless one of the two options above is in effect.
+`DevtoolsPlugin` previously bypassed JWT validation implicitly because it ran in-process and never went through `/api/messages` over HTTP. The Playground sends real HTTP requests, so the bot's JWT validator runs unless the bot is left anonymous.
 
 ## Launch
 
 Start your agent locally (default port `3978`), then run:
 
 ```bash
-agentsplayground -e http://localhost:3978/api/messages -c emulator
+agentsplayground -e http://localhost:3978/api/messages -c msteams
 ```
 
 The playground opens at [http://localhost:56150](http://localhost:56150).

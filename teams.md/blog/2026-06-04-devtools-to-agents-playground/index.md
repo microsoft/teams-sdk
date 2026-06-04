@@ -22,7 +22,7 @@ DevTools, a local set of development tools for testing Teams apps without sidelo
 
 ## What is Microsoft 365 Agents Playground
 
-Playground is a standalone CLI tool, installed alongside your bot rather than bundled into your project. It opens a chat UI at `http://localhost:56150`, lets you send messages to your bot, mock arbitrary activity types (membership changes, invokes, message reactions), and inspect every HTTP exchange in a log panel.
+Playground is a standalone web app you launch from the command line, installed alongside your bot rather than bundled into your project. It opens a chat UI at `http://localhost:56150`, lets you send messages to your bot, mock arbitrary activity types (membership changes, invokes, message reactions), and inspect every HTTP exchange in a log panel.
 
 ## Install
 
@@ -86,8 +86,10 @@ If you never used the DevTools package, no code change is needed. Just install P
 Start your bot locally on port `3978`, then in another shell:
 
 ```bash
-agentsplayground -e http://localhost:3978/api/messages -c emulator
+agentsplayground -e http://localhost:3978/api/messages -c msteams
 ```
+
+The `-c msteams` flag runs Playground in the Teams channel, so your agent receives the same `channelId` and lifecycle events (like installation updates) it would in production.
 
 The UI opens at `http://localhost:56150`. Type a message, your bot replies inline, and the log panel shows the full HTTP round trip.
 
@@ -95,17 +97,19 @@ The UI opens at `http://localhost:56150`. Type a message, your bot replies inlin
 
 DevTools bypassed authentication implicitly because it ran in-process. Playground sends real HTTP requests, so your bot needs to accept them.
 
-The easiest path is to leave your AAD credentials unset. Comment out `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` in `.env` (TypeScript and Python), or omit the equivalents from `appsettings.json` (.NET). The SDK detects there are no credentials and accepts unauthenticated requests, with a startup warning so the mode is explicit:
+The easiest path is to leave your credentials unset. The SDK detects there are no credentials and accepts unauthenticated requests, with a startup warning so the mode is explicit:
 
 ```
 [WARN] No credentials configured (CLIENT_ID / CLIENT_SECRET / TENANT_ID). Bot will accept unauthenticated requests on /api/messages.
 ```
 
-If you want to keep credentials configured (for example, to match a production environment), set the `skipAuth` option instead. In TypeScript that is `new App({ skipAuth: true })`; in Python, `App(skip_auth=True)`; in .NET, `builder.AddTeams(skipAuth: true)`. This option assumes your credentials are real and valid.
-
 ## Want to test in Teams directly?
 
-Playground is the fastest way to iterate locally, but you can also run your agent inside Teams itself. The Teams Developer CLI registers your agent (identity, credentials, and manifest) in a single command, so you can test in the real client instead of an emulator:
+Playground is the fastest way to iterate locally, but you can also run your agent inside Teams itself. There are a few ways to get there.
+
+Let your coding agent handle it with the [`teams-dev` agent skill](/developer-tools/agent-skills), which works with Copilot, Claude Code, and Cursor. Ask it to "get my agent running in Teams" and it drives the registration for you.
+
+Or use the Teams Developer CLI directly. It registers your agent (identity, credentials, and manifest) in a single command, so you can test in the real Teams client instead of locally:
 
 ```bash
 npm install -g @microsoft/teams.cli@preview
@@ -113,11 +117,13 @@ teams login
 teams app create --name "My Agent" --endpoint https://<your-tunnel>/api/messages --env .env
 ```
 
+The Teams Developer CLI is not required for this. You can register the app and create the bot resource directly with the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (`az`) or the Azure portal; the Teams CLI simply rolls those steps into one command.
+
 See the [CLI docs](/cli/) to get your agent running in Teams.
 
 ## What stays the same
 
-Your bot code, message handlers, manifests, and deployment story all work unchanged. Only the local debugging glue moves: a plugin or project reference goes away, and a standalone CLI tool takes its place.
+Your bot code, message handlers, manifests, and deployment story all work unchanged. Only the local debugging glue moves: a plugin or project reference goes away, and a standalone tool takes its place.
 
 ## Questions and feedback
 
