@@ -60,6 +60,14 @@ Prompt Preview is coming soon in June 2026.
 
 Prompt Preview shows a compact, collapsible preview of the targeted message your agent is replying to.
 
+#### Prompt Preview in targeted reply
+
+![Prompt Preview in a targeted reply.](/screenshots/private-prompt-preview.png)
+
+#### Prompt Preview in public reply
+
+![Prompt Preview in a public reply.](/screenshots/public-prompt-preview.png)
+
 In reactive scenarios, the SDK automatically includes targeted message info when you use <LanguageInclude section="context-send-method-name" /> or <LanguageInclude section="context-reply-method-name" /> from the inbound context.
 
 For proactive scenarios (using <LanguageInclude content={{"csharp": "`app.Send()`", "typescript": "`app.send()`", "python": "`app.send()`"}} />), attach targeted message info using the targeted message ID you are replying to.
