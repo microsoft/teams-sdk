@@ -87,7 +87,6 @@ var userAccount = new Account
     Name = "Adele Vance"
 };
 
-
 var targetedMessage = new MessageActivity("Here is the result!")
     .AddTargetedMessageInfo(targetedMessageId)
     .WithRecipient(userAccount, isTargeted: true);

@@ -58,17 +58,21 @@ To send a targeted message when responding to an incoming activity, use the <Lan
 Prompt Preview is coming soon in June 2026.
 :::
 
-Prompt Preview shows a compact, collapsible preview of the targeted message your agent is replying to.
+Prompt Preview shows a compact, collapsible preview of the targeted message your agent is replying to, helping carry context from a private user-to-agent message into the reply.
 
 #### Prompt Preview in targeted reply
+
+In a targeted (private) reply, both the prompt preview and the bot response are visible only to the targeted user.
 
 ![Prompt Preview in a targeted reply.](/screenshots/private-prompt-preview.png)
 
 #### Prompt Preview in public reply
 
+In a public reply, the same prompt preview appears above the bot response and is visible to everyone in the conversation.
+
 ![Prompt Preview in a public reply.](/screenshots/public-prompt-preview.png)
 
-In reactive scenarios, the SDK automatically includes targeted message info when you use <LanguageInclude section="context-send-method-name" /> or <LanguageInclude section="context-reply-method-name" /> from the inbound context.
+In reactive scenarios, when replying to an inbound targeted activity through <LanguageInclude section="context-send-method-name" /> or <LanguageInclude section="context-reply-method-name" />, the SDK automatically includes targeted message info.
 
 For proactive scenarios (using <LanguageInclude content={{"csharp": "`app.Send()`", "typescript": "`app.send()`", "python": "`app.send()`"}} />), attach targeted message info using the targeted message ID you are replying to.
 
