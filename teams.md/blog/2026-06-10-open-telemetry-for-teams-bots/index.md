@@ -13,6 +13,8 @@ description: Learn how to add distributed traces, metrics, and correlated logs t
 
 Your Teams bot handles dozens of activity types — messages, adaptive card submits, OAuth callbacks, proactive sends — and when something goes wrong in production you need to know exactly which turn failed, why, and how long it took. The Teams SDK for .NET ships first-class OpenTelemetry support so you can answer all three questions without adding a single line of tracing code to your handlers.
 
+![Grafana Tempo showing the full span tree for a Teams bot turn](./otel-grafana-tempo-trace.png)
+
 <!-- truncate -->
 
 ## What the SDK Emits
@@ -104,6 +106,10 @@ Then open [http://localhost:3000](http://localhost:3000) (`admin` / `admin`) and
 - **Mimir** — the `teams_turn_duration_milliseconds_bucket` histogram and activity counters
 - **Loki** — every log record from your handlers, each tagged with `TraceId` and `SpanId`
 
+![Grafana Mimir showing the teams.turn.duration histogram and teams.activities.received counter](./otel-grafana-mimir-metrics.png)
+
+![Grafana Loki log lines with TraceId and SpanId fields linking back to a Tempo trace](./otel-grafana-loki-logs.png)
+
 Click the `TraceId` link in a Loki log line to jump straight to the matching Tempo trace. Click a slow span in Tempo and use the "Logs for this span" button to see what your handler logged.
 
 ## Exporting to Production Backends
@@ -116,6 +122,8 @@ o.Exporters = ExportTarget.Otlp | ExportTarget.AzureMonitor;
 ```
 
 All three exporters can be combined — useful when you want Application Insights for alerting and a Grafana-based dashboard at the same time.
+
+![Application Insights application map showing the Teams bot and its downstream dependencies](./otel-appinsights-map.png)
 
 ## The ObservabilityBot Sample
 

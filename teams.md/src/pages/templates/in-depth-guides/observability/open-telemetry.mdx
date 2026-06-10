@@ -8,6 +8,8 @@ languages: ['csharp']
 
 # 🔭 OpenTelemetry
 
+![Grafana Tempo showing a Teams bot turn trace with nested middleware and handler spans](/screenshots/otel-grafana-tempo-trace.png)
+
 The Teams SDK for .NET emits distributed traces, metrics, and structured logs via the [OpenTelemetry](https://opentelemetry.io/) SDK. Every incoming activity produces a span hierarchy, a set of named metrics, and log records that carry the active `TraceId` and `SpanId` — giving you end-to-end visibility from the HTTP edge down to each handler call.
 
 ## How It Works

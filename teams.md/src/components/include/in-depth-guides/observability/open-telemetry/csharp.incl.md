@@ -121,6 +121,12 @@ Open [http://localhost:3000](http://localhost:3000) (default credentials `admin`
 - **Explore → Mimir** — `teams_*` Prometheus metrics (use `teams_turn_duration_milliseconds_bucket` for latency histograms)
 - **Explore → Loki** — structured logs correlated to their trace via `TraceId`
 
+![Grafana Tempo showing the full turn span tree for a Teams bot activity](/screenshots/otel-grafana-tempo-trace.png)
+
+![Grafana Mimir displaying teams.turn.duration and teams.activities.received metrics](/screenshots/otel-grafana-mimir-metrics.png)
+
+![Grafana Loki log lines with TraceId and SpanId fields correlated to a Tempo trace](/screenshots/otel-grafana-loki-logs.png)
+
 <!-- export-targets -->
 
 `ExportTarget` is a flags enum from the Microsoft OpenTelemetry distro. Combine values with `|`:
@@ -140,3 +146,5 @@ o.Exporters = ExportTarget.Otlp | ExportTarget.AzureMonitor;
 ```
 
 Set `APPLICATIONINSIGHTS_CONNECTION_STRING` in your environment or `appsettings.json` to enable the Azure Monitor exporter. The OTLP endpoint is read from `OTEL_EXPORTER_OTLP_ENDPOINT`.
+
+![Application Insights application map showing dependencies between the Teams bot, the token endpoint, and the Bot Service API](/screenshots/otel-appinsights-map.png)
