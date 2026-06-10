@@ -38,9 +38,6 @@
     "csharp",
     "python"
   ],
-  "in-depth-guides/ai/best-practices": [
-    "python"
-  ],
   "in-depth-guides/ai/chat": [
     "python"
   ],
@@ -61,6 +58,10 @@
     "python"
   ],
   "in-depth-guides/ai/setup-and-prereqs": [
+    "python"
+  ],
+  "in-depth-guides/observability/open-telemetry": [
+    "typescript",
     "python"
   ],
   "in-depth-guides/server/http-server": [

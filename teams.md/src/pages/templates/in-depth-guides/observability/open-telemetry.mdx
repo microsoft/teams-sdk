@@ -1,0 +1,78 @@
+---
+sidebar_position: 3
+title: 'OpenTelemetry'
+sidebar_label: '🔭 OpenTelemetry'
+summary: Wire the Teams SDK's built-in ActivitySource and Meter into your OpenTelemetry pipeline to collect distributed traces, metrics, and correlated logs from every bot turn.
+languages: ['csharp']
+---
+
+# 🔭 OpenTelemetry
+
+The Teams SDK for .NET emits distributed traces, metrics, and structured logs via the [OpenTelemetry](https://opentelemetry.io/) SDK. Every incoming activity produces a span hierarchy, a set of named metrics, and log records that carry the active `TraceId` and `SpanId` — giving you end-to-end visibility from the HTTP edge down to each handler call.
+
+## How It Works
+
+The SDK publishes two named `ActivitySource` objects and two named `Meter` objects that you subscribe to when you configure OpenTelemetry. Everything else — HTTP server/client instrumentation, Azure SDK spans, and log bridging — comes from the standard OTel ecosystem.
+
+<LanguageInclude section="activity-sources-and-meters" />
+
+## Installing the Packages
+
+<LanguageInclude section="package-install" />
+
+## Setting Up OpenTelemetry
+
+Add OpenTelemetry to your `WebApplicationBuilder`, subscribe to the Teams sources and meters, and configure your exporters:
+
+<LanguageInclude section="setup" />
+
+## Trace Hierarchy
+
+Each incoming activity produces the following span tree:
+
+<LanguageInclude section="trace-hierarchy" />
+
+| Span | Source |
+|------|--------|
+| HTTP server span | Auto-instrumented by OTel ASP.NET Core |
+| `turn` | `Microsoft.Teams.Core` |
+| `middleware` (one per registered middleware) | `Microsoft.Teams.Core` |
+| `handler` | `Microsoft.Teams.Apps` |
+| `conversation_client` | `Microsoft.Teams.Core` |
+| `auth.outbound` + HTTP client to token endpoint | `Microsoft.Teams.Core` + auto |
+| HTTP client to Bot Service API | Auto-instrumented |
+
+## Metrics
+
+The SDK registers the following instruments under its meters:
+
+<LanguageInclude section="metrics" />
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `teams.activities.received` | Counter | Total incoming activities, tagged by `activity.type` |
+| `teams.turn.duration` | Histogram (ms) | End-to-end turn processing time |
+| `teams.handler.errors` | Counter | Unhandled exceptions thrown from handlers |
+| `teams.middleware.duration` | Histogram (ms) | Per-middleware processing time, tagged by `middleware.name` |
+| `teams.outbound.calls` | Counter | Outbound Bot Service API calls |
+| `teams.outbound.errors` | Counter | Failed outbound calls |
+
+## Log Correlation
+
+Every `ILogger` record emitted inside a turn automatically carries the active `TraceId` and `SpanId`. This lets you pivot from a slow trace in Tempo directly to the corresponding log lines in Loki (or Application Insights) without any extra instrumentation.
+
+<LanguageInclude section="log-correlation" />
+
+## Running Locally with Grafana LGTM
+
+The [`grafana/otel-lgtm`](https://github.com/grafana/docker-otel-lgtm) container bundles Tempo (traces), Mimir (metrics), Loki (logs), and Grafana in a single image that accepts OTLP on ports 4317 (gRPC) and 4318 (HTTP).
+
+<LanguageInclude section="run-with-lgtm" />
+
+## Export Targets
+
+<LanguageInclude section="export-targets" />
+
+## Complete Example
+
+For a full working bot with OpenTelemetry wired up end-to-end, see the [ObservabilityBot sample](https://github.com/microsoft/teams.net/tree/main/core/samples/ObservabilityBot) in the teams.net repository.
