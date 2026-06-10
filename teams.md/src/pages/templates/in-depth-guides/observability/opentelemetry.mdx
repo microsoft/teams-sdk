@@ -12,6 +12,8 @@ The Teams SDK instruments its pipeline through standard .NET primitives — `Act
 
 The SDK follows the .NET [library instrumentation model](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs): **libraries produce telemetry; applications choose collection and export.** The SDK does not automatically send telemetry anywhere — your app controls what is collected and where it goes.
 
+![End-to-end observability architecture: the Teams SDK emits telemetry via .NET primitives (ActivitySource, Meter, ILogger), the ASP.NET Core host opts into collection and export, and exporters route data to Azure Monitor, OTLP local tooling, or governed backends](/screenshots/otel-architecture.png)
+
 ## Prerequisites
 
 <LanguageInclude section="prerequisites" />

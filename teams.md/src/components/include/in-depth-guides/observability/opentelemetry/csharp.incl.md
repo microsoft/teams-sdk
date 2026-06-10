@@ -15,7 +15,7 @@ For Azure Monitor / Application Insights export, also add:
 dotnet add package Azure.Monitor.OpenTelemetry.AspNetCore
 ```
 
-Or start from the [OTelBotWithAspire sample](https://github.com/nicenemo/OTelBotWithAspire), which includes all dependencies pre-configured through [.NET Aspire service defaults](https://learn.microsoft.com/dotnet/aspire/fundamentals/service-defaults).
+Or start from the [OTelBotWithAspire sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire), which includes all dependencies pre-configured through [.NET Aspire service defaults](https://learn.microsoft.com/dotnet/aspire/fundamentals/service-defaults).
 
 <!-- setup -->
 
@@ -76,7 +76,7 @@ if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_
 
 <!-- local-aspire -->
 
-The [OTelBotWithAspire sample](https://github.com/nicenemo/OTelBotWithAspire) includes an Aspire AppHost that orchestrates the bot and automatically provides the dashboard. Run the AppHost project and the dashboard opens at `http://localhost:18888`:
+The [OTelBotWithAspire sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire) includes an Aspire AppHost that orchestrates the bot and automatically provides the dashboard. Run the AppHost project and the dashboard opens at `http://localhost:18888`:
 
 ```csharp
 // OTelBotWithAspire.AppHost/AppHost.cs
@@ -144,7 +144,7 @@ If multiple bots share the same Application Insights resource, `service.name` an
 
 <!-- aspire-example -->
 
-The [OTelBotWithAspire sample](https://github.com/nicenemo/OTelBotWithAspire) is a ready-to-run Aspire solution with three projects:
+The [OTelBotWithAspire sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire) is a ready-to-run Aspire solution with three projects:
 
 | Project | Purpose |
 | --- | --- |

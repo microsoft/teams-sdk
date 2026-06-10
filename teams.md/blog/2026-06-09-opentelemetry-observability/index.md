@@ -31,7 +31,9 @@ This is not proprietary instrumentation. It is the same [OpenTelemetry model](ht
 
 The SDK follows the .NET [library instrumentation guidance](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs): libraries produce telemetry through `ActivitySource` and `Meter`; applications choose collection and export. The SDK does **not** automatically phone home or force a specific backend — your app controls everything.
 
-The only Teams-specific wiring is registering the SDK's source and meter names. Here is the relevant excerpt from the [OTelBot sample](https://github.com/nicenemo/OTelBotWithAspire)'s service defaults:
+![End-to-end observability architecture: the Teams SDK emits telemetry via .NET primitives (ActivitySource, Meter, ILogger), the ASP.NET Core host opts into collection and export, and exporters route data to Azure Monitor, OTLP local tooling, or governed backends](./otel-architecture.png)
+
+The only Teams-specific wiring is registering the SDK's source and meter names. Here is the relevant excerpt from the [OTelBot sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire)'s service defaults:
 
 ```csharp
 using Microsoft.Teams.Apps.Diagnostics;
@@ -166,7 +168,7 @@ Here is the same turn in Grafana Tempo — the span waterfall with span attribut
 
 ## Try It
 
-The full [OTelBotWithAspire sample](https://github.com/nicenemo/OTelBotWithAspire) is a ready-to-run Aspire solution with three projects:
+The full [OTelBotWithAspire sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire) is a ready-to-run Aspire solution with three projects:
 
 | Project | Purpose |
 | --- | --- |
