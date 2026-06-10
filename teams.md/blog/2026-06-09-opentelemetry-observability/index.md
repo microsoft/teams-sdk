@@ -11,7 +11,7 @@ tags: [teams-sdk, dotnet, observability, opentelemetry, preview]
 description: Teams SDK for .NET 2.1 preview now emits OpenTelemetry traces, metrics, and correlated logs — debug every turn end-to-end in Azure Monitor or any OTLP backend.
 ---
 
-Teams SDK for .NET 2.1 Preview adds OpenTelemetry-friendly observability to the ASP.NET Core hosting model, so your bot or agent can emit correlated traces, metrics, and logs that your application routes to Azure Monitor / Application Insights, OTLP-based local tooling, or both. The SDK emits the telemetry; your app decides whether to listen, how to enrich it, and where to send it.
+Teams SDK for .NET 2.1 Preview now emits OpenTelemetry traces, metrics, and correlated logs. Route them to Azure Monitor / Application Insights, a local OTLP collector, or both — the SDK emits the telemetry; your app decides where it goes.
 
 <!-- truncate -->
 
@@ -19,59 +19,27 @@ Teams SDK for .NET 2.1 Preview adds OpenTelemetry-friendly observability to the 
 
 A single user message can trigger middleware, handler dispatch, token acquisition, outbound Bot Service calls, and downstream service requests. When something goes wrong — or just runs slow — isolated log lines are not enough. You need to see the full turn, end to end.
 
-The Teams SDK now instruments its pipeline through standard .NET primitives — `ActivitySource`, `Meter`, and `ILogger` — so you get:
-
-- **Correlated traces** across the full turn lifecycle: middleware, handler, auth, outbound calls
-- **Metrics** for activity volume, turn latency, handler errors, and outbound call health
-- **Structured logs** that automatically carry `TraceId` and `SpanId`, so you can pivot from a trace to its log lines
-
-This is not proprietary instrumentation. It is the same [OpenTelemetry model](https://learn.microsoft.com/dotnet/core/diagnostics/observability-with-otel) that the rest of the .NET ecosystem uses.
-
-## How It Works: SDK Emits, Your App Opts In
-
-The SDK follows the .NET [library instrumentation guidance](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs): libraries produce telemetry through `ActivitySource` and `Meter`; applications choose collection and export. The SDK does **not** automatically phone home or force a specific backend — your app controls everything.
+The Teams SDK now instruments its pipeline through standard .NET primitives — `ActivitySource`, `Meter`, and `ILogger`. This is not proprietary instrumentation — it is the same [OpenTelemetry model](https://learn.microsoft.com/dotnet/core/diagnostics/observability-with-otel) that the rest of the .NET ecosystem uses. The SDK follows the .NET [library instrumentation guidance](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs): **libraries produce telemetry; applications choose collection and export.**
 
 ![End-to-end observability architecture: the Teams SDK emits telemetry via .NET primitives (ActivitySource, Meter, ILogger), the ASP.NET Core host opts into collection and export, and exporters route data to Azure Monitor, OTLP local tooling, or governed backends](./otel-architecture.png)
 
-The only Teams-specific wiring is registering the SDK's source and meter names. Here is the relevant excerpt from the [OTelBot sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire)'s service defaults:
+## Two Lines of Teams-Specific Code
+
+The only Teams-specific wiring is registering the SDK's `ActivitySource` and `Meter` names:
 
 ```csharp
-using Microsoft.Teams.Apps.Diagnostics;
-using Microsoft.Teams.Core.Diagnostics;
+tracing.AddSource([CoreTelemetryNames.ActivitySourceName,
+                   TeamsBotApplicationTelemetry.ActivitySourceName]);
 
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracing =>
-    {
-        tracing.AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation();
-        tracing.AddSource([CoreTelemetryNames.ActivitySourceName,
-                           TeamsBotApplicationTelemetry.ActivitySourceName]);
-    })
-    .WithMetrics(metrics =>
-    {
-        metrics.AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddRuntimeInstrumentation();
-        metrics.AddMeter([CoreTelemetryNames.MeterName,
-                          TeamsBotApplicationTelemetry.MeterName]);
-    });
-
-builder.Logging.AddOpenTelemetry(logging =>
-{
-    logging.IncludeFormattedMessage = true;
-    logging.IncludeScopes = true;
-});
+metrics.AddMeter([CoreTelemetryNames.MeterName,
+                  TeamsBotApplicationTelemetry.MeterName]);
 ```
 
-The `AddSource` / `AddMeter` calls are the only Teams-specific lines. Auto-instrumentation for ASP.NET Core and `HttpClient` fills in the rest — inbound HTTP spans, outbound API calls, and everything in between.
-
-With this configuration, the bot's `Program.cs` stays minimal:
+Everything else — ASP.NET Core and `HttpClient` auto-instrumentation, exporters, logging — is standard OpenTelemetry .NET setup. With [.NET Aspire service defaults](https://learn.microsoft.com/dotnet/aspire/fundamentals/service-defaults), your bot's `Program.cs` stays minimal:
 
 ```csharp
-using Microsoft.Teams.Apps;
-
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-builder.AddServiceDefaults();
+builder.AddServiceDefaults(); // configures OpenTelemetry, health checks, service discovery
 builder.Services.AddTeamsBotApplication();
 WebApplication app = builder.Build();
 
@@ -87,122 +55,29 @@ app.MapDefaultEndpoints();
 app.Run();
 ```
 
-`AddServiceDefaults()` configures OpenTelemetry, health checks, and service discovery — all through the standard [.NET Aspire service defaults](https://learn.microsoft.com/dotnet/aspire/fundamentals/service-defaults) pattern.
+## What You See
 
-## What the SDK Instruments
-
-Every turn produces a trace with this shape:
-
-```
-HTTP server span                       (auto — ASP.NET Core)
-└─ turn                                (Microsoft.Teams.Core)
-   ├─ middleware [n times]             (Microsoft.Teams.Core)
-   ├─ handler                          (Microsoft.Teams.Apps)
-   └─ conversation_client              (Microsoft.Teams.Core)
-      ├─ auth.outbound                 (Microsoft.Teams.Core)
-      │  └─ HTTP client span           (auto — token endpoint)
-      └─ HTTP client span              (auto — Bot Service API)
-```
-
-The `turn` span carries activity type, conversation ID, and channel ID. Spans from auto-instrumented libraries — HTTP clients, Azure SDKs, AI model calls — appear as children automatically.
-
-The SDK also exposes counters and histograms:
-
-| Metric | Type | What it tells you |
-| --- | --- | --- |
-| `teams.activities.received` | Counter | How many activities your bot is processing |
-| `teams.turn.duration` | Histogram | End-to-end turn latency |
-| `teams.handler.errors` | Counter | Unhandled exceptions in handlers |
-| `teams.middleware.duration` | Histogram | Per-middleware execution time |
-| `teams.outbound.calls` | Counter | Calls to the Bot Service API |
-| `teams.outbound.errors` | Counter | Failed outbound calls |
-
-## See Every Turn in Application Insights
-
-To additionally export to [Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-enable), set the `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable. The sample's service defaults detect this and call `UseAzureMonitor()` automatically:
-
-```csharp
-if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
-{
-    builder.Services.AddOpenTelemetry().UseAzureMonitor();
-}
-```
-
-In the portal, you can inspect each turn end-to-end — from the inbound request through middleware, handler dispatch, token acquisition, and outbound Bot Service calls — all in a single correlated trace view:
+In Application Insights, you can inspect each turn end-to-end — from the inbound request through middleware, handler dispatch, token acquisition, and outbound Bot Service calls:
 
 ![Application Insights end-to-end transaction view showing the span hierarchy for a bot turn — turn, handler, conversation_client, auth.outbound, and the outbound Bot Service call](./appinsights-trace.png)
 
-> **Tip:** If multiple bots or services emit to the same Application Insights resource, set `service.name` and `service.namespace` via `ConfigureResource` so the [Application Map](https://learn.microsoft.com/azure/azure-monitor/app/app-map) separates them correctly.
-
-## Debug Locally with OTLP
-
-The same telemetry works with any OTLP-compatible backend for local development.
-
-**[.NET Aspire](https://learn.microsoft.com/dotnet/aspire/fundamentals/dashboard/standalone)** — the sample includes an Aspire AppHost that orchestrates the bot and automatically provides a dashboard with traces, metrics, and structured logs:
-
-```csharp
-// OTelBotWithAspire.AppHost/AppHost.cs
-IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
-builder.AddProject<Projects.OTelBot>("otelbot");
-builder.Build().Run();
-```
-
-Run the AppHost project and the Aspire Dashboard opens automatically:
+The same telemetry works locally with any OTLP-compatible backend. The sample includes an Aspire AppHost — run it and the dashboard opens automatically:
 
 ![Aspire Dashboard trace view showing the bot turn span hierarchy — POST api/messages, turn, handler, conversation_client, auth.outbound, and the outbound Bot Service POST](./aspire-trace.png)
 
-**[Grafana LGTM](https://github.com/grafana/docker-otel-lgtm)** — alternatively, set `OTEL_EXPORTER_OTLP_ENDPOINT` to point at a Grafana LGTM container:
-
-```bash
-docker run --rm -d --name lgtm \
-  -p 3000:3000 -p 4317:4317 -p 4318:4318 \
-  grafana/otel-lgtm
-
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-dotnet run
-```
-
-Here is the same turn in Grafana Tempo — the span waterfall with span attributes showing `activity.type`, `activity.id`, `conversation.id`, `channel.id`, and the `Microsoft.Teams.Core` library name:
-
-![Grafana Tempo trace view showing 6 spans for a bot turn with expanded span attributes — activity.id, activity.type, bot.id, channel.id, conversation.id, and service.url](./grafana-trace.png)
-
-## AI and LLM Instrumentation
-
-If your bot calls AI models through [`Microsoft.Extensions.AI`](https://learn.microsoft.com/dotnet/ai/ai-extensions), you can trace LLM calls and tool invocations as part of the same turn. Add `.UseOpenTelemetry()` to the `IChatClient` pipeline:
-
-```csharp
-IChatClient chatClient = innerClient
-    .AsBuilder()
-    .UseFunctionInvocation()
-    .UseOpenTelemetry(sourceName: "Experimental.Microsoft.Extensions.AI")
-    .Build();
-```
-
-Then register the AI source and meter names alongside the Teams SDK ones:
-
-```csharp
-tracing.AddSource(["Experimental.Microsoft.Extensions.AI", "ModelContextProtocol"]);
-metrics.AddMeter(["Experimental.Microsoft.Extensions.AI", "ModelContextProtocol"]);
-```
-
-Now your traces show the full chain — from the inbound Teams message, through AI model chat completions and MCP tool calls, and back out through the Bot Service response:
+For bots that call AI models through [`Microsoft.Extensions.AI`](https://learn.microsoft.com/dotnet/ai/ai-extensions), you get the full chain — from the inbound message, through chat completions and MCP tool calls, and back out through the Bot Service response:
 
 ![Application Insights end-to-end transaction showing an AI bot turn — handler, orchestrate_tools, two gpt-5.4-mini chat completions, an MCP microsoft_docs_search tool call, and the outbound Bot Service response](./appinsights-aibot-trace.png)
 
-For a complete example, see the [AIBotWithOTel sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/AIBotWithOTel).
-
 ## Try It
 
-The full [OTelBotWithAspire sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire) is a ready-to-run Aspire solution with three projects:
+Two samples are available to get started:
 
-| Project | Purpose |
+| Sample | What it shows |
 | --- | --- |
-| `OTelBot` | The Teams bot — 18 lines of `Program.cs` |
-| `OTelBotWithAspire.ServiceDefaults` | OpenTelemetry, health checks, and service discovery configuration |
-| `OTelBotWithAspire.AppHost` | Aspire orchestrator that launches the bot with the dashboard |
+| [OTelBotWithAspire](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire) | Echo bot with Aspire service defaults and dashboard |
+| [AIBotWithOTel](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/AIBotWithOTel) | AI bot with Azure OpenAI, MCP tools, and full LLM tracing |
 
-Clone it and run the AppHost to see traces, metrics, and correlated logs for every turn.
-
-For the complete setup guide including standalone (non-Aspire) configuration, resource attributes, sampling, and a full `Program.cs` example, see the [OpenTelemetry in-depth guide](/csharp/in-depth-guides/observability/opentelemetry).
+For the complete setup guide — including standalone (non-Aspire) configuration, Azure Monitor, Grafana LGTM, resource attributes, metrics reference, and AI instrumentation details — see the [OpenTelemetry in-depth guide](/csharp/in-depth-guides/observability/opentelemetry).
 
 We'd love your feedback on the observability experience. File issues on the [GitHub repository](https://github.com/microsoft/teams-sdk).
