@@ -1,0 +1,110 @@
+---
+sidebar_position: 3
+sidebar_label: 'OpenTelemetry'
+title: 'OpenTelemetry'
+summary: Add distributed tracing, metrics, and correlated logs to your Teams bot using OpenTelemetry.
+languages: ['csharp']
+---
+
+# OpenTelemetry
+
+The Teams SDK instruments its pipeline through standard .NET primitives — `ActivitySource`, `Meter`, and `ILogger`. Your host application opts in by registering the SDK's source and meter names, then choosing where to export — [Azure Monitor / Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-enable), an OTLP collector, or both.
+
+The SDK follows the .NET [library instrumentation model](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs): **libraries produce telemetry; applications choose collection and export.** The SDK does not automatically send telemetry anywhere — your app controls what is collected and where it goes.
+
+## Prerequisites
+
+<LanguageInclude section="prerequisites" />
+
+## Setup
+
+<LanguageInclude section="setup" />
+
+## What the SDK Instruments
+
+The Teams SDK emits spans and metrics from two sources. Auto-instrumented libraries (ASP.NET Core, `HttpClient`, Azure SDKs) add their own spans as children automatically.
+
+### Traces
+
+Every incoming activity flows through a structured span hierarchy:
+
+```
+HTTP server span                       (auto — ASP.NET Core)
+└─ turn                                (Microsoft.Teams.Core)
+   ├─ middleware [n times]             (Microsoft.Teams.Core)
+   ├─ handler                          (Microsoft.Teams.Apps)
+   └─ conversation_client              (Microsoft.Teams.Core)
+      ├─ auth.outbound                 (Microsoft.Teams.Core)
+      │  └─ HTTP client span           (auto — token endpoint)
+      └─ HTTP client span              (auto — Bot Service API)
+```
+
+The `turn` span is enriched with activity type, activity ID, conversation ID, and channel ID.
+
+### Metrics
+
+The SDK exposes counters and histograms through two meters:
+
+| Metric | Type | Description |
+| --- | --- | --- |
+| `teams.activities.received` | Counter | Activities received by the bot |
+| `teams.turn.duration` | Histogram (ms) | End-to-end turn processing time |
+| `teams.handler.errors` | Counter | Unhandled exceptions in handlers |
+| `teams.middleware.duration` | Histogram (ms) | Per-middleware execution time |
+| `teams.outbound.calls` | Counter | Outbound Bot Service API calls |
+| `teams.outbound.errors` | Counter | Failed outbound calls |
+
+### Correlated Logs
+
+Every `ILogger` record produced inside a turn automatically carries the active `TraceId` and `SpanId`. This means you can pivot from a slow trace directly to its log lines — no manual correlation needed.
+
+<LanguageInclude section="logging-setup" />
+
+## Exporting to Azure Monitor
+
+<LanguageInclude section="azure-monitor" />
+
+Here is a turn in Application Insights — the span hierarchy from the inbound HTTP request through turn processing, handler dispatch, and outbound Bot Service calls:
+
+![Application Insights end-to-end transaction view showing the span hierarchy for a bot turn — turn, handler, conversation_client, auth.outbound, and the outbound Bot Service call](/screenshots/appinsights-otel-trace.png)
+
+## Exporting to a Local OTLP Collector
+
+For local development, you can send telemetry to any OTLP-compatible backend without changing your application code — just configure the exporter endpoint.
+
+### Aspire Dashboard
+
+The [.NET Aspire Dashboard](https://learn.microsoft.com/dotnet/aspire/fundamentals/dashboard/standalone) shows traces, metrics, and structured logs in a single standalone UI:
+
+<LanguageInclude section="local-aspire" />
+
+![Aspire Dashboard trace view showing the bot turn span hierarchy — POST api/messages, turn, handler, conversation_client, auth.outbound, and the outbound Bot Service POST](/screenshots/aspire-otel-trace.png)
+
+### Grafana LGTM
+
+[Grafana LGTM](https://github.com/grafana/docker-otel-lgtm) bundles Tempo (traces), Mimir (metrics), Loki (logs), and Grafana in a single container:
+
+<LanguageInclude section="local-grafana" />
+
+Here is the same turn in Grafana Tempo — the span waterfall with span attributes showing `activity.type`, `activity.id`, `conversation.id`, `channel.id`, and the `Microsoft.Teams.Core` library name:
+
+![Grafana Tempo trace view showing 6 spans for a bot turn with expanded span attributes — activity.id, activity.type, bot.id, channel.id, conversation.id, and service.url](/screenshots/grafana-otel-trace.png)
+
+## Resource Configuration
+
+<LanguageInclude section="resource-config" />
+
+## Full Example with Aspire
+
+<LanguageInclude section="aspire-example" />
+
+## Full Example (Standalone)
+
+<LanguageInclude section="full-example" />
+
+## Next Steps
+
+- [OTelBotWithAspire sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire) — ready-to-run Aspire solution with the Aspire Dashboard
+- [.NET observability with OpenTelemetry](https://learn.microsoft.com/dotnet/core/diagnostics/observability-with-otel) — conceptual overview of the three pillars
+- [Configure Azure Monitor OpenTelemetry](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-configuration) — sampling, resource attributes, and advanced configuration
+- [OpenTelemetry .NET documentation](https://opentelemetry.io/docs/languages/dotnet/) — upstream reference
