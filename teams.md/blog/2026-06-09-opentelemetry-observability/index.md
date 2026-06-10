@@ -166,6 +166,31 @@ Here is the same turn in Grafana Tempo — the span waterfall with span attribut
 
 ![Grafana Tempo trace view showing 6 spans for a bot turn with expanded span attributes — activity.id, activity.type, bot.id, channel.id, conversation.id, and service.url](./grafana-trace.png)
 
+## AI and LLM Instrumentation
+
+If your bot calls AI models through [`Microsoft.Extensions.AI`](https://learn.microsoft.com/dotnet/ai/ai-extensions), you can trace LLM calls and tool invocations as part of the same turn. Add `.UseOpenTelemetry()` to the `IChatClient` pipeline:
+
+```csharp
+IChatClient chatClient = innerClient
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .UseOpenTelemetry(sourceName: "Experimental.Microsoft.Extensions.AI")
+    .Build();
+```
+
+Then register the AI source and meter names alongside the Teams SDK ones:
+
+```csharp
+tracing.AddSource(["Experimental.Microsoft.Extensions.AI", "ModelContextProtocol"]);
+metrics.AddMeter(["Experimental.Microsoft.Extensions.AI", "ModelContextProtocol"]);
+```
+
+Now your traces show the full chain — from the inbound Teams message, through AI model chat completions and MCP tool calls, and back out through the Bot Service response:
+
+![Application Insights end-to-end transaction showing an AI bot turn — handler, orchestrate_tools, two gpt-5.4-mini chat completions, an MCP microsoft_docs_search tool call, and the outbound Bot Service response](./appinsights-aibot-trace.png)
+
+For a complete example, see the [AIBotWithOTel sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/AIBotWithOTel).
+
 ## Try It
 
 The full [OTelBotWithAspire sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/OTelBotWithAspire) is a ready-to-run Aspire solution with three projects:

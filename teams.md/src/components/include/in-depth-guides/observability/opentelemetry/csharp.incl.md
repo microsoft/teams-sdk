@@ -113,6 +113,61 @@ dotnet run
 
 Open `http://localhost:3000` (default credentials: `admin` / `admin`) to explore Tempo for traces, Mimir for metrics, and Loki for logs.
 
+<!-- ai-instrumentation -->
+
+### Step 1: Add the OpenTelemetry middleware to the chat client
+
+When building the `IChatClient` pipeline, call `.UseOpenTelemetry()` to emit spans for each chat completion and tool invocation:
+
+```csharp
+using Azure.AI.OpenAI;
+using Microsoft.Extensions.AI;
+
+IChatClient innerClient = new AzureOpenAIClient(new Uri(endpoint), new Azure.AzureKeyCredential(key))
+    .GetChatClient(deployment)
+    .AsIChatClient();
+
+IChatClient chatClient = innerClient
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .UseOpenTelemetry(sourceName: "Experimental.Microsoft.Extensions.AI")
+    .Build();
+```
+
+The `sourceName` parameter determines the `ActivitySource` name used for the emitted spans. If you use [Model Context Protocol (MCP)](https://learn.microsoft.com/dotnet/ai/model-context-protocol) tools, the MCP client also emits its own spans under the `"ModelContextProtocol"` source.
+
+### Step 2: Register the AI source and meter names
+
+Add the AI and MCP source/meter names alongside the Teams SDK ones in your OpenTelemetry configuration:
+
+```csharp
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        // Teams SDK sources
+        tracing.AddSource([CoreTelemetryNames.ActivitySourceName,
+                           TeamsBotApplicationTelemetry.ActivitySourceName]);
+        // AI / MCP sources
+        tracing.AddSource(["Experimental.Microsoft.Extensions.AI",
+                           "ModelContextProtocol"]);
+    })
+    .WithMetrics(metrics =>
+    {
+        // Teams SDK meters
+        metrics.AddMeter([CoreTelemetryNames.MeterName,
+                          TeamsBotApplicationTelemetry.MeterName]);
+        // AI / MCP meters
+        metrics.AddMeter(["Experimental.Microsoft.Extensions.AI",
+                          "ModelContextProtocol"]);
+    });
+```
+
+With both steps in place, your traces show the full chain — from the inbound Teams message, through turn and handler processing, into AI model chat completions and tool calls, and back out through the Bot Service response:
+
+![Application Insights end-to-end transaction showing an AI bot turn — handler, orchestrate_tools, two gpt-5.4-mini chat completions, an MCP microsoft_docs_search tool call, and the outbound Bot Service response](/screenshots/appinsights-aibot-trace.png)
+
+For a complete working example, see the [AIBotWithOTel sample](https://github.com/microsoft/teams-agent-accelerator-templates/tree/main/dotnet/AIBotWithOTel).
+
 <!-- resource-config -->
 
 [Resource attributes](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-configuration#set-the-cloud-role-name-and-the-cloud-role-instance) identify your service in the backend. At a minimum, set `service.name` so your bot is distinguishable in Application Map and trace views:

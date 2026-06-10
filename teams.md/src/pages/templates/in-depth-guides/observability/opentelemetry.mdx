@@ -92,6 +92,12 @@ Here is the same turn in Grafana Tempo — the span waterfall with span attribut
 
 ![Grafana Tempo trace view showing 6 spans for a bot turn with expanded span attributes — activity.id, activity.type, bot.id, channel.id, conversation.id, and service.url](/screenshots/grafana-otel-trace.png)
 
+## AI and LLM Instrumentation
+
+If your bot calls AI models through [`Microsoft.Extensions.AI`](https://learn.microsoft.com/dotnet/ai/ai-extensions), you can add OpenTelemetry instrumentation to capture LLM spans (chat completions, token usage) and tool-call spans (MCP or function invocation) as part of the same trace. These spans appear as children of the bot's `handler` span, giving you end-to-end visibility from the inbound Teams message through AI model calls and back.
+
+<LanguageInclude section="ai-instrumentation" />
+
 ## Resource Configuration
 
 <LanguageInclude section="resource-config" />
