@@ -86,6 +86,46 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
     await ctx.send("You have been signed out!")
 ```
 
+<!-- pending-messages -->
+
+```python
+from microsoft_teams.apps import App, ActivityContext, SignInEvent
+from microsoft_teams.apps.routing.activity_context import SignInOptions
+from microsoft_teams.api import MessageActivity
+
+app = App()
+
+pending_messages: dict[str, dict] = {}
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    if not ctx.is_signed_in:
+        # Store the original message before initiating sign-in
+        pending_messages[ctx.activity.from_.id] = {
+            "text": ctx.activity.text,
+            "activity": ctx.activity,
+        }
+
+        await ctx.sign_in(SignInOptions(
+            oauth_card_text="To help with that, I need to sign you in first."
+        ))
+        return
+
+    # User is already signed in — process normally
+    await process_message(ctx.activity.text, ctx)
+
+@app.event("sign_in")
+async def handle_sign_in(event: SignInEvent):
+    user_id = event.activity_ctx.activity.from_.id
+    pending = pending_messages.pop(user_id, None)
+
+    if pending:
+        await event.activity_ctx.send("Successfully signed in! Processing your original request...")
+        await process_message(pending["text"], event.activity_ctx)
+    else:
+        await event.activity_ctx.send("You are now signed in!")
+```
+
 <!-- signin-failure -->
 
 ```python

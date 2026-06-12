@@ -81,6 +81,43 @@ app.message('/signout', async ({ send, signout, isSignedIn }) => {
 });
 ```
 
+<!-- pending-messages -->
+
+```ts
+const pendingMessages = new Map<string, { text: string; activity: any }>();
+
+app.on('message', async ({ signin, isSignedIn, activity }) => {
+  if (!isSignedIn) {
+    // Store the original message before initiating sign-in
+    pendingMessages.set(activity.from.id, {
+      text: activity.text,
+      activity,
+    });
+
+    await signin({
+      oauthCardText: 'To help with that, I need to sign you in first.',
+    });
+    return;
+  }
+
+  // User is already signed in — process normally
+  await processMessage(activity.text, { /* ... */ });
+});
+
+app.event('signin', async ({ send, userGraph, activity }) => {
+  const userId = activity.from.id;
+  const pending = pendingMessages.get(userId);
+
+  if (pending) {
+    pendingMessages.delete(userId);
+    await send('Successfully signed in! Processing your original request...');
+    await processMessage(pending.text, { send, userGraph });
+  } else {
+    await send('You are now signed in!');
+  }
+});
+```
+
 <!-- signin-failure -->
 
 ```ts

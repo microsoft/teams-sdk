@@ -91,6 +91,18 @@ You can signout by calling the `signout` method, this will remove the token from
 
 <LanguageInclude section="signing-out" />
 
+## Resuming Pending Messages After Sign-In
+
+When using auto sign-in (calling `signin` inside a message handler), the user's original message is consumed by the sign-in flow. Once sign-in completes, your app receives a `signin` event — but the original message text is no longer available in that context.
+
+A common pattern is to store the original message before initiating sign-in, then retrieve and process it in the `signin` event handler. This avoids confusing exchanges where the bot ignores what the user originally asked.
+
+<LanguageInclude section="pending-messages" />
+
+:::tip
+For production apps, consider using a persistent store (database, Redis, etc.) instead of an in-memory map so pending messages survive restarts.
+:::
+
 ## Handling Sign-In Failures
 
 When using SSO, if the token exchange fails Teams sends a `signin/failure` invoke activity to your app. The SDK includes a built-in default handler that logs a warning with actionable troubleshooting guidance. You can optionally register your own handler to customize the behavior:
