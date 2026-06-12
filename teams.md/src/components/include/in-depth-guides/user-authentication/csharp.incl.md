@@ -100,9 +100,9 @@ using System.Collections.Concurrent;
 var pendingMessages = new ConcurrentDictionary<string, (string Text, object Activity)>();
 
 // Get the pre-registered OAuth flow
-OAuthFlow auth = bot.GetOAuthFlow("graph");
+OAuthFlow auth = teams.GetOAuthFlow("graph");
 
-bot.OnMessage(async (context, cancellationToken) =>
+teams.OnMessage(async (context, cancellationToken) =>
 {
     // SignInAsync returns null if SSO was initiated (result arrives via OnSignInComplete)
     string? token = await auth.SignInAsync(context, cancellationToken);
