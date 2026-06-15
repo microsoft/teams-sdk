@@ -17,25 +17,23 @@ vi.mock('@inquirer/prompts', () => ({
   input: vi.fn(),
 }));
 
-describe('collectManifestCustomization icons', () => {
+describe('collectManifestCustomization', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
   });
 
   it('allows an empty full description and falls back to the short description', async () => {
-    const { checkbox, input } = await import('@inquirer/prompts');
-    const mockedCheckbox = vi.mocked(checkbox);
+    const { input } = await import('@inquirer/prompts');
     const mockedInput = vi.mocked(input);
 
-    mockedCheckbox.mockResolvedValueOnce(['description'] as never);
     mockedInput
       .mockResolvedValueOnce('Handles projects for our team' as never)
       .mockResolvedValueOnce('' as never);
 
     const { collectManifestCustomization } = await import('../src/apps/manifest-builder.js');
 
-    const result = await collectManifestCustomization();
+    const result = await collectManifestCustomization(['description']);
 
     const fullDescriptionPrompt = mockedInput.mock.calls[1][0] as {
       validate: (value: string) => string | true;
@@ -47,29 +45,18 @@ describe('collectManifestCustomization icons', () => {
     });
   });
 
-  it('offers Icons as a checkbox choice and returns icon paths when selected', async () => {
-    const { checkbox, input } = await import('@inquirer/prompts');
-    const mockedCheckbox = vi.mocked(checkbox);
+  it('returns icon paths when icons are selected', async () => {
+    const { input } = await import('@inquirer/prompts');
     const mockedInput = vi.mocked(input);
 
-    mockedCheckbox.mockResolvedValueOnce(['icons'] as never);
     mockedInput
       .mockResolvedValueOnce('./color.png' as never)
       .mockResolvedValueOnce('./outline.png' as never);
 
     const { collectManifestCustomization } = await import('../src/apps/manifest-builder.js');
 
-    const result = await collectManifestCustomization();
+    const result = await collectManifestCustomization(['icons']);
 
-    // Verify "Icons" is offered as a choice
-    const checkboxCall = mockedCheckbox.mock.calls[0][0] as {
-      choices: Array<{ name: string; value: string }>;
-    };
-    const iconChoice = checkboxCall.choices.find((c) => c.value === 'icons');
-    expect(iconChoice).toBeDefined();
-    expect(iconChoice!.name).toBe('Icons');
-
-    // Verify icon paths are returned
     expect(result.icons).toEqual({
       colorIconPath: './color.png',
       outlineIconPath: './outline.png',
@@ -77,34 +64,30 @@ describe('collectManifestCustomization icons', () => {
   });
 
   it('omits icons and does not prompt for paths when not selected', async () => {
-    const { checkbox, input } = await import('@inquirer/prompts');
-    const mockedCheckbox = vi.mocked(checkbox);
+    const { input } = await import('@inquirer/prompts');
     const mockedInput = vi.mocked(input);
-
-    mockedCheckbox.mockResolvedValueOnce([] as never);
 
     const { collectManifestCustomization } = await import('../src/apps/manifest-builder.js');
 
-    const result = await collectManifestCustomization();
+    const result = await collectManifestCustomization([]);
 
     expect(result.icons).toBeUndefined();
     expect(mockedInput).not.toHaveBeenCalled();
   });
 
   it('omits icons when both paths are empty', async () => {
-    const { checkbox, input } = await import('@inquirer/prompts');
-    const mockedCheckbox = vi.mocked(checkbox);
+    const { input } = await import('@inquirer/prompts');
     const mockedInput = vi.mocked(input);
 
-    mockedCheckbox.mockResolvedValueOnce(['icons'] as never);
     mockedInput.mockResolvedValueOnce('' as never).mockResolvedValueOnce('' as never);
 
     const { collectManifestCustomization } = await import('../src/apps/manifest-builder.js');
 
-    const result = await collectManifestCustomization();
+    const result = await collectManifestCustomization(['icons']);
 
     expect(result.icons).toBeUndefined();
   });
+
 });
 
 describe('createManifest copilotAgents', () => {
