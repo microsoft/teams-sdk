@@ -2,7 +2,6 @@ import { input, select } from '@inquirer/prompts';
 import { Command } from 'commander';
 import pc from 'picocolors';
 import {
-  collectManifestCustomization,
   createAadAppViaTdp,
   createClientSecret,
   createManifestZip,
@@ -33,6 +32,12 @@ import { ensureAz, runAz } from '../../utils/az.js';
 import { resolveSubscription, resolveResourceGroup, ensureTenantMatch } from '../../utils/az-prompts.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { openInBrowser, printLinkBanner } from '../../utils/browser.js';
+import {
+  collectCreateAdvancedOptions,
+  isSignInAudienceOption,
+  SIGN_IN_AUDIENCE_BY_OPTION,
+  type SignInAudienceOption,
+} from './create-advanced.js';
 
 interface AppCreateOutput {
   appName: string;
@@ -55,7 +60,7 @@ interface CreateOptions {
   name?: string;
   endpoint?: string;
   serviceManagementReference?: string;
-  singleTenant?: boolean;
+  signInAudience?: string;
   env?: string;
   envFile?: string;
   colorIcon?: string;
@@ -70,6 +75,16 @@ interface CreateOptions {
   json?: boolean;
 }
 
+function parseSignInAudienceOption(value: string): SignInAudienceOption {
+  if (!isSignInAudienceOption(value)) {
+    throw new CliError(
+      'VALIDATION_FORMAT',
+      '--sign-in-audience must be myOrg or multipleOrgs.'
+    );
+  }
+  return value;
+}
+
 export const appCreateCommand = new Command('create')
   .description('Create a new Teams app with bot')
   .option('-n, --name <name>', 'App/bot name')
@@ -80,7 +95,7 @@ export const appCreateCommand = new Command('create')
   .option('--azure', '[OPTIONAL] Create bot in Azure (requires az CLI)')
   .option('--teams-managed', '[OPTIONAL] Create bot managed by Teams (default)')
   .option('--service-management-reference <id>', '[OPTIONAL] ServiceTree service ID for Microsoft Entra app attribution')
-  .option('--single-tenant', '[OPTIONAL] Create a single-tenant Microsoft Entra app')
+  .option('--sign-in-audience <audience>', '[OPTIONAL] Microsoft Entra sign-in audience: myOrg or multipleOrgs')
   .option('--subscription <id>', '[OPTIONAL] Azure subscription ID (defaults to az CLI default)')
   .option('--resource-group <name>', 'Azure resource group (required for --azure)')
   .option('--create-resource-group', "[OPTIONAL] Create the resource group if it doesn't exist")
@@ -100,7 +115,9 @@ export const appCreateCommand = new Command('create')
         );
       }
       const serviceManagementReference = options.serviceManagementReference?.trim();
-      const signInAudience = options.singleTenant ? 'AzureADMyOrg' : 'AzureADMultipleOrgs';
+      let signInAudienceOption = parseSignInAudienceOption(
+        options.signInAudience ?? 'multipleOrgs'
+      );
       const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
       const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
 
@@ -153,7 +170,7 @@ export const appCreateCommand = new Command('create')
 
       const generateSecret = options.secret !== false;
 
-      // Collect manifest customization options
+      // Collect advanced options
       let descriptionOpts: { short: string; full?: string } | undefined;
       let scopeChoices: BotScope[] | undefined;
       let developerOpts:
@@ -166,15 +183,20 @@ export const appCreateCommand = new Command('create')
         | undefined;
 
       if (interactive && !hasFlags && !options.json) {
-        const customization = await collectManifestCustomization();
-        descriptionOpts = customization.description;
-        scopeChoices = customization.scopes;
-        developerOpts = customization.developer;
-        if (customization.icons) {
-          options.colorIcon ??= customization.icons.colorIconPath;
-          options.outlineIcon ??= customization.icons.outlineIconPath;
+        const advancedOptions = await collectCreateAdvancedOptions();
+        descriptionOpts = advancedOptions.manifest.description;
+        scopeChoices = advancedOptions.manifest.scopes;
+        developerOpts = advancedOptions.manifest.developer;
+        signInAudienceOption = parseSignInAudienceOption(
+          options.signInAudience ?? advancedOptions.appRegistration?.signInAudience ?? signInAudienceOption
+        );
+        if (advancedOptions.manifest.icons) {
+          options.colorIcon ??= advancedOptions.manifest.icons.colorIconPath;
+          options.outlineIcon ??= advancedOptions.manifest.icons.outlineIconPath;
         }
       }
+
+      const signInAudience = SIGN_IN_AUDIENCE_BY_OPTION[signInAudienceOption];
 
       // Resolve icon paths (CLI flags take priority, then interactive selection)
       const colorIconPath = options.colorIcon;
@@ -273,8 +295,8 @@ export const appCreateCommand = new Command('create')
       if (serviceManagementReference) {
         summaryLines.push(['Service management reference', serviceManagementReference]);
       }
-      if (options.singleTenant) {
-        summaryLines.push(['Tenant mode', 'Single tenant']);
+      if (options.signInAudience || signInAudienceOption === 'myOrg') {
+        summaryLines.push(['Sign-in audience', signInAudienceOption]);
       }
       if (azureContext) {
         summaryLines.push(['Subscription', azureContext.subscription]);
