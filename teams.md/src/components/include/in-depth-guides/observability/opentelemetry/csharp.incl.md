@@ -1,5 +1,9 @@
 <!-- prerequisites -->
 
+:::note[Preview — Teams SDK 2.1]
+OpenTelemetry instrumentation is available starting with the **2.1 preview** of the Teams SDK for .NET. APIs may change before the stable release.
+:::
+
 Install the Teams SDK and OpenTelemetry packages:
 
 ```bash
@@ -30,16 +34,16 @@ builder.Services.AddOpenTelemetry()
     {
         tracing.AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation();
-        tracing.AddSource([CoreTelemetryNames.ActivitySourceName,   // "Microsoft.Teams.Core"
-                           TeamsBotApplicationTelemetry.ActivitySourceName]); // "Microsoft.Teams.Apps"
+        tracing.AddSource(new[] { CoreTelemetryNames.ActivitySourceName,   // "Microsoft.Teams.Core"
+                                   TeamsBotApplicationTelemetry.ActivitySourceName }); // "Microsoft.Teams.Apps"
     })
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation();
-        metrics.AddMeter([CoreTelemetryNames.MeterName,
-                          TeamsBotApplicationTelemetry.MeterName]);
+        metrics.AddMeter(new[] { CoreTelemetryNames.MeterName,
+                                 TeamsBotApplicationTelemetry.MeterName });
     });
 ```
 
@@ -145,20 +149,20 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing =>
     {
         // Teams SDK sources
-        tracing.AddSource([CoreTelemetryNames.ActivitySourceName,
-                           TeamsBotApplicationTelemetry.ActivitySourceName]);
+        tracing.AddSource(new[] { CoreTelemetryNames.ActivitySourceName,
+                                  TeamsBotApplicationTelemetry.ActivitySourceName });
         // AI / MCP sources
-        tracing.AddSource(["Experimental.Microsoft.Extensions.AI",
-                           "ModelContextProtocol"]);
+        tracing.AddSource(new[] { "Experimental.Microsoft.Extensions.AI",
+                                  "ModelContextProtocol" });
     })
     .WithMetrics(metrics =>
     {
         // Teams SDK meters
-        metrics.AddMeter([CoreTelemetryNames.MeterName,
-                          TeamsBotApplicationTelemetry.MeterName]);
+        metrics.AddMeter(new[] { CoreTelemetryNames.MeterName,
+                                 TeamsBotApplicationTelemetry.MeterName });
         // AI / MCP meters
-        metrics.AddMeter(["Experimental.Microsoft.Extensions.AI",
-                          "ModelContextProtocol"]);
+        metrics.AddMeter(new[] { "Experimental.Microsoft.Extensions.AI",
+                                 "ModelContextProtocol" });
     });
 ```
 
@@ -184,13 +188,14 @@ builder.Services.AddOpenTelemetry()
 For production, also consider setting `deployment.environment` so you can filter between staging and production:
 
 ```csharp
-.ConfigureResource(r => r
-    .AddService(serviceName: "my-teams-bot", serviceVersion: "1.0.0")
-    .AddAttributes(new Dictionary<string, object>
-    {
-        ["deployment.environment"] = builder.Environment.EnvironmentName,
-        ["service.namespace"] = "Contoso.Agents",
-    }))
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r
+        .AddService(serviceName: "my-teams-bot", serviceVersion: "1.0.0")
+        .AddAttributes(new Dictionary<string, object>
+        {
+            ["deployment.environment"] = builder.Environment.EnvironmentName,
+            ["service.namespace"] = "Contoso.Agents",
+        }));
 ```
 
 If multiple bots share the same Application Insights resource, `service.name` and `service.namespace` are what separate them in the [Application Map](https://learn.microsoft.com/azure/azure-monitor/app/app-map).
@@ -266,8 +271,8 @@ otel.WithTracing(tracing =>
 {
     tracing.AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation();
-    tracing.AddSource([CoreTelemetryNames.ActivitySourceName,
-                       TeamsBotApplicationTelemetry.ActivitySourceName]);
+    tracing.AddSource(new[] { CoreTelemetryNames.ActivitySourceName,
+                              TeamsBotApplicationTelemetry.ActivitySourceName });
     tracing.AddOtlpExporter();
 });
 
@@ -277,8 +282,8 @@ otel.WithMetrics(metrics =>
     metrics.AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
         .AddRuntimeInstrumentation();
-    metrics.AddMeter([CoreTelemetryNames.MeterName,
-                      TeamsBotApplicationTelemetry.MeterName]);
+    metrics.AddMeter(new[] { CoreTelemetryNames.MeterName,
+                             TeamsBotApplicationTelemetry.MeterName });
     metrics.AddOtlpExporter();
 });
 

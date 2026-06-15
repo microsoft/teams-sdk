@@ -28,11 +28,11 @@ The Teams SDK now instruments its pipeline through standard .NET primitives — 
 The only Teams-specific wiring is registering the SDK's `ActivitySource` and `Meter` names:
 
 ```csharp
-tracing.AddSource([CoreTelemetryNames.ActivitySourceName,
-                   TeamsBotApplicationTelemetry.ActivitySourceName]);
+tracing.AddSource(new[] { CoreTelemetryNames.ActivitySourceName,
+                          TeamsBotApplicationTelemetry.ActivitySourceName });
 
-metrics.AddMeter([CoreTelemetryNames.MeterName,
-                  TeamsBotApplicationTelemetry.MeterName]);
+metrics.AddMeter(new[] { CoreTelemetryNames.MeterName,
+                         TeamsBotApplicationTelemetry.MeterName });
 ```
 
 Everything else — ASP.NET Core and `HttpClient` auto-instrumentation, exporters, logging — is standard OpenTelemetry .NET setup. With [.NET Aspire service defaults](https://learn.microsoft.com/dotnet/aspire/fundamentals/service-defaults), your bot's `Program.cs` stays minimal:
