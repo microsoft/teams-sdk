@@ -8,6 +8,7 @@ const mockFetchAppDetailsV2 = vi.fn();
 const mockCreateBot = vi.fn();
 const mockCreateAadAppViaTdp = vi.fn();
 const mockCreateManifestZip = vi.fn();
+const mockImportAppPackage = vi.fn();
 
 vi.mock('../src/apps/index.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/apps/index.js')>();
@@ -33,7 +34,7 @@ vi.mock('../src/apps/index.js', async (importOriginal) => {
     createClientSecret: vi.fn().mockResolvedValue({ secretText: 'fake-secret-text' }),
     getAadAppByClientId: vi.fn().mockResolvedValue({ id: 'aad-object-id' }),
     createManifestZip: mockCreateManifestZip,
-    importAppPackage: vi.fn().mockResolvedValue({ teamsAppId: 'fake-teams-app-id' }),
+    importAppPackage: mockImportAppPackage,
     installLink: vi.fn((id: string, tenantId: string) =>
       `https://teams.microsoft.com/l/app/${id}?installAppPackage=true&appTenantId=${tenantId}`
     ),
@@ -119,6 +120,7 @@ describe('shared command validation', () => {
       displayName: 'TestAadApp',
     });
     mockCreateManifestZip.mockReturnValue(Buffer.from('fake-zip'));
+    mockImportAppPackage.mockResolvedValue({ teamsAppId: 'fake-teams-app-id' });
     mockFetchApp.mockResolvedValue({
       appId: 'aad-object-id',
       appName: 'Test App',
@@ -209,7 +211,14 @@ describe('shared command validation', () => {
       { from: 'user' }
     );
 
-    expect(mockCreateAadAppViaTdp).toHaveBeenCalledWith('fake-token', 'Test App');
+    expect(mockCreateAadAppViaTdp).toHaveBeenCalledWith(
+      'fake-token',
+      'Test App',
+      {
+        serviceManagementReference: undefined,
+        signInAudience: 'AzureADMultipleOrgs',
+      }
+    );
     expect(mockCreateManifestZip).toHaveBeenCalledWith(
       expect.objectContaining({
         botName: 'Test App',
@@ -225,6 +234,61 @@ describe('shared command validation', () => {
       expect.objectContaining({
         appName: 'Test App',
         endpoint: 'https://example.com/api/messages',
+      })
+    );
+  });
+
+  it('creates an app with service management reference and single tenant audience', async () => {
+    const { appCreateCommand } = await import('../src/commands/app/create.js');
+
+    await appCreateCommand.parseAsync(
+      [
+        '--name',
+        'Service Tree Bot',
+        '--endpoint',
+        'https://example.com/api/messages',
+        '--service-management-reference',
+        'service-tree-id',
+        '--single-tenant',
+        '--no-secret',
+        '--json',
+      ],
+      { from: 'user' }
+    );
+
+    expect(mockCreateAadAppViaTdp).toHaveBeenCalledWith(
+      'fake-token',
+      'Service Tree Bot',
+      {
+        serviceManagementReference: 'service-tree-id',
+        signInAudience: 'AzureADMyOrg',
+      }
+    );
+    expect(mockCreateManifestZip).toHaveBeenCalledWith(
+      expect.objectContaining({
+        botId: 'fake-client-id',
+        botName: 'Service Tree Bot',
+        endpoint: 'https://example.com/api/messages',
+      })
+    );
+    expect(mockImportAppPackage).toHaveBeenCalledWith('fake-token', Buffer.from('fake-zip'));
+    expect(mockCreateBot).toHaveBeenCalledWith({
+      botId: 'fake-client-id',
+      name: 'Service Tree Bot',
+      endpoint: 'https://example.com/api/messages',
+    });
+    expect(jsonOutput).toEqual(
+      expect.objectContaining({
+        appName: 'Service Tree Bot',
+        teamsAppId: 'fake-teams-app-id',
+        botId: 'fake-client-id',
+        endpoint: 'https://example.com/api/messages',
+        botLocation: 'teams-managed',
+        secretSkipped: true,
+        credentials: {
+          CLIENT_ID: 'fake-client-id',
+          TENANT_ID: 'fake-tenant-id',
+        },
       })
     );
   });
