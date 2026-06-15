@@ -88,6 +88,53 @@ teams.OnMessage("/signout", async (context, cancellationToken) =>
     await context.Send("you have been signed out!", cancellationToken);
 });
 ```
+<!-- pending-messages -->
+
+:::note
+The C# OAuth APIs shown below (`OAuthFlow`, `SignInAsync`, `OnSignInComplete`) are available in the [`Microsoft.Teams.Apps`](https://www.nuget.org/packages/Microsoft.Teams.Apps) core package (2.1+ preview).
+:::
+
+```cs
+using System.Collections.Concurrent;
+
+var pendingMessages = new ConcurrentDictionary<string, (string Text, object Activity)>();
+
+// Get the pre-registered OAuth flow
+OAuthFlow auth = teams.GetOAuthFlow("graph");
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    // SignInAsync returns null if SSO was initiated (result arrives via OnSignInComplete)
+    string? token = await auth.SignInAsync(context, cancellationToken);
+
+    if (token is null)
+    {
+        // Sign-in initiated — store the original message
+        var userId = context.Activity.From?.Id ?? string.Empty;
+        pendingMessages[userId] = (context.Activity.Text ?? string.Empty, context.Activity);
+        return;
+    }
+
+    // User is already signed in — process normally
+    await ProcessMessage(context.Activity.Text, context, cancellationToken);
+});
+
+auth.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
+{
+    var userId = context.Activity.From?.Id ?? string.Empty;
+
+    if (pendingMessages.TryRemove(userId, out var pending))
+    {
+        await context.SendActivityAsync("Successfully signed in! Processing your original request...", cancellationToken);
+        await ProcessMessage(pending.Text, context, cancellationToken);
+    }
+    else
+    {
+        await context.SendActivityAsync("You are now signed in!", cancellationToken);
+    }
+});
+```
+
 <!-- signin-failure -->
 
 ```cs
