@@ -22,13 +22,15 @@ teams app create [options]
 | `-e, --endpoint <url>` | [OPTIONAL] Bot messaging endpoint URL |
 | `--env <path>` | [OPTIONAL] Path to credentials file (.env or appsettings.json) |
 | `--env-file <path>` | [OPTIONAL] Alias for --env |
+| `--no-secret` | [OPTIONAL] Skip client secret generation (for managed identity or federated credentials) |
 | `--azure` | [OPTIONAL] Create bot in Azure (requires az CLI) |
 | `--teams-managed` | [OPTIONAL] Create bot managed by Teams (default) |
+| `--service-management-reference <id>` | [OPTIONAL] ServiceTree service ID for Microsoft Entra app attribution |
+| `--single-tenant` | [OPTIONAL] Create a single-tenant Microsoft Entra app |
 | `--subscription <id>` | [OPTIONAL] Azure subscription ID (defaults to az CLI default) |
 | `--resource-group <name>` | Azure resource group (required for --azure) |
 | `--create-resource-group` | [OPTIONAL] Create the resource group if it doesn't exist |
 | `--region <name>` | [OPTIONAL] Azure region for resource group (default: westus2) |
-| `--no-secret` | [OPTIONAL] Skip client secret generation (for managed identity or federated credentials) |
 | `--color-icon <path>` | [OPTIONAL] Path to color icon (192x192 PNG) |
 | `--outline-icon <path>` | [OPTIONAL] Path to outline icon (32x32 PNG) |
 | `--json` | [OPTIONAL] Output as JSON |
@@ -90,6 +92,14 @@ teams app create --name "My Bot" --no-secret
 ```
 
 Only `CLIENT_ID` and `TENANT_ID` are output. You can generate a secret later with [`teams app auth secret create`](./auth-secret-create).
+
+### Service-Attributed Apps
+
+Some tenants require new Microsoft Entra app registrations to be attributed to a service. Use `--service-management-reference` with the ServiceTree service ID, and `--single-tenant` when tenant policy requires a single-tenant app:
+
+```bash
+teams app create --name "My Bot" --service-management-reference <service-id> --single-tenant --no-secret
+```
 
 ### Output
 

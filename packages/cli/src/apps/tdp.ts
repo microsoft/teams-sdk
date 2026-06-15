@@ -3,10 +3,21 @@ import { apiFetch } from '../utils/http.js';
 
 const TDP_BASE_URL = 'https://dev.teams.microsoft.com/api';
 
+export type SignInAudience = 'AzureADMyOrg' | 'AzureADMultipleOrgs';
+
+export interface CreateAadAppViaTdpOptions {
+  serviceManagementReference: string | undefined;
+  signInAudience: SignInAudience;
+}
+
 /**
  * Create an AAD app via TDP, which also creates the service principal server-side.
  */
-export async function createAadAppViaTdp(token: string, displayName: string): Promise<AadApp> {
+export async function createAadAppViaTdp(
+  token: string,
+  displayName: string,
+  options: CreateAadAppViaTdpOptions
+): Promise<AadApp> {
   const response = await apiFetch(`${TDP_BASE_URL}/aadapp/v2`, {
     method: 'POST',
     headers: {
@@ -15,7 +26,10 @@ export async function createAadAppViaTdp(token: string, displayName: string): Pr
     },
     body: JSON.stringify({
       displayName,
-      signInAudience: 'AzureADMultipleOrgs',
+      signInAudience: options.signInAudience,
+      ...(options.serviceManagementReference && {
+        serviceManagementReference: options.serviceManagementReference,
+      }),
     }),
   });
 
