@@ -47,6 +47,8 @@ Use `createSilentSpinner()` from `src/utils/spinner.ts` (not `createSpinner` fro
 
 Strong, precise types are extremely important. Every interface, output shape, and function signature must be explicitly typed — never fall back to `Record<string, unknown>`, `any`, or untyped parameters when a concrete type is possible. Define dedicated interfaces for command options, JSON output shapes, and API responses. Avoid `as unknown as X` double-casts and `any` types unless absolutely necessary. Prefer fixing the underlying type (adding a field to an interface, using a proper generic, etc.) over casting.
 
+When an options object has a field that callers should consciously decide, prefer a required key with an explicit `| undefined` value over an optional key. Use optional keys only when the field is genuinely not part of the contract for all callers.
+
 ## CLI Options
 
 Prefix truly optional flags with `[OPTIONAL]` in their description:
@@ -128,7 +130,7 @@ Before creating a PR:
 
 Create AAD apps via TDP's `/aadapp/v2` endpoint (`createAadAppViaTdp` in `src/apps/tdp.ts`), NOT via Graph API directly. TDP's backend creates the service principal server-side, which is required for single-tenant bot registration.
 
-- `signInAudience`: Always `AzureADMultipleOrgs` (multi-tenant AAD app)
+- `signInAudience`: Defaults to `AzureADMultipleOrgs`; `teams app create --single-tenant` uses `AzureADMyOrg` for tenants that require single-tenant app registrations.
 - `isSingleTenant`: Always `true` on bot registration (SFI requirement)
 - TDP returns a different `id` than Graph's object ID — use `getAadAppByClientId` to look up the Graph object ID before calling `addPassword`
 - Graph replication lag may require retries after TDP creates the app

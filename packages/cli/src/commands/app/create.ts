@@ -54,6 +54,8 @@ interface AppCreateOutput {
 interface CreateOptions {
   name?: string;
   endpoint?: string;
+  serviceManagementReference?: string;
+  singleTenant?: boolean;
   env?: string;
   envFile?: string;
   colorIcon?: string;
@@ -77,6 +79,8 @@ export const appCreateCommand = new Command('create')
   .option('--no-secret', '[OPTIONAL] Skip client secret generation (for managed identity or federated credentials)')
   .option('--azure', '[OPTIONAL] Create bot in Azure (requires az CLI)')
   .option('--teams-managed', '[OPTIONAL] Create bot managed by Teams (default)')
+  .option('--service-management-reference <id>', '[OPTIONAL] ServiceTree service ID for Microsoft Entra app attribution')
+  .option('--single-tenant', '[OPTIONAL] Create a single-tenant Microsoft Entra app')
   .option('--subscription <id>', '[OPTIONAL] Azure subscription ID (defaults to az CLI default)')
   .option('--resource-group <name>', 'Azure resource group (required for --azure)')
   .option('--create-resource-group', "[OPTIONAL] Create the resource group if it doesn't exist")
@@ -95,6 +99,8 @@ export const appCreateCommand = new Command('create')
           'Cannot specify both --azure and --teams-managed.'
         );
       }
+      const serviceManagementReference = options.serviceManagementReference?.trim();
+      const signInAudience = options.singleTenant ? 'AzureADMyOrg' : 'AzureADMultipleOrgs';
       const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
       const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
 
@@ -264,6 +270,12 @@ export const appCreateCommand = new Command('create')
 
       // ===== All inputs gathered — confirm before proceeding =====
       const summaryLines: [string, string][] = [['App name', normalizedName]];
+      if (serviceManagementReference) {
+        summaryLines.push(['Service management reference', serviceManagementReference]);
+      }
+      if (options.singleTenant) {
+        summaryLines.push(['Tenant mode', 'Single tenant']);
+      }
       if (azureContext) {
         summaryLines.push(['Subscription', azureContext.subscription]);
         summaryLines.push(['Resource group', azureContext.resourceGroup]);
@@ -321,7 +333,10 @@ export const appCreateCommand = new Command('create')
 
       // Create AAD app via TDP (creates service principal server-side)
       spinner = createSilentSpinner('Creating Azure AD app...', silent).start();
-      const aadApp = await createAadAppViaTdp(tdpToken, normalizedName);
+      const aadApp = await createAadAppViaTdp(tdpToken, normalizedName, {
+        serviceManagementReference,
+        signInAudience,
+      });
       const clientId = aadApp.appId;
       spinner.success({ text: `Created Azure AD app (${clientId})` });
 
