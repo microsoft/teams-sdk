@@ -99,16 +99,17 @@ pending_messages: dict[str, dict] = {}
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
-    if not ctx.is_signed_in:
-        # Store the original message before initiating sign-in
+    # sign_in() returns the token if already signed in, or None if OAuth card was sent
+    token = await ctx.sign_in(SignInOptions(
+        oauth_card_text="To help with that, I need to sign you in first."
+    ))
+
+    if token is None:
+        # OAuth card sent — store the original message for later
         pending_messages[ctx.activity.from_.id] = {
             "text": ctx.activity.text,
             "activity": ctx.activity,
         }
-
-        await ctx.sign_in(SignInOptions(
-            oauth_card_text="To help with that, I need to sign you in first."
-        ))
         return
 
     # User is already signed in — process normally

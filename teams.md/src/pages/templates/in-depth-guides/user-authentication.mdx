@@ -93,9 +93,9 @@ You can signout by calling the `signout` method, this will remove the token from
 
 ## Resuming Pending Messages After Sign-In
 
-When using auto sign-in (calling `signin` inside a message handler), the user's original message is consumed by the sign-in flow. Once sign-in completes, your app receives a `signin` event — but the original message text is no longer available in that context.
+When a user isn't signed in and your message handler calls the sign-in method, an OAuth card is sent and the current turn ends. The sign-in completes on a *separate turn* — meaning the original message text is not available in the sign-in success context.
 
-A common pattern is to store the original message before initiating sign-in, then retrieve and process it in the sign-in success handler. This avoids confusing exchanges where the bot ignores what the user originally asked.
+To avoid ignoring what the user originally asked, store the pending message before initiating sign-in, then retrieve and process it once sign-in succeeds:
 
 <LanguageInclude section="pending-messages" />
 
