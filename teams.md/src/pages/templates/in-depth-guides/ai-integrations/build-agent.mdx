@@ -1,0 +1,70 @@
+---
+sidebar_position: 1
+sidebar_label: Build an agent in Teams
+title: Build an agent in Teams
+summary: Create an agent, add a local clarification tool and remote MCP tool servers, stream responses into Teams, and preserve conversation history across turns.
+languages: ['python', 'typescript']
+---
+
+import ClarificationCardImgUrl from '@site/static/screenshots/clarification.png';
+import Language from '@site/src/components/Language';
+
+# Build an agent in Teams
+
+<Language language="typescript">
+
+:::warning[Our AI libraries are deprecated]
+The Teams SDK has deprecated its own AI libraries — the `@microsoft/teams.ai` packages (`ChatPrompt`, `Model`, and the older `@microsoft/teams.mcp` / `@microsoft/teams.a2a` plugins) — in favor of dedicated AI frameworks. Use the pattern shown in these guides instead: bring the OpenAI SDK (or any framework you like), and wire MCP and A2A directly into your Teams app.
+:::
+
+</Language>
+
+<LanguageInclude section="intro" />
+
+## Defining the agent
+
+An agent is composed of three core elements: a **client** (model backend), **instructions** (system prompt), and **tools** (capabilities beyond text generation). A minimal setup starts with just a chat-enabled agent:
+
+<LanguageInclude section="define-agent" />
+
+## Adding a local tool
+
+Tools extend the agent with executable capabilities. They are regular functions the model can decide to invoke. Anything that runs in your process — database lookups, business logic, or Teams-specific actions like attaching an Adaptive Card to the reply — belongs here.
+
+A good example is **clarification**: when a request is ambiguous, the agent asks the user to pick between interpretations instead of guessing. The tool builds an Adaptive Card and stashes it in a per-turn bucket the handler inspects after the run completes; the user's choice comes back as the next turn.
+
+<LanguageInclude section="local-tool" />
+
+<img
+  src={ClarificationCardImgUrl}
+  alt="Screenshot of a clarification Adaptive Card in a Teams chat, asking the user to pick between candidate interpretations of an ambiguous question."
+  style={{ width: '100%', maxWidth: 700 }}
+/>
+
+## Adding remote MCP tools
+
+Remote tools are exposed via [MCP](https://modelcontextprotocol.io/introduction) servers and live behind a network boundary. The agent discovers their schemas at runtime and invokes them over HTTP. From the model's perspective, they behave like any other tool.
+
+<LanguageInclude section="mcp-tools" />
+
+## Running the agent in Teams
+
+Integrate with Teams by forwarding incoming messages to the agent and streaming the response back to the chat interface chunk by chunk.
+
+<LanguageInclude section="running" />
+
+## Per-conversation memory
+
+By default, each run starts with no history — the model only sees the current message. This works for one-shot interactions, but is insufficient for multi-turn conversations where users refer back to earlier context. Keep a per-conversation buffer and reuse it across turns:
+
+<LanguageInclude section="memory" />
+
+In production, push conversation history into Redis, Cosmos DB, or whatever you already use for state.
+
+## Grounding responses with citations
+
+When a tool returns search results, you usually want the model to cite its sources. The pattern: intercept each tool result, assign every source a stable 1-based index, and hand that index back to the model so it can reference it inline as `[1]`, `[2]`, and so on. The collected citations are attached to the final reply in [Enhancing the Teams Experience](./teams-enhancements#citations).
+
+<LanguageInclude section="citations" />
+
+For Teams-specific enhancements — continue to [Enhancing the Teams Experience](./teams-enhancements).

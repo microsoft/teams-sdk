@@ -2,204 +2,82 @@
 sidebar_position: 3
 sidebar_label: Exposing Teams to AI Agents (MCP)
 title: Exposing Teams to AI Agents (MCP)
-summary: Turn your Teams bot into an MCP server so external AI agents can reach real users — sending notifications, asking questions, and requesting approvals through chat.
-languages: ['python']
-suppressLanguageIncludeWarning: true
+summary: Turn your Teams bot into an MCP server so external AI agents can reach real users — finding them by name, sending notifications, asking questions, and requesting approvals through chat.
+languages: ['python', 'typescript']
 ---
+
+import McpServerImgUrl from '@site/static/screenshots/mcp-server.gif';
+import Language from '@site/src/components/Language';
 
 # Exposing Teams to AI Agents (MCP)
 
-This guide turns your Teams bot into an [MCP](https://modelcontextprotocol.io/introduction) server, enabling external AI agents to interact with users in Teams.
+<Language language="typescript">
 
-Through this mcp server, agents can send messages into chats, request input from users, and trigger workflows such as notifications or approvals.
-This turns Teams into a communication surface for agent-to-human interaction. 
+:::warning[Our AI libraries are deprecated]
+The Teams SDK has deprecated its own AI libraries — the `@microsoft/teams.ai` packages (`ChatPrompt`, `Model`, and the older `@microsoft/teams.mcp` / `@microsoft/teams.a2a` plugins) — in favor of dedicated AI frameworks. Use the pattern shown in these guides instead: bring the OpenAI SDK (or any framework you like), and wire MCP and A2A directly into your Teams app.
+:::
 
-The setup uses the official [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) (`FastMCP`) mounted onto the same FastAPI 
-server that hosts the Teams bot. One process, two HTTP surfaces: `/api/messages` for Teams, `/mcp` for agents.
+</Language>
 
-Full source: [examples/mcp-server](https://github.com/microsoft/teams.py/tree/main/examples/mcp-server).
+This guide turns your Teams bot into an [MCP](https://modelcontextprotocol.io/introduction) server, enabling external AI agents to interact with users in Teams. Through this server, agents can find users by name, send messages into chats, ask questions, and trigger workflows such as notifications or approvals — turning Teams into a communication surface for agent-to-human interaction.
+
+The bot and the MCP server run in the same process, exposing two HTTP surfaces: `/api/messages` for Teams and `/mcp` for agents.
+
+<img
+  src={McpServerImgUrl}
+  alt="Animated screenshot of an AI agent calling the Teams MCP server: it resolves a user by name, sends a notification, then asks a question that lands in the user's Teams chat."
+  style={{ width: '100%', maxWidth: 900 }}
+/>
+
+<LanguageInclude section="intro" />
 
 ## Defining a tool
 
-An MCP tool is a function exposed by the server and discoverable by clients. 
-Tools are defined using the MCP decorator. The function signature defines the input schema, while the return type defines the output. The docstring is used as the tool description for agent consumption.
+An MCP tool is a function exposed by the server and discoverable by clients. The function signature defines the input schema, the return type defines the output, and the description tells the agent when to use it.
 
-```python
-from mcp.server.fastmcp import FastMCP
+<LanguageInclude section="define-tool" />
 
-mcp = FastMCP("teams-bot")
+## Finding users by name
 
-@mcp.tool()
-async def echo(message: str) -> str:
-    """Echo back whatever was sent."""
-    return f"You said: {message}"
-```
+The agent talks in terms of names ("message Mehak about the deploy"), but every other tool needs an **AAD object id**. `find_user` bridges that gap by searching the tenant directory through Microsoft Graph, using the bot's own app identity.
 
-## Sending proactive messages from a tool
+<LanguageInclude section="find-user" />
 
-MCP tools can initiate proactive communication in Teams, allowing agents to send notifications or alerts without an active user message. 
-Common use cases include build status updates, workflow completions, or system events.
+This requires the bot's app registration to have the **`User.ReadBasic.All`** (Microsoft Graph, Application) permission with admin consent granted.
 
-To send a proactive message, the tool must resolve a `conversation_id`. 
-For personal chats, this can be created and reused to maintain continuity across notifications.
+## Sending proactive notifications
 
-```python
-@mcp.tool()
-async def notify(user_id: str, message: str) -> dict:
-    """Send a one-way notification to a Teams user."""
-    conversation_id = await _get_or_create_conversation(user_id)
-    await app.send(conversation_id=conversation_id, activity=message)
-    return {"notified": True, "user_id": user_id}
-```
+A one-way notification needs no response. The tool resolves the user's 1:1 conversation — opening one proactively if the user hasn't messaged the bot — and sends the message.
 
-See [Proactive Messaging](../../essentials/sending-messages/proactive-messaging) for the full story on `app.send` and how Teams handles bot-initiated conversations.
+<LanguageInclude section="notify" />
+
+See [Proactive Messaging](../../essentials/sending-messages/proactive-messaging) for the full story on how Teams handles bot-initiated conversations.
 
 ## Asking the user a question
-Unlike notifications, questions require a response from the user.
-Because MCP tools are expected to return quickly, this pattern separates the interaction into an asynchronous request–response flow.
 
-The `ask` tool sends the question and returns a `request_id`, which can later be used to retrieve the user’s reply via `get_reply`.
+Unlike notifications, questions need a response. The flow is split into two tools: `ask` sends an Adaptive Card with a reply box and returns a `requestId`; `wait_for_reply` blocks until the user submits (or a timeout fires). Recording the pending ask **before** sending the card means a fast reply is never lost.
 
-**The MCP tools**
-```python
-@mcp.tool()
-async def ask(user_id: str, question: str) -> dict:
-    """Ask a Teams user a question. Returns a request_id — poll get_reply for the answer."""
-    conversation_id = await _get_or_create_conversation(user_id)
-    request_id = str(uuid.uuid4())
-    await app.send(conversation_id=conversation_id, activity=question)
-    # Update state with pending ask.
-    pending_asks[request_id] = PendingAsk(user_id=user_id)
-    return {"request_id": request_id}
+<LanguageInclude section="ask" />
 
-@mcp.tool()
-async def get_reply(request_id: str) -> dict:
-    """Get the reply to a question. Status is 'pending' until the user responds."""
-    entry = pending_asks.get(request_id)
-    if not entry:
-        raise ValueError(f"Unknown request_id {request_id}")
-    return {"status": entry.status, "reply": entry.reply}
-```
+The user's typed reply arrives through a card-action handler, which records the answer and wakes up any `wait_for_reply` caller parked on it.
 
-**The Teams handler**
+<LanguageInclude section="ask-handler" />
 
-User responses are captured in the bot’s message handler.
-When a message arrives from a user with a pending request, it is treated as the answer to the outstanding question.
-```python
-@app.on_message
-async def handle_message(ctx: ActivityContext[MessageActivity]):
-    user_id = ctx.activity.from_.id
-    if ctx.activity.conversation.conversation_type == "personal":
-        # Cache the personal conversation_id so MCP tools can DM this user later.
-        personal_conversations[user_id] = ctx.activity.conversation.id
+## Requesting an approval
 
-    # If this user has a pending ask, treat their next message as the answer.
-    request_id = user_pending_ask.pop(user_id, None)
-    if request_id and request_id in pending_asks:
-        # Update state of pending ask with the answer.
-        pending_asks[request_id].reply = ctx.activity.text or ""
-        pending_asks[request_id].status = "answered"
-        await ctx.reply("Got it, thank you!")
-```
+For decisions that need a clear outcome — approving a deployment, confirming an action — an Adaptive Card with explicit **Approve** / **Reject** buttons is clearer than free text. The shape mirrors the ask flow: `request_approval` returns an `approvalId`, and `wait_for_approval` blocks for the decision.
 
-## Requesting an approval via Adaptive Card
+<LanguageInclude section="approval" />
 
-For decisions that require a clear outcome — such as approving a deployment or confirming an action — free-text responses are not ideal.
-Instead, Adaptive Cards can be used to present structured Approve / Reject actions directly in the conversation.
+The user's choice arrives through the same card-action mechanism as the ask flow — the `approval_response` handler records the decision and wakes up any `wait_for_approval` caller.
 
-This pattern mirrors the request–response flow used in `ask`, but replaces text input with a single explicit user action captured through a card interaction.
-
-**The MCP tools**
-```python
-from microsoft_teams.cards import AdaptiveCard, ExecuteAction, SubmitData, TextBlock
-
-approvals: dict[str, str] = {}  # approval_id -> "pending" | "approved" | "rejected"
-
-@mcp.tool()
-async def request_approval(user_id: str, title: str, description: str) -> dict:
-    """Send an Approve/Reject card. Returns an approval_id — poll get_approval for the decision."""
-    conversation_id = await _get_or_create_conversation(user_id)
-    approval_id = str(uuid.uuid4())
-    # Create adaptive card to send to the user asking for approval/confirmation.
-    card = AdaptiveCard(
-        body=[
-            TextBlock(text=title, weight="Bolder", size="Large", wrap=True),
-            TextBlock(text=description, wrap=True),
-        ],
-        actions=[
-            ExecuteAction(title="Approve").with_data(
-                SubmitData("approval_response", {"approval_id": approval_id, "decision": "approved"})
-            ),
-            ExecuteAction(title="Reject").with_data(
-                SubmitData("approval_response", {"approval_id": approval_id, "decision": "rejected"})
-            ),
-        ],
-    )
-    await app.send(conversation_id=conversation_id, activity=card)
-    # Update state with pending approval.
-    approvals[approval_id] = "pending"
-    return {"approval_id": approval_id}
-
-@mcp.tool()
-async def get_approval(approval_id: str) -> dict:
-    """Get an approval decision: 'pending', 'approved', or 'rejected'."""
-    if approval_id not in approvals:
-        raise ValueError(f"Unknown approval_id {approval_id}")
-    return {"approval_id": approval_id, "status": approvals[approval_id]}
-```
-
-**The card-action handler**
-
-User actions from Adaptive Cards are delivered as invoke activities. The handler updates shared state based on the selected action.
-```python
-from microsoft_teams.api import (
-    AdaptiveCardActionMessageResponse,
-    AdaptiveCardInvokeActivity,
-    AdaptiveCardInvokeResponse,
-)
-
-@app.on_card_action_execute("approval_response")
-async def handle_approval(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -> AdaptiveCardInvokeResponse:
-    # The SubmitData payload set on the card carries the approval_id back here.
-    data = ctx.activity.value.action.data
-    approval_id, decision = data.get("approval_id"), data.get("decision")
-    # Update pending approval with decision.
-    if approval_id in approvals and decision in ("approved", "rejected"):
-        approvals[approval_id] = decision
-    # Send invoke response back to Teams.
-    return AdaptiveCardActionMessageResponse(
-        status_code=200,
-        type="application/vnd.microsoft.activity.message",
-        value="Response recorded",
-    )
-```
+<LanguageInclude section="approval-handler" />
 
 ## Wiring the MCP server into your Teams app
 
-The Teams bot and MCP server run in the same process but expose separate HTTP surfaces.
-The bot handles `/api/messages`, while the MCP server is mounted as a separate application.
-```python
-import asyncio
-from microsoft_teams.apps.http.fastapi_adapter import FastAPIAdapter
+The Teams bot handles `/api/messages`, while the MCP server is mounted on the same HTTP server at `/mcp`.
 
-async def main() -> None:
-    # 1. Register Teams routes first.
-    await app.initialize()
-
-    adapter = app.server.adapter
-    assert isinstance(adapter, FastAPIAdapter)
-
-    # 2. Mount the MCP app at /.
-    mcp_http_app = mcp.streamable_http_app()
-    adapter.lifespans.append(mcp_http_app.router.lifespan_context)
-    adapter.app.mount("/", mcp_http_app)
-
-    # 3. Start the combined server.
-    await app.start()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
+<LanguageInclude section="wiring" />
 
 ## Testing with MCP Inspector
 
@@ -208,3 +86,5 @@ The easiest way to drive the server before wiring up a real agent is the [MCP In
 ```bash
 npx @modelcontextprotocol/inspector
 ```
+
+Set the transport to **Streamable HTTP** and the URL to `http://localhost:3978/mcp`, then connect and call `find_user` → `ask` → `wait_for_reply` to drive a full round-trip with a real Teams user.
