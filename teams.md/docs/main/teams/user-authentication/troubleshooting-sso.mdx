@@ -69,7 +69,7 @@ app.on('message', async ({ signin, isSignedIn, send }) => {
 });
 
 // Fires after SSO (tokenExchange) or magic code (verifyState) completes
-app.event('signin', async ({ send, userGraph }) => {
+app.event('signin', async ({ send }) => {
   await send('Sign-in complete!');
 });
 ```
