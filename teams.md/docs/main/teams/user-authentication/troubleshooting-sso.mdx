@@ -28,6 +28,52 @@ When SSO fails, Teams sends a `signin/failure` invoke activity to your bot with 
 The `userconsentrequired` and `interactionrequired` codes are handled by the Teams client via the OAuth card fallback flow and do not typically reach the bot.
 :::
 
+## `authrequestfailed`
+
+If you see:
+
+> Sign-in failed for user "..." in conversation "...": authrequestfailed -- Failed to handle SSO auth request
+
+This can occur in **cross-tenant** scenarios where the Teams app is installed in one tenant but the Entra auth app lives in another. Common causes:
+
+1. **No admin consent in the Teams app's tenant.** Even if the auth app is multi-tenant (`AzureADMultipleOrgs`), admin consent must be granted in the tenant where the Teams app is sideloaded/installed.
+2. **User identity mismatch.** The user signed into Teams is in a different tenant than expected by the auth app. For example, the Teams user is in a dev tenant but the auth app expects users from a production tenant.
+
+To resolve this, either:
+- Grant admin consent for the multi-tenant auth app in the tenant where the Teams app is installed
+- Install the Teams app in the same tenant as the auth app registration
+
+When `authrequestfailed` occurs, Teams falls back to the OAuth card sign-in flow (sign-in button). See [OAuth card fallback and magic code](#oauth-card-fallback-and-magic-code) below.
+
+## OAuth card fallback and magic code
+
+When SSO fails, Teams falls back to the OAuth card flow: the user clicks a sign-in button, authenticates in a popup, and the popup closes automatically once complete. In this normal fallback, no magic code is shown.
+
+However, if the **identity that authenticates in the popup differs from the Teams conversation user** (for example, signing in with a production tenant account while the Teams client is logged in as a dev tenant user), the Token Service cannot match the redirect state. In this case, the popup displays a **6-digit magic code** and asks the user to paste it into the bot chat.
+
+**The magic code flow is expected behavior, not a bug.** When the user pastes the code into the chat:
+
+1. Teams sends a `signin/verifyState` invoke activity to your bot with the code
+2. The SDK's built-in handler exchanges the code for a token
+3. The SDK emits a `signin` event
+
+**Important:** the `signin()` method in your message handler sends the OAuthCard and returns `undefined` when no cached token exists. It does not wait for the user to complete authentication. To handle the post-sign-in logic, use the `signin` event:
+
+```typescript
+app.on('message', async ({ signin, isSignedIn, send }) => {
+  if (!isSignedIn) {
+    await signin(); // sends the OAuthCard, returns undefined
+    return;
+  }
+  await send('You are already signed in!');
+});
+
+// Fires after SSO (tokenExchange) or magic code (verifyState) completes
+app.event('signin', async ({ send, userGraph }) => {
+  await send('Sign-in complete!');
+});
+```
+
 ## `resourcematchfailed`
 
 If you see a warning in your app logs like:

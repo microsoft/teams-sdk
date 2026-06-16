@@ -31,6 +31,22 @@ Before starting SSO configuration, ensure you have:
   Your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` stay the same. See [Bot Locations](/cli/concepts/bot-locations) for details.
   :::
 
+## SSO with User-Assigned Managed Identity
+
+If your bot uses **User-Assigned Managed Identity (MI)** authentication, the bot ID is the MI's client ID. Since managed identities don't have client secrets, you need a **separate Entra App Registration** for the OAuth connection used in SSO. In this setup, the IDs map differently:
+
+| Configuration | Value |
+|---------------|-------|
+| Application ID URI (Expose an API) | `api://botid-{botId}` (where `botId` = MI client ID) |
+| `webApplicationInfo.id` in manifest | The **auth app's** client ID (not the bot/MI ID) |
+| `webApplicationInfo.resource` in manifest | `api://botid-{botId}` (must match the Application ID URI) |
+| OAuth connection `ClientId` / `ClientSecret` | From the **auth app** registration |
+| OAuth connection `tokenExchangeUrl` | `api://botid-{botId}` (must match the Application ID URI) |
+
+:::caution
+The Application ID URI on the auth app must use the **bot ID** (MI client ID), not the auth app's own client ID. Teams requires the `botid-` prefix format and matches this URI across the manifest, OAuth connection, and Entra app registration.
+:::
+
 ## Configure the Entra App Registration for SSO
 
 You need an Entra ID App Registration to configure the OAuth Connection in Azure Bot Service. If you don't already have one, follow the [Create the Entra App Registration](../azure-configuration#create-the-entra-app-registration) guide first.
@@ -245,6 +261,18 @@ Expected — all SSO checks pass:
 
 </TabItem>
 </Tabs>
+
+## Cross-Tenant Considerations
+
+SSO requires the Teams client to silently acquire a token for the resource URI configured in `webApplicationInfo.resource`. This token acquisition happens in the context of the **tenant where the Teams app is installed** (sideloaded or published).
+
+If your Entra auth app lives in a different tenant than where the Teams app is installed:
+
+1. The auth app's `signInAudience` must be set to `AzureADMultipleOrgs` (multi-tenant).
+2. Admin consent for the app must be granted **in the tenant where the Teams app is installed**, not just in the tenant where the app registration lives.
+3. The user signed into Teams must be in a tenant that can reach the auth app.
+
+If these conditions are not met, SSO will silently fail and Teams will fall back to the OAuth card sign-in button. See the [Troubleshooting](troubleshooting-sso) guide for details on the fallback behavior.
 
 ## Troubleshooting
 
