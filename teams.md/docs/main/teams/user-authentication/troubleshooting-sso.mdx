@@ -58,13 +58,16 @@ However, if the **identity that authenticates in the popup differs from the Team
 3. The SDK's built-in handler exchanges the code for a token
 4. The SDK emits a `signin` event
 
+:::caution
+In cross-tenant scenarios where the authenticating identity differs from the Teams session user (for example, signing in with a production tenant account while Teams is logged in as a dev tenant user), the Teams client may not be able to correlate the magic code back to the pending OAuthCard session. In this case, the code arrives as a regular `message` activity instead of a `signin/verifyState` invoke, and the SDK cannot process it. To avoid this, ensure the authenticating identity matches the Teams session, or use one of the options in [Cross-Tenant Considerations](#cross-tenant-considerations) to enable SSO directly.
+:::
+
 **Important:** the `signin()` method in your message handler sends the OAuthCard and returns `undefined` when no cached token exists. It does not wait for the user to complete authentication. To handle the post-sign-in logic, use the `signin` event:
 
 ```typescript
-app.on('message', async ({ signin, isSignedIn, send }) => {
-  if (!isSignedIn) {
-    await signin(); // sends the OAuthCard, returns undefined
-    return;
+app.on('message', async ({ signin, send }) => {
+  if (!(await signin())) {
+    return; // OAuthCard sent; waiting for auth to complete
   }
   await send('You are already signed in!');
 });
@@ -74,6 +77,18 @@ app.event('signin', async ({ send }) => {
   await send('Sign-in complete!');
 });
 ```
+
+## Cross-Tenant Considerations
+
+SSO requires the Teams client to silently acquire a token for the resource URI configured in `webApplicationInfo.resource`. This token acquisition happens in the context of the **tenant where the Teams app is installed** (sideloaded or published).
+
+If your Entra auth app lives in a different tenant than where the Teams app is installed:
+
+1. The auth app's `signInAudience` must be set to `AzureADMultipleOrgs` (multi-tenant).
+2. Admin consent for the app must be granted **in the tenant where the Teams app is installed**, not just in the tenant where the app registration lives.
+3. The user signed into Teams must be in a tenant that can reach the auth app.
+
+If these conditions are not met, SSO will silently fail and Teams will fall back to the OAuth card sign-in button. See [OAuth card fallback and magic code](#oauth-card-fallback-and-magic-code) above for details on the fallback behavior.
 
 ## `resourcematchfailed`
 

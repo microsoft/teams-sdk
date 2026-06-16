@@ -264,15 +264,7 @@ Expected — all SSO checks pass:
 
 ## Cross-Tenant Considerations
 
-SSO requires the Teams client to silently acquire a token for the resource URI configured in `webApplicationInfo.resource`. This token acquisition happens in the context of the **tenant where the Teams app is installed** (sideloaded or published).
-
-If your Entra auth app lives in a different tenant than where the Teams app is installed:
-
-1. The auth app's `signInAudience` must be set to `AzureADMultipleOrgs` (multi-tenant).
-2. Admin consent for the app must be granted **in the tenant where the Teams app is installed**, not just in the tenant where the app registration lives.
-3. The user signed into Teams must be in a tenant that can reach the auth app.
-
-If these conditions are not met, SSO will silently fail and Teams will fall back to the OAuth card sign-in button. See the [Troubleshooting](troubleshooting-sso) guide for details on the fallback behavior.
+If your Entra auth app lives in a different tenant than where the Teams app is installed, see [Cross-Tenant Considerations](troubleshooting-sso#cross-tenant-considerations) in the troubleshooting guide.
 
 ## Troubleshooting
 
