@@ -1,3 +1,6 @@
+> [!WARNING]
+> **Deprecated** — This package is no longer maintained. We recommend migrating to [teams.py](https://github.com/microsoft/teams.py), which is the successor to this package.
+
 # Teams AI Library
 
 Welcome to the Teams AI Library Python package! 

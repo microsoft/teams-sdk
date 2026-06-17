@@ -1,10 +1,11 @@
 [project]
 name = "teams-ai"
-version = "1.8.1"
+version = "1.8.2"
 description = "SDK focused on building AI based applications for Microsoft Teams."
 readme = "README.md"
 authors = [{ name = "Microsoft", email = "teams@microsoft.com"}]
 keywords = ["microsoft", "teams", "ai", "bot"]
+classifiers = ["Development Status :: 7 - Inactive"]
 requires-python = ">=3.9,<4.0"
 dependencies = [
     "botbuilder-core (>=4.15.0,<5.0.0)",
