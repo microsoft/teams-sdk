@@ -13,56 +13,17 @@ description: The Teams SDK's built-in AI libraries were a bridge to agent develo
 
 When the Teams SDK first introduced built-in LLM support, it provided a good foundation for basic agent use cases: prompt templates, a simple chat loop, and model integration. It worked for many developers and solved the immediate problem of "how do I wire an LLM into my Teams bot?"
 
-But the agent ecosystem moved fast. Over the past year, dedicated agent frameworks matured with features that outpaced the Teams SDK: advanced streaming patterns, sophisticated multi-turn reasoning loops, real-time observability and token counting, function calling with automatic retries, and first-class session management tied to conversation scoping. The Teams SDK's AI libraries had the basics, including MCP and A2A support, but couldn't iterate fast enough to match the pace of frameworks like Microsoft Agent Framework, LangChain, and Foundry, which shipped new agent patterns monthly.
+But the agent ecosystem moved fast. Over the past year, dedicated agent frameworks matured with features that outpaced the Teams SDK: sophisticated multi-turn reasoning loops, real-time observability and token counting, function calling with automatic retries, and first-class session management tied to conversation scoping. The Teams SDK's AI libraries had the basics, including MCP and A2A support, but couldn't iterate fast enough to match the pace of frameworks and platforms like the Microsoft Agent Framework, LangChain, and Foundry, which shipped new agent patterns monthly.
 
 Today, dedicated frameworks offer what the Teams AI libraries couldn't keep up with: battle-tested agentic patterns, comprehensive streaming with token-level control, built-in observability for cost and latency, automatic tool retry logic, and session management with persistence strategies baked in. The Teams SDK's role is to integrate these frameworks cleanly, not to try to be one.
 
-We're moving away from the Teams AI helpers (`ChatPrompt`, `McpPlugin` etc.) toward native integration with dedicated agent frameworks. If you're using the Teams AI integrations today, here's what's changing and how to migrate.
+We're moving away from the Teams AI helpers (`ChatPrompt`, `McpPlugin`, etc.). Rather than bundling AI logic, the Teams SDK gives you dedicated, Teams-native building blocks (streaming, cards, citations, feedback) for running a framework-built agent in Teams. If you're using the Teams AI integrations today, here's what's changing and how to migrate.
 
 <!-- truncate -->
 
 ## What's Changing
 
-- **TypeScript:** The following packages are deprecated and will be removed in a future release:
-  - `@microsoft/teams.ai`
-  - `@microsoft/teams.openai`
-  - `@microsoft/teams.mcp`
-  - `@microsoft/teams.mcpclient`
-  - `@microsoft/teams.a2a`
-  
-  The libraries remain functional for now. Framework-based replacements: [ai-mcp](https://github.com/microsoft/teams.ts/tree/main/examples/ai-mcp) · [mcp-server](https://github.com/microsoft/teams.ts/tree/main/examples/mcp-server) · [a2a](https://github.com/microsoft/teams.ts/tree/main/examples/a2a)
-
-- **.NET:** The following packages are deprecated and will be removed in a future release:
-  - `Microsoft.Teams.AI`
-  - `Microsoft.Teams.AI.Models.OpenAI`
-  - `Microsoft.Teams.Plugins.External.Mcp`
-  - `Microsoft.Teams.Plugins.External.McpClient`
-  
-  The libraries remain functional for now. Framework-based replacements: [ExtAIBot](https://github.com/microsoft/teams.net/tree/main/core/samples/ExtAIBot) · [McpServer](https://github.com/microsoft/teams.net/tree/main/core/samples/McpServer) · [A2ABot](https://github.com/microsoft/teams.net/tree/main/core/samples/A2ABot)
-
-- **Python:** The following packages have been removed from the Teams SDK and are no longer supported:
-  - `microsoft-teams-ai`
-  - `microsoft-teams-openai`
-  - `microsoft-teams-mcpplugin`
-  - `microsoft-teams-a2a`
-  
-  Migrate to a dedicated framework. Framework-based replacements: [ai-mcp](https://github.com/microsoft/teams.py/tree/main/examples/ai-mcp) · [mcp-server](https://github.com/microsoft/teams.py/tree/main/examples/mcp-server) · [a2a](https://github.com/microsoft/teams.py/tree/main/examples/a2a)
-
-## What Was Lagging in Teams SDK AI Libraries
-
-The Teams libraries couldn't keep pace with frameworks evolving at high velocity. Here's what fell behind:
-
-| Capability | Teams AI Libraries | Dedicated Frameworks |
-| --- | --- | --- |
-| Tool calling | Inject tool descriptions as text into prompts; model parses tool calls from response text | Native structured function calling APIs; typed tool definitions with automatic dispatch |
-| Function failure handling | You write retry logic and error handling manually | Automatic retries, validation, error recovery built-in |
-| Observability | Wire up your own logging and tracking; no built-in metrics | Built-in callbacks for every step; automatic token counting, cost tracking, dashboards |
-| Session management | Manually manage conversation history and state persistence | Built-in session management handles persistence, scoping, and cleanup automatically |
-| Conversation scoping | Manually track which conversation owns which state | Automatic scoping tied to Teams conversation context |
-| Multi-agent patterns | No support; you write orchestration yourself | Native support for agent-to-agent handoff, hierarchical agents, composition |
-| Model switching | Tied to library version; requires code changes to swap | Abstracted provider; swap OpenAI to Azure OpenAI to Anthropic without code changes |
-
-These gaps mean developers rebuilding the same solutions repeatedly: retries, observability, session state. That's exactly what dedicated frameworks solve.
+The Teams SDK's built-in AI helpers (`ChatPrompt`, the OpenAI model, and the MCP and A2A plugins) are deprecated in TypeScript and .NET, and already removed in Python. The TypeScript and .NET packages are still maintained for now but will be removed, so migrate to a dedicated framework. The [full package list](#deprecated-packages) is below.
 
 ## How to Choose Your Path Forward
 
@@ -150,29 +111,67 @@ session = agent.create_session()  # keyed by ctx.activity.conversation.id
 
 Full runnable versions, with MCP tools, source citations, and Adaptive Cards: **TypeScript** [ai-mcp](https://github.com/microsoft/teams.ts/tree/main/examples/ai-mcp) · **.NET** [ExtAIBot](https://github.com/microsoft/teams.net/tree/main/core/samples/ExtAIBot) · **Python** [ai-mcp](https://github.com/microsoft/teams.py/tree/main/examples/ai-mcp).
 
+Also: MCP server ([TypeScript](https://github.com/microsoft/teams.ts/tree/main/examples/mcp-server) · [.NET](https://github.com/microsoft/teams.net/tree/main/core/samples/McpServer) · [Python](https://github.com/microsoft/teams.py/tree/main/examples/mcp-server)) and agent-to-agent ([TypeScript](https://github.com/microsoft/teams.ts/tree/main/examples/a2a) · [.NET](https://github.com/microsoft/teams.net/tree/main/core/samples/A2ABot) · [Python](https://github.com/microsoft/teams.py/tree/main/examples/a2a)).
+
+## Capabilities You No Longer Build Yourself
+
+The Teams AI libraries never provided these, so you wired them up yourself. Migrate to a framework and you get them all out of the box:
+
+| Capability | Teams AI Libraries | Dedicated Frameworks |
+| --- | --- | --- |
+| Tool calling | Inject tool descriptions as text into prompts; model parses tool calls from response text | Native structured function calling APIs; typed tool definitions with automatic dispatch |
+| Function failure handling | You write retry logic and error handling manually | Automatic retries, validation, error recovery built-in |
+| Observability | Wire up your own logging and tracking; no built-in metrics | Built-in callbacks for every step; automatic token counting, cost tracking, dashboards |
+| Session management | Manually manage conversation history and state persistence | Built-in session management handles persistence, scoping, and cleanup automatically |
+| Conversation scoping | Manually track which conversation owns which state | Automatic scoping tied to Teams conversation context |
+| Multi-agent patterns | No support; you write orchestration yourself | Native support for agent-to-agent handoff, hierarchical agents, composition |
+| Model switching | Tied to library version; requires code changes to swap | Abstracted provider; swap OpenAI to Azure OpenAI to Anthropic without code changes |
+
+These gaps mean developers rebuilding the same solutions repeatedly: retries, observability, session state. That's exactly what dedicated frameworks solve.
+
 ## What We're Investing In
 
-While we're moving away from Teams AI libraries, the Teams SDK is investing in:
+While we're moving away from Teams AI libraries, the Teams SDK is investing in being the best place to host a framework-built agent:
 
-- **Clean framework integration** with popular choices (LangChain, MAF, Foundry)
-- **Native agent patterns** that leverage Teams' UX, streaming, and rich cards
-- **Session and context management** tied to Teams conversations
-- **Tool and capability integration** (MCP servers, custom tools, adaptive cards as tool outputs)
+- **Teams-native building blocks** for agent UX: streaming, rich cards, citations, and feedback
+- **Conversation context and scoping** your framework can build on
+- **Capability hooks** for MCP servers, custom tools, and Adaptive Cards as tool outputs
 - **Examples and documentation** for common agent scenarios across frameworks
 - **Observability and debugging** for agents running in Teams
 
 The goal is clarity: the Teams SDK owns Teams routing and affordances. Agent frameworks own agent logic. Together, they're better than either alone.
 
+## Deprecated Packages
+
+- **TypeScript:** The following packages are deprecated and will be removed in a future release:
+  - `@microsoft/teams.ai`
+  - `@microsoft/teams.openai`
+  - `@microsoft/teams.mcp`
+  - `@microsoft/teams.mcpclient`
+  - `@microsoft/teams.a2a`
+
+- **.NET:** The following packages are deprecated and will be removed in a future release:
+  - `Microsoft.Teams.AI`
+  - `Microsoft.Teams.AI.Models.OpenAI`
+  - `Microsoft.Teams.Plugins.External.Mcp`
+  - `Microsoft.Teams.Plugins.External.McpClient`
+
+- **Python:** The following packages have been removed from the Teams SDK and are no longer supported:
+  - `microsoft-teams-ai`
+  - `microsoft-teams-openai`
+  - `microsoft-teams-mcpplugin`
+  - `microsoft-teams-a2a`
+
 ## Migration Timeline
 
 - **Now:** TypeScript and .NET are deprecated but still functional and published (npm, NuGet). Python's packages have already been removed from the SDK and are no longer supported.
-- **End of Q3 2026:** The deprecated packages are removed and stop receiving fixes. 
- 
+- **End of Q3 2026:** The deprecated packages are removed and stop receiving fixes.
+
 Migrate as you adopt a framework. The sooner you move, the sooner you're off a deprecated path.
 
 ## Further Reading
 
-**Agent frameworks**
+**Frameworks & platforms**
 - [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/): Python and .NET; typed tools, sessions, streaming.
 - [Microsoft.Extensions.AI](https://learn.microsoft.com/en-us/dotnet/ai/microsoft-extensions-ai): the .NET `IChatClient` abstractions used in the .NET migration.
 - [Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/): managed agent platform with orchestration and evaluation.
