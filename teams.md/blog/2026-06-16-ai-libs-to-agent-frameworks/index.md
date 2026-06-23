@@ -1,6 +1,6 @@
 ---
 slug: ai-libraries-to-agent-frameworks
-title: "Unbundling AI from the Teams SDK: A Cleaner Path to Agents"
+title: "Teams SDK + Agent Frameworks: Better Together"
 date: 2026-06-16
 authors:
   - name: Mehak Bindra
