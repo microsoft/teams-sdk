@@ -35,6 +35,7 @@ vi.mock('../src/utils/http.js', () => ({
 }));
 
 import { updateAppDetails } from '../src/apps/api.js';
+import { invalidateAppDetails } from '../src/apps/app-details-cache.js';
 
 describe('updateAppDetails version auto-bump', () => {
   beforeEach(() => {
@@ -42,6 +43,8 @@ describe('updateAppDetails version auto-bump', () => {
     mockDetails.version = '1.0.0';
     mockDetails.shortName = 'Test App';
     mockDetails.webApplicationInfoId = '';
+    // Each CLI invocation is a fresh process with an empty cache.
+    invalidateAppDetails();
   });
 
   it('bumps patch version when content changes', async () => {

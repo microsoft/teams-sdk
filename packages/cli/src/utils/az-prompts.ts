@@ -1,8 +1,8 @@
-import { confirm, search, select } from '@inquirer/prompts';
+import { confirm, search } from '@inquirer/prompts';
 import pc from 'picocolors';
 import { runAz } from './az.js';
 import { isAutoConfirm, isInteractive } from './interactive.js';
-import { logger } from './logger.js';
+
 import { CliError } from './errors.js';
 import { createSilentSpinner } from './spinner.js';
 
