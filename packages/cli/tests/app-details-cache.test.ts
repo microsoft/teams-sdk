@@ -90,7 +90,7 @@ describe('app details in-memory cache', () => {
   it('does not let callers corrupt the cached object (clone safety)', async () => {
     const first = await fetchAppDetailsV2('token', 'app-1');
     first.shortName = 'Mutated';
-    (first.bots ??= []).push({ botId: 'x' } as never);
+    (first.bots ??= []).push({ botId: 'x' });
 
     const second = await fetchAppDetailsV2('token', 'app-1');
     expect(second.shortName).toBe('Test App');
