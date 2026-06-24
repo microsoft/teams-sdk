@@ -1,7 +1,7 @@
 import AdmZip from 'adm-zip';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { AppSummary, AppDetails, AppBot } from './types.js';
+import type { AppSummary, AppDetails } from './types.js';
 import { importAppPackage } from './tdp.js';
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';

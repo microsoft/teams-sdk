@@ -36,7 +36,6 @@ export function createResourceCache<T>(): ResourceCache<T> {
       } else {
         store.clear();
       }
-    }
     },
   };
 }
