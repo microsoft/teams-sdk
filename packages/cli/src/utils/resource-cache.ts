@@ -31,11 +31,12 @@ export function createResourceCache<T>(): ResourceCache<T> {
       store.set(key, structuredClone(value));
     },
     invalidate(key?: string): void {
-      if (key) {
+      if (key !== undefined) {
         store.delete(key);
       } else {
         store.clear();
       }
+    }
     },
   };
 }
