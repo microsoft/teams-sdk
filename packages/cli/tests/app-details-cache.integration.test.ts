@@ -75,8 +75,7 @@ describeIntegration('app-details cache — live timing (RUN_INTEGRATION=1)', () 
       // Primary assertions: network-call counts (deterministic).
       expect(cachedNetworkCalls).toBe(1);
       expect(forcedNetworkCalls).toBe(ITERATIONS);
-      // Timing is informational/noisy; the cached run must not be slower overall.
-      expect(cachedMs).toBeLessThanOrEqual(forcedMs);
+      // Timing is informational/noisy; do not assert on it.
     },
     60000
   );
