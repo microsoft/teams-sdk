@@ -7,11 +7,7 @@ import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
 import { bumpPatchVersion, stableStringify } from '../utils/version.js';
 import { staticsDir } from '../project/paths.js';
-import {
-  getCachedAppDetails,
-  setCachedAppDetails,
-  invalidateAppDetails,
-} from './app-details-cache.js';
+import { getCachedAppDetails, setCachedAppDetails } from './app-details-cache.js';
 
 /**
  * Teams app manifest.json structure (subset of fields we care about)
