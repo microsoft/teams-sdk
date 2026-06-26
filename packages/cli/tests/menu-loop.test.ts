@@ -51,7 +51,7 @@ function setupMocks(): void {
   }));
 
   vi.mock('../src/project/scaffold.js', () => ({
-    listTemplates: vi.fn().mockReturnValue(['echo', 'ai', 'graph', 'mcp', 'mcpclient', 'tab']),
+    listTemplates: vi.fn().mockReturnValue(['echo', 'graph', 'tab']),
     listToolkits: vi.fn().mockReturnValue(['basic', 'oauth', 'embed']),
     scaffoldProject: vi.fn().mockResolvedValue(undefined),
     addToolkitConfig: vi.fn().mockResolvedValue(undefined),
