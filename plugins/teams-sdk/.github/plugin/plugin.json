@@ -6,5 +6,9 @@
     "name": "Microsoft"
   },
   "homepage": "https://github.com/microsoft/teams-sdk",
-  "license": "MIT"
+  "license": "MIT",
+  "skills": [
+    "skills/teams-dev/",
+    "skills/ngc-readiness/"
+  ]
 }
