@@ -42,6 +42,10 @@ Based on the user's request, route to the appropriate guide or handle directly:
 - Read the **[Troubleshooting guide](references/troubleshooting.md)**
 - Covers: Sideloading issues, auth errors, SSO problems, migration issues
 
+### Validating an existing app (handled by a different skill)
+
+**Auditing a Teams app for New Gen Channels (NGC) — shared & private channels — readiness is NOT handled here.** It belongs to the sibling **ngc-readiness** skill in this same plugin. If the user asks to scan, audit, assess, validate, or check an app for NGC / shared channel / private channel compatibility, or to generate an "NGC readiness report", defer to the **ngc-readiness** skill instead of this one. Keep the split clean: `teams-dev` *builds and configures*, `ngc-readiness` *validates*.
+
 ### Simple Operations (Handle Directly)
 
 For simple queries and updates, handle directly using the commands below:
