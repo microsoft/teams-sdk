@@ -185,7 +185,7 @@ async function editScopePermissions(
 
   const approved = await confirmPermissionUpdate(toAdd.length, toRemoveKeys.size);
   if (!approved) {
-    logger.info(pc.dim('No changes uploaded.'));
+    logger.info(pc.dim('No changes made.'));
     return;
   }
 
