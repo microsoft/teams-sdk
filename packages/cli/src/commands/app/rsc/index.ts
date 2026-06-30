@@ -1,10 +1,11 @@
 import { Command } from 'commander';
-import { select, checkbox, Separator } from '@inquirer/prompts';
+import { select, checkbox, confirm, Separator } from '@inquirer/prompts';
 import pc from 'picocolors';
 import { createSilentSpinner } from '../../../utils/spinner.js';
 import { logger } from '../../../utils/logger.js';
 import { CliError, wrapAction } from '../../../utils/errors.js';
 import { outputJson } from '../../../utils/json-output.js';
+import { isAutoConfirm } from '../../../utils/interactive.js';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../../auth/index.js';
 import {
   inferScope,
@@ -85,6 +86,17 @@ function printPermissionsTable(permissions: RscPermissionEntry[]): void {
       `${row.name.padEnd(nameCol + 2)}${row.scope.padEnd(scopeCol + 2)}${row.type}${suffix}`
     );
   }
+}
+
+async function confirmPermissionUpdate(addedCount: number, removedCount: number): Promise<boolean> {
+  const parts: string[] = [];
+  if (addedCount > 0) parts.push(`add ${addedCount}`);
+  if (removedCount > 0) parts.push(`remove ${removedCount}`);
+
+  logger.info(pc.bold(`RSC permission changes: ${parts.join(', ')}`));
+
+  if (isAutoConfirm()) return true;
+  return confirm({ message: 'Apply RSC permission changes?', default: true });
 }
 
 /**
@@ -168,6 +180,12 @@ async function editScopePermissions(
 
   if (toAdd.length === 0 && toRemoveKeys.size === 0) {
     logger.info(pc.dim('No changes.'));
+    return;
+  }
+
+  const approved = await confirmPermissionUpdate(toAdd.length, toRemoveKeys.size);
+  if (!approved) {
+    logger.info(pc.dim('No changes uploaded.'));
     return;
   }
 
