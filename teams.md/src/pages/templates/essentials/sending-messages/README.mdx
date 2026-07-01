@@ -40,8 +40,8 @@ Sending a message at `@mentions` a user is as simple including the details of th
 
 ## Targeted Messages
 
-:::info[Coming Soon]
-Targeted messages are coming soon in May 2026.
+:::info[Preview]
+Targeted messages are available in public preview. General availability is planned for a future release.
 :::
 
 Targeted messages, also known as ephemeral messages, are delivered to a specific user in a shared conversation. From a single user's perspective, they appear as regular inline messages in a conversation. Other participants won't see these messages, making them useful for authentication flows, help or error responses, personal reminders, or sharing contextual information without cluttering the group conversation.
@@ -51,6 +51,32 @@ To send a targeted message when responding to an incoming activity, use the <Lan
 <LanguageInclude section="targeted-send-example" />
 
 <LanguageInclude section="targeted-preview-note" />
+
+### Prompt Preview
+
+:::info[Coming Soon]
+Prompt Preview is coming soon in June 2026.
+:::
+
+Prompt Preview shows a compact, collapsible preview of the targeted message your agent is replying to, helping carry context from a private user-to-agent message into the reply.
+
+#### Prompt Preview in targeted reply
+
+In a targeted (private) reply, both the prompt preview and the bot response are visible only to the targeted user.
+
+![Prompt Preview in a targeted reply.](/screenshots/private-prompt-preview.png)
+
+#### Prompt Preview in public reply
+
+In a public reply, the same prompt preview appears above the bot response and is visible to everyone in the conversation.
+
+![Prompt Preview in a public reply.](/screenshots/public-prompt-preview.png)
+
+In reactive scenarios, when replying to an inbound targeted activity through <LanguageInclude section="context-send-method-name" /> or <LanguageInclude section="context-reply-method-name" />, the SDK automatically includes targeted message info.
+
+For proactive scenarios (using <LanguageInclude content={{"csharp": "`app.Send()`", "typescript": "`app.send()`", "python": "`app.send()`"}} />), attach targeted message info using the targeted message ID you are replying to.
+
+<LanguageInclude section="prompt-preview-proactive-example" />
 
 ## Reactions
 
@@ -69,10 +95,6 @@ When your agent receives a message in a thread, the conversation context already
 For proactive threading (sending to a thread outside of a handler), see [Proactive Messaging](./proactive-messaging#proactive-threading).
 
 ## Quoted Replies
-
-:::info[Coming Soon]
-Quoted replies are coming soon in May 2026.
-:::
 
 Quoted replies let your agent reference a previous message in the conversation. When a user sends a message that quotes another message, your agent receives structured metadata about the quoted content. Your agent can also send messages that quote previous messages.
 

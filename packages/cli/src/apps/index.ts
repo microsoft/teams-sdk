@@ -1,4 +1,6 @@
 export * from './types.js';
+export * from './app-details-cache.js';
+export * from './bot-cache.js';
 export * from './api.js';
 export * from './home.js';
 export * from './graph.js';
