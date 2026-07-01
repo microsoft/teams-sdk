@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/teams.cli",
-  "version": "3.0.1",
+  "version": "3.0.0",
   "description": "Teams Developer CLI for managing Microsoft Teams apps",
   "type": "module",
   "main": "dist/index.js",
@@ -61,7 +61,7 @@
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",
     "@types/node": "^22.10.0",
-    "tsx": "^4.19.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.8.2",
     "vitest": "^4.1.4"
   },

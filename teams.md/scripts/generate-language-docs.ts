@@ -554,7 +554,20 @@ function copyCategoryFiles(): void {
         // Copy category file to all language directories with unique keys
         const categoryContent = JSON.parse(readFileUtf8Normalized(sourcePath));
 
+        // Optional `languages` array restricts which language sidebars get this
+        // category (e.g. a section that only exists for some languages). The key
+        // is stripped from the written output so Docusaurus never sees it.
+        const { languages: restrictLanguages, ...categoryRest } = categoryContent;
+        const allowedLanguages =
+          Array.isArray(restrictLanguages) && restrictLanguages.length > 0
+            ? restrictLanguages
+            : LANGUAGES;
+
         for (const lang of LANGUAGES) {
+          if (!allowedLanguages.includes(lang)) {
+            continue;
+          }
+
           const targetDir = path.join(DOCS_BASE, lang, relativePath);
           const targetPath = path.join(targetDir, '_category_.json');
 
@@ -565,7 +578,7 @@ function copyCategoryFiles(): void {
 
           // Add unique key based on language and relative path
           const modifiedContent = {
-            ...categoryContent,
+            ...categoryRest,
             key: `${lang}-${relativePath.replace(/[/\\]/g, '-') || 'root'}`,
           };
 

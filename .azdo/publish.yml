@@ -42,7 +42,10 @@ extends:
           name: 1ES-Teams-Windows-2022-DomoreexpGithub
           os: windows
         templateContext:
-          isReleaseJob: true
+          outputs:
+          - output: pipelineArtifact
+            targetPath: $(Build.SourcesDirectory)/out
+            artifactName: npm-packages
         variables:
           ob_outputDirectory: '$(Build.SourcesDirectory)/out'
           ob_git_fetchTags: true
@@ -127,23 +130,24 @@ extends:
             # Get version from nbgv and set NpmTag
             $version = (npm run version:get --silent).Trim()
             Write-Host "Version from nbgv: $version"
-            Write-Host "##vso[task.setvariable variable=VersionNumber]$version"
+            Write-Host "##vso[task.setvariable variable=VersionNumber;isOutput=true]$version"
 
             # Determine npm tag from version prerelease suffix
             if ($version -match '-beta') {
               Write-Host "Beta version detected - using 'beta' npm tag"
-              Write-Host "##vso[task.setvariable variable=NpmTag]beta"
+              Write-Host "##vso[task.setvariable variable=NpmTag;isOutput=true]beta"
             } elseif ($version -match '-preview') {
               Write-Host "Preview version detected - using 'preview' npm tag"
-              Write-Host "##vso[task.setvariable variable=NpmTag]preview"
+              Write-Host "##vso[task.setvariable variable=NpmTag;isOutput=true]preview"
             } elseif ($version -match '-') {
               Write-Host "Prerelease version detected - using 'next' npm tag"
-              Write-Host "##vso[task.setvariable variable=NpmTag]next"
+              Write-Host "##vso[task.setvariable variable=NpmTag;isOutput=true]next"
             } else {
               Write-Host "Stable version detected - using 'latest' npm tag"
-              Write-Host "##vso[task.setvariable variable=NpmTag]latest"
+              Write-Host "##vso[task.setvariable variable=NpmTag;isOutput=true]latest"
             }
           displayName: 'Stamp package versions (nbgv)'
+          name: versionStep
           env:
             PublicRelease: 'true'
           target:
@@ -173,21 +177,75 @@ extends:
           target:
             container: host
 
-        # Publish to internal npm feed (Azure Artifacts)
+    - stage: publish
+      displayName: Publish
+      dependsOn: build
+      variables:
+        VersionNumber: $[stageDependencies.build.build_test.outputs['versionStep.VersionNumber']]
+        NpmTag: $[stageDependencies.build.build_test.outputs['versionStep.NpmTag']]
+      jobs:
+      # Publish to internal npm feed (Azure Artifacts)
+      - job: publish_internal
+        condition: and(succeeded(), eq('${{ parameters.publishType }}', 'Internal'))
+        pool:
+          name: 1ES-Teams-Windows-2022-DomoreexpGithub
+          os: windows
+        templateContext:
+          inputs:
+          - input: pipelineArtifact
+            artifactName: npm-packages
+            targetPath: $(Pipeline.Workspace)/npm-packages
+        steps:
+        - task: NodeTool@0
+          displayName: 'Use Node 24.x'
+          inputs:
+            versionSpec: '24.x'
+            checkLatest: true
+          target:
+            container: host
+
+        # Configure npm to use internal feed for publishing
+        - task: CmdLine@2
+          displayName: 'Configure npm registry'
+          inputs:
+            script: |
+              echo always-auth=true >> .npmrc
+              echo registry=https://pkgs.dev.azure.com/DomoreexpGithub/Github_Pipelines/_packaging/TeamsSDKPreviews/npm/registry/ >> .npmrc
+          target:
+            container: host
+
+        - task: NpmAuthenticate@0
+          displayName: 'Authenticate npm registry'
+          inputs:
+            workingFile: .npmrc
+          target:
+            container: host
+
         - powershell: |
-            Get-ChildItem ./out -Filter *.tgz | ForEach-Object {
+            Get-ChildItem $(Pipeline.Workspace)/npm-packages -Filter *.tgz | ForEach-Object {
               Write-Host "Publishing $($_.Name) to internal feed..."
               npm publish $_.FullName --tag $(NpmTag)
             }
           displayName: 'Publish packages to internal npm feed'
-          condition: and(succeeded(), eq('${{ parameters.publishType }}', 'Internal'))
           target:
             container: host
 
-        # Publish to npm via ESRP
+      # Publish to npm via ESRP
+      - job: publish_public
+        condition: and(succeeded(), eq('${{ parameters.publishType }}', 'Public'))
+        pool:
+          name: 1ES-Teams-Windows-2022-DomoreexpGithub
+          os: windows
+        templateContext:
+          type: releaseJob
+          isProduction: true
+          inputs:
+          - input: pipelineArtifact
+            artifactName: npm-packages
+            targetPath: $(Pipeline.Workspace)/npm-packages
+        steps:
         - task: EsrpRelease@10
           displayName: 'Publish packages to npm via ESRP'
-          condition: and(succeeded(), eq('${{ parameters.publishType }}', 'Public'))
           inputs:
             connectedservicename: 'TeamsESRP-Release-Npm'
             usemanagedidentity: true
@@ -197,7 +255,7 @@ extends:
             intent: 'packagedistribution'
             contenttype: 'npm'
             contentsource: 'Folder'
-            folderlocation: '$(Build.SourcesDirectory)/out'
+            folderlocation: '$(Pipeline.Workspace)/npm-packages'
             waitforreleasecompletion: true
             serviceendpointurl: 'https://api.esrp.microsoft.com'
             owners: $(Release.Owners)
