@@ -69,6 +69,28 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 <!-- targeted-preview-note -->
 N/A
 
+<!-- prompt-preview-proactive-example -->
+
+```python
+from microsoft_teams.api import Account, MessageActivityInput
+
+targeted_message_id = "1772050244572"
+conversation_id = "19:groupchat-id@thread.v2"
+user_account = Account(id="29:1AbCDef...", name="Adele Vance")
+
+targeted_message = MessageActivityInput(text="Here is the result!")
+targeted_message.add_targeted_message_info(targeted_message_id)
+targeted_message.with_recipient(user_account, is_targeted=True)
+
+# Targeted reply (only the user sees it)
+await app.send(conversation_id, targeted_message)
+
+# OR public reply (everyone sees it)
+public_message = MessageActivityInput(text="Here is the result!")
+public_message.add_targeted_message_info(targeted_message_id)
+await app.send(conversation_id, public_message)
+```
+
 <!-- context-send-method-name -->
 
 `send()`
