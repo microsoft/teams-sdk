@@ -11,6 +11,8 @@ QuoteAgent/
 
 <!-- project-structure-description -->
 
+- **Program.cs**: Contains the main application code and is the entry point for your application.
+
 <!-- app-class-code -->
 
 ```csharp title="Program.cs"
@@ -25,7 +27,7 @@ var teams = app.UseTeams();
 
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing(cancellationToken);
+    await context.Typing(cancellationToken: cancellationToken);
     await context.Send($"you said '{context.Activity.Text}'", cancellationToken);
 });
 
@@ -45,8 +47,8 @@ To test your agent locally without sideloading into Teams, run the **[Microsoft 
 ```csharp title="Program.cs"
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing(cancellationToken);
-    await context.Send($"you said \"{context.activity.Text}\"", cancellationToken);
+    await context.Typing(cancellationToken: cancellationToken);
+    await context.Send($"you said \"{context.Activity.Text}\"", cancellationToken);
 });
 ```
 
