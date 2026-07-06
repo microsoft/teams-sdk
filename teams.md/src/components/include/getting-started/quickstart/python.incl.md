@@ -60,8 +60,9 @@ The playground sends unauthenticated requests, so a default `App()` will reject 
 app = App(skip_auth=True)
 ```
 
-> [!WARNING]
-> Only use `skip_auth` for local development — never in production, as it disables inbound request authentication.
+:::warning
+Only use `skip_auth` for local development — never in production, as it disables inbound request authentication.
+:::
 
 Install the playground globally:
 

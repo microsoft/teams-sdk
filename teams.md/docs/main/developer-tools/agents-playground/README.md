@@ -68,8 +68,9 @@ app = App(skip_auth=True)
 </TabItem>
 </Tabs>
 
-> [!WARNING]
-> Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+:::warning
+Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+:::
 
 ### Why this is needed
 
