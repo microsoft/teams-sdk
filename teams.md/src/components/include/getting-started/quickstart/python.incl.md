@@ -22,6 +22,14 @@ Navigate to your new agent's directory:
 cd quote-agent
 ```
 
+Create and activate a virtual environment, then install the dependencies:
+
+```sh
+python -m venv .venv
+# Activate it: `source .venv/bin/activate` (macOS/Linux) or `.venv\Scripts\activate` (Windows)
+pip install -e .
+```
+
 Start the development server:
 
 ```sh

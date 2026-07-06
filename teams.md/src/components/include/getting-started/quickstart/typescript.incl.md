@@ -40,14 +40,10 @@ npm run dev
 
 ```sh
 > quote-agent@0.0.0 dev
-> npx nodemon -w "./src/**" -e ts --exec "node -r ts-node/register -r dotenv/config ./src/index.ts"
+> tsx watch -r dotenv/config src/index.ts
 
-[nodemon] 3.1.9
-[nodemon] to restart at any time, enter `rs`
-[nodemon] watching path(s): src/**
-[nodemon] watching extensions: ts
-[nodemon] starting `node -r ts-node/register -r dotenv/config ./src/index.ts`
-[INFO] @teams/app/http listening on port 3978 🚀
+[WARN] @teams/app No credentials configured and skipAuth is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set skipAuth: true for local development.
+[INFO] @teams/app listening on port 3978 🚀
 ```
 
 <!-- post-startup-explanation -->

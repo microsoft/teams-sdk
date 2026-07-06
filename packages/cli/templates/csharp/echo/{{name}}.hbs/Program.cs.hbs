@@ -9,7 +9,7 @@ var teams = app.UseTeams();
 
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing(cancellationToken);
+    await context.Typing(cancellationToken: cancellationToken);
     await context.Send($"you said '{context.Activity.Text}'", cancellationToken);
 });
 
