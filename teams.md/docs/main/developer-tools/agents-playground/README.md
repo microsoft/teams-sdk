@@ -36,7 +36,7 @@ You can also remove `@microsoft/teams.dev` from your `package.json` after deleti
 
 The Playground sends requests without a Bot Framework JWT, so your agent needs to accept unauthenticated requests on `/api/messages`.
 
-By default the SDK **rejects** unauthenticated requests. Leaving `CLIENT_ID` / `CLIENT_SECRET` / `TENANT_ID` unset is not enough — with no credentials configured, the bot rejects every incoming request and logs:
+By default the SDK **rejects** unauthenticated requests, so a freshly scaffolded agent rejects every request the Playground sends and logs:
 
 ```
 [WARN] No credentials configured and skipAuth is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set skipAuth for local development.
