@@ -54,6 +54,14 @@ INFO:     Uvicorn running on http://0.0.0.0:3978 (Press CTRL+C to quit)
 
 The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
 
+The playground sends unauthenticated requests, so a default `App()` will reject them (you'll see the `No credentials configured` warning above). For local testing, enable `skip_auth` so your agent accepts them:
+
+```python title="src/main.py"
+app = App(skip_auth=True)
+```
+
+> **Note:** Only use `skip_auth` for local development — never in production, as it disables inbound request authentication.
+
 Install the playground globally:
 
 ```sh

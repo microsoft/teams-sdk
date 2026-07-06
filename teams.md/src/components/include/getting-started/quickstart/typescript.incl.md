@@ -49,6 +49,14 @@ npm run dev
 
 The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
 
+The playground sends unauthenticated requests, so a default `new App()` will reject them (you'll see the `No credentials configured` warning above). For local testing, enable `skipAuth` so your agent accepts them:
+
+```typescript title="src/index.ts"
+const app = new App({ skipAuth: true });
+```
+
+> **Note:** Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+
 Install the playground globally:
 
 ```sh

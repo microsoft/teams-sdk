@@ -47,6 +47,14 @@ dotnet run
 
 The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
 
+The playground sends unauthenticated requests, which a default `builder.AddTeams()` rejects when no credentials are configured. For local testing, enable `skipAuth` so your agent accepts them:
+
+```csharp title="Program.cs"
+builder.AddTeams(skipAuth: true);
+```
+
+> **Note:** Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+
 Install the playground globally:
 
 ```sh
