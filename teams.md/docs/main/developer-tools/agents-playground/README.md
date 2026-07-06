@@ -3,6 +3,9 @@ sidebar_position: 3
 summary: Test your Teams agent locally with the Microsoft 365 Agents Playground CLI.
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # 🎮 Microsoft 365 Agents Playground
 
 The Microsoft 365 Agents Playground is a local testing tool for agents built with the Teams SDK. It lets you chat with your agent, mock activities, and inspect requests and responses without sideloading into Teams.
@@ -33,17 +36,45 @@ You can also remove `@microsoft/teams.dev` from your `package.json` after deleti
 
 The Playground sends requests without a Bot Framework JWT, so your agent needs to accept unauthenticated requests on `/api/messages`.
 
-For local development, leave `CLIENT_ID` / `CLIENT_SECRET` / `TENANT_ID` unset (for example, comment them out of your `.env`). With no credentials configured, the bot does not enforce JWT validation. The SDK logs a warning at startup confirming the bot is in anonymous mode:
+By default the SDK **rejects** unauthenticated requests, so a freshly scaffolded agent rejects every request the Playground sends and logs:
 
-```
-[WARN] No credentials configured (CLIENT_ID / CLIENT_SECRET / TENANT_ID). Bot will accept unauthenticated requests on /api/messages.
+:::warning
+No credentials configured and skipAuth is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set skipAuth for local development.
+:::
+
+To accept the Playground's requests during local development, enable `skipAuth` on your app:
+
+<Tabs groupId="language">
+<TabItem value="typescript" label="TypeScript">
+
+```typescript title="src/index.ts"
+const app = new App({ skipAuth: true });
 ```
 
-This is the cleanest migration path: nothing to add to your code, and the startup warning makes the mode explicit.
+</TabItem>
+<TabItem value="csharp" label="C#">
+
+```csharp title="Program.cs"
+builder.AddTeams(skipAuth: true);
+```
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```python title="src/main.py"
+app = App(skip_auth=True)
+```
+
+</TabItem>
+</Tabs>
+
+:::warning
+Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+:::
 
 ### Why this is needed
 
-`DevtoolsPlugin` previously bypassed JWT validation implicitly because it ran in-process and never went through `/api/messages` over HTTP. The Playground sends real HTTP requests, so the bot's JWT validator runs unless the bot is left anonymous.
+`DevtoolsPlugin` previously bypassed JWT validation implicitly because it ran in-process and never went through `/api/messages` over HTTP. The Playground sends real HTTP requests, so the bot's JWT validator runs unless `skipAuth` is enabled.
 
 ## Launch
 
