@@ -10,7 +10,6 @@ This command:
 
 1. Creates a new directory called `oauth-app`.
 2. Bootstraps the graph agent template files into it under `oauth-app/src`.
-3. Creates your agent's manifest files, including a `manifest.json` file and placeholder icons in the `oauth-app/appPackage` directory.
 
 <!-- configure-oauth -->
 
