@@ -55,7 +55,8 @@ The playground sends unauthenticated requests, so a default `new App()` will rej
 const app = new App({ skipAuth: true });
 ```
 
-> **Note:** Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+> [!WARNING]
+> Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
 
 Install the playground globally:
 

@@ -53,7 +53,8 @@ The playground sends unauthenticated requests, which a default `builder.AddTeams
 builder.AddTeams(skipAuth: true);
 ```
 
-> **Note:** Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+> [!WARNING]
+> Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
 
 Install the playground globally:
 
