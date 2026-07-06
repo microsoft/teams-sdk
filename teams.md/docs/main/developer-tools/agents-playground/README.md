@@ -38,9 +38,9 @@ The Playground sends requests without a Bot Framework JWT, so your agent needs t
 
 By default the SDK **rejects** unauthenticated requests, so a freshly scaffolded agent rejects every request the Playground sends and logs:
 
-```
-[WARN] No credentials configured and skipAuth is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set skipAuth for local development.
-```
+:::warning
+No credentials configured and skipAuth is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set skipAuth for local development.
+:::
 
 To accept the Playground's requests during local development, enable `skipAuth` on your app:
 
