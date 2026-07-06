@@ -2,6 +2,9 @@ name: CI - Templates
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - heyitsaamir-ci-templates-workflow
   pull_request:
     branches:
       - main
