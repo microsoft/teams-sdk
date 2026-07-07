@@ -154,7 +154,7 @@ await client.Send(card);
 
         if (text.Contains("form"))
         {
-            await context.Typing(cancellationToken);
+            await context.Typing(cancellationToken: cancellationToken);
             var card = CreateTaskFormCard();
             await context.Send(card, cancellationToken);
         }
