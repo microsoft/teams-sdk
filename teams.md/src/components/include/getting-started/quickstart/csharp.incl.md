@@ -1,6 +1,6 @@
 <!-- prerequisites -->
 
-- **.NET** v.8 or higher. Install or upgrade from [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download).
+- **.NET** v.10 or higher. Install or upgrade from [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download).
 
 <!-- create-command -->
 
@@ -10,16 +10,15 @@ teams project new csharp quote-agent --template echo
 
 <!-- create-explanation -->
 
-1. Creates a new directory called `Quote.Agent`.
+1. Creates a new directory called `QuoteAgent`.
 2. Bootstraps the echo agent template files into your project directory.
-3. Creates your agent's manifest files, including a `manifest.json` file and placeholder icons in the `Quote.Agent/appPackage` directory. The Teams [app manifest](https://learn.microsoft.com/en-us/microsoftteams/platform/resources/schema/manifest-schema) is required for [sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) the app into Teams.
 
 <!-- running-steps -->
 
 1. Navigate to your new agent's directory:
 
 ```sh
-cd Quote.Agent/Quote.Agent
+cd QuoteAgent/QuoteAgent
 ```
 
 2. Install the dependencies:
@@ -47,6 +46,16 @@ dotnet run
 <!-- post-startup-explanation -->
 
 The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
+
+The playground sends unauthenticated requests, which a default `builder.AddTeams()` rejects when no credentials are configured. For local testing, enable `skipAuth` so your agent accepts them:
+
+```csharp title="Program.cs"
+builder.AddTeams(skipAuth: true);
+```
+
+:::warning
+Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+:::
 
 Install the playground globally:
 

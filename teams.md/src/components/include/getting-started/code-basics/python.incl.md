@@ -6,14 +6,12 @@ N/A
 
 ```
 quote-agent/
-|── appPackage/       # Teams app package files
 ├── src
     ├── main.py       # Main application code
 ```
 
 <!-- project-structure-description -->
 
-- **appPackage/**: Contains the Teams app package files, including the `manifest.json` file and icons. This is required for [sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) the app into Teams for testing. The app manifest defines the app's metadata, capabilities, and permissions.
 - **src/**: Contains the main application code. The `main.py` file is the entry point for your application.
 
 <!-- app-class-code -->

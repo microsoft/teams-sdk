@@ -12,7 +12,6 @@ teams project new typescript quote-agent --template echo
 
 1. Creates a new directory called `quote-agent`.
 2. Bootstraps the echo agent template files into it under `quote-agent/src`.
-3. Creates your agent's manifest files, including a `manifest.json` file and placeholder icons in the `quote-agent/appPackage` directory. The Teams [app manifest](https://learn.microsoft.com/en-us/microsoftteams/platform/resources/schema/manifest-schema) is required for [sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) the app into Teams.
 
 <!-- running-steps -->
 
@@ -40,19 +39,25 @@ npm run dev
 
 ```sh
 > quote-agent@0.0.0 dev
-> npx nodemon -w "./src/**" -e ts --exec "node -r ts-node/register -r dotenv/config ./src/index.ts"
+> tsx watch -r dotenv/config src/index.ts
 
-[nodemon] 3.1.9
-[nodemon] to restart at any time, enter `rs`
-[nodemon] watching path(s): src/**
-[nodemon] watching extensions: ts
-[nodemon] starting `node -r ts-node/register -r dotenv/config ./src/index.ts`
-[INFO] @teams/app/http listening on port 3978 🚀
+[WARN] @teams/app No credentials configured and skipAuth is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set skipAuth: true for local development.
+[INFO] @teams/app listening on port 3978 🚀
 ```
 
 <!-- post-startup-explanation -->
 
 The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
+
+The playground sends unauthenticated requests, so a default `new App()` will reject them (you'll see the `No credentials configured` warning above). For local testing, enable `skipAuth` so your agent accepts them:
+
+```typescript title="src/index.ts"
+const app = new App({ skipAuth: true });
+```
+
+:::warning
+Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+:::
 
 Install the playground globally:
 

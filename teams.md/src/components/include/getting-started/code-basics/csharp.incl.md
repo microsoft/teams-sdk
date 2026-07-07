@@ -5,14 +5,13 @@ N/A
 <!-- project-structure -->
 
 ```
-Quote.Agent/
-|── appPackage/       # Teams app package files
+QuoteAgent/
 ├── Program.cs        # Main application startup code
 ```
 
 <!-- project-structure-description -->
 
-- **appPackage/**: Contains the Teams app package files, including the `manifest.json` file and icons. This is required for [sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) the app into Teams for testing. The app manifest defines the app's metadata, capabilities, and permissions.
+- **Program.cs**: Contains the main application code and is the entry point for your application.
 
 <!-- app-class-code -->
 
@@ -28,7 +27,7 @@ var teams = app.UseTeams();
 
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing(cancellationToken);
+    await context.Typing(cancellationToken: cancellationToken);
     await context.Send($"you said '{context.Activity.Text}'", cancellationToken);
 });
 
@@ -48,8 +47,8 @@ To test your agent locally without sideloading into Teams, run the **[Microsoft 
 ```csharp title="Program.cs"
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing(cancellationToken);
-    await context.Send($"you said \"{context.activity.Text}\"", cancellationToken);
+    await context.Typing(cancellationToken: cancellationToken);
+    await context.Send($"you said \"{context.Activity.Text}\"", cancellationToken);
 });
 ```
 
