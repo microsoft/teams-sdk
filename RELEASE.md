@@ -81,9 +81,9 @@ Do not use a stable-looking version such as `3.1.{height}` for preview releases.
    Cut one GitHub Release per CLI patch version so the changes for each patch are discoverable. Tag it with the `cli-<version>` prefix (matching the repo's `py-`/`js-`/`dotnet-` convention), targeting the merged release commit on `release/v3`. Scope the notes to `@microsoft/teams.cli` changes since the previous patch, and mark the newest release as `latest`.
 
    ```bash
-   gh release create cli-3.0.3 \
+   gh release create "cli-<version>" \
      --target "$(git rev-parse origin/release/v3)" \
-     --title "Teams Developer CLI 3.0.3" \
+     --title "Teams Developer CLI <version>" \
      --notes-file notes.md \
      --latest
    ```
