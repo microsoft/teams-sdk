@@ -88,7 +88,7 @@ Do not use a stable-looking version such as `3.1.{height}` for preview releases.
      --latest
    ```
 
-   To find the CLI changes since the previous patch, diff `packages/cli` between the two release commits (for example `git log <prev-tag>..<new-tag> --oneline -- packages/cli`) and summarize the notable fixes/features with their PR numbers.
+   To find the CLI changes since the previous patch, diff `packages/cli` between the two release commits (for example `git log <prev-tag>..<new-tag> --oneline -- packages/cli`), summarize the notable fixes/features with their PR numbers, and save that summary to `notes.md`.
 
 6. **Bump `main` for the next development cycle** if needed:
    - Edit `version.json` on `main`.
