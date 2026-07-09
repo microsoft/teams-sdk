@@ -76,9 +76,9 @@ Do not use a stable-looking version such as `3.1.{height}` for preview releases.
    npm view @microsoft/teams.cli@latest version
    ```
 
-5. **Create a GitHub Release for the CLI patch:**
+5. **Create a GitHub Release for the CLI stable version:**
 
-   Cut one GitHub Release per CLI patch version so the changes for each patch are discoverable. Tag it with the `cli-<version>` prefix (matching the repo's `py-`/`js-`/`dotnet-` convention), targeting the merged release commit on `release/v3`. Scope the notes to `@microsoft/teams.cli` changes since the previous patch, and mark the newest release as `latest`.
+   Cut one GitHub Release per stable CLI version so the changes for each patch are discoverable. Tag it with the `cli-<version>` prefix, targeting the merged release commit on `release/v3`. Scope the notes to `@microsoft/teams.cli` changes since the previous stable tag, and mark the newest release as `latest`.
 
    ```bash
    gh release create "cli-<version>" \
