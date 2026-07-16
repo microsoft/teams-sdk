@@ -91,9 +91,6 @@ export function outputCredentials(
       writeEnvFile(envPath, values);
     }
     spinner.success({ text: `Credentials written to ${envPath}` });
-
-    logger.info(pc.bold(pc.green(`\n${successMessage}`)));
-    logger.info(`Credentials written to ${pc.cyan(envPath)}`);
   } else {
     logger.info(pc.bold(pc.green(`\n${successMessage}`)));
     logger.info(`\n${pc.dim('CLIENT_ID=')}${values.CLIENT_ID}`);
