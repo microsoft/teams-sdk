@@ -63,6 +63,14 @@ export async function createApp(
   input: AppCreateInput,
   progress?: AppCreateProgress
 ): Promise<AppCreateResult> {
+  if (input.botLocation === 'azure' && !input.azureContext) {
+    throw new CliError(
+      'VALIDATION_MISSING',
+      'Azure context is required when creating an Azure bot.',
+      'Provide an Azure subscription and resource group, or use Teams-managed bot hosting.'
+    );
+  }
+
   progress?.start('Acquiring tokens...');
   const account = await getAccount();
   if (!account) {

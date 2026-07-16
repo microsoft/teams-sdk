@@ -100,4 +100,24 @@ describe('createApp action', () => {
     expect(progress.start).toHaveBeenCalledWith('Acquiring tokens...');
     expect(progress.success).toHaveBeenCalledWith('Bot registered');
   });
+
+  it('rejects Azure bot creation without Azure context before remote side effects', async () => {
+    const { createApp } = await import('../src/commands/app/create-action.js');
+
+    await expect(
+      createApp({
+        ...baseInput,
+        botLocation: 'azure',
+        azureContext: undefined,
+      })
+    ).rejects.toMatchObject({
+      code: 'VALIDATION_MISSING',
+      message: 'Azure context is required when creating an Azure bot.',
+    });
+
+    expect(mockGetAccount).not.toHaveBeenCalled();
+    expect(mockCreateAadAppViaTdp).not.toHaveBeenCalled();
+    expect(mockImportAppPackage).not.toHaveBeenCalled();
+    expect(mockCreateBot).not.toHaveBeenCalled();
+  });
 });
