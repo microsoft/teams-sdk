@@ -3,7 +3,6 @@ import * as path from 'node:path';
 import pc from 'picocolors';
 import { CliError } from './errors.js';
 import { logger } from './logger.js';
-import { createSilentSpinner } from './spinner.js';
 
 export interface EnvValues {
   CLIENT_ID: string;
@@ -84,13 +83,12 @@ export function outputCredentials(
   successMessage: string
 ): void {
   if (envPath) {
-    const spinner = createSilentSpinner('Writing credentials...').start();
     if (isJsonFile(envPath)) {
       writeJsonCredentials(envPath, values);
     } else {
       writeEnvFile(envPath, values);
     }
-    spinner.success({ text: `Credentials written to ${envPath}` });
+    logger.info(pc.bold(pc.green(`Credentials written to ${envPath}`)));
   } else {
     logger.info(pc.bold(pc.green(`\n${successMessage}`)));
     logger.info(`\n${pc.dim('CLIENT_ID=')}${values.CLIENT_ID}`);

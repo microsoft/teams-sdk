@@ -186,7 +186,10 @@ describe('outputCredentials', () => {
 
     outputCredentials(filePath, TEST_VALUES, 'Credentials:');
 
-    expect(logger.info).not.toHaveBeenCalled();
+    const output = vi.mocked(logger.info).mock.calls.map(([message]) => message).join('\n');
+    expect(output).toContain(`Credentials written to ${filePath}`);
+    expect(output).not.toContain('Credentials:');
+    expect(output).not.toContain('CLIENT_ID=');
     expect(logger.warn).not.toHaveBeenCalled();
   });
 

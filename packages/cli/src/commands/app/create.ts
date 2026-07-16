@@ -112,7 +112,10 @@ export async function runAppCreate(
     return undefined;
   }
 
-  const result = await createApp(prepared.input, createSpinnerProgress(prepared.silent));
+  const result = await createApp(
+    prepared.input,
+    createSpinnerProgress(prepared.silent || prepared.input.botLocation === 'azure')
+  );
   const output = toAppCreateOutput(result, prepared.envPath);
   await renderAppCreateResult(output, result, prepared.envPath, options, runOptions);
   return output;
@@ -266,7 +269,7 @@ async function prepareAppCreate(
       const rgRegion = options.region ?? 'westus2';
       const rgSpinner = createSilentSpinner(
         `Creating resource group ${resourceGroup}...`,
-        silent
+        true
       ).start();
       await runAz([
         'group',
