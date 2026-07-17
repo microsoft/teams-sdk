@@ -179,6 +179,20 @@ describe('outputCredentials', () => {
     expect(content).toContain('TENANT_ID=test-tenant-id');
   });
 
+  it('does not print terminal credentials section when writing to a file', async () => {
+    const { logger } = await import('../src/utils/logger.js');
+    const filePath = tmpFile('.env');
+    files.push(filePath);
+
+    outputCredentials(filePath, TEST_VALUES, 'Credentials:');
+
+    const output = vi.mocked(logger.info).mock.calls.map(([message]) => message).join('\n');
+    expect(output).toContain(`Credentials written to ${filePath}`);
+    expect(output).not.toContain('Credentials:');
+    expect(output).not.toContain('CLIENT_ID=');
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
   it('writes JSON format for paths ending in .json', () => {
     const filePath = tmpFile('appsettings.json');
     files.push(filePath);

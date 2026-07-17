@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../src/utils/interactive.js', () => ({
   confirmAction: vi.fn().mockResolvedValue(true),
+  isAutoConfirm: vi.fn().mockReturnValue(false),
+  isInteractive: vi.fn().mockReturnValue(false),
 }));
 
 vi.mock('../src/utils/logger.js', () => ({
