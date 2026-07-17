@@ -92,9 +92,9 @@ export function credentialFilePath(
 
 export function credentialDisplayPath(language: ProjectLanguage, projectName: string): string {
   if (language === 'csharp') {
-    return path.join(projectName, projectName, 'appsettings.Development.json');
+    return path.posix.join(projectName, projectName, 'appsettings.Development.json');
   }
-  return path.join(projectName, '.env');
+  return path.posix.join(projectName, '.env');
 }
 
 export function appCreateCommandFor(agentName: string, credentialsPath: string): string {
