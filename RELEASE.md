@@ -10,7 +10,7 @@ Versions are computed from `version.json` and git history.
 - **Preview branch**: public preview releases.
 - **Release branch**: stable releases. For v3, use `release/v3`.
 - **Release refs** are configured in `version.json` via `publicReleaseRefSpec`; keep this in sync with any release branch name changes.
-- **Preview versions** use a prerelease suffix and automatic height, for example `3.1-preview.{height}`. This produces versions like `3.1.0-preview.12`.
+- **Preview versions** use a prerelease suffix and automatic height, for example `3.1.0-preview.{height}`. This produces versions like `3.1.0-preview.12`.
 - **Stable versions** are hard-coded on the release branch, for example `3.0.0` or `3.0.1`.
 
 The publish pipeline determines the npm tag from the computed version:
@@ -27,7 +27,7 @@ Do not use a stable-looking version such as `3.1.{height}` for preview releases.
 1. **Prepare the `preview` branch:**
 
    - Create or update the `preview` branch from the commit you want to ship.
-   - Set `version.json` to the preview version line, for example `"3.1-preview.{height}"`.
+   - Set `version.json` to the preview version line, for example `"3.1.0-preview.{height}"`.
    - Update docs and install instructions to use the preview package where appropriate:
 
      ```bash
@@ -78,7 +78,7 @@ Do not use a stable-looking version such as `3.1.{height}` for preview releases.
 
 5. **Bump `main` for the next development cycle** if needed:
    - Edit `version.json` on `main`.
-   - For example, move to `"3.1-preview.{height}"` or `"3.1-beta.{height}"`.
+   - For example, move to `"3.1.0-preview.{height}"` or `"3.1.0-beta.{height}"`.
    - Commit and push via PR.
 
 ## Publishing
