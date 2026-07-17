@@ -23,7 +23,7 @@ teams --version
 Install the Teams Developer CLI using npm:
 
 ```bash
-npm install -g @microsoft/teams.cli
+npm install -g @microsoft/teams.cli@preview
 ```
 
 **After installation:**

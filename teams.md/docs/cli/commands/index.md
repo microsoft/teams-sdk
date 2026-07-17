@@ -50,7 +50,7 @@ teams
 ├── config                         Manage CLI configuration
 │   ├── get [key]                  Show configuration values
 │   └── set <key> [value]          Set a configuration value
-└── self-update                    Update to latest version
+└── self-update                    Update to latest preview version
 ```
 
 ## Structured Help

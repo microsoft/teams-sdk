@@ -62,7 +62,7 @@ export async function runSelfUpdate(options: SelfUpdateOptions = {}): Promise<bo
 
   try {
     await runSelfUpdateCommand(command);
-    logger.info(pc.green('Updated to the latest version'));
+    logger.info(pc.green('Updated to the latest preview version'));
     return true;
   } catch (error) {
     logger.error(pc.red('Update failed'));
@@ -73,7 +73,7 @@ export async function runSelfUpdate(options: SelfUpdateOptions = {}): Promise<bo
 }
 
 export const selfUpdateCommand = new Command('self-update')
-  .description('Update teams to the latest version')
+  .description('Update teams to the latest preview version')
   .option('--force', '[OPTIONAL] Run update even when the current version is already up to date')
   .action(async (options: SelfUpdateOptions) => {
     if (!(await runSelfUpdate(options))) {
