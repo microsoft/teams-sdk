@@ -1,6 +1,8 @@
-# @microsoft/teams.cli
+# Teams Developer CLI
 
-Teams Developer CLI for managing Microsoft Teams apps.
+[![npm preview version](https://img.shields.io/npm/v/@microsoft/teams.cli/preview.svg?label=npm%20preview)](https://www.npmjs.com/package/@microsoft/teams.cli)
+
+Teams Developer CLI helps you create, configure, and manage Microsoft Teams apps from the command line. Use it to scaffold projects, register Teams apps and bots, manage manifests and packages, configure authentication, and automate common app lifecycle tasks.
 
 ## Install
 
@@ -14,51 +16,36 @@ npm install -g @microsoft/teams.cli@preview
 teams
 ```
 
-This launches an interactive CLI. You can also run specific commands directly:
+This launches the interactive CLI. You can also run commands directly for scripting and automation.
 
-```bash
-teams login                          # Sign in with your Microsoft account
-teams logout                         # Sign out
-teams status                         # Check authentication status
-teams app                            # Manage a Teams app (interactive menu)
-teams app list                       # List your Teams apps
-teams app create                     # Create a new Teams app with bot
-teams app get [appId]                # Get a Teams app
-teams app update [appId]             # Update app properties
-teams app doctor [appId]             # Run diagnostic checks
-teams app manifest download [appId]  # Download manifest
-teams app manifest upload [appId]    # Upload manifest
-teams app package download [appId]   # Download app package
-teams app bot get [appId]            # Get bot location (Teams-managed vs Azure)
-teams app bot migrate [appId]        # Migrate bot to Azure
-teams app auth secret create [appId] # Generate a client secret
-teams app rsc list [appId]           # List RSC permissions
-teams app rsc add [appId]            # Add RSC permission
-teams app rsc remove [appId]         # Remove RSC permission
-teams app rsc set [appId]            # Declaratively set RSC permissions
-teams project new                    # Create a new Teams app project
-teams config                         # Manage CLI configuration
-teams self-update                    # Update to the latest version
-```
+## Documentation
 
-## Global Options
+For command reference, guides, and examples, see:
 
-| Flag                    | Description                                                        |
-| ----------------------- | ------------------------------------------------------------------ |
-| `-v, --verbose`         | Enable verbose logging                                             |
-| `--json`                | Output results as JSON (structured output, recommended for agents) |
-| `--yes` / `-y`          | Skip confirmation prompts (CI/agent use)                           |
-| `--disable-auto-update` | Disable automatic update checks                                    |
+https://aka.ms/teamscli
+
+## Automation
+
+Use these options for CI and agent workflows:
+
+| Flag                    | Description                            |
+| ----------------------- | -------------------------------------- |
+| `--json`                | Output structured JSON where supported |
+| `--yes` / `-y`          | Skip confirmation prompts              |
+| `--disable-auto-update` | Disable automatic update checks        |
+| `-v, --verbose`         | Enable verbose logging                 |
+
+Set `TEAMS_NO_INTERACTIVE=1` to disable interactive prompts entirely.
 
 ## AI Agent Skills
 
-Install agent skills to help AI assistants manage Teams bot infrastructure:
+Use Teams developer skills to help AI assistants manage Teams bot infrastructure:
 
-```bash
-npx skills add microsoft/teams-sdk --skill teams-dev
-```
+https://aka.ms/Teams-Skills
 
-See [skills/README.md](skills/README.md) for details.
+## Issues
+
+Report CLI issues at https://aka.ms/teams-cli-issues.
 
 ## License
 

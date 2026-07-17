@@ -15,7 +15,7 @@ export default function App() {
   React.useEffect(() => {
     // initialize the app and prompt for Graph scope consent, if not already granted
     const app = new client.App(clientId, {
-      logger: new ConsoleLogger('@tests/tab', { level: 'debug' }),
+      logger: new ConsoleLogger('tab', { level: 'debug' }),
       msalOptions: {
         prewarmScopes: ['User.Read', 'Presence.ReadWrite', 'Team.ReadBasic.All']
       }

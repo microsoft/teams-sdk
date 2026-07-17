@@ -10,7 +10,6 @@ This command:
 
 1. Creates a new directory called `oauth-app`.
 2. Bootstraps the graph agent template files into it under `oauth-app/src`.
-3. Creates your agent's manifest files, including a `manifest.json` file and placeholder icons in the `oauth-app/appPackage` directory.
 
 <!-- configure-oauth -->
 
@@ -78,6 +77,44 @@ app.message('/signout', async ({ send, signout, isSignedIn }) => {
   if (!isSignedIn) return;
   await signout();
   await send('you have been signed out!');
+});
+```
+
+<!-- pending-messages -->
+
+```ts
+const pendingMessages = new Map<string, { text: string; activity: any }>();
+
+app.on('message', async ({ signin, activity, send }) => {
+  // signin() returns the token if already signed in, or undefined if OAuth card was sent
+  const token = await signin({
+    oauthCardText: 'To help with that, I need to sign you in first.',
+  });
+
+  if (!token) {
+    // OAuth card sent — store the original message for later
+    pendingMessages.set(activity.from.id, {
+      text: activity.text,
+      activity,
+    });
+    return;
+  }
+
+  // User is already signed in — process normally
+  await processMessage(activity.text, { send });
+});
+
+app.event('signin', async ({ send, userGraph, activity }) => {
+  const userId = activity.from.id;
+  const pending = pendingMessages.get(userId);
+
+  if (pending) {
+    pendingMessages.delete(userId);
+    await send('Successfully signed in! Processing your original request...');
+    await processMessage(pending.text, { send, userGraph });
+  } else {
+    await send('You are now signed in!');
+  }
 });
 ```
 

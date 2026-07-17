@@ -1,7 +1,7 @@
 ---
 name: teams-dev
 description: Use this skill whenever the user mentions Microsoft Teams in a development context — whether they're building, integrating, configuring, debugging, or just asking questions. Covers bots, message extensions, embedded web apps, Adaptive Cards, dialogs, SSO, infrastructure, the Teams Developer CLI/SDK, and general Teams platform queries. If the word "Teams" appears, err on the side of invoking this skill.
-teams_cli_version: 3.0.0-preview.*
+teams_cli_version: 3.0.*
 ---
 
 # Teams Bot Development & Infrastructure

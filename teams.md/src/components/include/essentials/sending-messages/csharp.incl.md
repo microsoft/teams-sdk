@@ -76,6 +76,30 @@ In .NET, targeted message APIs are marked with `[Experimental("ExperimentalTeams
 ```
 :::
 
+<!-- prompt-preview-proactive-example -->
+
+```csharp
+var targetedMessageId = "1772050244572";
+var conversationId = "19:groupchat-id@thread.v2";
+var userAccount = new Account
+{
+    Id = "29:1AbCDef...",
+    Name = "Adele Vance"
+};
+
+var targetedMessage = new MessageActivity("Here is the result!")
+    .AddTargetedMessageInfo(targetedMessageId)
+    .WithRecipient(userAccount, isTargeted: true);
+
+// Targeted reply (only the user sees it)
+await app.Send(conversationId, targetedMessage);
+
+// OR public reply (everyone sees it)
+var publicMessage = new MessageActivity("Here is the result!")
+    .AddTargetedMessageInfo(targetedMessageId);
+await app.Send(conversationId, publicMessage);
+```
+
 <!-- context-send-method-name -->
 
 `Send()`
@@ -160,13 +184,4 @@ await app.Send(conversationId, msg);
 ```
 
 <!-- quoted-replies-preview-note -->
-
-:::tip[.NET]
-In .NET, quoted reply APIs are marked with `[Experimental("ExperimentalTeamsQuotedReplies")]` and will produce a compiler error until you opt in. Suppress the diagnostic inline with `#pragma warning disable ExperimentalTeamsQuotedReplies` or project-wide in your `.csproj`:
-
-```xml
-<PropertyGroup>
-  <NoWarn>$(NoWarn);ExperimentalTeamsQuotedReplies</NoWarn>
-</PropertyGroup>
-```
-:::
+N/A

@@ -5,31 +5,30 @@ N/A
 <!-- project-structure -->
 
 ```
-Quote.Agent/
-|── appPackage/       # Teams app package files
+QuoteAgent/
 ├── Program.cs        # Main application startup code
 ```
 
 <!-- project-structure-description -->
 
-- **appPackage/**: Contains the Teams app package files, including the `manifest.json` file and icons. This is required for [sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) the app into Teams for testing. The app manifest defines the app's metadata, capabilities, and permissions.
+- **Program.cs**: Contains the main application code and is the entry point for your application.
 
 <!-- app-class-code -->
 
 ```csharp title="Program.cs"
-using Microsoft.Teams.Apps.Activities;
-using Microsoft.Teams.Apps.Extensions;
-using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+using Microsoft.Teams.Apps;
+using Microsoft.Teams.Apps.Handlers;
 
-var builder = WebApplication.CreateBuilder(args);
-builder.AddTeams();
-var app = builder.Build();
-var teams = app.UseTeams();
+WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
+builder.Services.AddTeamsBotApplication();
+WebApplication app = builder.Build();
+
+TeamsBotApplication teams = app.UseTeamsBotApplication();
 
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing(cancellationToken);
-    await context.Send($"you said '{context.Activity.Text}'", cancellationToken);
+    await context.TypingAsync(cancellationToken: cancellationToken);
+    await context.SendAsync($"you said '{context.Activity.Text}'", cancellationToken);
 });
 
 app.Run();
@@ -48,8 +47,8 @@ To test your agent locally without sideloading into Teams, run the **[Microsoft 
 ```csharp title="Program.cs"
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing(cancellationToken);
-    await context.Send($"you said \"{context.activity.Text}\"", cancellationToken);
+    await context.TypingAsync(cancellationToken: cancellationToken);
+    await context.SendAsync($"you said \"{context.Activity.Text}\"", cancellationToken);
 });
 ```
 
@@ -72,7 +71,7 @@ of routing logic!
 <!-- app-lifecycle-code -->
 
 ```csharp
-var app = builder.Build();
-app.UseTeams();
+WebApplication app = builder.Build();
+app.UseTeamsBotApplication();
 app.Run();
 ```

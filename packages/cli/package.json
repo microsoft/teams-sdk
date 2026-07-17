@@ -34,7 +34,7 @@
     "directory": "packages/cli"
   },
   "bugs": {
-    "url": "https://github.com/microsoft/teams-sdk/issues"
+    "url": "https://aka.ms/teams-cli-issues"
   },
   "homepage": "https://microsoft.github.io/teams-sdk/cli/",
   "engines": {
@@ -61,7 +61,7 @@
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",
     "@types/node": "^22.10.0",
-    "tsx": "^4.19.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.8.2",
     "vitest": "^4.1.4"
   },

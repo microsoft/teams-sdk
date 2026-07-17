@@ -12,7 +12,6 @@ teams project new python quote-agent --template echo
 
 1. Creates a new directory called `quote-agent`.
 2. Bootstraps the echo agent template files into it under `quote-agent/src`.
-3. Creates your agent's manifest files, including a `manifest.json` file and placeholder icons in the `quote-agent/appPackage` directory. The Teams [app manifest](https://learn.microsoft.com/en-us/microsoftteams/platform/resources/schema/manifest-schema) is required for [sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) the app into Teams.
 
 <!-- running-steps -->
 
@@ -20,6 +19,14 @@ Navigate to your new agent's directory:
 
 ```sh
 cd quote-agent
+```
+
+Create and activate a virtual environment, then install the dependencies:
+
+```sh
+python -m venv .venv
+# Activate it: `source .venv/bin/activate` (macOS/Linux) or `.venv\Scripts\activate` (Windows)
+pip install -e .
 ```
 
 Start the development server:
@@ -46,6 +53,16 @@ INFO:     Uvicorn running on http://0.0.0.0:3978 (Press CTRL+C to quit)
 <!-- post-startup-explanation -->
 
 The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
+
+The playground sends unauthenticated requests, so a default `App()` will reject them (you'll see the `No credentials configured` warning above). For local testing, enable `skip_auth` so your agent accepts them:
+
+```python title="src/main.py"
+app = App(skip_auth=True)
+```
+
+:::warning
+Only use `skip_auth` for local development — never in production, as it disables inbound request authentication.
+:::
 
 Install the playground globally:
 

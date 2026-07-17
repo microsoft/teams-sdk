@@ -24,7 +24,7 @@ You can find a set of open-source agent accelerator templates in the [Teams Agen
 
 ### Quick start
 
-The Teams Developer CLI makes it easy to bootstrap your first agent. First, install the CLI via NPM:
+The Teams Developer CLI makes it easy to bootstrap your first agent. First, install the public preview CLI via NPM:
 
 ```sh
 npm install -g @microsoft/teams.cli@preview
@@ -33,7 +33,7 @@ npm install -g @microsoft/teams.cli@preview
 Next, use the CLI to create your agent:
 
 ```sh
-npx @microsoft/teams.cli new <typescript | csharp | python> quote-agent --template echo
+npx @microsoft/teams.cli@preview new <typescript | csharp | python> quote-agent --template echo
 ```
 
 For more information, follow our quickstart guide: [C#](http://microsoft.github.io/teams-sdk/csharp/getting-started/quickstart), [Typescript](http://microsoft.github.io/teams-sdk/typescript/getting-started/quickstart), [Python](http://microsoft.github.io/teams-sdk/python/getting-started/quickstart)

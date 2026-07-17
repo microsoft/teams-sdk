@@ -39,6 +39,7 @@ export default {
             'commands/app/manifest',
             'commands/app/manifest-download',
             'commands/app/manifest-upload',
+            'commands/app/manifest-update',
             'commands/app/package',
             'commands/app/package-download',
             'commands/app/bot',

@@ -23,7 +23,7 @@ Install the [`teams-dev` skill](/developer-tools/agent-skills) in Claude Code, G
 ## 1. Install the CLI
 
 ```bash
-npm install -g @microsoft/teams.cli
+npm install -g @microsoft/teams.cli@preview
 teams --version
 ```
 

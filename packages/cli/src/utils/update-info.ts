@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 
 export const PACKAGE_NAME = '@microsoft/teams.cli';
-export const UPDATE_TAG = 'latest';
+export const UPDATE_TAG = 'preview';
 export const UPDATE_SPEC = `${PACKAGE_NAME}@${UPDATE_TAG}`;
 export const REGISTRY_API = `https://registry.npmjs.org/${encodeURIComponent(PACKAGE_NAME)}/${UPDATE_TAG}`;
 

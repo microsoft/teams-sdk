@@ -16,7 +16,7 @@ Verify the Teams Developer CLI is installed:
 teams --version
 ```
 
-**Expected output:** Shows version number (e.g., `3.0.0-preview.*` or later)
+**Expected output:** Shows version number (e.g., `3.0.0` or later)
 
 **If not installed:**
 

@@ -3,27 +3,19 @@
     "csharp",
     "python"
   ],
-  "in-depth-guides/ai": [
-    "python"
-  ],
   "in-depth-guides/ai-integrations": [
-    "typescript",
     "csharp"
   ],
   "in-depth-guides/ai-integrations/a2a": [
-    "typescript",
     "csharp"
   ],
-  "in-depth-guides/ai-integrations/build-agent-maf": [
-    "typescript",
+  "in-depth-guides/ai-integrations/build-agent": [
     "csharp"
   ],
   "in-depth-guides/ai-integrations/mcp-server": [
-    "typescript",
     "csharp"
   ],
   "in-depth-guides/ai-integrations/teams-enhancements": [
-    "typescript",
     "csharp"
   ],
   "in-depth-guides/ai/a2a": [
@@ -36,9 +28,6 @@
   ],
   "in-depth-guides/ai/a2a/a2a-server": [
     "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/best-practices": [
     "python"
   ],
   "in-depth-guides/ai/chat": [
@@ -61,6 +50,10 @@
     "python"
   ],
   "in-depth-guides/ai/setup-and-prereqs": [
+    "python"
+  ],
+  "in-depth-guides/observability/opentelemetry": [
+    "typescript",
     "python"
   ],
   "in-depth-guides/server/http-server": [

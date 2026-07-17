@@ -8,7 +8,7 @@
 
 ## Install
 
-Install `teams` globally from npm:
+Install the public preview `teams` CLI globally from npm:
 
 ```bash
 npm install -g @microsoft/teams.cli@preview
@@ -22,7 +22,7 @@ teams --version
 
 ## Update
 
-The CLI checks for updates automatically once per day. To update manually:
+The preview CLI checks the `preview` npm tag for updates automatically once per day. To update manually:
 
 ```bash
 teams self-update

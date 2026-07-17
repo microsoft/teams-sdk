@@ -25,6 +25,19 @@ function validateOptionalField(field: AppMetadataField, value: string): string |
  */
 export const PLACEHOLDER_BOT_ID = '00000000-0000-0000-0000-000000000000';
 
+export type ManifestCustomizationField = 'description' | 'icons' | 'scopes' | 'developer';
+
+export const MANIFEST_CUSTOMIZATION_CHOICES = [
+  { name: 'Description', value: 'description' },
+  { name: 'Icons', value: 'icons' },
+  { name: 'Scopes', value: 'scopes' },
+  { name: 'Developer details', value: 'developer' },
+] as const satisfies readonly { name: string; value: ManifestCustomizationField }[];
+
+export function isManifestCustomizationField(value: string): value is ManifestCustomizationField {
+  return MANIFEST_CUSTOMIZATION_CHOICES.some((choice) => choice.value === value);
+}
+
 export interface ManifestCustomization {
   description?: { short: string; full?: string };
   icons?: { colorIconPath?: string; outlineIconPath?: string };
@@ -41,24 +54,16 @@ export interface ManifestCustomization {
  * Interactively collects manifest customization options from the user.
  * Prompts for description, icons, scopes, and developer details.
  */
-export async function collectManifestCustomization(): Promise<ManifestCustomization> {
-  if (!isInteractive()) {
+export async function collectManifestCustomization(
+  fields: ManifestCustomizationField[]
+): Promise<ManifestCustomization> {
+  if (!isInteractive() || fields.length === 0) {
     return {};
   }
 
-  const customizeFields = await checkbox({
-    message: 'Customize manifest fields? (space to select, enter to continue)',
-    choices: [
-      { name: 'Description', value: 'description' },
-      { name: 'Icons', value: 'icons' },
-      { name: 'Scopes', value: 'scopes' },
-      { name: 'Developer details', value: 'developer' },
-    ],
-  });
-
   const result: ManifestCustomization = {};
 
-  if (customizeFields.includes('description')) {
+  if (fields.includes('description')) {
     const shortDesc = await input({
       message: 'Short description:',
       validate: (value) => validateField('shortDescription', value),
@@ -70,7 +75,7 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
     result.description = { short: shortDesc, full: fullDesc.trim() || undefined };
   }
 
-  if (customizeFields.includes('icons')) {
+  if (fields.includes('icons')) {
     const colorIconPath =
       (await input({ message: 'Color icon path (192x192 PNG, leave empty to skip):' })) ||
       undefined;
@@ -82,7 +87,7 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
     }
   }
 
-  if (customizeFields.includes('scopes')) {
+  if (fields.includes('scopes')) {
     while (true) {
       const scopes = await checkbox<BotScope>({
         message: 'Select bot scopes:',
@@ -103,7 +108,7 @@ export async function collectManifestCustomization(): Promise<ManifestCustomizat
     }
   }
 
-  if (customizeFields.includes('developer')) {
+  if (fields.includes('developer')) {
     const devName = await input({
       message: 'Developer name:',
       validate: (value) => validateField('developerName', value),

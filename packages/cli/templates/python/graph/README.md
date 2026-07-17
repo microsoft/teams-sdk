@@ -6,7 +6,6 @@ This is a minimal Microsoft Teams graph bot template using [microsoft-teams](htt
 
 - `src/main.py`: Main application code for the Teams bot.
 - `pyproject.toml`: Project dependencies and metadata.
-- `apppackage/`: Teams app manifest and related files.
 
 ## Getting Started
 
