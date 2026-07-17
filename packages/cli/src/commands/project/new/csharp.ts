@@ -27,9 +27,12 @@ const csharpStrategy: ProjectLanguageStrategy = {
   validateProjectName(): void {},
   mapBaseEnvVars(baseEnvVars: Record<string, string>): Record<string, string> {
     const envVars: Record<string, string> = {};
-    if (baseEnvVars.CLIENT_ID) envVars['Teams.ClientId'] = baseEnvVars.CLIENT_ID;
-    if (baseEnvVars.CLIENT_SECRET) envVars['Teams.ClientSecret'] = baseEnvVars.CLIENT_SECRET;
-    if (baseEnvVars.TENANT_ID) envVars['Teams.TenantId'] = baseEnvVars.TENANT_ID;
+    if (baseEnvVars.CLIENT_ID) envVars['AzureAd.ClientId'] = baseEnvVars.CLIENT_ID;
+    if (baseEnvVars.TENANT_ID) envVars['AzureAd.TenantId'] = baseEnvVars.TENANT_ID;
+    if (baseEnvVars.CLIENT_SECRET) {
+      envVars['AzureAd.ClientCredentials.0.SourceType'] = 'ClientSecret';
+      envVars['AzureAd.ClientCredentials.0.ClientSecret'] = baseEnvVars.CLIENT_SECRET;
+    }
     if (baseEnvVars.OPENAI_API_KEY) envVars.OPENAI_API_KEY = baseEnvVars.OPENAI_API_KEY;
     if (baseEnvVars.AZURE_OPENAI_API_KEY)
       envVars.AZURE_OPENAI_API_KEY = baseEnvVars.AZURE_OPENAI_API_KEY;
@@ -64,6 +67,7 @@ export const projectNewCsharpCommand = new Command('csharp')
   .option(`-t, --template <template>`, `App template (${templates.join(', ')})`, 'echo')
   .option('--client-id <id>', '[OPTIONAL] Azure app client ID')
   .option('--client-secret <secret>', '[OPTIONAL] Azure app client secret')
+  .option('--tenant-id <id>', '[OPTIONAL] Azure tenant ID')
   .option('-s, --start', '[OPTIONAL] Auto-start project after creation')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(

@@ -102,7 +102,7 @@ export function appCreateCommandFor(agentName: string, credentialsPath: string):
 }
 
 export function hasCredentialValues(envVars: Record<string, string>): boolean {
-  return Boolean(envVars.CLIENT_ID ?? envVars['Teams.ClientId']);
+  return Boolean(envVars.CLIENT_ID ?? envVars['Teams.ClientId'] ?? envVars['AzureAd.ClientId']);
 }
 
 export async function resolveProjectName(
