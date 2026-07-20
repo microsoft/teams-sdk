@@ -76,7 +76,21 @@ Do not use a stable-looking version such as `3.1.{height}` for preview releases.
    npm view @microsoft/teams.cli@latest version
    ```
 
-5. **Bump `main` for the next development cycle** if needed:
+5. **Create a GitHub Release for the CLI stable version:**
+
+   Cut one GitHub Release per stable CLI version so the changes for each patch are discoverable. Tag it with the `cli-<version>` prefix, targeting the merged release commit on `release/v3`. Scope the notes to `@microsoft/teams.cli` changes since the previous stable tag, and mark the newest release as `latest`.
+
+   ```bash
+   gh release create "cli-<version>" \
+     --target "$(git rev-parse origin/release/v3)" \
+     --title "Teams Developer CLI <version>" \
+     --notes-file notes.md \
+     --latest
+   ```
+
+   To find the CLI changes since the previous patch, diff `packages/cli` between the two release commits (for example `git log <prev-tag>..<new-tag> --oneline -- packages/cli`), summarize the notable fixes/features with their PR numbers, and save that summary to `notes.md`.
+
+6. **Bump `main` for the next development cycle** if needed:
    - Edit `version.json` on `main`.
    - For example, move to `"3.1-preview.{height}"` or `"3.1-beta.{height}"`.
    - Commit and push via PR.
