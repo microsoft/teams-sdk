@@ -21,11 +21,13 @@ foreach (var w in warnings)
     Console.WriteLine($"{w.Source}: {w.Url} is not in {w.PolicyField}");
 }
 
-// Fix the policy based on the warnings before sending.
+// Fix the policy based on the warnings before sending. Google Fonts loads the
+// stylesheet from fonts.googleapis.com and the font files from fonts.gstatic.com,
+// so both domains are needed even though only the stylesheet URL appears in the HTML.
 var correctedPolicy = new HtmlWidgetSecurityPolicy
 {
     ConnectDomains = [],
-    ResourceDomains = ["'self'", "data:", "https://fonts.googleapis.com"],
+    ResourceDomains = ["'self'", "data:", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
     FrameDomains = [],
     BaseUriDomains = [],
 };
