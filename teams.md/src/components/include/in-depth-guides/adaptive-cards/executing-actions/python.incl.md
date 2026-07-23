@@ -261,7 +261,7 @@ from microsoft_teams.apps import ActivityContext
 GAMES = ["Super Mario Odyssey", "Metroid Dread", "Splatoon 3"]
 
 
-@app.on_search
+@app.on_card_search
 async def handle_search(ctx: ActivityContext[SearchInvokeActivity]) -> SearchResponse:
     query = (ctx.activity.value.query_text or "").lower()
     results = [
