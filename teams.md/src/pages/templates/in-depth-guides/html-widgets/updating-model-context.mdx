@@ -1,0 +1,47 @@
+---
+sidebar_position: 5
+sidebar_label: 'Updating Model Context'
+title: 'Updating Model Context'
+---
+
+# Updating Model Context
+
+A widget can contribute content to the model context so your app can use it on future turns.
+This is the widget-side equivalent of `Action.Submit` for adaptive cards: the widget reuses the existing messageBack mechanism, so the request arrives as a normal message activity.
+It is fire-and-forget, meaning your app does not send a response.
+
+:::warning Preview
+HTML Widgets are in preview and the API surface may change.
+:::
+
+## The request
+
+When a widget calls `ui/update-model-context`, the Teams client delivers an ordinary message activity, and the `McpUiUpdateModelContextRequest` arrives on its `value` field:
+
+```json
+{
+  "type": "message",
+  "value": {
+    "method": "ui/update-model-context",
+    "params": {
+      "content": [{ "type": "text", "text": "The user selected the blue theme." }],
+      "structuredContent": { "theme": "blue" }
+    }
+  }
+}
+```
+
+Inside `value`, the `content` field reuses the same content block union as a tool call result, and the `structuredContent` field carries arbitrary structured data.
+You never parse this by hand; the helper below reads `value` off the activity and returns the typed request.
+
+## Parsing the request
+
+The SDK provides a helper that reads the typed request off an incoming message activity.
+It returns the parsed request when the activity carries a valid `ui/update-model-context` request, and nothing otherwise, so you can branch on the result inside your message handler.
+
+Call <LanguageInclude content={{"typescript": "`tryGetWidgetModelContext`", "python": "`try_get_widget_model_context`", "csharp": "`HtmlWidgetHelpers.TryGetWidgetModelContext`"}} /> inside your <LanguageInclude content={{"typescript": "`message`", "python": "message", "csharp": "`OnMessage`"}} /> handler. It returns the typed request when the activity carries a valid `ui/update-model-context` request, and <LanguageInclude content={{"typescript": "`undefined`", "python": "`None`", "csharp": "`null`"}} /> otherwise.
+
+<LanguageInclude section="parse-code" />
+
+The helper is tolerant of two wire shapes: the raw request object, and an envelope of the form `{ "type": "widgetModelContext", "data": <request> }`.
+Both resolve to the same typed request.

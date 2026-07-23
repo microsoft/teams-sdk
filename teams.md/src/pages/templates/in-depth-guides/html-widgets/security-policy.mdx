@@ -1,0 +1,42 @@
+---
+sidebar_position: 4
+sidebar_label: 'Security Policy'
+title: 'Security Policy'
+---
+
+# Security Policy
+
+A widget's `securityPolicy` declares which origins the widget is allowed to reach for network requests, static resources, nested iframes, and base URIs.
+The Teams client enforces this policy through the browser's Content Security Policy.
+The SDK adds two helpers to make working with the policy easier.
+
+:::warning Preview
+HTML Widgets are in preview and the API surface may change.
+:::
+
+:::note Not a security boundary
+These helpers are development-time convenience aids for catching policy mistakes early, not a security boundary in themselves. Treat them as a supplement to, not a replacement for, the Teams client's runtime enforcement and your own review and hardening of the HTML your app sends.
+:::
+
+## Validating a policy
+
+`validateSecurityPolicy` scans your HTML for external references and returns a warning for any origin that is not covered by the appropriate policy field.
+This is a development-time audit tool, not a security boundary.
+The browser's CSP enforcement is the real protection.
+Use it to catch a missing `connectDomains` or `resourceDomains` entry before you ship, so the widget does not silently fail to load a font or reach an API.
+
+Call <LanguageInclude content={{"typescript": "`validateSecurityPolicy`", "python": "`validate_security_policy`", "csharp": "`HtmlWidgetHelpers.ValidateSecurityPolicy`"}} /> with your HTML and the policy you intend to send. It returns <LanguageInclude content={{"typescript": "an array", "python": "a list", "csharp": "a list"}} /> of warnings; an empty <LanguageInclude content={{"typescript": "array", "python": "list", "csharp": "list"}} /> means every external reference is covered.
+
+<LanguageInclude section="validate-code" />
+
+Each warning tells you the offending URL, where it appeared in the HTML, and which policy field it belongs in, so you can correct the policy before sending.
+
+## Injecting the protocol script
+
+Interactive widgets need the MCP Apps protocol handshake script in their HTML.
+`injectWidgetProtocol` inserts that script for you, wiring up the widget name, version, requested display modes, and notification subscriptions.
+If the HTML already contains the protocol, the helper leaves it unchanged.
+
+Call <LanguageInclude content={{"typescript": "`injectWidgetProtocol`", "python": "`inject_widget_protocol`", "csharp": "`HtmlWidgetHelpers.InjectWidgetProtocol`"}} /> with your HTML and options describing the widget. It returns the HTML with the protocol script inserted before the closing `</body>` tag.
+
+<LanguageInclude section="inject-code" />
