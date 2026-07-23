@@ -19,10 +19,16 @@ for (const w of warnings) {
   console.log(`${w.source}: ${w.url} is not in ${w.policyField}`);
 }
 
-// Fix the policy based on the warnings before sending.
+// Fix the policy based on the warnings before sending. Google Fonts loads the
+// stylesheet from fonts.googleapis.com and the font files from fonts.gstatic.com,
+// so both domains are needed even though only the stylesheet URL appears in the HTML.
 const correctedPolicy = {
   ...policy,
-  resourceDomains: [...policy.resourceDomains, 'https://fonts.googleapis.com'],
+  resourceDomains: [
+    ...policy.resourceDomains,
+    'https://fonts.googleapis.com',
+    'https://fonts.gstatic.com',
+  ],
 };
 ```
 
