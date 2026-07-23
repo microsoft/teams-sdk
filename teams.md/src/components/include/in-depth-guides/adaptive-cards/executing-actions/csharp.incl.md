@@ -345,7 +345,7 @@ var games = new[] { "Super Mario Odyssey", "Metroid Dread", "Splatoon 3" };
 
 teams.OnSearch((context, cancellationToken) =>
 {
-    var query = context.Activity.Value.QueryText?.ToLowerInvariant() ?? "";
+    var query = context.Activity.Value?.QueryText?.ToLowerInvariant() ?? "";
     var results = games
         .Where(g => g.ToLowerInvariant().Contains(query))
         .Select(g => new SearchResult { Title = g, Value = g })
@@ -356,7 +356,7 @@ teams.OnSearch((context, cancellationToken) =>
         Value = new SearchResponseValue { Results = results }
     };
 
-    return Task.FromResult<InvokeResponse>(new InvokeResponse<SearchResponse>(200, response));
+    return Task.FromResult(new InvokeResponse<SearchResponse>(200, response));
 });
 ```
 
