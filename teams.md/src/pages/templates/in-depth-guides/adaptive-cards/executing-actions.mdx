@@ -64,7 +64,7 @@ Input Controls provide ways for you to validate. More details can be found on th
 
 ## Dynamic Typeahead Search
 
-An `Input.ChoiceSet` can fetch its choices dynamically as the user types, instead of listing them statically. Replace the static `choices` with a `choices.data` `Data.Query` that names a `dataset`. As the user types, Teams sends your bot an `application/search` invoke, and you return the matching results.
+An `Input.ChoiceSet` can fetch its choices dynamically as the user types, instead of listing them statically. Leave `choices` as an empty array and add a `choices.data` `Data.Query` that names a `dataset`. As the user types, Teams sends your bot an `application/search` invoke, and you return the matching results.
 
 <LanguageInclude section="dynamic-search-card" />
 
