@@ -1,0 +1,34 @@
+---
+sidebar_position: 2
+sidebar_label: 'Sending Widgets'
+title: 'Sending Widgets'
+---
+
+# Sending Widgets
+
+The simplest widget is static HTML with no callbacks.
+The SDK build helpers take a widget payload and produce a message with the correct `extendedmarkdown` text format and the fenced `html-widget` code block already assembled.
+
+:::warning Preview
+HTML Widgets are in preview and the API surface may change.
+:::
+
+## Building a widget message
+
+Use <LanguageInclude content={{"typescript": "`buildHtmlWidgetMessage`", "python": "`build_html_widget_message`", "csharp": "`HtmlWidgetHelpers.BuildHtmlWidgetMessage`"}} /> to turn a payload into a message you can send directly. The helper <LanguageInclude content={{"typescript": "sets `textFormat` to", "python": "sets the text format to", "csharp": "sets the text format to"}} /> `extendedmarkdown` and wraps the payload in the fenced `html-widget` block. You only need to provide <LanguageInclude content={{"typescript": "`name`, `html`, and `domain`", "python": "`name`, `html`, and `domain`", "csharp": "`Name`, `Html`, and `Domain`"}} />; the <LanguageInclude content={{"typescript": "`type`", "python": "`type`", "csharp": "`Type`"}} /> defaults to `widget/mcp-ui`.
+
+<LanguageInclude section="build-message-code" />
+
+## Adding text before and after
+
+You often want to introduce a widget with a sentence, or add a note after it.
+The build helpers accept options for text to place before and after the widget block.
+
+<LanguageInclude section="before-after-code" />
+
+## Building the markdown directly
+
+When you need full control over the outgoing activity, build just the markdown string and send it yourself.
+Remember to set the text format to `extendedmarkdown` so the Teams client parses the widget block.
+
+<LanguageInclude section="build-markdown-code" />
