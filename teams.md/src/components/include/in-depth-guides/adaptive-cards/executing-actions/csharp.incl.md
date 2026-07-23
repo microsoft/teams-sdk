@@ -295,3 +295,68 @@ teams.OnAdaptiveCardAction(async (context, cancellationToken) =>
 :::note
 The `data` values come from JSON and need to be extracted using the helper method shown above to handle different JSON element types.
 :::
+
+<!-- dynamic-search-card -->
+
+```csharp
+using Microsoft.Teams.Cards;
+
+private static AdaptiveCard CreateDynamicSearchCard()
+{
+    return new AdaptiveCard
+    {
+        Schema = "http://adaptivecards.io/schemas/adaptive-card.json",
+        Body = new List<CardElement>
+        {
+            new ChoiceSetInput
+            {
+                Id = "game",
+                Label = "Game",
+                Placeholder = "Search for a game",
+                Style = ChoiceSetInputStyle.Filtered,
+                Choices = new List<Choice>()
+            }.WithChoicesData(new QueryData { Dataset = "nintendoGames" })
+        },
+        Actions = new List<Microsoft.Teams.Cards.Action>
+        {
+            new ExecuteAction
+            {
+                Title = "Submit",
+                Data = new Union<string, SubmitActionData>(new SubmitActionData
+                {
+                    NonSchemaProperties = new Dictionary<string, object?>
+                    {
+                        { "action", "submit_game" }
+                    }
+                })
+            }
+        }
+    };
+}
+```
+
+<!-- dynamic-search-handler -->
+
+```csharp
+using Microsoft.Teams.Apps;
+using Microsoft.Teams.Apps.Handlers;
+
+var games = new[] { "Super Mario Odyssey", "Metroid Dread", "Splatoon 3" };
+
+teams.OnSearch((context, cancellationToken) =>
+{
+    var query = context.Activity.Value?.QueryText?.ToLowerInvariant() ?? "";
+    var results = games
+        .Where(g => g.ToLowerInvariant().Contains(query))
+        .Select(g => new SearchResult { Title = g, Value = g })
+        .ToList();
+
+    var response = new SearchResponse
+    {
+        Value = new SearchResponseValue { Results = results }
+    };
+
+    return Task.FromResult(new InvokeResponse<SearchResponse>(200, response));
+});
+```
+

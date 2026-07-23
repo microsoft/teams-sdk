@@ -220,3 +220,53 @@ async def handle_card_action(ctx: ActivityContext[AdaptiveCardInvokeActivity]) -
 :::note
 The `data` values are accessible as a dictionary and can be accessed using `.get()` method for safe access.
 :::
+<!-- dynamic-search-card -->
+
+```python
+from microsoft_teams.cards import AdaptiveCard
+
+card = AdaptiveCard.model_validate(
+    {
+        "type": "AdaptiveCard",
+        "version": "1.5",
+        "body": [
+            {
+                "type": "Input.ChoiceSet",
+                "id": "game",
+                "label": "Game",
+                "placeholder": "Search for a game",
+                "style": "filtered",
+                "choices": [],
+                "choices.data": {"type": "Data.Query", "dataset": "nintendoGames"},
+            }
+        ],
+        "actions": [
+            {"type": "Action.Execute", "title": "Submit", "data": {"action": "submit_game"}}
+        ],
+    }
+)
+```
+
+<!-- dynamic-search-handler -->
+
+```python
+from microsoft_teams.api import SearchInvokeActivity
+from microsoft_teams.api.models.search import (
+    SearchInvokeResponseValue,
+    SearchInvokeResult,
+    SearchResponse,
+)
+from microsoft_teams.apps import ActivityContext
+
+GAMES = ["Super Mario Odyssey", "Metroid Dread", "Splatoon 3"]
+
+
+@app.on_card_search
+async def handle_search(ctx: ActivityContext[SearchInvokeActivity]) -> SearchResponse:
+    query = (ctx.activity.value.query_text or "").lower()
+    results = [
+        SearchInvokeResult(title=g, value=g) for g in GAMES if query in g.lower()
+    ]
+    return SearchResponse(value=SearchInvokeResponseValue(results=results))
+```
+
