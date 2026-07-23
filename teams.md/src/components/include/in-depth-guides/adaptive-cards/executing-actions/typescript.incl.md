@@ -284,7 +284,7 @@ import { App } from '@microsoft/teams.apps';
 
 const GAMES = ['Super Mario Odyssey', 'Metroid Dread', 'Splatoon 3'];
 
-app.on('search', async ({ activity }) => {
+app.on('card.search', async ({ activity }) => {
   const query = activity.value.queryText?.toLowerCase() ?? '';
   const results = GAMES.filter((g) => g.toLowerCase().includes(query)).map(
     (g) => ({ title: g, value: g })
