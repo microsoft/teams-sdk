@@ -35,3 +35,8 @@ Teams currently renders `text` content; the other MCP content types (`image`, `a
 <LanguageInclude section="response-intro" />
 
 <LanguageInclude section="response-code" />
+
+## Throttling in large contexts
+
+In large or busy contexts the Teams platform may throttle widget tool calls, so your app can receive fewer `htmlwidget/calltool` invokes than the widget issued. This throttling happens on the platform before the invoke reaches your app, so there is no error or `429` status for your handler to catch and nothing for the SDK to retry. Design your tool handlers so that a dropped call is not fatal: keep them idempotent, and let the widget reflect its own state rather than assuming every call reaches your app.
+
