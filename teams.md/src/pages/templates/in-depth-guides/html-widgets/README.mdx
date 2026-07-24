@@ -63,6 +63,8 @@ Instead the SDK ships a small set of helpers so you never have to build the fenc
 - **Security helpers**: <LanguageInclude content={{"typescript": "`validateSecurityPolicy` and `injectWidgetProtocol`", "python": "`validate_security_policy` and `inject_widget_protocol`", "csharp": "`HtmlWidgetHelpers.ValidateSecurityPolicy` and `HtmlWidgetHelpers.InjectWidgetProtocol`"}} /> audit that external references in your HTML are covered by your declared policy, and inject the MCP Apps protocol script for you. See [Security policy](./security-policy).
 - **A model-context helper**: <LanguageInclude content={{"typescript": "`tryGetWidgetModelContext`", "python": "`try_get_widget_model_context`", "csharp": "`HtmlWidgetHelpers.TryGetWidgetModelContext`"}} /> parses a widget's `ui/update-model-context` request off an incoming message activity. See [Updating model context](./updating-model-context).
 
+For how failures surface at each stage, from sending to rendering, see [Error handling](./error-handling).
+
 ## Resources
 
 - [MCP Apps (ext-apps) specification](https://github.com/modelcontextprotocol/ext-apps)
