@@ -1,0 +1,71 @@
+---
+sidebar_position: 1
+title: 'HTML Widgets'
+suppressLanguageIncludeWarning: true
+---
+
+# HTML Widgets
+
+HTML Widgets let your app render rich, interactive HTML inside a Teams message.
+A widget is an [MCP Apps (ext-apps)](https://github.com/modelcontextprotocol/ext-apps) surface that the Teams client renders in a sandboxed iframe.
+The widget can call tools on your app, send messages back, request display mode changes, open links, and contribute content to the model context for future turns.
+
+:::warning Preview
+HTML Widgets are in preview and the API surface may change.
+<LanguageInclude content={{"typescript": "Every widget type and helper is annotated `@experimental` in its JSDoc (diagnostic `ExperimentalTeamsHtmlWidget`) to mark it as preview.", "python": "Every widget type and helper is decorated with `@experimental` (`ExperimentalTeamsHtmlWidget`), which emits a runtime preview warning when it is used.", "csharp": "Every widget type and helper is guarded by the `ExperimentalTeamsHtmlWidget` compiler diagnostic, so you opt in explicitly to use them."}} />
+:::
+
+## How it works
+
+A widget travels inside a normal message.
+The app sends a message with `textFormat: 'extendedmarkdown'` whose text contains a fenced `html-widget` code block holding a JSON payload:
+
+````text
+Here is your widget:
+
+```html-widget
+{
+  "type": "widget/mcp-ui",
+  "name": "My Widget",
+  "html": "<div>Hello</div>",
+  "domain": "https://teams.microsoft.com"
+}
+```
+````
+
+The Teams client parses that block, loads the widget HTML in a sandboxed iframe, and wires up the MCP Apps protocol over `postMessage`.
+From that point the widget and your app communicate through a small set of methods.
+
+## The widget payload
+
+Every widget is described by a payload with the following fields:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `type` | yes | The widget type identifier. Currently only `widget/mcp-ui` is supported. The SDK builders default this for you. |
+| `name` | yes | The display name of the widget. |
+| `html` | yes | The HTML content that makes up the widget. |
+| `domain` | yes | A valid domain URL applied to sandbox metadata. It does not need to resolve or serve content, but must be non-empty. This is informational metadata, not a verified identity claim. |
+| `description` | no | A description of the widget. |
+| `securityPolicy` | no | Allowed origins for network requests, resources, frames, and base URIs. See [Security policy](./security-policy). |
+| `toolInput` | no | Data passed to the widget as initial context, available through `toolInput` in the `ui/initialize` handshake. |
+| `toolOutput` | no | Data the tool produced alongside the widget, available to the widget at render time. |
+| `permissions` | no | Capabilities the widget requests from the host (camera, microphone, geolocation, clipboard write). |
+
+## What the SDK provides
+
+The SDK does not change the wire contract.
+Everything a widget needs could be assembled by hand.
+Instead the SDK ships a small set of helpers so you never have to build the fenced code block, escape the JSON, or hand-parse invoke payloads:
+
+- **Build helpers**: <LanguageInclude content={{"typescript": "`buildHtmlWidgetMessage` and `buildHtmlWidgetMarkdown`", "python": "`build_html_widget_message` and `build_html_widget_markdown`", "csharp": "`HtmlWidgetHelpers.BuildHtmlWidgetMessage` and `HtmlWidgetHelpers.BuildHtmlWidgetMarkdown`"}} /> turn a payload into a ready-to-send message (or the raw markdown string) with the correct `html-widget` fence and `extendedmarkdown` text format. See [Sending widgets](./sending-widgets).
+- **A typed tool-call handler**: <LanguageInclude content={{"typescript": "the `widget.callTool` event", "python": "the `@app.on_widget_call_tool` decorator", "csharp": "the `OnWidgetCallTool` handler"}} /> receives `htmlwidget/calltool` invokes when a widget calls one of your tools, gives you the typed tool name and arguments, and lets you return a typed result. See [Handling tool calls](./handling-tool-calls).
+- **Security helpers**: <LanguageInclude content={{"typescript": "`validateSecurityPolicy` and `injectWidgetProtocol`", "python": "`validate_security_policy` and `inject_widget_protocol`", "csharp": "`HtmlWidgetHelpers.ValidateSecurityPolicy` and `HtmlWidgetHelpers.InjectWidgetProtocol`"}} /> audit that external references in your HTML are covered by your declared policy, and inject the MCP Apps protocol script for you. See [Security policy](./security-policy).
+- **A model-context helper**: <LanguageInclude content={{"typescript": "`tryGetWidgetModelContext`", "python": "`try_get_widget_model_context`", "csharp": "`HtmlWidgetHelpers.TryGetWidgetModelContext`"}} /> parses a widget's `ui/update-model-context` request off an incoming message activity. See [Updating model context](./updating-model-context).
+
+For how failures surface at each stage, from sending to rendering, see [Error handling](./error-handling).
+
+## Resources
+
+- [MCP Apps (ext-apps) specification](https://github.com/modelcontextprotocol/ext-apps)
+- [Model Context Protocol](https://modelcontextprotocol.io)

@@ -1,0 +1,42 @@
+---
+sidebar_position: 3
+sidebar_label: 'Handling Tool Calls'
+title: 'Handling Tool Calls'
+---
+
+# Handling Tool Calls
+
+An interactive widget can call tools on your app.
+When it does, the Teams client sends your app an `htmlwidget/calltool` invoke activity.
+The SDK gives you a typed handler for these invokes and a typed response shape, so you never parse the raw invoke body.
+
+:::warning Preview
+HTML Widgets are in preview and the API surface may change.
+:::
+
+## The flow
+
+1. Your app sends a widget whose HTML calls `tools/call` over the MCP Apps protocol.
+2. The Teams client forwards that call to your app as an `htmlwidget/calltool` invoke.
+3. Your handler inspects the tool name and arguments, does its work, and returns a result.
+4. The Teams client delivers the result back to the widget, which re-renders.
+
+## Registering a handler
+
+Register a handler <LanguageInclude content={{"typescript": "for the `widget.callTool` event", "python": "with the `@app.on_widget_call_tool` decorator", "csharp": "with `teams.OnWidgetCallTool`"}} />. The activity value is typed, so you get the tool <LanguageInclude content={{"typescript": "`name` and `arguments`", "python": "`name` and `arguments`", "csharp": "`Name` and `Arguments`"}} /> directly.
+
+<LanguageInclude section="handler-code" />
+
+## Returning a result
+
+A tool call result carries a list of content blocks, optional structured content the widget can render from, and an `isError` flag.
+Teams currently renders `text` content; the other MCP content types (`image`, `audio`, `resource`) are defined for forward compatibility.
+
+<LanguageInclude section="response-intro" />
+
+<LanguageInclude section="response-code" />
+
+## Throttling in large contexts
+
+In large or busy contexts the Teams platform may throttle widget tool calls, so your app can receive fewer `htmlwidget/calltool` invokes than the widget issued. This throttling happens on the platform before the invoke reaches your app, so there is no error or `429` status for your handler to catch and nothing for the SDK to retry. Design your tool handlers so that a dropped call is not fatal: keep them idempotent, and let the widget reflect its own state rather than assuming every call reaches your app.
+
