@@ -175,21 +175,19 @@ describe('project new menu loop', () => {
     setupMocks();
   });
 
-  it('loops back to menu after creating a project', async () => {
-    const { select, input } = await import('@inquirer/prompts');
+  it('exits after creating a project', async () => {
+    const { select, input, confirm } = await import('@inquirer/prompts');
     const mockedSelect = vi.mocked(select);
     const mockedInput = vi.mocked(input);
+    const mockedConfirm = vi.mocked(confirm);
 
     mockedSelect
       .mockResolvedValueOnce('typescript' as never)
-      .mockResolvedValueOnce('back' as never);
+      .mockResolvedValueOnce('echo' as never);
     mockedInput.mockResolvedValueOnce('test-app' as never);
+    mockedConfirm.mockResolvedValueOnce(false as never);
 
     const { projectNewCommand } = await import('../src/commands/project/new/index.js');
-
-    // Stub the TS subcommand to avoid actually scaffolding
-    const tsSub = projectNewCommand.commands.find((c: Command) => c.name() === 'typescript');
-    if (tsSub) tsSub.parseAsync = vi.fn().mockResolvedValue(undefined);
 
     await projectNewCommand.parseAsync([], { from: 'user' });
 
@@ -197,9 +195,13 @@ describe('project new menu loop', () => {
   });
 
   it('exits immediately when Back is selected', async () => {
-    const { select } = await import('@inquirer/prompts');
+    const { select, input, confirm } = await import('@inquirer/prompts');
     const mockedSelect = vi.mocked(select);
+    const mockedInput = vi.mocked(input);
+    const mockedConfirm = vi.mocked(confirm);
     mockedSelect.mockResolvedValueOnce('back' as never);
+    mockedInput.mockResolvedValueOnce('test-app' as never);
+    mockedConfirm.mockResolvedValueOnce(false as never);
 
     const { projectNewCommand } = await import('../src/commands/project/new/index.js');
 
