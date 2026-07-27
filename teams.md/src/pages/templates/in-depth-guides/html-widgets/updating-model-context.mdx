@@ -7,8 +7,10 @@ title: 'Updating Model Context'
 # Updating Model Context
 
 A widget can contribute content to the model context so your app can use it on future turns.
-This is the widget-side equivalent of `Action.Submit` for adaptive cards: the widget reuses the existing messageBack mechanism, so the request arrives as a normal message activity.
-It is fire-and-forget, meaning your app does not send a response.
+
+Widgets send data back to your app over the same messageBack channel other Teams surfaces use, so the request arrives as an ordinary message activity. `ui/update-model-context` is the specific request for contributing to model context; other widget-to-app requests (such as [tool calls](./handling-tool-calls)) travel over the same channel with different methods. This particular request is fire-and-forget: your app does not send a response.
+
+(If you have used adaptive cards, this is the widget-side equivalent of `Action.Submit`.)
 
 :::warning Preview
 HTML Widgets are in preview and the API surface may change.
