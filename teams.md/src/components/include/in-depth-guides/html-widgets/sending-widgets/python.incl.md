@@ -46,18 +46,45 @@ await ctx.send(message)
 
 ```python
 from microsoft_teams.api.activities.message import MessageActivityInput
-from microsoft_teams.apps.utils.html_widget import (
-    HtmlWidgetMarkdownOptions,
-    build_html_widget_markdown,
+from microsoft_teams.apps.utils.html_widget import build_html_widget_markdown
+
+# build_html_widget_markdown returns just the string, so you can compose several
+# widgets into one message or splice a widget into text you already have.
+weather = build_html_widget_markdown(
+    HtmlWidgetPayload(
+        name="Weather",
+        html="<div>Sunny, 72F</div>",
+        domain="https://teams.microsoft.com",
+    )
 )
 
-markdown = build_html_widget_markdown(
+forecast = build_html_widget_markdown(
     HtmlWidgetPayload(
-        name="Simple Widget",
-        html="<div>Hello from a widget</div>",
+        name="Forecast",
+        html="<div>Rain tomorrow</div>",
         domain="https://teams.microsoft.com",
-    ),
-    HtmlWidgetMarkdownOptions(before="Here is a simple static widget:"),
+    )
 )
-await ctx.send(MessageActivityInput(text=markdown, text_format="extendedmarkdown"))
+
+text = f"Today:\n\n{weather}\n\nLooking ahead:\n\n{forecast}"
+await ctx.send(MessageActivityInput(text=text, text_format="extendedmarkdown"))
+```
+
+<!-- inject-code -->
+
+```python
+from microsoft_teams.apps.utils.html_widget import (
+    InjectWidgetProtocolOptions,
+    inject_widget_protocol,
+)
+
+html = inject_widget_protocol(
+    "<body><h1>Hello</h1></body>",
+    InjectWidgetProtocolOptions(
+        name="My Widget",
+        version="2.0.0",
+        available_display_modes=["inline", "fullscreen"],
+        notifications=["tool-result", "tool-input"],
+    ),
+)
 ```

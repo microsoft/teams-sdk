@@ -1,3 +1,25 @@
+<!-- declare-code -->
+
+```typescript
+import { buildHtmlWidgetMessage } from '@microsoft/teams.apps';
+
+// Attach a securityPolicy to the payload. The build helper carries it through
+// to the widget block; omit it and the SDK applies a restrictive default.
+const message = buildHtmlWidgetMessage({
+  name: 'Chart Widget',
+  html: '<div id="chart"></div>',
+  domain: 'https://teams.microsoft.com',
+  securityPolicy: {
+    connectDomains: ['https://api.contoso.com'],
+    resourceDomains: ["'self'", 'data:', 'https://cdn.contoso.com'],
+    frameDomains: [],
+    baseUriDomains: [],
+  },
+});
+
+await send(message);
+```
+
 <!-- validate-code -->
 
 ```typescript
@@ -14,33 +36,16 @@ const policy = {
   baseUriDomains: [],
 };
 
-const warnings = validateSecurityPolicy(html, policy);
-for (const w of warnings) {
-  console.log(`${w.source}: ${w.url} is not in ${w.policyField}`);
+// Run the audit only in development so it never executes in production.
+const isDevelopment = process.env.NODE_ENV !== 'production';
+if (isDevelopment) {
+  const warnings = validateSecurityPolicy(html, policy);
+  for (const w of warnings) {
+    console.warn(`${w.source}: ${w.url} is not in ${w.policyField}`);
+  }
 }
 
-// Fix the policy based on the warnings before sending. Google Fonts loads the
+// In development the audit above would warn that this HTML loads the Roboto
 // stylesheet from fonts.googleapis.com and the font files from fonts.gstatic.com,
-// so both domains are needed even though only the stylesheet URL appears in the HTML.
-const correctedPolicy = {
-  ...policy,
-  resourceDomains: [
-    ...policy.resourceDomains,
-    'https://fonts.googleapis.com',
-    'https://fonts.gstatic.com',
-  ],
-};
-```
-
-<!-- inject-code -->
-
-```typescript
-import { injectWidgetProtocol } from '@microsoft/teams.apps';
-
-const html = injectWidgetProtocol('<body><h1>Hello</h1></body>', {
-  name: 'My Widget',
-  version: '2.0.0',
-  appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] },
-  notifications: ['tool-result', 'tool-input'],
-});
+// so you would add both origins to resourceDomains before shipping.
 ```

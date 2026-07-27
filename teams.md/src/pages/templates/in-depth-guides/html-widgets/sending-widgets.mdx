@@ -28,7 +28,18 @@ The build helpers accept options for text to place before and after the widget b
 
 ## Building the markdown directly
 
-When you need full control over the outgoing activity, build just the markdown string and send it yourself.
+The message helper covers the common case, but it produces one complete message from a single payload. Build just the markdown string when you need to do something the message helper cannot, such as combining more than one widget in a single message, embedding a widget inside text you are already assembling, or setting activity properties the helper does not touch (for example attachments or channel data).
 Remember to set the text format to `extendedmarkdown` so the Teams client parses the widget block.
 
 <LanguageInclude section="build-markdown-code" />
+
+## Preparing interactive widget HTML
+
+Interactive widgets need the MCP Apps protocol handshake script in their HTML so the widget and your app can exchange messages.
+The build helpers add this for you: whenever you call <LanguageInclude content={{"typescript": "`buildHtmlWidgetMessage` or `buildHtmlWidgetMarkdown`", "python": "`build_html_widget_message` or `build_html_widget_markdown`", "csharp": "`BuildHtmlWidgetMessage` or `BuildHtmlWidgetMarkdown`"}} />, the protocol script is injected automatically.
+Configure it through the <LanguageInclude content={{"typescript": "`protocolOptions`", "python": "`protocol_options`", "csharp": "`ProtocolOptions`"}} /> field to set the widget name, version, requested display modes, and notification subscriptions.
+
+You only need to inject the protocol yourself when you build widget HTML by hand instead of going through the build helpers.
+In that case call <LanguageInclude content={{"typescript": "`injectWidgetProtocol`", "python": "`inject_widget_protocol`", "csharp": "`HtmlWidgetHelpers.InjectWidgetProtocol`"}} /> with your HTML and options describing the widget; it returns the HTML with the protocol script inserted before the closing `</body>` tag, and leaves the HTML unchanged if the protocol is already present.
+
+<LanguageInclude section="inject-code" />
