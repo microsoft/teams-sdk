@@ -10,6 +10,8 @@ HTML Widgets let your app render rich, interactive HTML inside a Teams message.
 A widget is an [MCP Apps (ext-apps)](https://github.com/modelcontextprotocol/ext-apps) surface that the Teams client renders in a sandboxed iframe.
 The widget can call tools on your app, send messages back, request display mode changes, open links, and contribute content to the model context for future turns.
 
+You do not need to know the MCP Apps protocol to build widgets. The SDK helpers handle the wire format and protocol handshake for you, and the links to the specification are here only if you want the underlying details.
+
 :::warning Preview
 HTML Widgets are in preview and the API surface may change.
 <LanguageInclude content={{"typescript": "Every widget type and helper is annotated `@experimental` in its JSDoc (diagnostic `ExperimentalTeamsHtmlWidget`) to mark it as preview.", "python": "Every widget type and helper is decorated with `@experimental` (`ExperimentalTeamsHtmlWidget`), which emits a runtime preview warning when it is used.", "csharp": "Every widget type and helper is guarded by the `ExperimentalTeamsHtmlWidget` compiler diagnostic, so you opt in explicitly to use them."}} />
