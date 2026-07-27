@@ -1,3 +1,28 @@
+<!-- declare-code -->
+
+```csharp
+using Microsoft.Teams.Apps.HtmlWidget;
+
+// Attach a security policy to the payload. The build helper carries it through
+// to the widget block; omit it and the SDK applies a restrictive default.
+var message = HtmlWidgetHelpers.BuildHtmlWidgetMessage(
+    new HtmlWidgetPayload
+    {
+        Name = "Chart Widget",
+        Html = "<div id=\"chart\"></div>",
+        Domain = "https://teams.microsoft.com",
+        SecurityPolicy = new HtmlWidgetSecurityPolicy
+        {
+            ConnectDomains = ["https://api.contoso.com"],
+            ResourceDomains = ["'self'", "data:", "https://cdn.contoso.com"],
+            FrameDomains = [],
+            BaseUriDomains = [],
+        },
+    });
+
+await context.Send(message, cancellationToken);
+```
+
 <!-- validate-code -->
 
 ```csharp
@@ -15,34 +40,17 @@ var policy = new HtmlWidgetSecurityPolicy
     BaseUriDomains = [],
 };
 
-var warnings = HtmlWidgetHelpers.ValidateSecurityPolicy(html, policy);
-foreach (var w in warnings)
+// Run the audit only in development so it never executes in production.
+var isDevelopment = builder.Environment.IsDevelopment();
+if (isDevelopment)
 {
-    Console.WriteLine($"{w.Source}: {w.Url} is not in {w.PolicyField}");
+    foreach (var w in HtmlWidgetHelpers.ValidateSecurityPolicy(html, policy))
+    {
+        Console.WriteLine($"{w.Source}: {w.Url} is not in {w.PolicyField}");
+    }
 }
 
-// Fix the policy based on the warnings before sending. Google Fonts loads the
+// In development the audit above would warn that this HTML loads the Roboto
 // stylesheet from fonts.googleapis.com and the font files from fonts.gstatic.com,
-// so both domains are needed even though only the stylesheet URL appears in the HTML.
-var correctedPolicy = new HtmlWidgetSecurityPolicy
-{
-    ConnectDomains = [],
-    ResourceDomains = ["'self'", "data:", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
-    FrameDomains = [],
-    BaseUriDomains = [],
-};
-```
-
-<!-- inject-code -->
-
-```csharp
-var html = HtmlWidgetHelpers.InjectWidgetProtocol(
-    "<body><h1>Hello</h1></body>",
-    new InjectWidgetProtocolOptions
-    {
-        Name = "My Widget",
-        Version = "2.0.0",
-        AvailableDisplayModes = ["inline", "fullscreen"],
-        Notifications = ["tool-result", "tool-input"],
-    });
+// so you would add both origins to ResourceDomains before shipping.
 ```
