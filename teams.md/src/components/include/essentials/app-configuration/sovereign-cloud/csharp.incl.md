@@ -1,5 +1,25 @@
 <!-- configuration -->
 
+:::info[SDK 2.1 Preview]
+The **Teams SDK for .NET 2.1** preview doesn't use the `Teams:Cloud` presets shown below. For sovereign clouds, set the relevant endpoints alongside your `AzureAd` credentials in `appsettings.json` — the Entra login instance via `AzureAd:Instance`, and the Bot Framework endpoints under a `BotFramework` section:
+
+```json title="appsettings.json (US Gov example)"
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.us/",
+    "TenantId": "your-tenant-id",
+    "ClientId": "your-client-id"
+  },
+  "BotFramework": {
+    "OpenIdMetadataUrl": "https://login.botframework.azure.us/v1/.well-known/openid-configuration",
+    "BotTokenIssuer": "https://api.botframework.us"
+  }
+}
+```
+
+When these aren't set, the SDK defaults to the public-cloud endpoints. The `Teams:Cloud` configuration below applies to SDK 2.0.
+:::
+
 In `appsettings.json`:
 
 ```json

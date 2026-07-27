@@ -5,7 +5,33 @@ title: 'Proactive Messaging'
 summary: Learn how to send proactive messages to users without waiting for them to initiate the conversation, including storing conversation IDs and sending notifications.
 ---
 
+import Language from '@site/src/components/Language';
+
 # Proactive Messaging
+
+<Language language="csharp">
+
+:::info[SDK 2.1 Preview]
+In the **Teams SDK for .NET 2.1** preview, proactive messaging works by sending an activity that carries its own **conversation reference** (service URL, conversation, and sender). Store that reference from an activity handler, then later build an activity and call `teams.SendActivityAsync(activity)`:
+
+```csharp
+// Inside a handler, capture the reference for later use.
+var reference = TeamsActivity.FromActivity(context.Activity);
+
+// Later (e.g. a timer or webhook), send proactively.
+var proactive = TeamsActivity.CreateBuilder()
+    .WithType("message")
+    .WithText("Hey! It's been a while. How are you?")
+    .WithConversationReference(reference)
+    .Build();
+
+await teams.SendActivityAsync(proactive, cancellationToken);
+```
+
+For background work outside the request pipeline (for example an `IHostedService`), inject `ConversationClient` (registered via `builder.Services.AddConversationClient()`) and call `SendActivityAsync` on it. The SDK 2.0 `app.Send(conversationId, ...)` helpers shown below don't apply to 2.1.
+:::
+
+</Language>
 
 In [Sending Messages](./), you were shown how to respond to an event when it happens. However, there are times when you want to send a message to the user without them sending a message first. This is called proactive messaging. You can do this by using the `send` method in the `app` instance. This approach is useful for sending notifications or reminders to the user.
 

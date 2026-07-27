@@ -27,6 +27,17 @@ npm install -g @microsoft/teams.cli
 teams --version
 ```
 
+Choose CLI track by .NET SDK target:
+
+- **SDK 2.0**: stable CLI (`@microsoft/teams.cli`)
+- **SDK 2.1 (Preview)**: preview CLI (`@microsoft/teams.cli@preview`)
+
+```bash
+# SDK 2.1 preview
+npm install -g @microsoft/teams.cli@preview
+teams --version
+```
+
 ## 2. Log in
 
 ```bash

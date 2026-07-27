@@ -1,0 +1,91 @@
+---
+sidebar_position: 10
+title: Agentic Identity
+sidebar_label: Agentic Identity
+summary: Run your Teams bot as an AI teammate in Agent 365 — a first-class Microsoft 365 identity that acts with a user's own permissions. Covers detecting agentic context and calling APIs on behalf of the user.
+languages: ['csharp']
+---
+
+# Agentic Identity
+
+:::info[SDK 2.1 Preview]
+Agentic identity is a **Teams SDK for .NET 2.1** feature and is available in preview. See the [2.1 announcement](/blog/announcing-teams-sdk-dotnet-2-1-preview#agentic-identity) for the full overview.
+:::
+
+With [Agent 365](https://learn.microsoft.com/microsoft-agent-365/), your bot can run as an **AI teammate** — a first-class identity in Microsoft 365 with its own mailbox, Teams presence, directory entry, and manager relationship. People `@mention` it, email it, and invite it to meetings, just like a human colleague.
+
+## Why it matters
+
+This changes how your bot interacts with APIs:
+
+- A **traditional bot** calls APIs with its own app permissions.
+- An **AI teammate** can call APIs with its own identity — scoped to what *they* can access, with actions attributed to them in audit logs.
+
+The SDK handles the token acquisition for you. When an activity arrives in an agentic context, `context.Api` calls automatically use the right permissions — you don't need to change how you call the API.
+
+## Detecting an agentic context
+
+If you need to know whether the current turn is running in an agentic context — for logging, telemetry, or conditional logic — read the identity off the activity's `Recipient`:
+
+```csharp
+using Microsoft.Teams.Apps;
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    var agenticIdentity = context.Activity.Recipient?.GetAgenticIdentity();
+
+    if (agenticIdentity is not null)
+    {
+        context.Log.Info(
+            $"Acting on behalf of user {agenticIdentity.AgenticUserId} " +
+            $"via app {agenticIdentity.AgenticAppId}");
+    }
+
+    // context.Api calls automatically use the right permissions
+    // whether or not an agentic identity is present.
+    await context.SendAsync($"You said: {context.Activity.Text}", cancellationToken);
+});
+```
+
+`GetAgenticIdentity()` returns `null` when the turn is **not** agentic (a traditional bot invocation), so a simple null check is all you need to branch.
+
+### `AgenticIdentity` properties
+
+| Property | Description |
+|---|---|
+| `AgenticUserId` | The ID of the user the AI teammate is acting on behalf of. |
+| `AgenticAppId` | The application ID of the AI teammate. |
+| `AgenticAppBlueprintId` | The application blueprint ID for the AI teammate. |
+| `TenantId` | The tenant ID associated with the agentic identity. |
+
+## Calling APIs as the AI teammate
+
+Because the SDK resolves the correct token per turn, you call the Teams API clients exactly as you normally would. When the turn is agentic, some API operations accept the caller's agentic identity so the action is attributed to the AI teammate — for example, adding a reaction:
+
+```csharp
+teams.OnMessage("(?i)^react$", async (context, cancellationToken) =>
+{
+    var response = await context.SendAsync("Reacting to this message.", cancellationToken);
+
+    await context.Api.Conversations.Reactions.AddAsync(
+        context.Activity.Conversation!.Id!,
+        response!.Id!,
+        "1f44b_wavinghand-tone4",
+        context.Activity.Recipient?.GetAgenticIdentity(),
+        cancellationToken: cancellationToken);
+});
+```
+
+Passing `context.Activity.Recipient?.GetAgenticIdentity()` is safe even outside an agentic context — it evaluates to `null`, and the API falls back to the bot's own app permissions.
+
+## Setup
+
+To enable agentic scenarios you configure your app registration for Agent 365. No additional code or SDK configuration is required beyond the standard [`AzureAd` authentication](../essentials/app-authentication) setup.
+
+- [Configure your app registration for Agent 365](https://learn.microsoft.com/microsoft-agent-365/developer/custom-client-app-registration)
+- [Entra Agent ID: plan agent identity architecture](https://learn.microsoft.com/entra/agent-id/how-to-plan-agent-identity-architecture)
+
+## Next steps
+
+- Read the [2.1 preview announcement](/blog/announcing-teams-sdk-dotnet-2-1-preview) for the broader feature set.
+- Review [App Authentication](../essentials/app-authentication) to configure the `AzureAd` credentials your bot uses.

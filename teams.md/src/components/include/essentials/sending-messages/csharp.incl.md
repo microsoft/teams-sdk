@@ -1,11 +1,27 @@
 <!-- basic-message-example -->
 
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Send($"you said: {context.activity.Text}", cancellationToken);
+    await context.Send($"you said: {context.Activity.Text}", cancellationToken);
 });
 ```
+
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (Preview)">
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    await context.SendAsync($"you said: {context.Activity.Text}", cancellationToken);
+});
+```
+
+  </TabItem>
+</Tabs>
 
 <!-- signin-example -->
 
@@ -22,6 +38,9 @@ app.OnMessage(async (context, cancellationToken) =>
 
 <!-- streaming-example -->
 
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
 {
@@ -32,6 +51,30 @@ app.OnMessage(async (context, cancellationToken) =>
     return Task.CompletedTask;
 });
 ```
+
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (Preview)">
+
+The 2.1 preview streams through a `TeamsStreamingWriter`. Create one from the turn context, push informative updates and response chunks, then finalize:
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    TeamsStreamingWriter writer = TeamsStreamingWriter.CreateFromContext(context);
+
+    await writer.SendInformativeUpdateAsync("Thinking…", cancellationToken);
+
+    await writer.AppendResponseAsync("hello", cancellationToken);
+    await writer.AppendResponseAsync(", ", cancellationToken);
+    await writer.AppendResponseAsync("world!", cancellationToken);
+
+    // flush the accumulated text as the final message: "hello, world!"
+    await writer.FinalizeResponseAsync(cancellationToken: cancellationToken);
+});
+```
+
+  </TabItem>
+</Tabs>
 
 <!-- mention-method-name -->
 

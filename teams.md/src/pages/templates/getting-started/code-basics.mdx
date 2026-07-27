@@ -5,6 +5,10 @@ title: Code Basics
 summary: Understanding the structure and key components of a Teams SDK application including the Application class, dependency injection, and project organization.
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Language from '@site/src/components/Language';
+
 <LanguageInclude section="imports" />
 
 # Code Basics
@@ -33,9 +37,13 @@ The app configuration includes a variety of options that allow you to customize 
 
 ### Plugins
 
+<Language language={['typescript', 'python']}>
+
 Plugins are a core part of the Teams SDK. They allow you to hook into various lifecycles of the application. The lifecycles include server events (start, stop, initialize, etc.), and also Teams Activity events <LanguageInclude section="plugin-events" />.
 
-<LanguageInclude section="local-test-note" />
+</Language>
+
+<LanguageInclude section="plugins-note" />
 
 ### Message Handling
 

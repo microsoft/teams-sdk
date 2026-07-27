@@ -4,9 +4,16 @@ summary: Guide to sending messages from your Teams SDK agent, including replies,
 title: Sending Messages
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Sending Messages
 
 Sending messages is a core part of an agent's functionality. With all activity handlers, a `send` method is provided which allows your handlers to send a message back to the user to the relevant conversation.
+
+:::info[SDK 2.1 Preview]
+In the 2.1 preview, the per-turn `context.Send`, `context.Reply`, and `context.Quote` helpers work the same way. The main difference is **streaming** — see the tabbed examples below.
+:::
 
 <LanguageInclude section="basic-message-example" />
 

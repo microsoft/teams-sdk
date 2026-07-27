@@ -1,6 +1,6 @@
 <!-- api-object-name -->
 
-`app.Api`
+`context.Api` (and `teams.Api` at the app level)
 
 <!-- api-table -->
 
@@ -16,9 +16,8 @@
 
 <!-- handler-example -->
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
@@ -27,8 +26,25 @@ app.OnMessage(async (context, cancellationToken) =>
 });
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    var members = await context.Api.Conversations.Members.GetAsync(
+        context.Activity.Conversation!.Id!,
+        cancellationToken: cancellationToken);
+});
+```
+
+</TabItem>
+</Tabs>
 
 <!-- meetings-example -->
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 app.OnMeetingStart(async (context, cancellationToken) =>
@@ -46,8 +62,46 @@ app.OnMeetingStart(async (context, cancellationToken) =>
 });
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+```csharp
+teams.OnMeetingStart(async (context, cancellationToken) =>
+{
+    var meetingId = context.Activity.Value.Id;
+    var tenantId = context.Activity.ChannelData?.Tenant?.Id;
+    var userId = context.Activity.From?.AadObjectId;
+
+    if (meetingId != null && tenantId != null && userId != null)
+    {
+        var participant = await context.Api.Meetings.GetParticipantAsync(meetingId, userId, tenantId);
+        // participant.Meeting?.Role — "Organizer", "Presenter", "Attendee"
+        // participant.Meeting?.InMeeting — true/false
+    }
+});
+```
+
+</TabItem>
+</Tabs>
+
 <!-- proactive-example -->
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 var members = await app.Api.Conversations.Members.Get("...");
 ```
+
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+Outside of a turn, use the app-level `teams.Api` client (point it at the target service URL first):
+
+```csharp
+var api = teams.Api.ForServiceUrl(serviceUrl);
+var members = await api.Conversations.Members.GetAsync(conversationId);
+```
+
+</TabItem>
+</Tabs>

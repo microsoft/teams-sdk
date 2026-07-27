@@ -1,6 +1,6 @@
 <!-- prerequisites -->
 
-- **.NET** v.10 or higher. Install or upgrade from [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download).
+- **.NET** v8 or higher. Install or upgrade from [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download).
 
 <!-- create-command -->
 
@@ -35,6 +35,9 @@ dotnet run
 
 <!-- console-output -->
 
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
 4. In the console, you should see a similar output:
 
 ```sh
@@ -43,9 +46,27 @@ dotnet run
 [INFO] Microsoft.Hosting.Lifetime Hosting environment: Development
 ```
 
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (Preview)">
+
+You should see:
+
+```sh
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:3978
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+```
+
+  </TabItem>
+</Tabs>
+
 <!-- post-startup-explanation -->
 
 The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 The playground sends unauthenticated requests, which a default `builder.AddTeams()` rejects when no credentials are configured. For local testing, enable `skipAuth` so your agent accepts them:
 
@@ -56,6 +77,26 @@ builder.AddTeams(skipAuth: true);
 :::warning
 Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
 :::
+
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (Preview)">
+
+The playground sends unauthenticated requests, and SDK 2.1 preview rejects them by default. For local testing, enable `DangerouslyAllowUnauthenticatedRequests`:
+
+```json title="appsettings.Development.json"
+{
+  "AzureAd": {
+    "DangerouslyAllowUnauthenticatedRequests": true
+  }
+}
+```
+
+:::warning
+Only use `DangerouslyAllowUnauthenticatedRequests` for local development — never in production, as it disables inbound request authentication.
+:::
+
+  </TabItem>
+</Tabs>
 
 Install the playground globally:
 
@@ -75,11 +116,32 @@ The playground opens at [http://localhost:56150](http://localhost:56150). Send a
 
 <!-- manual-install -->
 
-N/A
+```sh
+dotnet add package Microsoft.Teams.Apps --prerelease
+```
 
 <!-- manual-code -->
 
-N/A
+```csharp
+using Microsoft.Teams.Apps;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Register the Teams services on your existing app
+builder.Services.AddTeamsBotApplication();
+
+var app = builder.Build();
+
+// Maps POST /api/messages onto your existing ASP.NET Core app
+TeamsBotApplication teams = app.UseTeamsBotApplication();
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    await context.SendAsync($"you said: {context.Activity.Text}", cancellationToken);
+});
+
+app.Run();
+```
 
 <!-- manual-more -->
 
