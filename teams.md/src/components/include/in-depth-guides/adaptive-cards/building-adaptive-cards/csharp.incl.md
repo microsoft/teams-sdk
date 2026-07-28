@@ -74,70 +74,150 @@ var textBlock = new TextBlock("Test")
 
 <!-- designer-example -->
 
-```csharp
-var cardJson = """
-{
-    "type": "AdaptiveCard",
-    "body": [
-        {
-            "type": "ColumnSet",
-            "columns": [
-                {
-                    "type": "Column",
-                    "verticalContentAlignment": "center",
-                    "items": [
-                        {
-                            "type": "Image",
-                            "style": "Person",
-                            "url": "https://aka.ms/AAp9xo4",
-                            "size": "Small",
-                            "altText": "Portrait of David Claux"
-                        }
-                    ],
-                    "width": "auto"
-                },
-                {
-                    "type": "Column",
-                    "spacing": "medium",
-                    "verticalContentAlignment": "center",
-                    "items": [
-                        {
-                            "type": "TextBlock",
-                            "weight": "Bolder",
-                            "text": "David Claux",
-                            "wrap": true
-                        }
-                    ],
-                    "width": "auto"
-                },
-                {
-                    "type": "Column",
-                    "spacing": "medium",
-                    "verticalContentAlignment": "center",
-                    "items": [
-                        {
-                            "type": "TextBlock",
-                            "text": "Principal Platform Architect at Microsoft",
-                            "isSubtle": true,
-                            "wrap": true
-                        }
-                    ],
-                    "width": "stretch"
-                }
-            ]
-        }
-    ],
-    "version": "1.5",
-    "schema": "http://adaptivecards.io/schemas/adaptive-card.json"
-}
-""";
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+    ```csharp
+    var cardJson = """
+    {
+        "type": "AdaptiveCard",
+        "body": [
+            {
+                "type": "ColumnSet",
+                "columns": [
+                    {
+                        "type": "Column",
+                        "verticalContentAlignment": "center",
+                        "items": [
+                            {
+                                "type": "Image",
+                                "style": "Person",
+                                "url": "https://aka.ms/AAp9xo4",
+                                "size": "Small",
+                                "altText": "Portrait of David Claux"
+                            }
+                        ],
+                        "width": "auto"
+                    },
+                    {
+                        "type": "Column",
+                        "spacing": "medium",
+                        "verticalContentAlignment": "center",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "weight": "Bolder",
+                                "text": "David Claux",
+                                "wrap": true
+                            }
+                        ],
+                        "width": "auto"
+                    },
+                    {
+                        "type": "Column",
+                        "spacing": "medium",
+                        "verticalContentAlignment": "center",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "Principal Platform Architect at Microsoft",
+                                "isSubtle": true,
+                                "wrap": true
+                            }
+                        ],
+                        "width": "stretch"
+                    }
+                ]
+            }
+        ],
+        "version": "1.5",
+        "schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+    }
+    """;
 
-// Deserialize the JSON into an AdaptiveCard object
-var card = AdaptiveCard.Deserialize(cardJson);
+    // Deserialize the JSON into an AdaptiveCard object
+    var card = AdaptiveCard.Deserialize(cardJson);
 
-// Send the card
-await client.Send(card);
-```
+    // Send the card
+    await client.Send(card);
+    ```
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (Preview)">
+    ```csharp
+    using System.Text.Json;
+    using Microsoft.Teams.Apps;
+    using Microsoft.Teams.Cards;
+
+    var cardJson = """
+    {
+        "type": "AdaptiveCard",
+        "body": [
+            {
+                "type": "ColumnSet",
+                "columns": [
+                    {
+                        "type": "Column",
+                        "verticalContentAlignment": "center",
+                        "items": [
+                            {
+                                "type": "Image",
+                                "style": "Person",
+                                "url": "https://aka.ms/AAp9xo4",
+                                "size": "Small",
+                                "altText": "Portrait of David Claux"
+                            }
+                        ],
+                        "width": "auto"
+                    },
+                    {
+                        "type": "Column",
+                        "spacing": "medium",
+                        "verticalContentAlignment": "center",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "weight": "Bolder",
+                                "text": "David Claux",
+                                "wrap": true
+                            }
+                        ],
+                        "width": "auto"
+                    },
+                    {
+                        "type": "Column",
+                        "spacing": "medium",
+                        "verticalContentAlignment": "center",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "Principal Platform Architect at Microsoft",
+                                "isSubtle": true,
+                                "wrap": true
+                            }
+                        ],
+                        "width": "stretch"
+                    }
+                ]
+            }
+        ],
+        "version": "1.5",
+        "schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+    }
+    """;
+
+    // Deserialize the JSON into an AdaptiveCard object
+    var card = AdaptiveCard.Deserialize(cardJson);
+
+    // Serialize and wrap in a TeamsAttachment
+    JsonElement cardElement = JsonSerializer.SerializeToElement(card);
+    TeamsAttachment attachment = TeamsAttachment.CreateBuilder()
+        .WithAdaptiveCard(cardElement)
+        .Build();
+
+    // Send the card
+    await context.SendAsync(new MessageActivityInput().AddAttachment(attachment), cancellationToken);
+    ```
+  </TabItem>
+</Tabs>
 
 <!-- card-interface -->
 
@@ -145,22 +225,50 @@ await client.Send(card);
 
 <!-- example-intro -->
 
-<Tabs>
-  <TabItem label="Minimal" value="minimal">
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
     ```csharp
-    teams.OnMessage(async (context, cancellationToken) =>
+    using Microsoft.Teams.Apps.Annotations;
+
+    [TeamsController]
+    public class MessageController
+    {
+        [Message]
+        public async Task OnMessage([Context] IContext context)
+        {
+            var text = context.Activity.Text?.ToLowerInvariant() ?? "";
+
+            if (text.Contains("form"))
+            {
+                var card = CreateTaskFormCard();
+                await context.Client.Send(card);
+            }
+        }
+    }
+    ```
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (Preview)">
+    ```csharp
+    using System.Text.Json;
+    using Microsoft.Teams.Apps;
+    using Microsoft.Teams.Cards;
+
+    bot.OnMessage(async (context, cancellationToken) =>
     {
         var text = context.Activity.Text?.ToLowerInvariant() ?? "";
 
         if (text.Contains("form"))
         {
-            await context.Typing(cancellationToken: cancellationToken);
+            await context.TypingAsync(cancellationToken);
             var card = CreateTaskFormCard();
-            await context.Send(card, cancellationToken);
+            JsonElement cardElement = JsonSerializer.SerializeToElement(card);
+            TeamsAttachment attachment = TeamsAttachment.CreateBuilder()
+                .WithAdaptiveCard(cardElement)
+                .Build();
+            await context.SendAsync(new MessageActivityInput().AddAttachment(attachment), cancellationToken);
         }
     });
     ```
-
   </TabItem>
 </Tabs>
 

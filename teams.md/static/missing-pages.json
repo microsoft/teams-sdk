@@ -14,19 +14,10 @@
     "typescript",
     "python"
   ],
-  "in-depth-guides/ai-integrations": [
+  "in-depth-guides/observability/logging": [
     "csharp"
   ],
-  "in-depth-guides/ai-integrations/a2a": [
-    "csharp"
-  ],
-  "in-depth-guides/ai-integrations/build-agent": [
-    "csharp"
-  ],
-  "in-depth-guides/ai-integrations/mcp-server": [
-    "csharp"
-  ],
-  "in-depth-guides/ai-integrations/teams-enhancements": [
+  "in-depth-guides/observability/middleware": [
     "csharp"
   ],
   "in-depth-guides/observability/opentelemetry": [
@@ -65,9 +56,17 @@
   "migrations": [
     "csharp"
   ],
-  "migrations/dotnet-2-1": [
-    "typescript",
-    "python"
+  "migrations/botbuilder/proactive-activities": [
+    "csharp"
+  ],
+  "migrations/botbuilder/sending-activities": [
+    "csharp"
+  ],
+  "migrations/botbuilder/the-api-client": [
+    "csharp"
+  ],
+  "migrations/botbuilder/user-authentication": [
+    "csharp"
   ],
   "migrations/slack-bolt": [
     "csharp",

@@ -71,16 +71,14 @@ Slash commands arrive as normal message activities with the targeted flag set on
 
 <LanguageInclude section="slash-command-example" />
 
-## Middleware pattern
+## Activity handler chaining
 
-<LanguageInclude section="middleware-intro" />
-
-<LanguageInclude section="middleware-examples" />
+How handlers flow depends on SDK version.
 
 <Language language={['typescript', 'python']}>
 
 :::info
-Just like other middlewares, if you stop the chain by not calling `next()`, the activity will not be passed to the next handler. The order of registration for the handlers also matters as that determines how the handlers will be called.
+In SDK 2.0, handlers are chained. Call `next()` to continue to the next matching handler; return without `next()` to stop the chain. Handler registration order controls execution order.
 :::
 
 </Language>
@@ -92,7 +90,25 @@ In the 2.1 preview, activity handlers are **not** a `next()`-style chain — all
 :::
 
 :::note[SDK 2.0 (Legacy)]
-In SDK 2.0, activity handlers formed a chain: if you stopped it by not calling `next()`, the activity was not passed to the next handler, and the order of registration determined how handlers were called.
+In SDK 2.0, activity handlers are chained. Call `context.Next()` to continue to the next matching handler; return without it to stop the chain. Registration order determines handler execution order.
+
+```csharp
+app.OnMessage(async (context, cancellationToken) =>
+{
+    if (context.Activity.Text == "/help")
+    {
+        await context.Send("Here are all the ways I can help you...", cancellationToken);
+        return; // stop chain
+    }
+
+    await context.Next(); // continue chain
+});
+
+app.OnMessage(async (context, cancellationToken) =>
+{
+    await context.Send($"Hello! you said {context.Activity.Text}", cancellationToken);
+});
+```
 :::
 
 </Language>

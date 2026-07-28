@@ -26,6 +26,10 @@ const app = new App({
 
 <!-- signing-in -->
 
+:::note
+This uses the Single Sign-On (SSO) authentication flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
+:::
+
 ```ts
 app.message('/signin', async ({ signin, send }) => {
   if (await signin()) {

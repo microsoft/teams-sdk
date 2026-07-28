@@ -4,29 +4,7 @@
 
 <!-- migration-note -->
 
-:::info[SDK 2.1 Preview]
-The **Teams SDK for .NET 2.1** preview does **not** ship a built-in Graph client — the `Microsoft.Teams.Extensions.Graph` package (and the `app.Graph` / `userGraph` helpers described below) have no 2.1 equivalent. Instead, call Microsoft Graph directly with the [`Microsoft.Graph`](https://learn.microsoft.com/graph/sdks/sdks-overview) SDK (or `Azure.Identity` + `HttpClient`), reusing your bot's `AzureAd` configuration.
-
-For an **app-only** call, acquire a token with the bot's own credentials:
-
-```csharp
-using Azure.Identity;
-using Azure.Core;
-
-// Reuse the bot's AzureAd:TenantId / ClientId / ClientCredentials[0]:ClientSecret
-var credential = new ClientSecretCredential(
-    configuration["AzureAd:TenantId"],
-    configuration["AzureAd:ClientId"],
-    configuration["AzureAd:ClientCredentials:0:ClientSecret"]);
-
-var token = await credential.GetTokenAsync(
-    new TokenRequestContext(["https://graph.microsoft.com/.default"]),
-    cancellationToken);
-// use token.Token as a Bearer token against https://graph.microsoft.com
-```
-
-For **delegated** (on-behalf-of-user) calls, obtain the user token through an [OAuth flow](../in-depth-guides/user-authentication) and pass it to the Graph SDK. The examples in the rest of this page describe the SDK 2.0 built-in client.
-:::
+N/A
 
 <!-- package-overview -->
 
@@ -34,33 +12,42 @@ N/A
 
 <!-- app-graph-object -->
 
-`app.Graph`
+`GraphServiceClient`
 
 <!-- app-access-method -->
 
-N/A
+for app-level calls
 
 <!-- app-graph-example -->
 
 ```csharp
-// Equivalent of https://learn.microsoft.com/en-us/graph/api/user-get
-// Gets the details of the bot-user
-var user = app.Graph.Me.GetAsync().GetAwaiter().GetResult();
-Console.WriteLine($"User ID: {user.id}");
-Console.WriteLine($"User Display Name: {user.displayName}");
-Console.WriteLine($"User Email: {user.mail}");
-Console.WriteLine($"User Job Title: {user.jobTitle}");
+using Azure.Identity;
+using Microsoft.Graph;
+
+var credential = new ClientSecretCredential(
+    configuration["AzureAd:TenantId"],
+    configuration["AzureAd:ClientId"],
+    configuration["AzureAd:ClientCredentials:0:ClientSecret"]);
+
+var graph = new GraphServiceClient(credential, ["https://graph.microsoft.com/.default"]);
+var user = await graph.Me.GetAsync(cancellationToken: cancellationToken);
+Console.WriteLine($"User ID: {user?.Id}");
+Console.WriteLine($"User Display Name: {user?.DisplayName}");
+Console.WriteLine($"User Email: {user?.Mail}");
+Console.WriteLine($"User Job Title: {user?.JobTitle}");
 ```
 
 <!-- user-graph-intro -->
 
-To access the graph using the user's token, you need to do this as part of a message handler:
+To access Graph with the signed-in user's token, do this in a message handler:
 
 <!-- user-graph-example -->
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
@@ -73,18 +60,43 @@ app.OnMessage(async (context, cancellationToken) =>
 });
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+```csharp
+using System.Net.Http.Headers;
+
+var flow = teams.GetOAuthFlow("graph");
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    var token = await flow.SignInAsync(context, cancellationToken);
+    if (token is null) return;
+
+    using var http = new HttpClient();
+    http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+    var meJson = await http.GetStringAsync(
+        "https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,jobTitle",
+        cancellationToken);
+
+    await context.SendAsync(meJson, cancellationToken);
+});
+```
+
+</TabItem>
+</Tabs>
 
 <!-- user-graph-object -->
 
-`userGraph`
+`context.UserGraph` (SDK 2.0) / `context.GetUserGraphClient()` (SDK 2.1)
 
 <!-- app-graph-in-handler -->
 
-`appGraph`
+`GraphServiceClient`
 
 <!-- app-graph-reference -->
 
-`app.Graph`
+your app-level `GraphServiceClient`
 
 <!-- advanced-sections -->
 

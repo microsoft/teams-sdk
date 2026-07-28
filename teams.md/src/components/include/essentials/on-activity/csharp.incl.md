@@ -7,6 +7,8 @@ The Teams SDK exposes a fluent router so you can subscribe to these activities w
 <Tabs groupId="csharp-sdk-version" defaultValue="core">
   <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
+Slash commands arrive as targeted messages. Check `Recipient.IsTargeted` and handle them explicitly:
+
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
 {
@@ -36,28 +38,30 @@ In the above example, the `context.Activity` property is of type `MessageActivit
 <Tabs groupId="csharp-sdk-version" defaultValue="core">
   <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
+Slash commands arrive as targeted messages. Check `Recipient.IsTargeted` and handle them explicitly:
+
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
 {
     if (context.Activity.Recipient?.IsTargeted == true)
     {
         await context.Send($"Received slash command: {context.Activity.Text}", cancellationToken);
-        return;
     }
-
-    await context.Next();
 });
 ```
 
   </TabItem>
   <TabItem value="core" label="SDK 2.1 (Preview)">
 
-Match specific messages with a regular expression. This handler only fires for messages starting with `/`:
+Slash commands arrive as targeted messages. Check `Recipient.IsTargeted` and handle them explicitly:
 
 ```csharp
-teams.OnMessage(@"^/(\w+)", async (context, cancellationToken) =>
+teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.SendAsync($"Received slash command: {context.Activity.Text}", cancellationToken);
+    if (context.Activity.Recipient?.IsTargeted == true)
+    {
+        await context.SendAsync($"Received slash command: {context.Activity.Text}", cancellationToken);
+    }
 });
 ```
 

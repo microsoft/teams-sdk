@@ -78,6 +78,12 @@ This will serve the HTML page to the `${BOT_ENDPOINT}/tabs/settings` endpoint as
 
 <!-- query-settings-code -->
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
 ```csharp
 using Microsoft.Teams.Api.Cards;
 using Microsoft.Teams.Cards;
@@ -121,7 +127,37 @@ public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionQuerySet
 }
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+```csharp
+using Microsoft.Teams.Apps.MessageExtensions;
+using Microsoft.Teams.Apps.Schema;
+
+//...
+
+bot.OnQuerySettingUrl(async (context, cancellationToken) =>
+{
+    // Get user settings (this could come from a database or user store)
+    var selectedOption = ""; // Default or retrieve from user preferences
+
+    var botEndpoint = Environment.GetEnvironmentVariable("BOT_ENDPOINT") ?? "https://your-bot-endpoint.com";
+    var settingsUrl = $"{botEndpoint}/tabs/settings?selectedOption={Uri.EscapeDataString(selectedOption)}";
+
+    return MessageExtensionResponse.CreateBuilder()
+        .WithType(MessageExtensionResponseTypes.Config)
+        .WithSuggestedActions(new SuggestedAction(ActionTypes.OpenUrl, "Settings", settingsUrl))
+        .Build();
+});
+```
+
+</TabItem>
+</Tabs>
+
 <!-- handle-submission-code -->
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 [MessageExtension.Setting]
@@ -165,3 +201,26 @@ private static Microsoft.Teams.Api.MessageExtensions.Response CreateEmptyResult(
     };
 }
 ```
+
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+SDK 2.1 does not have a dedicated settings-submission handler. Inside your existing `OnInvoke` handler, check for `composeExtension/setting`:
+
+```csharp
+bot.OnQuerySetting(async (context, cancellationToken) =>
+{
+    string? value = context.Activity.Value?.State;
+
+    if (state != "CancelledByUser")
+    {
+        // Save the user's settings here
+        // SaveUserSettings(context.Activity.From.Id, state);
+    }
+
+    return new InvokeResponse(200);
+}
+```
+
+</TabItem>
+</Tabs>

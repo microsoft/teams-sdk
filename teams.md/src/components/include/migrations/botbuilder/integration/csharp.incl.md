@@ -4,34 +4,25 @@
   <TabItem value="Program.cs" default>
     ```csharp
 
+    using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Integration.AspNet.Core;
-    using Microsoft.Teams.Api.Activities;
-    using Microsoft.Teams.Apps;
-    using Microsoft.Teams.Apps.Activities;
-    using Microsoft.Teams.Apps.Annotations;
-    using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+    using Microsoft.Teams.Apps.BotBuilder;
 
     public static partial class Program
     {
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder
-                .AddTeams()
-                // highlight-next-line
-                .AddBotBuilder<Bot, BotBuilderAdapter, ConfigurationBotFrameworkAuthentication>();
+            builder.AddTeamsBotFrameworkHttpAdapter();
+            builder.Services.AddTransient<IBot, Bot>();
 
             var app = builder.Build();
 
-            var teams = app.UseTeams();
+            app.MapPost("/api/messages", async (IBotFrameworkHttpAdapter adapter, IBot bot, HttpRequest request, HttpResponse response, CancellationToken ct)
+                => await adapter.ProcessAsync(request, response, bot, ct));
+
             app.Run();
         }
-
-        teams.OnMessage(async (context, cancellationToken) =>
-        {
-            await context.Client.Typing(cancellationToken);
-            await context.Client.Send($"hi from teams...", cancellationToken);
-        });
     }
     ```
 

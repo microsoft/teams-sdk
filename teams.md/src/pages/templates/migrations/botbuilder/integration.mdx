@@ -1,23 +1,91 @@
 ---
 sidebar_position: 1
 languages: ['typescript', 'csharp', 'python']
-title: Using the BotBuilder Plugin
-summary: How to migrate BotBuilder adapters to Teams SDK plugins for handling bot communication and middleware.
+title: Botbuilder Compatibility
+summary: How to integrate existing BotBuilder adapters/handlers with Teams SDK during migration.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Language from '@site/src/components/Language';
 
-# Using the BotBuilder Plugin
+# Botbuilder Compatibility
+
+<Language language="csharp">
+
+## Migrating to SDK 2.1
+
+In **SDK 2.1**, the BotBuilder plugin is replaced by the `Microsoft.Teams.Apps.BotBuilder` NuGet package, which wires your existing `ActivityHandler` and `CloudAdapter` directly into ASP.NET Core without any additional plugin layer.
+
+**1. Replace packages**
+
+Remove the old SDK 2.0 plugin:
+
+```xml
+<!-- remove -->
+<PackageReference Include="Microsoft.Teams.Plugins.AspNetCore.BotBuilder" Version="..." />
+```
+
+Add the SDK 2.1 compatibility package:
+
+```xml
+<!-- add -->
+<PackageReference Include="Microsoft.Teams.Apps.BotBuilder" Version="..." />
+```
+
+**2. Update `Program.cs`**
+
+Replace manual BotFramework registration with a single call:
+
+```csharp
+// before (SDK 2.0 or raw BotBuilder)
+builder.Services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
+builder.Services.AddTransient<IBot, Bot>();
+
+// after (SDK 2.1)
+builder.AddTeamsBotFrameworkHttpAdapter();
+builder.Services.AddTransient<IBot, Bot>();
+```
+
+Then map the messages endpoint:
+
+```csharp
+app.MapPost("/api/messages", async (IBotFrameworkHttpAdapter adapter, IBot bot,
+    HttpRequest request, HttpResponse response, CancellationToken ct)
+    => await adapter.ProcessAsync(request, response, bot, ct));
+```
+
+**3. Keep your existing handlers**
+
+Your `ActivityHandler` (`Bot.cs`) and `CloudAdapter` implementations require no changes — they continue to work as-is.
+
+:::info[On SDK 2.0?]
+Use `Microsoft.Teams.Plugins.AspNetCore.BotBuilder` and follow the plugin registration pattern shown below.
+
+The plugin connects your existing `CloudAdapter` and `ActivityHandler` to Teams SDK. When an activity arrives:
+1. The BotBuilder `ActivityHandler` processes it first (standard Bot Framework logic).
+2. The Teams SDK handlers execute afterward.
+
+This lets you incrementally migrate — both run on the same message:
+```
+hi from botbuilder...
+hi from teams...
+```
+
+<LanguageInclude section="example" />
+:::
+
+</Language>
+
+<Language language={['typescript', 'python']}>
 
 # Adapters
 A BotBuilder `CloudAdapter` is responsible for managing communication between a bot and its users.
 It serves as the entry point for incoming activities and forwards them to the registered `ActivityHandler` for processing. 
 You can customize the adapter to add middleware for logging, authentication, and define error handling.
 
-The `BotBuilderPlugin` provided within the Teams SDK, connects the SDK with the BotBuilder framework.
-It can either use an existing `CloudAdapter` or create a new default one, allowing activities to be processed through BotBuilder
-while still handling events via the Teams SDK App framework.
+The BotBuilder integration layer in Teams SDK connects the SDK with BotBuilder components.
+It lets you keep an existing `CloudAdapter` and `ActivityHandler` while migrating hosting/runtime integration into Teams SDK.
 
 # Activity Handlers
 The BotBuilder `ActivityHandler` contains the actual bot logic for processing messages or events
@@ -43,26 +111,18 @@ With the `BotBuilderPlugin`, when a message or activity is received:
 1. The BotBuilder ActivityHandler runs first, handling the activity according to standard Bot Framework logic.
 2. The Teams SDK app based activity handlers execute afterward, allowing Teams SDK logic to execute.
 
-:::info
-This snippet shows how to use the `BotBuilderPlugin` to send and receive activities using botbuilder instead of the default Teams SDK http plugin.
-:::
-
 <LanguageInclude section="example" />
 
 In this example:
-- <LanguageInclude content={{"typescript": "`adapter.ts`", "csharp": "`BotBuilderAdapter.cs`", "python": "`adapter.py`"}} /> defines a `CloudAdapter` to
-handle incoming activities, and can include middleware support or error handling.
-- <LanguageInclude content={{"typescript": "`activity-handler.ts`", "csharp": "`Bot.cs`", "python": "`activity_handler.py`"}} /> defines the `ActivityHandler` and contains the core bot logic,
-handling incoming messages and sending responses via the `TurnContext`.
-- <LanguageInclude content={{"typescript": "`index.ts`", "csharp": "`Program.cs`", "python": "`app.py`"}} /> sets up a Teams SDK `app`
-and registers the `BotBuilderPlugin` with your adapter and activity handler. It also defines a native Teams SDK activity handler that responds to messages.
+- <LanguageInclude content={{"typescript": "`adapter.ts`", "python": "`adapter.py`"}} /> defines a `CloudAdapter` to handle incoming activities, and can include middleware support or error handling.
+- <LanguageInclude content={{"typescript": "`activity-handler.ts`", "python": "`activity_handler.py`"}} /> defines the `ActivityHandler` and contains the core bot logic, handling incoming messages and sending responses via the `TurnContext`.
+- <LanguageInclude content={{"typescript": "`index.ts`", "python": "`app.py`"}} /> sets up a Teams SDK `app` and registers the `BotBuilderPlugin` with your adapter and activity handler.
 
-In the ouptut below, 
-The first line comes from the BotBuilder ActivityHandler. The second line comes from the Teams SDK message activity handler.
-This shows that both handlers can process the same message sequentially when using the BotBuilder Plugin.
-This strategy can now be used to incrementally migrate from BotBuilder to the Teams SDK.
+This strategy can be used to incrementally migrate from BotBuilder to the Teams SDK.
 
 ```
 hi from botbuilder...
 hi from teams...
 ```
+
+</Language>

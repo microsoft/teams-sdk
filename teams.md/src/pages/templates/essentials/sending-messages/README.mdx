@@ -21,8 +21,6 @@ In the above example, the handler gets a `message` activity, and uses the `send`
 
 <LanguageInclude section="signin-example" />
 
-You are not restricted to only replying to `message` activities. In the above example, the handler is listening to <LanguageInclude section="signin-event-name" /> events, which are sent when a user successfully signs in.
-
 :::tip
 This shows an example of sending a text message. Additionally, you are able to send back things like [adaptive cards](../../in-depth-guides/adaptive-cards) by using the same `send` method. Look at the [adaptive card](../../in-depth-guides/adaptive-cards) section for more details.
 :::
@@ -81,7 +79,7 @@ In a public reply, the same prompt preview appears above the bot response and is
 
 In reactive scenarios, when replying to an inbound targeted activity through <LanguageInclude section="context-send-method-name" /> or <LanguageInclude section="context-reply-method-name" />, the SDK automatically includes targeted message info.
 
-For proactive scenarios (using <LanguageInclude content={{"csharp": "`app.Send()`", "typescript": "`app.send()`", "python": "`app.send()`"}} />), attach targeted message info using the targeted message ID you are replying to.
+For proactive scenarios (using <LanguageInclude content={{"csharp": "`app.SendAsync()`", "typescript": "`app.send()`", "python": "`app.send()`"}} />), attach targeted message info using the targeted message ID you are replying to.
 
 <LanguageInclude section="prompt-preview-proactive-example" />
 

@@ -6,6 +6,12 @@ Start off by sending an initial card in the `TaskFetch` event.
 
 <!-- initial-card -->
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
 ```csharp
 using System.Text.Json;
 using Microsoft.Teams.Api;
@@ -62,9 +68,69 @@ private static Response CreateMultiStepFormDialog()
 }
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+```csharp
+using System.Text.Json;
+using Microsoft.Teams.Apps.Schema;
+using Microsoft.Teams.Apps.TaskModules;
+using Microsoft.Teams.Cards;
+
+//...
+
+private static InvokeResponse<TaskModuleResponse> CreateMultiStepFormDialog()
+{
+    var dialogCard = new AdaptiveCard
+    {
+        Body = new List<CardElement>
+        {
+            new TextBlock("This is a multi-step form")
+            {
+                Size = TextSize.Large,
+                Weight = TextWeight.Bolder
+            },
+            new TextInput
+            {
+                Id = "name",
+                Label = "Name",
+                Placeholder = "Enter your name",
+                IsRequired = true
+            }
+        },
+        Actions = new List<Action>
+        {
+            new SubmitAction
+            {
+                Title = "Submit",
+                Data = new { submissiondialogtype = "webpage_dialog_step_1" }
+            }
+        }
+    };
+
+    TeamsAttachment attachment = TeamsAttachment.CreateBuilder()
+        .WithAdaptiveCard(JsonSerializer.SerializeToElement(dialogCard))
+        .Build();
+
+    return TaskModuleResponse.CreateBuilder()
+        .WithType(TaskModuleResponseTypes.Continue)
+        .WithTitle("Multi-step Form Dialog")
+        .WithHeight("medium")
+        .WithWidth("medium")
+        .WithCard(attachment)
+        .Build();
+}
+```
+
+</TabItem>
+</Tabs>
+
 <!-- submission-handler -->
 
 Then in the submission handler, you can choose to `continue` the dialog with a different card.
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 using System.Text.Json;
@@ -128,11 +194,80 @@ case "webpage_dialog_step_2":
     return new Response(new MessageTask("Multi-step form completed successfully"));
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+```csharp
+using System.Text.Json;
+using Microsoft.Teams.Apps.Schema;
+using Microsoft.Teams.Apps.TaskModules;
+using Microsoft.Teams.Cards;
+
+//...
+
+// Add these cases to the OnTaskSubmit handler switch statement
+case "webpage_dialog_step_1":
+    var nameStep1 = GetFormValue("name") ?? "Unknown";
+    var nextStepCard = new AdaptiveCard
+    {
+        Body = new List<CardElement>
+        {
+            new TextBlock("Email")
+            {
+                Size = TextSize.Large,
+                Weight = TextWeight.Bolder
+            },
+            new TextInput
+            {
+                Id = "email",
+                Label = "Email",
+                Placeholder = "Enter your email",
+                IsRequired = true
+            }
+        },
+        Actions = new List<Action>
+        {
+            new SubmitAction
+            {
+                Title = "Submit",
+                Data = new { submissiondialogtype = "webpage_dialog_step_2", name = nameStep1 }
+            }
+        }
+    };
+
+    TeamsAttachment nextStepAttachment = TeamsAttachment.CreateBuilder()
+        .WithAdaptiveCard(JsonSerializer.SerializeToElement(nextStepCard))
+        .Build();
+
+    return TaskModuleResponse.CreateBuilder()
+        .WithType(TaskModuleResponseTypes.Continue)
+        .WithTitle($"Thanks {nameStep1} - Get Email")
+        .WithHeight("medium")
+        .WithWidth("medium")
+        .WithCard(nextStepAttachment)
+        .Build();
+
+case "webpage_dialog_step_2":
+    var nameStep2 = GetFormValue("name") ?? "Unknown";
+    var emailStep2 = GetFormValue("email") ?? "No email";
+    await context.SendAsync($"Hi {nameStep2}, thanks for submitting the form! We got that your email is {emailStep2}", cancellationToken);
+    return TaskModuleResponse.CreateBuilder()
+        .WithType(TaskModuleResponseTypes.Message)
+        .WithMessage("Multi-step form completed successfully")
+        .Build();
+```
+
+</TabItem>
+</Tabs>
+
 <!-- complete-example -->
 
 ### Complete Multi-Step Form Handler
 
 Here's the complete example showing how to handle a multi-step form:
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 using System.Text.Json;
@@ -234,3 +369,104 @@ public async Task<Response> OnTaskSubmit([Context] Tasks.SubmitActivity activity
     }
 }
 ```
+
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (Preview)">
+
+```csharp
+using System.Text.Json;
+using Microsoft.Teams.Apps.Schema;
+using Microsoft.Teams.Apps.TaskModules;
+using Microsoft.Teams.Cards;
+
+//...
+
+teams.OnTaskSubmit(async (context, cancellationToken) =>
+{
+    var data = context.Activity.Value?.Data as JsonElement?;
+    if (data == null)
+    {
+        return TaskModuleResponse.CreateBuilder()
+            .WithType(TaskModuleResponseTypes.Message)
+            .WithMessage("No data found in the activity value")
+            .Build();
+    }
+
+    var submissionType = data.Value.TryGetProperty("submissiondialogtype", out var submissionTypeObj) && submissionTypeObj.ValueKind == JsonValueKind.String
+        ? submissionTypeObj.ToString()
+        : null;
+
+    string? GetFormValue(string key)
+    {
+        if (data.Value.TryGetProperty(key, out var val))
+        {
+            if (val is JsonElement element)
+                return element.GetString();
+            return val.ToString();
+        }
+        return null;
+    }
+
+    switch (submissionType)
+    {
+        case "webpage_dialog_step_1":
+            var nameStep1 = GetFormValue("name") ?? "Unknown";
+            var nextStepCard = new AdaptiveCard
+            {
+                Body = new List<CardElement>
+                {
+                    new TextBlock("Email")
+                    {
+                        Size = TextSize.Large,
+                        Weight = TextWeight.Bolder
+                    },
+                    new TextInput
+                    {
+                        Id = "email",
+                        Label = "Email",
+                        Placeholder = "Enter your email",
+                        IsRequired = true
+                    }
+                },
+                Actions = new List<Action>
+                {
+                    new SubmitAction
+                    {
+                        Title = "Submit",
+                        Data = new { submissiondialogtype = "webpage_dialog_step_2", name = nameStep1 }
+                    }
+                }
+            };
+
+            TeamsAttachment nextStepAttachment = TeamsAttachment.CreateBuilder()
+                .WithAdaptiveCard(JsonSerializer.SerializeToElement(nextStepCard))
+                .Build();
+
+            return TaskModuleResponse.CreateBuilder()
+                .WithType(TaskModuleResponseTypes.Continue)
+                .WithTitle($"Thanks {nameStep1} - Get Email")
+                .WithHeight("medium")
+                .WithWidth("medium")
+                .WithCard(nextStepAttachment)
+                .Build();
+
+        case "webpage_dialog_step_2":
+            var nameStep2 = GetFormValue("name") ?? "Unknown";
+            var emailStep2 = GetFormValue("email") ?? "No email";
+            await context.SendAsync($"Hi {nameStep2}, thanks for submitting the form! We got that your email is {emailStep2}", cancellationToken);
+            return TaskModuleResponse.CreateBuilder()
+                .WithType(TaskModuleResponseTypes.Message)
+                .WithMessage("Multi-step form completed successfully")
+                .Build();
+
+        default:
+            return TaskModuleResponse.CreateBuilder()
+                .WithType(TaskModuleResponseTypes.Message)
+                .WithMessage("Unknown submission type")
+                .Build();
+    }
+});
+```
+
+</TabItem>
+</Tabs>

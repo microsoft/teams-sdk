@@ -85,7 +85,7 @@ flowchart LR
 - Register your own services in `builder.Services` and inject them into handlers and middleware, just like any ASP.NET Core app
 
 :::note[SDK 2.0 (Legacy)]
-The SDK 2.0 model exposed the app as an `App` class with a **plugin architecture** — plugins sat both in front of the app (hosting it as a server) and behind it (reacting to activities being sent), and communicated through an event bus. The 2.1 preview **removes plugins** in favor of ASP.NET Core middleware and dependency injection. If you're upgrading, see the [.NET 2.1 migration guide](../migrations/dotnet-2-1). The plugin-based model is still described below for the TypeScript and Python SDKs.
+The SDK 2.0 model exposed the app as an `App` class with a **plugin architecture** — plugins sat both in front of the app (hosting it as a server) and behind it (reacting to activities being sent), and communicated through an event bus. The 2.1 preview **removes plugins** in favor of ASP.NET Core middleware and dependency injection. If you're upgrading from Bot Framework or 2.0 patterns, see the [BotBuilder migration guide](../migrations/botbuilder). The plugin-based model is still described below for the TypeScript and Python SDKs.
 :::
 
 </Language>

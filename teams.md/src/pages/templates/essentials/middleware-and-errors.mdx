@@ -1,8 +1,8 @@
 ---
 sidebar_position: 2
-sidebar_label: Middleware & Errors
-title: Middleware & Error Handling
-summary: Handling cross-cutting concerns in a Teams SDK 2.1 app — turn middleware for every-turn logic, plus error handling, logging, and app lifecycle.
+sidebar_label: Middleware
+title: Middleware
+summary: Turn middleware in Teams SDK 2.1 for cross-cutting, every-turn logic.
 languages: ['csharp']
 suppressLanguageIncludeWarning: true
 ---
@@ -10,9 +10,9 @@ suppressLanguageIncludeWarning: true
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Middleware & Error Handling
+# Middleware
 
-**Turn middleware** is how a 2.1 app runs logic on *every* activity it receives — before that activity reaches your handlers. It's the 2.1 replacement for much of what plugins did in 2.0: cross-cutting concerns like logging, metrics, and request enrichment. Because your app is a standard ASP.NET Core application, other concerns — app lifecycle (startup/shutdown) and errors — are handled with familiar building blocks (`IHostApplicationLifetime`, `try`/`catch`, `context.Log`).
+**Turn middleware** is how a 2.1 app runs logic on *every* activity it receives — before that activity reaches your handlers. Use it for cross-cutting concerns like logging, metrics, and request enrichment.
 
 ```mermaid
 flowchart LR
@@ -32,7 +32,9 @@ flowchart LR
     classDef interesting fill:#b1650f,stroke:#333,stroke-width:4px;
 ```
 
-If you're coming from SDK 2.0, the plugin event bus is gone. The table below maps each thing you used to handle onto its 2.1 mechanism:
+## Relationship to SDK 2.0
+
+If you're coming from SDK 2.0, the plugin event bus is gone. The table below maps each thing you used to handle in 2.0 onto its 2.1 mechanism:
 
 <Tabs groupId="csharp-sdk-version" defaultValue="core">
 <TabItem value="legacy" label="SDK 2.0 (Legacy)">

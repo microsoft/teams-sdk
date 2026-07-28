@@ -36,7 +36,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 
     if (agenticIdentity is not null)
     {
-        context.Log.Info(
+        context.Log.LogInformation(
             $"Acting on behalf of user {agenticIdentity.AgenticUserId} " +
             $"via app {agenticIdentity.AgenticAppId}");
     }
@@ -60,23 +60,20 @@ teams.OnMessage(async (context, cancellationToken) =>
 
 ## Calling APIs as the AI teammate
 
-Because the SDK resolves the correct token per turn, you call the Teams API clients exactly as you normally would. When the turn is agentic, some API operations accept the caller's agentic identity so the action is attributed to the AI teammate — for example, adding a reaction:
+Because the SDK resolves the correct token per turn, you call the Teams API clients exactly as you normally would. In SDK 2.1, `context.Api` is already scoped from the inbound activity (including agentic identity when present), so you don't pass agentic identity separately — for example, adding a reaction:
 
 ```csharp
 teams.OnMessage("(?i)^react$", async (context, cancellationToken) =>
 {
     var response = await context.SendAsync("Reacting to this message.", cancellationToken);
 
-    await context.Api.Conversations.Reactions.AddAsync(
+    await context.Api.Conversations.AddReactionAsync(
         context.Activity.Conversation!.Id!,
         response!.Id!,
-        "1f44b_wavinghand-tone4",
-        context.Activity.Recipient?.GetAgenticIdentity(),
+        ReactionType.Like,
         cancellationToken: cancellationToken);
 });
 ```
-
-Passing `context.Activity.Recipient?.GetAgenticIdentity()` is safe even outside an agentic context — it evaluates to `null`, and the API falls back to the bot's own app permissions.
 
 ## Setup
 
