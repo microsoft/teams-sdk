@@ -197,7 +197,7 @@ teams.OnMessage("/whoami", async (context, cancellationToken) =>
 
 teams.OnMessage("(?i)^my gh user$", async (context, cancellationToken) =>
 {
-    tring? token = await githubAuth.SignInAsync(context, ct);
+    string? token = await githubAuth.SignInAsync(context, cancellationToken);
     if (token is null) return;
 
     using HttpClient http = new();
