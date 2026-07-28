@@ -844,8 +844,8 @@ function watch(): void {
   const inclWatcher = chokidar.watch(path.join(FRAGMENTS_DIR, '**/*.incl.md'), {
     persistent: true,
     ignoreInitial: true,
-    usePolling: true,
-    interval: 500,
+    usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+    interval: Number(process.env.CHOKIDAR_INTERVAL ?? 500),
   });
 
   /**
