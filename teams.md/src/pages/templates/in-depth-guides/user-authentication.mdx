@@ -23,18 +23,7 @@ User authentication does not work with the developer tools setup. You have to ru
 It is possible to authenticate the user into [other auth providers](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-identity-providers?view=azure-bot-service-4.0&tabs=adv2%2Cga2#other-identity-providers) like Facebook, Github, Google, Dropbox, and so on.
 :::
 
-
-## Project Setup
-
-<Language language={['typescript', 'python']}>
-
-:::tip
-If you're creating a new app, use the `graph` template. Skip this if you're adding auth to an existing app.
-:::
-
 <LanguageInclude section="create-project" />
-
-</Language>
 
 ### Set up the OAuth connection
 
@@ -77,12 +66,6 @@ You can subscribe to the `signin` event, that will be triggered once the OAuth f
 <LanguageInclude section="signin-event" />
 
 ## Start using the client
-
-<Language language={['typescript', 'python']}>
-
-From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
-
-</Language>
 
 :::note
 The default graph configuration requests the `User.ReadBasic.All` permission. It is possible to request other permissions by modifying the App Registration for the bot on Azure.

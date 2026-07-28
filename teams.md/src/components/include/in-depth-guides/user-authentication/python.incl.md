@@ -1,4 +1,9 @@
 <!-- create-project -->
+## Project Setup
+
+:::tip
+If you're creating a new app, use the `graph` template. Skip this if you're adding auth to an existing app.
+:::
 
 Use your terminal to run the following command:
 
@@ -53,6 +58,9 @@ async def handle_sign_in(event: SignInEvent):
 ```
 
 <!-- using-graph -->
+
+From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+
 
 ```python
 @app.on_message
