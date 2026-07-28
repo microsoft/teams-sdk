@@ -210,7 +210,7 @@ SDK 2.1 does not have a dedicated settings-submission handler. Inside your exist
 ```csharp
 bot.OnQuerySetting(async (context, cancellationToken) =>
 {
-    string? value = context.Activity.Value?.State;
+    string? state = context.Activity.Value?.State;
 
     if (state != "CancelledByUser")
     {
@@ -219,7 +219,7 @@ bot.OnQuerySetting(async (context, cancellationToken) =>
     }
 
     return new InvokeResponse(200);
-}
+});
 ```
 
 </TabItem>
