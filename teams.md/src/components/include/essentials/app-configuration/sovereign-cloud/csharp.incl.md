@@ -1,24 +1,27 @@
 <!-- configuration -->
+For **SDK 2.1 (current)**, configure sovereign cloud endpoints as shown below.
 
-:::info[SDK 2.1 Preview]
-The **Teams SDK for .NET 2.1** preview doesn't use the `Teams:Cloud` presets shown below. For sovereign clouds, set the relevant endpoints alongside your `AzureAd` credentials in `appsettings.json` — the Entra login instance via `AzureAd:Instance`, and the Bot Framework endpoints under a `BotFramework` section:
-
-```json title="appsettings.json (US Gov example)"
+```json title="Properties/launchSettings.json (US Gov example)"
 {
-  "AzureAd": {
-    "Instance": "https://login.microsoftonline.us/",
-    "TenantId": "your-tenant-id",
-    "ClientId": "your-client-id"
-  },
-  "BotFramework": {
-    "OpenIdMetadataUrl": "https://login.botframework.azure.us/v1/.well-known/openid-configuration",
-    "BotTokenIssuer": "https://api.botframework.us"
+  "profiles": {
+    "YourBot": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "AzureAd__Instance": "https://login.microsoftonline.us/",
+        "AzureAd__TenantId": "your-tenant-id",
+        "AzureAd__ClientId": "your-client-id",
+        "BotFramework__OpenIdMetadataUrl": "https://login.botframework.azure.us/v1/.well-known/openid-configuration",
+        "BotFramework__BotTokenIssuer": "https://api.botframework.us"
+      }
+    }
   }
 }
 ```
 
-When these aren't set, the SDK defaults to the public-cloud endpoints. The `Teams:Cloud` configuration below applies to SDK 2.0.
-:::
+For deployed environments, set equivalent values via app configuration or environment variables. When these aren't set, the SDK defaults to public-cloud endpoints.
+
+:::note[SDK 2.0 (Legacy)]
+The configuration below is only valid for **SDK 2.0** apps. It uses SDK 2.0 `Teams:Cloud` presets.
 
 In `appsettings.json`:
 
@@ -44,29 +47,16 @@ var app = new App(new AppOptions
 ```
 
 **Available cloud presets:** `CloudEnvironment.Public`, `CloudEnvironment.USGov`, `CloudEnvironment.USGovDoD`, `CloudEnvironment.China`
+:::
 
 <!-- per-endpoint-overrides -->
 
-In `appsettings.json`:
-
-```json
-{
-  "Teams": {
-    "Cloud": "China",
-    "LoginTenant": "your-tenant-id"
-  }
-}
-```
+N/A
 
 <!-- troubleshooting-china-tenant -->
 
-In `appsettings.json`:
+N/A
 
-```json
-{
-  "Teams": {
-    "Cloud": "China",
-    "LoginTenant": "your-tenant-id"
-  }
-}
-```
+<!-- troubleshooting-cloud-env-ignored -->
+
+N/A

@@ -44,7 +44,7 @@ public Response OnMessageExtensionQuery(
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.Teams.Apps.MessageExtensions;
@@ -143,7 +143,7 @@ private static Response CreateSearchResults(string query, ILogger log)
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.Teams.Apps.MessageExtensions;
@@ -263,7 +263,7 @@ private static Response CreateItemSelectionResponse(object? selectedItem, ILogge
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;

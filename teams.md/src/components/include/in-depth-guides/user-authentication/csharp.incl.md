@@ -25,7 +25,7 @@ var teams = app.UseTeams();
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 :::info
 In SDK 2.1, you can register and use multiple OAuth connections in one bot (for example, Graph + GitHub) by adding multiple `AddOAuthFlow(...)` entries.
@@ -89,7 +89,7 @@ teams.OnMessage("/signin", async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
   :::note
 The graph connection uses the Single Sign-On (SSO) authentication flow whereas the Github connection uses the oauth flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
@@ -134,7 +134,7 @@ teams.OnSignIn(async (_, teamsEvent, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 graphAuth.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
@@ -175,7 +175,7 @@ teams.OnMessage("/whoami", async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Net.Http.Headers;
@@ -234,7 +234,7 @@ teams.OnMessage("/signout", async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage("/signout graph", async (context, cancellationToken) =>
@@ -291,7 +291,7 @@ teams.OnSignIn(async (_, teamsEvent, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Collections.Concurrent;
@@ -370,7 +370,7 @@ teams.OnSignInFailure(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 graphAuth.OnSignInFailure(async (context, failure, cancellationToken) =>

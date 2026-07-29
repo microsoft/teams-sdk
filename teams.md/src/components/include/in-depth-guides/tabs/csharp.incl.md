@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 SDK 2.0 includes a built-in `app.AddTab(...)` helper for hosting static tab content from your bot host.
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 SDK 2.1 does not expose a dedicated `AddTab` helper. Instead, host tab content with standard ASP.NET routes (for example `app.MapGet("/tabs/{name}/...")`) and keep using Teams SDK handlers for bot-side tab functions.
 

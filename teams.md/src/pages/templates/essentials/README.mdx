@@ -30,7 +30,7 @@ Before diving in, let's define a few key terms:
 
 <Language language="csharp">
 
-In the **2.1 preview**, your app is a standard ASP.NET Core application. Incoming activities from Teams arrive at your app's endpoint, pass through any **turn middleware** you register, and are routed to the dedicated **activity handler** (`OnMessage`, `OnEvent`, `OnMembersAdded`, …) that matches.
+In the **2.1**, your app is a standard ASP.NET Core application. Incoming activities from Teams arrive at your app's endpoint, pass through any **turn middleware** you register, and are routed to the dedicated **activity handler** (`OnMessage`, `OnEvent`, `OnMembersAdded`, …) that matches.
 
 ```mermaid
 flowchart LR
@@ -52,7 +52,7 @@ flowchart LR
 ```
 
 :::note[SDK 2.0 (Legacy)]
-SDK 2.0 routed both incoming and outgoing events through a **plugin event bus** before they reached your handlers. The 2.1 preview removes plugins in favor of standard ASP.NET Core **middleware** and **dependency injection**.
+SDK 2.0 routed both incoming and outgoing events through a **plugin event bus** before they reached your handlers. The 2.1 removes plugins in favor of standard ASP.NET Core **middleware** and **dependency injection**.
 :::
 
 </Language>

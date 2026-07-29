@@ -16,7 +16,7 @@ TENANT_ID=your-tenant-id
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 Set the following environment variables in your application:
 
@@ -62,7 +62,7 @@ app.Use(async (ctx, next) =>
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 // ASP.NET middleware: gate a custom route with a shared secret.
@@ -147,7 +147,7 @@ Set the following environment variables:
 - `CLIENT_ID`: Your Application (client) ID
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 Your application should automatically use User Assigned Managed Identity authentication when you provide the `ClientId` environment variable without a `ClientSecret`.
 
@@ -228,7 +228,7 @@ Set the following environment variables:
 - `TENANT_ID`: The tenant id where your bot is registered
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 Depending on the type of managed identity you select, set the environment variables accordingly.
 

@@ -286,7 +286,7 @@ The 2.1 preview consolidates into three packages. The following 2.0 packages hav
 | `Microsoft.Teams.Common` (logging, HTTP) | Use `Microsoft.Extensions.Logging` and `HttpClient` via DI |
 | `Microsoft.Teams.Plugins.*` | Plugin architecture removed — use standard ASP.NET Core middleware and DI |
 
-For the full list of API changes, see the [Migration Guide](https://github.com/microsoft/teams.net/blob/main/core/docs/MigrationGuide.md).
+For the full list of API changes, see the [Migration Guide](/csharp/migrations/v2-dotnet).
 
 ## What You Can Build Today
 

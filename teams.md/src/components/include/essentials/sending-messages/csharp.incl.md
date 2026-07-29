@@ -11,7 +11,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -38,7 +38,7 @@ app.OnVerifyState(async (context, cancellationToken) =>
 You are not restricted to only replying to `message` activities. In the above example, the handler is listening to `OnVerifyState` events, which are sent when a user successfully signs in.
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 var flow = teams.GetOAuthFlow("graph");
@@ -73,9 +73,9 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
-The 2.1 preview streams through a `TeamsStreamingWriter`. Create one from the turn context, push informative updates and response chunks, then finalize:
+The 2.1 streams through a `TeamsStreamingWriter`. Create one from the turn context, push informative updates and response chunks, then finalize:
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -113,7 +113,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -151,7 +151,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -211,7 +211,7 @@ await app.Send(conversationId, publicMessage);
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 var targetedMessageId = "1772050244572";
@@ -263,7 +263,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -299,7 +299,7 @@ app.OnMessage(async context =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -333,7 +333,7 @@ app.OnMessage(async context =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -361,7 +361,7 @@ app.OnMessage(async context =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -405,7 +405,7 @@ await app.Send(conversationId, msg);
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 var parentMessageId = "1772050244572";

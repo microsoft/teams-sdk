@@ -69,7 +69,7 @@ public async Task<Microsoft.Teams.Api.TaskModules.Response> OnTaskSubmit([Contex
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;
@@ -141,7 +141,7 @@ case "webpage_dialog":
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 // Add this case to the switch statement in the OnTaskSubmit handler
@@ -226,7 +226,7 @@ public async Task<Microsoft.Teams.Api.TaskModules.Response> OnTaskSubmit([Contex
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;

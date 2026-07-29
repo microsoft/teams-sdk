@@ -86,7 +86,7 @@ In SDK 2.0, handlers are chained. Call `next()` to continue to the next matching
 <Language language="csharp">
 
 :::info
-In the 2.1 preview, activity handlers are **not** a `next()`-style chain — all matching handlers run in their registration order, and one handler does not stop the others from running. To short-circuit or wrap the pipeline (for example to stop processing on a condition), use turn middleware (`ITurnMiddleware`) and control flow by whether you `await nextTurn(...)`.
+In SDK 2.1, activity handlers are **not** a `next()`-style chain — all matching handlers run in their registration order, and one handler does not stop the others from running. To short-circuit or wrap the pipeline (for example to stop processing on a condition), use turn middleware (`ITurnMiddleware`) and control flow by whether you `await nextTurn(...)`.
 :::
 
 :::note[SDK 2.0 (Legacy)]

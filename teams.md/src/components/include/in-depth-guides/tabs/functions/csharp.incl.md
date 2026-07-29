@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 Agents may want to expose REST APIs that client applications can call. SDK 2.0 provides the `app.AddFunction()` helper for this.
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 Agents may want to expose REST APIs that client applications can call. In SDK 2.1, implement these with standard ASP.NET endpoints (for example `app.MapPost(...)`) and protect them with authorization.
 
@@ -48,7 +48,7 @@ app.AddFunction<ProcessMessageData>("process-message", context =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.Teams.Core.Hosting;
@@ -100,7 +100,7 @@ app.AddFunction("get-random-number", () =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 In SDK 2.1, return standard ASP.NET minimal API results:
 
@@ -123,7 +123,7 @@ app.MapPost("/api/functions/get-random-number", () =>
 The function callback receives a `FunctionContext` object with useful values from the app and caller.
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 SDK 2.1 function endpoints use standard ASP.NET handler parameters instead of a Teams `FunctionContext`.
 
@@ -156,7 +156,7 @@ SDK 2.1 function endpoints use standard ASP.NET handler parameters instead of a 
 | `UserName`     | Caller | Microsoft Entra name of the current user, extracted from the validated auth token.                                  |
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 | Parameter / Source         | Description |
 | -------------------------- | ----------- |
@@ -181,7 +181,7 @@ Take care to validate caller-supplied values before using them. Don't assume the
 :::
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 In SDK 2.1, use `.RequireAuthorization()` so only authenticated callers reach the endpoint. You should still validate caller payload, route values, and business-level authorization.
 
@@ -206,7 +206,7 @@ To simplify common scenarios, SDK 2.0 `FunctionContext` provides `Send`.
 :::
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 In SDK 2.1, implement helper behavior explicitly in your endpoint (for example, resolve target conversation, verify access, then send via `ConversationClient`).
 

@@ -17,7 +17,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -51,7 +51,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 Slash commands arrive as targeted messages. Check `Recipient.IsTargeted` and handle them explicitly:
 
@@ -76,9 +76,9 @@ teams.OnMessage(async (context, cancellationToken) =>
 The `OnActivity` activity handlers (and attributes) follow a [middleware](https://www.patterns.dev/vanilla/mediator-pattern/) pattern similar to how `dotnet` middlewares work. This means that for each activity handler, a `Next` function is passed in which can be called to pass control to the next handler. This allows you to build a chain of handlers that can process the same activity in different ways.
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
-The 2.1 preview runs cross-cutting logic through **turn middleware** rather than chained activity handlers. Implement `ITurnMiddleware` and register it with `teams.UseMiddleware(...)`. Each middleware receives a `NextTurn` delegate it can `await` to pass control to the next middleware (and ultimately your activity handlers), giving you a familiar ASP.NET-style pipeline.
+The 2.1 runs cross-cutting logic through **turn middleware** rather than chained activity handlers. Implement `ITurnMiddleware` and register it with `teams.UseMiddleware(...)`. Each middleware receives a `NextTurn` delegate it can `await` to pass control to the next middleware (and ultimately your activity handlers), giving you a familiar ASP.NET-style pipeline.
 
   </TabItem>
 </Tabs>
@@ -117,7 +117,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 Define a middleware by implementing `ITurnMiddleware`:
 

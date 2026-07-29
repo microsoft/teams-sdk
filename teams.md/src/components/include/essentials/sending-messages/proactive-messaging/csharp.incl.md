@@ -19,7 +19,7 @@ import TabItem from '@theme/TabItem';
     });
     ```
   </TabItem>
-  <TabItem label="SDK 2.1 (Preview)" value="core">
+  <TabItem label="SDK 2.1 (current)" value="core" default>
     ```csharp
     teams.OnInstall(async (context, cancellationToken) =>
     {
@@ -51,7 +51,7 @@ public static class Notifications
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 public static class Notifications
@@ -88,7 +88,7 @@ public static async Task SendTargetedNotification(string conversationId, Account
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 // When sending proactively, you must provide an explicit recipient account
@@ -135,7 +135,7 @@ await app.Reply(conversationId, "Hello!");
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 // Send to a specific thread proactively
@@ -161,12 +161,12 @@ await app.Send(threadId, "Sent via helper");
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
-using Microsoft.Teams.Api;
+using Microsoft.Teams.Core.Schema;
 
-var threadId = Conversation.ToThreadedConversationId(conversationId, messageId);
+var threadId = ConversationExtensions.ToThreadedConversationId(conversationId, messageId);
 await app.SendAsync(threadId, "Sent via helper", cancellationToken: cancellationToken);
 ```
 

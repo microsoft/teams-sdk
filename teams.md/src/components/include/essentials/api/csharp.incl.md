@@ -27,7 +27,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -63,7 +63,7 @@ app.OnMeetingStart(async (context, cancellationToken) =>
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 teams.OnMeetingStart(async (context, cancellationToken) =>
@@ -94,7 +94,7 @@ var members = await app.Api.Conversations.Members.Get("...");
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 Outside of a turn, use the app-level `teams.Api` client (point it at the target service URL first):
 

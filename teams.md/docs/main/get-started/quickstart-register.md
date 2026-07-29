@@ -27,17 +27,6 @@ npm install -g @microsoft/teams.cli
 teams --version
 ```
 
-Choose CLI track by .NET SDK target:
-
-- **SDK 2.0**: stable CLI (`@microsoft/teams.cli`)
-- **SDK 2.1 (Preview)**: preview CLI (`@microsoft/teams.cli@preview`)
-
-```bash
-# SDK 2.1 preview
-npm install -g @microsoft/teams.cli@preview
-teams --version
-```
-
 ## 2. Log in
 
 ```bash
@@ -69,8 +58,6 @@ cd echo-bot
 teams project new csharp echo-bot
 cd Echo.Bot/Echo.Bot
 ```
-
-The C# scaffold creates a solution at `Echo.Bot/` with the project nested inside. Follow the **Next steps** line printed by the CLI for the exact path.
 
 </TabItem>
 <TabItem value="python" label="Python">
@@ -114,8 +101,6 @@ teams app create \
   --endpoint https://<tunnel-host>/api/messages \
   --env appsettings.json
 ```
-
-Credentials are written under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
 
 </TabItem>
 <TabItem value="python" label="Python">

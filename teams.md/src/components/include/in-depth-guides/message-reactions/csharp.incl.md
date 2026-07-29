@@ -26,7 +26,7 @@ import TabItem from '@theme/TabItem';
     }
     ```
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
     ```csharp
     using Microsoft.Teams.Apps;
 
@@ -79,7 +79,7 @@ import TabItem from '@theme/TabItem';
     }
     ```
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
     ```csharp
     using Microsoft.Teams.Apps;
 
@@ -147,7 +147,7 @@ import TabItem from '@theme/TabItem';
     }
     ```
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
     ```csharp
     using Microsoft.Teams.Apps;
 

@@ -285,7 +285,7 @@ import TabItem from '@theme/TabItem';
     }
     ```
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
     ```csharp
     using System.Text.Json;
     using Microsoft.Teams.Apps;
@@ -410,10 +410,10 @@ private static AdaptiveCard CreateDynamicSearchCard()
 <Tabs groupId="csharp-sdk-version" defaultValue="core">
   <TabItem value="legacy" label="SDK 2.0 (Legacy)">
     :::note
-    Dynamic typeahead search for Adaptive Cards is not supported in SDK 2.0. Use SDK 2.1 (Preview) for this feature.
+    Dynamic typeahead search for Adaptive Cards is not supported in SDK 2.0. Use SDK 2.1 for this feature.
     :::
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
     ```csharp
     using Microsoft.Teams.Apps;
     using Microsoft.Teams.Apps.Handlers;

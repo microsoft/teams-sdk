@@ -15,7 +15,7 @@ app.AddTab("myApp", "Web/bin");
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.AspNetCore.StaticFiles;

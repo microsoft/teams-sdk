@@ -13,7 +13,7 @@ QuoteAgent/
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```
 QuoteAgent/
@@ -34,7 +34,7 @@ QuoteAgent/
 - **Program.cs**: Contains the main application code and is the entry point for your application.
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 - **Program.cs**: The entry point. A standard ASP.NET Core app that registers the Teams application into DI and wires it into the request pipeline.
 - **appsettings.json**: Standard ASP.NET Core configuration — logging levels and, when you deploy, the `AzureAd` section that holds your bot credentials.
@@ -70,7 +70,7 @@ app.Run();
 The app configuration includes a variety of options that allow you to customize its behavior, including controlling the underlying server, authentication, and other settings.
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp title="Program.cs"
 using Microsoft.Teams.Apps;
@@ -102,7 +102,7 @@ app.Run();
 <!-- plugins-note -->
 
 :::note[Removed in SDK 2.1]
-Plugins have been removed in the 2.1 preview. Because your app is a standard ASP.NET Core app, extend it with regular **middleware** and **dependency injection** instead — for per-turn logic, implement `ITurnMiddleware` and register it with `teams.UseMiddleware(...)` (see [Listening to Activities](../essentials/on-activity)).
+Plugins have been removed in SDK 2.1. Because your app is a standard ASP.NET Core app, extend it with regular **middleware** and **dependency injection** instead — for per-turn logic, implement `ITurnMiddleware` and register it with `teams.UseMiddleware(...)` (see [Listening to Activities](../essentials/on-activity)).
 :::
 
 <!-- local-test-note -->
@@ -123,7 +123,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp title="Program.cs"
 teams.OnMessage(async (context, cancellationToken) =>
@@ -164,7 +164,7 @@ app.Run();
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 WebApplication app = builder.Build();

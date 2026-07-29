@@ -128,7 +128,7 @@ public Microsoft.Teams.Api.MessageExtensions.Response OnMessageExtensionQuerySet
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.Teams.Apps.MessageExtensions;
@@ -203,7 +203,7 @@ private static Microsoft.Teams.Api.MessageExtensions.Response CreateEmptyResult(
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 SDK 2.1 does not have a dedicated settings-submission handler. Inside your existing `OnInvoke` handler, check for `composeExtension/setting`:
 

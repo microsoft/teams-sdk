@@ -69,7 +69,7 @@ private static Response CreateMultiStepFormDialog()
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;
@@ -195,7 +195,7 @@ case "webpage_dialog_step_2":
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;
@@ -371,7 +371,7 @@ public async Task<Response> OnTaskSubmit([Context] Tasks.SubmitActivity activity
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;

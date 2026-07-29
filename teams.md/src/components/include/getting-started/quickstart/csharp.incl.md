@@ -47,7 +47,7 @@ dotnet run
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 You should see:
 
@@ -79,9 +79,9 @@ Only use `skipAuth` for local development — never in production, as it disable
 :::
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
-The playground sends unauthenticated requests, and SDK 2.1 preview rejects them by default. For local testing, enable `DangerouslyAllowUnauthenticatedRequests`:
+The playground sends unauthenticated requests, and SDK 2.1 rejects them by default. For local testing, enable `DangerouslyAllowUnauthenticatedRequests`:
 
 ```json title="appsettings.Development.json"
 {

@@ -61,7 +61,7 @@ private static AdaptiveCard CreateDialogLauncherCard()
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.Teams.Cards;
@@ -160,7 +160,7 @@ public Microsoft.Teams.Api.TaskModules.Response OnTaskFetch([Context] Tasks.Fetc
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;
@@ -272,7 +272,7 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateSimpleFormDialog()
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;
@@ -379,7 +379,7 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateWebpageDialog(ICon
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.Teams.Apps.Schema;

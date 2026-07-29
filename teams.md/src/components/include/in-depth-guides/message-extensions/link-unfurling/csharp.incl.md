@@ -34,7 +34,7 @@ public Response OnMessageExtensionQueryLink(
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.Teams.Apps.MessageExtensions;
@@ -132,7 +132,7 @@ private static Response CreateErrorResponse(string message)
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using System.Text.Json;

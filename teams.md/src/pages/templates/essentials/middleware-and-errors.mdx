@@ -49,9 +49,9 @@ If you're coming from SDK 2.0, the plugin event bus is gone. The table below map
 | `activity.sent`     | Triggered when an activity is sent (not necessarily in response).              |
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
-In the 2.1 preview there is no separate plugin event bus. Instead, these concerns map onto standard .NET building blocks:
+In SDK 2.1 there is no separate plugin event bus. Instead, these concerns map onto standard .NET building blocks:
 
 | **What you want to react to** | **How you handle it in 2.1** |
 | ----------------------------- | ---------------------------- |
@@ -83,7 +83,7 @@ app.OnActivity((sender, @event) =>
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```csharp
 using Microsoft.Teams.Apps;
@@ -128,7 +128,7 @@ app.OnError((sender, @event) =>
 ```
 
 </TabItem>
-<TabItem value="core" label="SDK 2.1 (Preview)">
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 Handle errors where they occur and log them through `context.Log`:
 

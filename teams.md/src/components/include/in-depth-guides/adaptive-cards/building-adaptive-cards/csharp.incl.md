@@ -141,7 +141,7 @@ var textBlock = new TextBlock("Test")
     await client.Send(card);
     ```
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
     ```csharp
     using System.Text.Json;
     using Microsoft.Teams.Apps;
@@ -247,7 +247,7 @@ var textBlock = new TextBlock("Test")
     }
     ```
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (Preview)">
+  <TabItem value="core" label="SDK 2.1 (current)" default>
     ```csharp
     using System.Text.Json;
     using Microsoft.Teams.Apps;
