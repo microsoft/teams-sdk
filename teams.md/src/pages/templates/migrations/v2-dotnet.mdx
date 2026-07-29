@@ -15,13 +15,14 @@ Use this guide to move an existing **Teams SDK for .NET 2.0** app to **SDK 2.1**
 
 If you're starting a new app, target SDK 2.1 directly.
 
-## What's changed
+## Migration highlights
 
 | Area | SDK 2.0 | SDK 2.1 (current) |
 |---|---|---|
 | App model | Plugin-oriented | Standard ASP.NET Core app |
 | Startup | `builder.AddTeams()` + `app.UseTeams()` | `builder.Services.AddTeamsBotApplication()` + `app.UseTeamsBotApplication()` |
-| Message send APIs | `context.Send(...)` | `context.SendAsync(...)` |
+| Auth config | `Teams:*` settings | MSAL-native `AzureAd` + `BotFramework` sections |
+| Messaging helpers | `Send`/`Reply`/`Quote`, `MessageActivity`, `app.Send`/`app.Reply` | `SendAsync`/`ReplyAsync`/`QuoteAsync`, `MessageActivityInput`, `app.SendAsync`/`app.ReplyAsync` |
 | Cross-cutting pipeline | Plugin/event-bus patterns | `ITurnMiddleware` + DI |
 | Local unauthenticated dev | `skipAuth: true` | `AzureAd:DangerouslyAllowUnauthenticatedRequests=true` |
 
@@ -52,19 +53,9 @@ Example `.csproj` change:
 </TabItem>
 </Tabs>
 
-## 2. Configuration key map (SDK 2.0 → SDK 2.1)
+## 2. Move to MSAL-native auth configuration
 
-SDK 2.1 uses standard ASP.NET Core configuration sections (`AzureAd`, `BotFramework`) instead of SDK 2.0 `Teams:*` settings.
-
-| SDK 2.0 key | SDK 2.1 key | Notes |
-|---|---|---|
-| `Teams:ClientId` | `AzureAd:ClientId` | Bot app/client ID |
-| `Teams:TenantId` | `AzureAd:TenantId` | Entra tenant ID |
-| `Teams:ClientSecret` | `AzureAd:ClientSecret` | Only for secret-based auth |
-| `Teams:Cloud` | `AzureAd:Instance` + `BotFramework:*` endpoints | In 2.1, set explicit cloud endpoints |
-| `Teams:LoginTenant` | `AzureAd:TenantId` | Use tenant-scoped config directly |
-
-Example config:
+SDK 2.1 moves from SDK-specific `Teams:*` auth settings to MSAL-native Microsoft Entra config under `AzureAd` (plus `BotFramework` service endpoints), aligned with standard ASP.NET Core configuration.
 
 <Tabs groupId="dotnet-config-migration" defaultValue="current">
 <TabItem value="legacy" label="SDK 2.0 (Legacy)">
@@ -139,12 +130,8 @@ app.Run();
 
 ## 4. Update helper calls to SDK 2.1 APIs
 
-Replace app/context helper method usage:
-
-- `context.Send(...)` → `context.SendAsync(...)`
-- `context.Typing(...)` → `context.TypingAsync(...)`
-
-Example:
+Keep simple text helpers (`Send`/`Reply`) and update async call patterns for SDK 2.1.  
+When sending typed activities, use `MessageActivityInput`.
 
 <Tabs groupId="dotnet-helper-migration" defaultValue="current">
 <TabItem value="legacy" label="SDK 2.0 (Legacy)">
@@ -152,8 +139,23 @@ Example:
 ```csharp
 app.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Typing(cancellationToken: cancellationToken);
-    await context.Send($"you said: {context.Activity.Text}", cancellationToken);
+    // Context helpers
+    await context.Send("Acknowledged", cancellationToken);
+    await context.Reply("Got it!", cancellationToken);
+    await context.Quote("1772050244572", "Referencing an earlier message");
+
+    await context.Send(new MessageActivity("Hello from bot"), cancellationToken);
+    await context.Reply(new MessageActivity("Reply with activity object"), cancellationToken);
+    await context.Quote("1772050244572", new MessageActivity("Quoted reply with activity object"));
+
+    // App helpers
+    await app.Send(context.Activity.Conversation.Id, "Welcome");
+    await app.Send(
+        context.Activity.Conversation.Id,
+        new MessageActivity("Welcome with activity object"),
+        cancellationToken: cancellationToken);
+
+    await app.Reply(context.Activity.Conversation.Id, "1772050244572", "Thread update");
 });
 ```
 
@@ -163,8 +165,38 @@ app.OnMessage(async (context, cancellationToken) =>
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    await context.TypingAsync(cancellationToken);
-    await context.SendAsync($"you said: {context.Activity.Text}", cancellationToken);
+    // Context helpers
+    await context.SendAsync("Acknowledged", cancellationToken);
+    await context.ReplyAsync("Got it!", cancellationToken);
+    await context.QuoteAsync("1772050244572", "Referencing an earlier message", cancellationToken);
+
+    await context.SendAsync(new MessageActivityInput("Hello from bot"), cancellationToken);
+    await context.ReplyAsync(new MessageActivityInput("Reply with activity object"), cancellationToken);
+    await context.QuoteAsync(
+        "1772050244572",
+        new MessageActivityInput("Quoted reply with activity object"),
+        cancellationToken);
+
+    // App helpers
+    await teams.SendAsync(
+        context.Activity.Conversation.Id,
+        "Welcome",
+        cancellationToken: cancellationToken);
+    await teams.SendAsync(
+        context.Activity.Conversation.Id,
+        new MessageActivityInput("Welcome with activity object"),
+        serviceUrl: context.Activity.ServiceUrl,
+        cancellationToken: cancellationToken);
+
+    await teams.ReplyAsync(
+        context.Activity.Conversation.Id,
+        "Flat chat update",
+        cancellationToken: cancellationToken);
+    await teams.ReplyAsync(
+        context.Activity.Conversation.Id,
+        "1772050244572",
+        "Thread update",
+        cancellationToken: cancellationToken);
 });
 ```
 
