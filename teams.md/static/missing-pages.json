@@ -72,6 +72,10 @@
     "csharp",
     "python"
   ],
+  "migrations/v2-dotnet": [
+    "typescript",
+    "python"
+  ],
   "migrations/v1": [
     "csharp"
   ],
