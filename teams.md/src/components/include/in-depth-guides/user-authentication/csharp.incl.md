@@ -300,54 +300,26 @@ using Microsoft.Teams.Apps.OAuth;
 
 var pendingMessages = new ConcurrentDictionary<string, string>();
 
-static string PendingKey(string userId, string connectionName)
-    => $"{connectionName}:{userId}";
-
 teams.OnMessage("(?i)^my ad user$", async (context, cancellationToken) =>
 {
     var userId = context.Activity.From?.Id ?? string.Empty;
     string? token = await graphAuth.SignInAsync(context, cancellationToken);
     if (token is null)
     {
-        pendingMessages[PendingKey(userId, "graph")] = context.Activity.Text ?? string.Empty;
+        pendingMessages[userId] = context.Activity.Text ?? string.Empty;
         return;
     }
 
     await ProcessGraphMessage(context.Activity.Text, context, token, cancellationToken);
 });
 
-teams.OnMessage("(?i)^my gh user$", async (context, cancellationToken) =>
-{
-    var userId = context.Activity.From?.Id ?? string.Empty;
-    string? token = await githubAuth.SignInAsync(context, cancellationToken);
-    if (token is null)
-    {
-        pendingMessages[PendingKey(userId, "github")] = context.Activity.Text ?? string.Empty;
-        return;
-    }
-
-    await ProcessGitHubMessage(context.Activity.Text, context, token, cancellationToken);
-});
-
 graphAuth.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
 {
     var userId = context.Activity.From?.Id ?? string.Empty;
-    var key = PendingKey(userId, "graph");
-    if (pendingMessages.TryRemove(key, out var text))
+    if (pendingMessages.TryRemove(userId, out var text))
     {
         await context.SendAsync("Successfully signed in to Graph! Processing your request...", cancellationToken);
         await ProcessGraphMessage(text, context, tokenResponse.Token, cancellationToken);
-    }
-});
-
-githubAuth.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
-{
-    var userId = context.Activity.From?.Id ?? string.Empty;
-    var key = PendingKey(userId, "github");
-    if (pendingMessages.TryRemove(key, out var text))
-    {
-        await context.SendAsync("Successfully signed in to GitHub! Processing your request...", cancellationToken);
-        await ProcessGitHubMessage(text, context, tokenResponse.Token, cancellationToken);
     }
 });
 ```

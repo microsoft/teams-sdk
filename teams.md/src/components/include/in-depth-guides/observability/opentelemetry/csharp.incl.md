@@ -1,9 +1,5 @@
 <!-- prerequisites -->
 
-:::note[Teams SDK 2.1]
-OpenTelemetry instrumentation is available in **Teams SDK for .NET 2.1**.
-:::
-
 Install the Teams SDK and OpenTelemetry packages:
 
 ```bash

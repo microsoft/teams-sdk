@@ -8,6 +8,10 @@ languages: ['csharp']
 
 # OpenTelemetry
 
+:::info[SDK 2.1]
+OpenTelemetry instrumentation is available in **Teams SDK 2.1**.
+:::
+
 The Teams SDK instruments its pipeline through standard .NET primitives — `ActivitySource`, `Meter`, and `ILogger`. Your host application opts in by registering the SDK's source and meter names, then choosing where to export — [Azure Monitor / Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-enable), an OTLP collector, or both.
 
 The SDK follows the .NET [library instrumentation model](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs): **libraries produce telemetry; applications choose collection and export.** The SDK does not automatically send telemetry anywhere — your app controls what is collected and where it goes.

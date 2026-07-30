@@ -35,21 +35,8 @@ dotnet run
 
 <!-- console-output -->
 
-<Tabs groupId="csharp-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+1. In the console, you should see a similar output:
 
-4. In the console, you should see a similar output:
-
-```sh
-[INFO] Microsoft.Hosting.Lifetime Now listening on: http://localhost:3978
-[INFO] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
-[INFO] Microsoft.Hosting.Lifetime Hosting environment: Development
-```
-
-  </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
-
-You should see:
 
 ```sh
 info: Microsoft.Hosting.Lifetime[14]
@@ -57,9 +44,6 @@ info: Microsoft.Hosting.Lifetime[14]
 info: Microsoft.Hosting.Lifetime[0]
       Application started. Press Ctrl+C to shut down.
 ```
-
-  </TabItem>
-</Tabs>
 
 <!-- post-startup-explanation -->
 
@@ -81,12 +65,16 @@ Only use `skipAuth` for local development — never in production, as it disable
   </TabItem>
   <TabItem value="core" label="SDK 2.1 (current)" default>
 
-The playground sends unauthenticated requests, and SDK 2.1 rejects them by default. For local testing, enable `DangerouslyAllowUnauthenticatedRequests`:
+The playground sends unauthenticated requests, and SDK 2.1 rejects them by default. For local testing, enable `DangerouslyAllowUnauthenticatedRequests` in your launch settings:
 
-```json title="appsettings.Development.json"
+```json title="Properties/launchSettings.json"
 {
-  "AzureAd": {
-    "DangerouslyAllowUnauthenticatedRequests": true
+  "profiles": {
+    "https": {
+      "environmentVariables": {
+        "AzureAd__DangerouslyAllowUnauthenticatedRequests": "true"
+      }
+    }
   }
 }
 ```
