@@ -77,17 +77,93 @@ export function isJsonFile(filePath: string): boolean {
   return path.extname(filePath).toLowerCase() === '.json';
 }
 
+export function isLaunchSettingsFile(filePath: string): boolean {
+  return path.basename(filePath).toLowerCase() === 'launchsettings.json';
+}
+
+/**
+ * Write credentials into a .NET launchSettings.json file as environment
+ * variables on the first profile. Uses the legacy double-underscore keys
+ * (Teams__ClientId, Teams__ClientSecret, Teams__TenantId) so ASP.NET
+ * configuration binds them to the Teams settings section.
+ */
+export function writeLaunchSettingsCredentials(filePath: string, values: EnvValues): void {
+  const resolvedPath = path.resolve(filePath);
+
+  let json: Record<string, unknown> = {};
+  if (fs.existsSync(resolvedPath)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(fs.readFileSync(resolvedPath, 'utf-8'));
+    } catch {
+      throw new CliError('VALIDATION_FORMAT', `Invalid JSON in ${filePath}.`, 'Fix the JSON syntax and try again.');
+    }
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      throw new CliError(
+        'VALIDATION_FORMAT',
+        `Expected a JSON object in ${filePath}, got ${Array.isArray(parsed) ? 'array' : typeof parsed}.`,
+        'The file must contain a top-level JSON object (e.g. {}).'
+      );
+    }
+    json = parsed as Record<string, unknown>;
+  }
+
+  let profiles = json.profiles as Record<string, unknown> | undefined;
+  if (
+    !profiles ||
+    typeof profiles !== 'object' ||
+    Array.isArray(profiles) ||
+    Object.keys(profiles).length === 0
+  ) {
+    profiles = { http: { commandName: 'Project', environmentVariables: {} } };
+    json.profiles = profiles;
+  }
+
+  const firstKey = Object.keys(profiles)[0]!;
+  let profile = profiles[firstKey];
+  if (!profile || typeof profile !== 'object' || Array.isArray(profile)) {
+    profile = {};
+    profiles[firstKey] = profile;
+  }
+  const profileObj = profile as Record<string, unknown>;
+
+  let envVars = profileObj.environmentVariables;
+  if (!envVars || typeof envVars !== 'object' || Array.isArray(envVars)) {
+    envVars = {};
+    profileObj.environmentVariables = envVars;
+  }
+  const envVarsObj = envVars as Record<string, unknown>;
+
+  envVarsObj['Teams__ClientId'] = values.CLIENT_ID;
+  if (values.CLIENT_SECRET !== undefined) {
+    envVarsObj['Teams__ClientSecret'] = values.CLIENT_SECRET;
+  }
+  envVarsObj['Teams__TenantId'] = values.TENANT_ID;
+
+  fs.writeFileSync(resolvedPath, JSON.stringify(json, null, 2) + '\n');
+}
+
+/**
+ * Write credentials to a file, dispatching on the file type:
+ * launchSettings.json → profile env vars, other .json → Teams section, else .env.
+ */
+export function writeCredentials(filePath: string, values: EnvValues): void {
+  if (isLaunchSettingsFile(filePath)) {
+    writeLaunchSettingsCredentials(filePath, values);
+  } else if (isJsonFile(filePath)) {
+    writeJsonCredentials(filePath, values);
+  } else {
+    writeEnvFile(filePath, values);
+  }
+}
+
 export function outputCredentials(
   envPath: string | undefined,
   values: EnvValues,
   successMessage: string
 ): void {
   if (envPath) {
-    if (isJsonFile(envPath)) {
-      writeJsonCredentials(envPath, values);
-    } else {
-      writeEnvFile(envPath, values);
-    }
+    writeCredentials(envPath, values);
     logger.info(pc.bold(pc.green(`Credentials written to ${envPath}`)));
   } else {
     logger.info(pc.bold(pc.green(`\n${successMessage}`)));

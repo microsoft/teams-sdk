@@ -11,7 +11,8 @@ import {
   type BotLocation,
 } from '../../apps/index.js';
 import { getAccount } from '../../auth/index.js';
-import { isJsonFile, outputCredentials, writeEnvFile, writeJsonCredentials } from '../../utils/env.js';
+import { outputCredentials, writeCredentials } from '../../utils/env.js';
+import { resolveCredentialDestination } from '../../utils/credential-destination.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
 import { readAndValidateIcon } from '../../utils/icon.js';
 import { outputJson } from '../../utils/json-output.js';
@@ -170,16 +171,13 @@ async function prepareAppCreate(
         })) || undefined
       : undefined);
 
-  const shouldPromptForEnvPath =
-    !runOptions.suppressCredentialOutput && interactive && !hasFlags && !options.json;
-  const envPath =
-    (options.envFile ?? options.env) ??
-    (shouldPromptForEnvPath
-      ? (await input({
-          message:
-            'Path to credentials file, e.g. .env or appsettings.json (leave empty to show in terminal):',
-        })) || undefined
-      : undefined);
+  const envPath = runOptions.suppressCredentialOutput
+    ? (options.envFile ?? options.env)
+    : await resolveCredentialDestination({
+        explicit: options.envFile ?? options.env,
+        interactive: interactive && !hasFlags,
+        json: options.json,
+      });
 
   const generateSecret = options.secret !== false;
   let descriptionOpts: { short: string; full?: string } | undefined;
@@ -374,11 +372,7 @@ async function renderAppCreateResult(
 ): Promise<void> {
   if (options.json) {
     if (envPath) {
-      if (isJsonFile(envPath)) {
-        writeJsonCredentials(envPath, result.credentials);
-      } else {
-        writeEnvFile(envPath, result.credentials);
-      }
+      writeCredentials(envPath, result.credentials);
     }
     outputJson(output);
     return;

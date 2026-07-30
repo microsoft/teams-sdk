@@ -1,8 +1,8 @@
-import { input } from '@inquirer/prompts';
 import { createClientSecret, fetchApp, getAadAppByClientId } from '../../../../apps/index.js';
 import { confirmAction } from '../../../../utils/interactive.js';
 import { getAccount, getTokenSilent, graphScopes } from '../../../../auth/index.js';
-import { isJsonFile, outputCredentials, writeEnvFile, writeJsonCredentials } from '../../../../utils/env.js';
+import { outputCredentials, writeCredentials } from '../../../../utils/env.js';
+import { resolveCredentialDestination } from '../../../../utils/credential-destination.js';
 import { CliError } from '../../../../utils/errors.js';
 import { outputJson } from '../../../../utils/json-output.js';
 import { createSilentSpinner } from '../../../../utils/spinner.js';
@@ -41,11 +41,11 @@ export async function generateSecret(opts: GenerateSecretOptions): Promise<void>
   const silent = !!opts.json;
   let envPath = opts.envPath;
 
-  if (envPath === undefined && opts.interactive) {
-    envPath =
-      (await input({
-        message: 'Path to credentials file, e.g. .env or appsettings.json (leave empty to show in terminal):',
-      })) || undefined;
+  if (envPath === undefined) {
+    envPath = await resolveCredentialDestination({
+      interactive: !!opts.interactive,
+      json: opts.json,
+    });
   }
 
   if (!(await confirmAction('Generate a new client secret?', silent))) {
@@ -96,11 +96,7 @@ export async function generateSecret(opts: GenerateSecretOptions): Promise<void>
     };
 
     if (envPath) {
-      if (isJsonFile(envPath)) {
-        writeJsonCredentials(envPath, credentialValues);
-      } else {
-        writeEnvFile(envPath, credentialValues);
-      }
+      writeCredentials(envPath, credentialValues);
     }
 
     const result: SecretGenerateOutput = {
