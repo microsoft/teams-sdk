@@ -10,6 +10,11 @@ export interface EnvValues {
   TENANT_ID: string;
 }
 
+/** Ensure the parent directory of a file path exists before writing to it. */
+function ensureParentDir(resolvedPath: string): void {
+  fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
+}
+
 export function writeEnvFile(filePath: string, values: EnvValues): void {
   const resolvedPath = path.resolve(filePath);
 
@@ -38,6 +43,12 @@ export function writeEnvFile(filePath: string, values: EnvValues): void {
     }
   }
 
+  // Drop a stale secret so --no-secret never leaves an old CLIENT_SECRET behind.
+  if (values.CLIENT_SECRET === undefined && existing.has('CLIENT_SECRET')) {
+    lines.splice(existing.get('CLIENT_SECRET')!, 1);
+  }
+
+  ensureParentDir(resolvedPath);
   fs.writeFileSync(resolvedPath, lines.join('\n').trim() + '\n');
 }
 
@@ -62,7 +73,9 @@ export function writeJsonCredentials(filePath: string, values: EnvValues): void 
     json = parsed as Record<string, unknown>;
   }
 
-  const existing = (json.Teams as Record<string, unknown>) ?? {};
+  const existing = { ...((json.Teams as Record<string, unknown>) ?? {}) };
+  // Drop a stale secret so --no-secret never leaves an old ClientSecret behind.
+  delete existing.ClientSecret;
   json.Teams = {
     ...existing,
     ClientId: values.CLIENT_ID,
@@ -70,6 +83,7 @@ export function writeJsonCredentials(filePath: string, values: EnvValues): void 
     TenantId: values.TENANT_ID,
   };
 
+  ensureParentDir(resolvedPath);
   fs.writeFileSync(resolvedPath, JSON.stringify(json, null, 2) + '\n');
 }
 
@@ -137,9 +151,13 @@ export function writeLaunchSettingsCredentials(filePath: string, values: EnvValu
   envVarsObj['Teams__ClientId'] = values.CLIENT_ID;
   if (values.CLIENT_SECRET !== undefined) {
     envVarsObj['Teams__ClientSecret'] = values.CLIENT_SECRET;
+  } else {
+    // Drop a stale secret so --no-secret never leaves an old ClientSecret behind.
+    delete envVarsObj['Teams__ClientSecret'];
   }
   envVarsObj['Teams__TenantId'] = values.TENANT_ID;
 
+  ensureParentDir(resolvedPath);
   fs.writeFileSync(resolvedPath, JSON.stringify(json, null, 2) + '\n');
 }
 

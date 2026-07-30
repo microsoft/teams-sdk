@@ -136,6 +136,46 @@ describe('writeLaunchSettingsCredentials', () => {
     expect(firstProfile.environmentVariables.Teams__ClientSecret).toBe('test-client-secret');
     expect(firstProfile.environmentVariables.Teams__TenantId).toBe('test-tenant-id');
   });
+
+  it('creates the parent directory when it does not exist', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitest-launch-'));
+    tmpDirs.push(dir);
+    // Properties/ does not exist yet — the picker advertises "(will be created)".
+    const filePath = path.join(dir, 'Properties', 'launchSettings.json');
+
+    writeLaunchSettingsCredentials(filePath, TEST_VALUES);
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const firstProfile = json.profiles[Object.keys(json.profiles)[0]];
+    expect(firstProfile.environmentVariables.Teams__ClientId).toBe('test-client-id');
+  });
+
+  it('removes an existing Teams__ClientSecret when the secret is undefined', () => {
+    const filePath = tmpFile('launchSettings.json');
+    files.push(filePath);
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify({
+        profiles: {
+          http: {
+            environmentVariables: {
+              Teams__ClientId: 'old-id',
+              Teams__ClientSecret: 'stale-secret',
+              Teams__TenantId: 'old-tenant',
+            },
+          },
+        },
+      })
+    );
+
+    writeLaunchSettingsCredentials(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const env = json.profiles.http.environmentVariables;
+    expect(env.Teams__ClientId).toBe('id-123');
+    expect(env.Teams__TenantId).toBe('tenant-456');
+    expect(env).not.toHaveProperty('Teams__ClientSecret');
+  });
 });
 
 // ── writeCredentials (dispatch) ──────────────────────────────────────
