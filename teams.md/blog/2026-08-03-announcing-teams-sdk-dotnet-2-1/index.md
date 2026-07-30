@@ -1,7 +1,7 @@
 ---
 slug: announcing-teams-sdk-dotnet-2-1
 title: "Teams SDK for .Net 2.1 is now Generally Available"
-date: 2026-07-30
+date: 2026-08-03
 authors:
   - name: Mehak Bindra
     title: Microsoft
