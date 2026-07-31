@@ -1,0 +1,54 @@
+---
+sidebar_position: 4
+title: Handle Agentic User lifecycle events
+summary: Subscribe to Agentic User creation, update, enablement, deletion, restoration, and workload onboarding events.
+languages: ['typescript']
+---
+
+# Handle Agentic User lifecycle events
+
+Agentic User lifecycle notifications arrive as Bot Framework event activities at the normal messaging endpoint:
+
+```text
+type      = event
+name      = agentLifecycle
+valueType = AgenticUserIdentityCreated | ...
+```
+
+## Register a general handler
+
+<LanguageInclude section="general-handler" />
+
+Handlers run in registration order. Register the general handler first and call `ctx.next()` when you want the matching variant-specific handler to run afterward.
+
+## Register typed variant handlers
+
+<LanguageInclude section="variant-handlers" />
+
+Available handler names:
+
+| Handler | Purpose |
+| --- | --- |
+| `agenticUserIdentityCreated` | A concrete Agentic User identity was created. |
+| `agenticUserIdentityUpdated` | A supported identity property changed. |
+| `agenticUserManagerUpdated` | The primary manager relationship changed. |
+| `agenticUserEnabled` | The Agentic User was enabled. |
+| `agenticUserDisabled` | The Agentic User was disabled. |
+| `agenticUserDeleted` | The Agentic User was deleted. |
+| `agenticUserUndeleted` | A soft-deleted Agentic User was restored. |
+| `agenticUserWorkloadOnboardingUpdated` | Workload onboarding state changed. |
+
+## Process events safely
+
+Lifecycle events are asynchronous notifications, not a strictly ordered transaction log.
+
+- Make each handler idempotent.
+- Store the event version when present.
+- Do not assume identity-created arrives first.
+- Do not assume receive order matches timestamp order.
+- Treat optional properties as absent or explicitly `null`.
+- Preserve unknown variants for diagnostics.
+
+<LanguageInclude section="idempotent-handler" />
+
+The deletion-reason field is not yet stable enough to use as required business logic. Treat it as optional diagnostic data.

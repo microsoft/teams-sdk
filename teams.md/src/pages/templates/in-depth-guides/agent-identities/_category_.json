@@ -1,0 +1,8 @@
+{
+  "label": "Agent identities",
+  "key": "agent-identities",
+  "position": 5,
+  "collapsible": true,
+  "collapsed": true,
+  "languages": ["typescript"]
+}

@@ -1,0 +1,37 @@
+---
+sidebar_position: 1
+title: Build with Agentic Users
+summary: Use one Teams SDK blueprint runtime to receive and send activities as multiple Agentic Users.
+languages: ['typescript']
+---
+
+# Build with Agentic Users
+
+:::warning[Preview]
+Agentic User APIs are planned for a future TypeScript preview package and are not available in the current stable packages. They may change before general availability.
+:::
+
+An Agentic Blueprint is a shared application implementation that runs on behalf of multiple concrete Agentic Users. Incoming activities identify the Agentic User in `activity.recipient`; the SDK uses that identity to scope reactive sends and API calls.
+
+For proactive work, create an `AgenticUser` explicitly and pass it to the send or API operation.
+
+Before using these APIs, read the platform [agent identities overview](/teams/agent-identities/) and [architecture guide](/teams/agent-identities/architecture).
+
+## AgenticUser identity
+
+<LanguageInclude section="identity-shape" />
+
+The Agentic App Instance ID and Agentic User ID are both required. `getAgenticUser` fills in the tenant ID and blueprint ID from the app configuration unless you override them.
+
+## Minimal application
+
+<LanguageInclude section="minimal-application" />
+
+The same message handler can serve multiple Agentic Users. The SDK scopes `send`, `reply`, and `api` to the identity carried by each inbound activity.
+
+## Guides
+
+- [Handle reactive messages](./reactive-messaging)
+- [Send proactive messages](./proactive-messaging)
+- [Handle lifecycle events](./lifecycle-events)
+- [Understand authentication](./authentication)

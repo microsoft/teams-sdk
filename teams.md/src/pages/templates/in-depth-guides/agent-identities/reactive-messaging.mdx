@@ -1,0 +1,47 @@
+---
+sidebar_position: 2
+title: Handle reactive Agentic User messages
+summary: Receive an activity for an Agentic User and reply with the automatically scoped sender and API client.
+languages: ['typescript']
+---
+
+# Handle reactive Agentic User messages
+
+Reactive Agentic User handling uses the normal Teams SDK message-handler model. The difference is that the inbound activity recipient carries the concrete identity.
+
+For the credential and token flow used by the scoped context, see [Authenticate as an Agentic User](./authentication).
+
+## Inspect the recipient
+
+<LanguageInclude section="inspect-recipient" />
+
+The wire fields differ from the `AgenticUser` SDK type:
+
+| Activity recipient field | AgenticUser field |
+| --- | --- |
+| `agenticAppId` | `agenticAppInstanceId` |
+| `agenticUserId` | `agenticUserId` |
+| `agenticAppBlueprintId` | `agenticBlueprintId` |
+| `tenantId` | `tenantId` |
+
+Use the identifiers to load application-owned configuration and state. Key storage by tenant and Agentic User ID rather than by the shared blueprint ID.
+
+## Send and reply
+
+<LanguageInclude section="reactive-send" />
+
+The context `send`, `reply`, and `api` properties are already scoped to the inbound Agentic User. Do not create a replacement blueprint-scoped API client inside the handler.
+
+`reply` adds a visual quote when the inbound activity has an ID. Use `send` when you want a normal message without a quote.
+
+## Missing identity
+
+If a route is intended only for Agentic Users, validate the required recipient fields before loading Agentic User state. The SDK requires the Agentic App Instance ID and Agentic User ID. Your application can also require a tenant ID when its storage model cannot use the configured tenant fallback:
+
+<LanguageInclude section="require-agentic-user" />
+
+Do not silently fall back to blueprint state or blueprint sender identity.
+
+:::caution[Service URL validation]
+The Bot API destination is security-sensitive because outbound bearer tokens are attached to it. Deploy only with a trusted service URL validation policy.
+:::

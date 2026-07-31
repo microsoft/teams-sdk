@@ -1,0 +1,42 @@
+---
+sidebar_position: 3
+title: Send proactive Agentic User messages
+summary: Select an Agentic User explicitly and send proactive activities through the Teams SDK or scoped API client.
+languages: ['typescript']
+---
+
+# Send proactive Agentic User messages
+
+Proactive work has no inbound activity, so the SDK cannot infer which Agentic User is sending. Your application must retrieve the target conversation and Agentic User identifiers from trusted storage.
+
+Before sending, review [Authenticate as an Agentic User](./authentication) to understand the blueprint credential and token delegation chain.
+
+:::caution[Preview implementation blocker]
+Proactive sender-envelope behavior is under active validation. Verify that Teams attributes the activity to the intended Agentic User before using this flow outside development environments.
+:::
+
+## Create an AgenticUser
+
+<LanguageInclude section="create-agentic-user" />
+
+`getAgenticUser` requires:
+
+- Agentic App Instance ID.
+- Agentic User ID.
+- Tenant ID, either through app configuration or an override.
+
+The blueprint ID defaults to the app's configured client ID.
+
+## Send with app.send
+
+<LanguageInclude section="app-send" />
+
+Passing `{ agenticUser }` selects Agentic User token acquisition for the send. Store conversation IDs alongside their tenant and Agentic User identity to avoid sending through the wrong instance.
+
+## Use a scoped API client
+
+<LanguageInclude section="scoped-api" />
+
+The scoped client reuses the app's HTTP and authentication configuration while selecting the Agentic User for outbound token acquisition.
+
+Do not cache a scoped client globally if the process serves multiple Agentic Users. Either keep the identity in the operation's local scope or cache by the complete tenant and Agentic User identity.

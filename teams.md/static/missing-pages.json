@@ -3,6 +3,26 @@
     "csharp",
     "python"
   ],
+  "in-depth-guides/agent-identities": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/agent-identities/authentication": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/agent-identities/lifecycle-events": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/agent-identities/proactive-messaging": [
+    "csharp",
+    "python"
+  ],
+  "in-depth-guides/agent-identities/reactive-messaging": [
+    "csharp",
+    "python"
+  ],
   "in-depth-guides/ai-integrations": [
     "csharp"
   ],
@@ -17,40 +37,6 @@
   ],
   "in-depth-guides/ai-integrations/teams-enhancements": [
     "csharp"
-  ],
-  "in-depth-guides/ai/a2a": [
-    "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/a2a/a2a-client": [
-    "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/a2a/a2a-server": [
-    "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/chat": [
-    "python"
-  ],
-  "in-depth-guides/ai/function-calling": [
-    "python"
-  ],
-  "in-depth-guides/ai/keeping-state": [
-    "python"
-  ],
-  "in-depth-guides/ai/mcp": [
-    "python"
-  ],
-  "in-depth-guides/ai/mcp/mcp-client": [
-    "python"
-  ],
-  "in-depth-guides/ai/mcp/mcp-server": [
-    "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/setup-and-prereqs": [
-    "python"
   ],
   "in-depth-guides/observability/opentelemetry": [
     "typescript",
