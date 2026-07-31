@@ -140,31 +140,7 @@ app.Run();
 </TabItem>
 </Tabs>
 
-## 4. Agentic identity (new in SDK 2.1)
-
-SDK 2.1 supports running your bot as an **AI teammate** in Agent 365 — a first-class Microsoft 365 identity with its own presence, mailbox, and directory entry. No extra configuration is needed; the SDK resolves the correct token per turn automatically.
-
-Use `GetAgenticIdentity()` on the activity recipient to detect and branch on agentic context:
-
-```csharp
-teams.OnMessage(async (context, cancellationToken) =>
-{
-    var agenticIdentity = context.Activity.Recipient?.GetAgenticIdentity();
-
-    if (agenticIdentity is not null)
-    {
-        // Running as an AI teammate — APIs are automatically scoped to its identity
-        context.Log.LogInformation(
-            $"Acting on behalf of user {agenticIdentity.AgenticUserId}");
-    }
-
-    await context.SendAsync($"You said: {context.Activity.Text}", cancellationToken);
-});
-```
-
-See the [Agentic Identity guide](../in-depth-guides/agentic-identity) for the full setup.
-
-## 5. Update helper calls to SDK 2.1 APIs
+## 4. Update helper calls to SDK 2.1 APIs
 
 Keep simple text helpers (`Send`/`Reply`) and update async call patterns for SDK 2.1.  
 When sending typed activities, use `MessageActivityInput`.
@@ -239,7 +215,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 </TabItem>
 </Tabs>
 
-## 6. OAuth migration
+## 5. OAuth migration
 
 In SDK 2.0, OAuth was typically handled through app-level sign-in events after invoking `context.SignIn(...)`.  
 In SDK 2.1, OAuth is modeled as named flows (`AddOAuthFlow` + `GetOAuthFlow`) with explicit success and failure callbacks per flow.
@@ -311,7 +287,7 @@ graphAuth.OnSignInFailure(async (context, failure, cancellationToken) =>
 </TabItem>
 </Tabs>
 
-## 7. Add built-in state management
+## 6. Migrate to built-in state management
 
 SDK 2.1 state is cleaner: call `options.UseState()` and use `context.State.ConversationState` / `context.State.UserState` in handlers.
 
@@ -349,7 +325,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 </TabItem>
 </Tabs>
 
-## 8. AI migration
+## 7. AI migration
 
 SDK 2.0 AI-specific libraries are deprecated. In SDK 2.1, keep `Microsoft.Teams.Apps` as your Teams transport/runtime layer and plug in a dedicated AI stack (for example Microsoft Agent Framework, OpenAI SDK, MCP, or A2A) from your handlers.
 
@@ -421,7 +397,7 @@ app.Run();
 </TabItem>
 </Tabs>
 
-## 9. Cards migration
+## 8. Cards migration
 
 You can still use `Microsoft.Teams.Cards` in SDK 2.1. Build cards with the cards package, then serialize to `JsonElement` before attaching to `MessageActivityInput`.
 
@@ -475,7 +451,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 </TabItem>
 </Tabs>
 
-## 10. Streaming migration
+## 9. Streaming migration
 
 In SDK 2.0, streaming used `context.Stream.Emit(...)` to push chunks.  
 In SDK 2.1, `TeamsStreamingWriter` manages chunk updates and requires an explicit finalize step to complete the response.
@@ -510,27 +486,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 </TabItem>
 </Tabs>
 
-## 11. Add OpenTelemetry instrumentation
-
-OpenTelemetry support is new in SDK 2.1 — there was no equivalent in 2.0. The SDK instruments its pipeline via standard .NET primitives (`ActivitySource`, `Meter`, `ILogger`). Your app opts in by registering the SDK's source and meter names and choosing an exporter.
-
-```csharp title="Program.cs"
-using Microsoft.Teams.Apps;
-
-builder.Services.AddTeamsBotApplication();
-
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing
-        .AddSource(TeamsTelemetry.ActivitySourceName)
-        .AddAzureMonitorTraceExporter())
-    .WithMetrics(metrics => metrics
-        .AddMeter(TeamsTelemetry.MeterName)
-        .AddAzureMonitorMetricExporter());
-```
-
-See the [OpenTelemetry guide](../in-depth-guides/observability/opentelemetry) for the full setup including exporters, sampling, and correlated logs.
-
-## 12. Message extensions, task modules, files, and meetings
+## 10. Message extensions, task modules, files, and meetings
 
 This area has the biggest shape change beyond startup/auth. The handler names stay familiar (`OnQuery`, `OnTaskFetch`, `OnFileConsent`, `OnMeetingStart`), but the payload types and namespaces move to new feature-specific modules in SDK 2.1.
 
@@ -631,7 +587,7 @@ teams.OnMeetingStart(async (context, cancellationToken) =>
 </TabItem>
 </Tabs>
 
-## 13. Plugin/event-bus patterns → turn middleware
+## 11. Plugin/event-bus patterns → turn middleware
 
 SDK 2.1 removes plugin/event-bus style extensibility. Use `ITurnMiddleware` for cross-cutting behavior.
 
@@ -655,7 +611,7 @@ internal sealed class LoggingMiddleware : ITurnMiddleware
 teams.UseMiddleware(new LoggingMiddleware());
 ```
 
-## 14. Update local dev auth behavior
+## 12. Update local dev auth behavior
 
 <Tabs groupId="dotnet-skipauth-migration" defaultValue="current">
 <TabItem value="legacy" label="SDK 2.0 (Legacy)">

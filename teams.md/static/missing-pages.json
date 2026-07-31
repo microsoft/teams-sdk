@@ -27,6 +27,10 @@
   "in-depth-guides/server/http-server": [
     "csharp"
   ],
+  "in-depth-guides/state": [
+    "typescript",
+    "python"
+  ],
   "in-depth-guides/tabs": [
     "python"
   ],
@@ -73,10 +77,6 @@
     "csharp"
   ],
   "migrations/v2-dotnet": [
-    "typescript",
-    "python"
-  ],
-  "in-depth-guides/state": [
     "typescript",
     "python"
   ],
