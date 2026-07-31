@@ -42,60 +42,6 @@ Set the following environment variables in your application:
 </TabItem>
 </Tabs>
 
-<!-- custom-route-shared-secret-example -->
-
-<Tabs groupId="csharp-sdk-version" defaultValue="core">
-<TabItem value="legacy" label="SDK 2.0 (Legacy)">
-
-```csharp
-// ASP.NET middleware: gate a custom route with a shared secret.
-app.Use(async (ctx, next) =>
-{
-    if (ctx.Request.Path.StartsWithSegments("/webhooks/external") &&
-        ctx.Request.Headers.Authorization != $"Bearer {Environment.GetEnvironmentVariable("WEBHOOK_SECRET")}")
-    {
-        ctx.Response.StatusCode = 401;
-        return;
-    }
-    await next();
-});
-```
-
-</TabItem>
-<TabItem value="core" label="SDK 2.1 (current)" default>
-
-```csharp
-// ASP.NET middleware: gate a custom route with a shared secret.
-app.Use(async (ctx, next) =>
-{
-    if (ctx.Request.Path.StartsWithSegments("/webhooks/external") &&
-        ctx.Request.Headers.Authorization != $"Bearer {Environment.GetEnvironmentVariable("WEBHOOK_SECRET")}")
-    {
-        ctx.Response.StatusCode = 401;
-        return;
-    }
-    await next();
-});
-```
-
-</TabItem>
-</Tabs>
-
-<!-- sovereign-cloud-overrides -->
-
-For scenarios requiring customization of individual cloud endpoints — such as China single-tenant bots that need a tenant-specific login URL — C# supports per-endpoint overrides in `appsettings.json`:
-
-```json
-{
-  "Teams": {
-    "Cloud": "China",
-    "LoginTenant": "your-tenant-id"
-  }
-}
-```
-
-Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `GraphScope`
-
 <!-- umi-configuration -->
 
 <Tabs groupId="csharp-sdk-version" defaultValue="core">

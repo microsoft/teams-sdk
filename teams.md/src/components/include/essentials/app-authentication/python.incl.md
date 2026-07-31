@@ -63,16 +63,3 @@ MANAGED_IDENTITY_CLIENT_ID=system
 # Do not set CLIENT_SECRET
 TENANT_ID=your-tenant-id
 ```
-
-<!-- custom-route-shared-secret-example -->
-
-```python
-# FastAPI dependency: gate a custom route with a shared secret.
-async def require_webhook_auth(request: Request) -> None:
-    if request.headers.get("authorization") != f"Bearer {os.environ['WEBHOOK_SECRET']}":
-        raise HTTPException(status_code=401)
-```
-
-<!-- sovereign-cloud-overrides -->
-
-N/A

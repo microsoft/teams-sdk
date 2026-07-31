@@ -63,20 +63,3 @@ MANAGED_IDENTITY_CLIENT_ID=system
 # Do not set CLIENT_SECRET
 TENANT_ID=your-tenant-id
 ```
-
-<!-- custom-route-shared-secret-example -->
-
-```typescript
-// Express middleware: gate a custom route with a shared secret.
-const requireWebhookAuth: express.RequestHandler = (req, res, next) => {
-  if (req.headers.authorization !== `Bearer ${process.env.WEBHOOK_SECRET}`) {
-    res.status(401).end();
-    return;
-  }
-  next();
-};
-```
-
-<!-- sovereign-cloud-overrides -->
-
-N/A
