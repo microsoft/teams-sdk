@@ -90,7 +90,7 @@ teams.OnMessage("/signin", async (context, cancellationToken) =>
 
   </TabItem>
   <TabItem value="core" label="SDK 2.1 (current)" default>
-
+Call `SignInAsync` on the flow directly — each flow manages its own sign-in state independently.
   :::note
 The graph connection uses the Single Sign-On (SSO) authentication flow whereas the Github connection uses the oauth flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
 :::
@@ -135,7 +135,7 @@ teams.OnSignIn(async (_, teamsEvent, cancellationToken) =>
 
   </TabItem>
   <TabItem value="core" label="SDK 2.1 (current)" default>
-
+Success and failure callbacks are scoped per flow — no branching on connection name needed.
 ```csharp
 graphAuth.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
 {

@@ -42,7 +42,6 @@ See the [Agentic Identity guide](/csharp/in-depth-guides/agentic-identity).
 ### Multi-flow OAuth
 
 In 2.0, OAuth was a single pair of `OnSignIn`/`OnSignInFailure` events. Multiple connections meant branching inside a shared callback. In 2.1, each connection is a named flow registered at startup with its own lifecycle: sign-in trigger, success callback, and failure callback are all scoped per connection. Multiple flows stay isolated and independently testable.
-
 See the [User Authentication guide](/csharp/in-depth-guides/user-authentication).
 
 ### Built-in state
@@ -53,7 +52,9 @@ See the [State Management guide](/csharp/in-depth-guides/state).
 
 ### OpenTelemetry instrumentation
 
-The SDK now instruments its pipeline through standard .NET primitives (`ActivitySource`, `Meter`, and `ILogger`), following the .NET library instrumentation model: the SDK produces telemetry, your app chooses where it goes. Route to Azure Monitor, an OTLP collector, or both. See the [OpenTelemetry guide](/csharp/in-depth-guides/observability/opentelemetry).
+The SDK now instruments its pipeline through standard .NET primitives (`ActivitySource`, `Meter`, and `ILogger`), following the .NET library instrumentation model: the SDK produces telemetry, your app chooses where it goes. Route to Azure Monitor, an OTLP collector, or both.
+
+See the [OpenTelemetry guide](/csharp/in-depth-guides/observability/opentelemetry).
 
 ## Integrating with your stack
 

@@ -31,6 +31,7 @@ from microsoft_teams.apps import App
 
 app = App(cloud=with_overrides(CHINA, login_tenant="your-tenant-id"))
 ```
+Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `GraphScope`
 
 <!-- troubleshooting-china-tenant -->
 

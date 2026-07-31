@@ -56,7 +56,7 @@ using Microsoft.Teams.Cards;
 teams.OnMeetingStart(async (context, cancellationToken) =>
 {
     var activity = context.Activity.Value;
-    var startTime = activity.StartTime.ToLocalTime();
+    var startTime = DateTimeOffset.Parse(activity.StartTime).ToLocalTime();
 
     var card = new AdaptiveCard
     {
@@ -136,7 +136,7 @@ using Microsoft.Teams.Cards;
 teams.OnMeetingEnd(async (context, cancellationToken) =>
 {
     var activity = context.Activity.Value;
-    var endTime = activity.EndTime.ToLocalTime();
+    var endTime = DateTimeOffset.Parse(activity.EndTime).ToLocalTime();
 
     var card = new AdaptiveCard
     {

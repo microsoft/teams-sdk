@@ -37,6 +37,9 @@ const app = new App({
 });
 ```
 
+Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `GraphScope`
+
+
 <!-- troubleshooting-china-tenant -->
 
 ```typescript
