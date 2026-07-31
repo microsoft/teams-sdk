@@ -64,7 +64,7 @@ The Teams SDK's built-in AI helpers (`ChatPrompt`, `OpenAIChatModel`, MCP and A2
 
 ### Bot Framework v4 compatibility
 
-If you have an existing Bot Framework v4 bot, you can run it on the new SDK infrastructure without rewriting your handlers. Install the compatibility package and pass your existing `IBot` implementation: two lines, and your bot works unchanged. Migrate handlers incrementally when you're ready.
+If you have an existing Bot Framework v4 bot, you can run it on the new SDK infrastructure without rewriting your handlers. Install the compatibility package and pass your existing `IBot` implementation: two lines, and your bot works unchanged.
 
 See the [BotBuilder migration guide](/csharp/migrations/botbuilder).
 

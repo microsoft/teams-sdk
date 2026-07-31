@@ -17,16 +17,21 @@ N/A
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.AddTeamsBotFrameworkHttpAdapter();
-            builder.Services.AddTransient<IBot, Bot>();
+            builder
+                .AddTeams()
+                .AddBotBuilder<Bot, BotBuilderAdapter, ConfigurationBotFrameworkAuthentication>();
 
             var app = builder.Build();
 
-            app.MapPost("/api/messages", async (IBotFrameworkHttpAdapter adapter, IBot bot, HttpRequest request, HttpResponse response, CancellationToken ct)
-                => await adapter.ProcessAsync(request, response, bot, ct));
-
+            var teams = app.UseTeams();
             app.Run();
         }
+
+        teams.OnMessage(async (context, cancellationToken) =>
+        {
+            await context.Client.Typing(cancellationToken);
+            await context.Client.Send($"hi from teams...", cancellationToken);
+        });
     }
     ```
 

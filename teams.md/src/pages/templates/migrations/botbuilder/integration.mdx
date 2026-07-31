@@ -62,6 +62,8 @@ Your `ActivityHandler` (`Bot.cs`) and `CloudAdapter` implementations require no 
 :::info[On SDK 2.0?]
 Use `Microsoft.Teams.Plugins.AspNetCore.BotBuilder` and follow the plugin registration pattern shown below.
 
+<LanguageInclude section="example" />
+
 The plugin connects your existing `CloudAdapter` and `ActivityHandler` to Teams SDK. When an activity arrives:
 1. The BotBuilder `ActivityHandler` processes it first (standard Bot Framework logic).
 2. The Teams SDK handlers execute afterward.
@@ -71,8 +73,6 @@ This lets you incrementally migrate — both run on the same message:
 hi from botbuilder...
 hi from teams...
 ```
-
-<LanguageInclude section="example" />
 :::
 
 </Language>
