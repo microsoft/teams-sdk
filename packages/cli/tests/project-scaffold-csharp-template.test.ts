@@ -72,8 +72,12 @@ describe('template files', () => {
         } else if (entry.isFile()) {
           const buf = Buffer.alloc(3);
           const fd = fs.openSync(full, 'r');
-          const read = fs.readSync(fd, buf, 0, 3, 0);
-          fs.closeSync(fd);
+          let read: number;
+          try {
+            read = fs.readSync(fd, buf, 0, 3, 0);
+          } finally {
+            fs.closeSync(fd);
+          }
           if (read === 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) {
             offenders.push(path.relative(templatesDir, full));
           }
