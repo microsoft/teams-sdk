@@ -63,6 +63,19 @@ describe('writeEnvFile', () => {
     expect(content).not.toContain('CLIENT_ID=old-value');
     expect(content).toContain('OTHER=keep');
   });
+
+  it('removes an existing CLIENT_SECRET when the secret is undefined', () => {
+    const filePath = tmpFile('.env');
+    files.push(filePath);
+    fs.writeFileSync(filePath, 'CLIENT_ID=old-id\nCLIENT_SECRET=stale-secret\nTENANT_ID=old-tenant\n');
+
+    writeEnvFile(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('CLIENT_ID=id-123');
+    expect(content).toContain('TENANT_ID=tenant-456');
+    expect(content).not.toContain('CLIENT_SECRET');
+  });
 });
 
 // ── writeJsonCredentials ─────────────────────────────────────────────
@@ -135,6 +148,27 @@ describe('writeJsonCredentials', () => {
     expect(json.Teams.ClientId).toBe('test-client-id');
     expect(json.Teams.ClientSecret).toBe('test-client-secret');
     expect(json.Teams.TenantId).toBe('test-tenant-id');
+  });
+
+  it('removes an existing ClientSecret when the secret is undefined', () => {
+    const filePath = tmpFile('appsettings.json');
+    files.push(filePath);
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify(
+        { Teams: { AppId: 'keep-me', ClientId: 'old-id', ClientSecret: 'stale-secret', TenantId: 'old-tenant' } },
+        null,
+        2
+      )
+    );
+
+    writeJsonCredentials(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    expect(json.Teams.AppId).toBe('keep-me');
+    expect(json.Teams.ClientId).toBe('id-123');
+    expect(json.Teams.TenantId).toBe('tenant-456');
+    expect(json.Teams).not.toHaveProperty('ClientSecret');
   });
 });
 
