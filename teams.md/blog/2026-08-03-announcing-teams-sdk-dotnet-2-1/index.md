@@ -23,7 +23,7 @@ dotnet add package Microsoft.Teams.Apps
 
 ## ASP.NET Core is now the foundation
 
-In 2.0, the SDK owned too much. Hosting, configuration, logging, HTTP, and storage were all SDK concerns, which meant every team had to work around the SDK instead of with the .NET ecosystem they already knew. In 2.1, the SDK steps back. It handles the Teams-specific parts (inbound activity validation, auth via MSAL, activity dispatch, and outbound message helpers and clients) and hands everything else back to ASP.NET Core. Hosting, configuration, logging, HTTP, and storage are all standard .NET primitives now: `ILogger`, `IHttpClientFactory`, `IDistributedCache`. Any library, framework, or pattern that works in a .NET service works in your Teams bot.
+In 2.0, the SDK owned too much: a plugin architecture, a proprietary server lifecycle, a custom event bus, a separate dependency system, and full ownership of hosting, configuration, logging, HTTP, and storage. This meant every team had to work around the SDK instead of with the .NET ecosystem they already knew. In 2.1, the SDK steps back. It handles the Teams-specific parts (inbound activity validation, activity dispatch,  auth via MSAL and outbound message builders and clients) and hands everything else back to ASP.NET Core. A basic bot is now a small ASP.NET Core application with a message handler — services, configuration, logging, middleware, and authorization all work exactly as they do in any other .NET app.
 
 Handlers in 2.1 are typed, readable, and composable, with regex routing for messages and a rich `context` object that gives you the typed activity, DI-resolved services, logging, and outbound helpers all in one place.
 
