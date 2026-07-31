@@ -1,0 +1,32 @@
+---
+title: Agentic User lifecycle events
+sidebar_position: 4
+summary: Handle Agentic User creation, updates, enablement, deletion, restoration, and workload onboarding.
+---
+
+# Agentic User lifecycle events
+
+Agent 365 sends lifecycle events when an Agentic User is created or when its identity, manager, availability, deletion status, or workload onboarding changes. These events let your app keep its state and behavior synchronized with Microsoft 365.
+
+For example, your app can initialize per-agent storage after creation, update ownership when the manager changes, pause scheduled work when the Agentic User is disabled, clean up access after deletion, and wait for Teams onboarding before sending messages.
+
+## Supported events
+
+| Event                         | Typical use                                           |
+| ----------------------------- | ----------------------------------------------------- |
+| Agentic User identity created | Initialize per-agent configuration and state          |
+| Identity property updated     | Refresh mail, alias, or user principal name data      |
+| Manager updated               | Update ownership, approval, or escalation routing     |
+| Enabled                       | Resume work for the Agentic User                      |
+| Disabled                      | Stop scheduled or proactive work                      |
+| Deleted                       | Disable access and begin cleanup                      |
+| Undeleted                     | Restore state after the Agentic User is restored      |
+| Workload onboarding updated   | Wait for Teams onboarding to succeed before messaging |
+
+The event names in activity payloads use `AgenticUser*`, such as `AgenticUserIdentityCreated` and `AgenticUserDisabled`.
+
+## Register handlers
+
+Register a general handler when you need common processing for every lifecycle event. Register typed handlers when you need the payload for a specific variant.
+
+<LanguageInclude section="handlers" />
