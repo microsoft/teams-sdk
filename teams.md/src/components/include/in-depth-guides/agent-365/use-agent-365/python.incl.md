@@ -9,13 +9,13 @@ app = App()
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]) -> None:
-    agentic_user = ctx.activity.recipient.agentic_user
-    if agentic_user is None:
+    agentic_identity = ctx.activity.recipient.agentic_identity
+    if agentic_identity is None or agentic_identity.agentic_user_id is None:
         raise RuntimeError("The activity is not addressed to an Agentic User.")
 
     await ctx.reply(
         f"Hi! I'm an Agentic User, and my user ID is "
-        f"{agentic_user.agentic_user_id}. Nice to meet you!"
+        f"{agentic_identity.agentic_user_id}. Nice to meet you!"
     )
 ```
 
@@ -34,8 +34,8 @@ async def react_to_message(ctx: ActivityContext[MessageActivity]) -> None:
 <!-- proactive -->
 
 ```python
-agentic_user = app.get_agentic_user(
-    agentic_app_instance_id,
+agentic_identity = app.get_agentic_identity(
+    agentic_app_id,
     agentic_user_id,
     tenant_id=tenant_id,
 )
@@ -43,10 +43,10 @@ agentic_user = app.get_agentic_user(
 await app.send(
     conversation_id,
     "Your scheduled update is ready.",
-    agentic_identity=agentic_user,
+    agentic_identity=agentic_identity,
 )
 
-api = app.api.from_agentic_identity(agentic_user)
+api = app.api.from_agentic_identity(agentic_identity)
 
 await api.reactions.add(conversation_id, activity_id, "like")
 ```

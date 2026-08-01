@@ -17,13 +17,13 @@ var tokenOptions = new AuthorizationHeaderProviderOptions
     AcquireTokenOptions = new()
     {
         AuthenticationOptionsName = "AzureAd",
-        Tenant = agenticUser.TenantId
+        Tenant = agenticIdentity.TenantId
     }
 };
 
 tokenOptions.WithAgentUserIdentity(
-    agenticUser.AgenticAppInstanceId,
-    new Guid(agenticUser.AgenticUserId));
+    agenticIdentity.AgenticAppId!,
+    new Guid(agenticIdentity.AgenticUserId!));
 
 string authorization = await provider.CreateAuthorizationHeaderAsync(
     [observabilityScope],
@@ -35,10 +35,10 @@ string token = authorization["Bearer ".Length..];
 
 ```csharp
 var agentDetails = new AgentDetails(
-    agentId: agenticUser.AgenticAppInstanceId,
-    agenticUserId: agenticUser.AgenticUserId,
-    agentBlueprintId: agenticUser.AgenticBlueprintId,
-    tenantId: agenticUser.TenantId);
+    agentId: agenticIdentity.AgenticAppId,
+    agenticUserId: agenticIdentity.AgenticUserId,
+    agentBlueprintId: agenticIdentity.AgenticAppBlueprintId,
+    tenantId: agenticIdentity.TenantId);
 
 using var scope = InvokeAgentScope.Start(
     new Request(conversationId: conversationId),
@@ -49,6 +49,6 @@ await teamsApp.SendAsync(
     conversationId,
     "Digest ready.",
     serviceUrl,
-    AgenticIdentity.FromAgenticUser(agenticUser),
+    agenticIdentity,
     cancellationToken);
 ```

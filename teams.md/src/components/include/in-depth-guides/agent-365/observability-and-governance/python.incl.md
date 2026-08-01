@@ -19,9 +19,9 @@ Use the app's token provider to request an observability token for the Agentic A
 ```python
 OBSERVABILITY_SCOPE = "api://9b975845-388f-4429-889e-eab1ef63949c/.default"
 
-token = await app.token_provider.get_agentic_app_instance_token(
+token = await app.token_provider.get_agentic_app_token(
     OBSERVABILITY_SCOPE,
-    agentic_user.agentic_app_instance_id,
+    agentic_app_id,
     tenant_id,
 )
 ```
@@ -34,13 +34,13 @@ from microsoft_teams.apps import create_agent365_scope
 open_agent365_scope = create_agent365_scope(agent365)
 
 with open_agent365_scope(
-    agentic_user=agentic_user,
+    agentic_identity=agentic_identity,
     conversation_id=conversation_id,
 ):
     # Create the Agent 365 operation span inside this scope.
     await app.send(
         conversation_id,
         "Digest ready.",
-        agentic_identity=agentic_user,
+        agentic_identity=agentic_identity,
     )
 ```

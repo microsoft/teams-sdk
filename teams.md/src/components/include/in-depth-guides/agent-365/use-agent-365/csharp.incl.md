@@ -3,10 +3,11 @@
 ```csharp
 teamsApp.OnMessage(async (context, cancellationToken) =>
 {
-    AgenticUser? agenticUser = context.Activity.Recipient?.GetAgenticUser();
+    AgenticIdentity? agenticIdentity =
+        context.Activity.Recipient?.GetAgenticIdentity();
 
     await context.ReplyAsync(
-        $"Hi! I'm an Agentic User, and my user ID is {agenticUser?.AgenticUserId}. Nice to meet you!",
+        $"Hi! I'm an Agentic User, and my user ID is {agenticIdentity?.AgenticUserId}. Nice to meet you!",
         cancellationToken);
 });
 ```
@@ -16,7 +17,7 @@ teamsApp.OnMessage(async (context, cancellationToken) =>
 ```csharp
 teamsApp.OnMessage(async (context, cancellationToken) =>
 {
-    await context.Api.Conversations.Reactions.AddAsync(
+    await context.Api.Conversations.AddReactionAsync(
         context.Activity.Conversation.Id,
         context.Activity.Id,
         ReactionType.Like,
@@ -28,26 +29,26 @@ teamsApp.OnMessage(async (context, cancellationToken) =>
 <!-- proactive -->
 
 ```csharp
-var agenticUser = new AgenticUser
+var agenticIdentity = new AgenticIdentity
 {
-    AgenticAppInstanceId = agenticAppInstanceId,
+    AgenticAppId = agenticAppId,
     AgenticUserId = agenticUserId,
+    AgenticAppBlueprintId = blueprintId,
     TenantId = tenantId
 };
-AgenticIdentity identity = AgenticIdentity.FromAgenticUser(agenticUser);
 
 await teamsApp.SendAsync(
     conversationId,
     "Your scheduled update is ready.",
     serviceUrl,
-    identity,
+    agenticIdentity,
     cancellationToken);
 
 ApiClient api = teamsApp.Api
     .ForServiceUrl(serviceUrl)
-    .ForAgenticIdentity(identity);
+    .ForAgenticIdentity(agenticIdentity);
 
-await api.Conversations.Reactions.AddAsync(
+await api.Conversations.AddReactionAsync(
     conversationId,
     activityId,
     ReactionType.Like,

@@ -18,6 +18,7 @@ Teams SDK provides the Activity Protocol and identity-aware messaging layer for 
 | **Agent Identity Blueprint** | The reusable application, credentials, permissions, and runtime that define an agent.                                                                |
 | **Agentic App Instance**     | A concrete app or workload identity created from the blueprint.                                                                                      |
 | **Agentic User (AU)**        | The Microsoft 365 user identity associated with an app instance. It can have a directory profile, manager, mailbox, permissions, and Teams presence. |
+| **AgenticIdentity**          | The Teams SDK operation scope. It identifies the blueprint and can include the Agentic App and Agentic User used for an SDK operation.                |
 
 ```mermaid
 flowchart LR
@@ -29,6 +30,8 @@ flowchart LR
 ```
 
 One blueprint can power many agents. Your code uses the Agentic User and app instance IDs to load the correct configuration, state, and permissions for each agent.
+
+`AgenticIdentity` is an SDK type, not another platform identity. Use it to scope proactive sends, API clients, and telemetry to the intended Agentic User. SDK operation types call the concrete app identifier the Agentic App ID.
 
 For a deeper identity architecture overview, see [Plan an agent identity architecture](https://learn.microsoft.com/entra/agent-id/how-to-plan-agent-identity-architecture).
 
