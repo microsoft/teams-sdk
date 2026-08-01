@@ -13,7 +13,7 @@ Set up Agent 365 before you configure Teams SDK. Microsoft Learn owns the curren
 
 ## Follow the Agent 365 setup
 
-Start with [Get started with Agent 365 development](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/get-started). Choose the **AI teammate** path because it creates an agent with its own Microsoft 365 user identity.
+Start with [Get started with Agent 365 development](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/get-started). Choose the **agent** path and set it up with an agent identity blueprint.
 
 We recommend the [AI-guided setup](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/get-started#ai-guided-setup). It checks prerequisites and guides you through Agent 365 CLI installation, blueprint setup, deployment, and publishing.
 
@@ -22,9 +22,7 @@ If you prefer to complete each stage yourself, follow these Learn guides in orde
 1. [Set up the agent blueprint](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/registration). This creates the blueprint, credentials, permissions, and supporting resources.
 2. [Test with Dev Tunnels](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/test-with-devtunnels) if your Teams SDK app runs locally.
 3. [Publish the agent](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/publish) and upload its package to the Microsoft 365 admin center.
-4. [Configure and create the agent instance](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/create-instance). This connects the blueprint to your Activity Protocol endpoint and creates the Agentic User you can message in Teams.
-
-The AI teammate experience requires a tenant in the Frontier preview and appropriate Microsoft 365 licenses. The Learn guides contain the current tenant, role, and license requirements.
+4. [Configure the agent and create an instance](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/create-instance). This connects the blueprint to your Activity Protocol endpoint. After the agent is published and configured, users can request new instances directly from Teams.
 
 :::tip
 Your **Notification URL** in Teams Developer Portal is the public Activity Protocol endpoint for your app, typically `https://<host>/api/messages`.
