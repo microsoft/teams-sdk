@@ -1,7 +1,7 @@
 ---
 title: Set up Agent 365
 sidebar_position: 2
-summary: Prepare the Agent 365 identity, callback, package, and values required by Teams SDK.
+summary: Set up Agent 365, then configure the identity values required by Teams SDK.
 suppressLanguageIncludeWarning: true
 ---
 
@@ -9,28 +9,30 @@ import LangLink from '@site/src/components/LangLink';
 
 # Set up Agent 365
 
-Before you run your agent with Teams SDK, provision its Agent 365 identity and Microsoft 365 resources. Use Agent 365 tools and Microsoft Learn for platform setup, then add the resulting values to your app.
+Set up Agent 365 before you configure Teams SDK. Microsoft Learn owns the current requirements, permissions, CLI commands, publication flow, and tenant administration steps.
 
-## Prerequisites
+## Follow the Agent 365 setup
 
-You must set up these platform resources:
+Start with [Get started with Agent 365 development](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/get-started). Choose the **AI teammate** path because it creates an agent with its own Microsoft 365 user identity.
 
-1. **Agent Identity Blueprint** and its service principal in the target tenant.
-2. **Runtime credential** for the blueprint. We recommend managed identity or federated credentials in production. Use a client secret only for development.
-3. **Public HTTPS callback** for the app's Activity Protocol endpoint, such as `https://<host>/api/messages`.
-4. **Microsoft 365 agent package** that binds the Agentic User template to the blueprint.
-5. **Agentic User** with the required license, manager, permissions, and workload onboarding.
+We recommend the [AI-guided setup](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/get-started#ai-guided-setup). It checks prerequisites and guides you through Agent 365 CLI installation, blueprint setup, deployment, and publishing.
 
-Start with:
+If you prefer to complete each stage yourself, follow these Learn guides in order:
 
-- [Agent 365 documentation](https://learn.microsoft.com/microsoft-agent-365/)
-- [Register a custom client app](https://learn.microsoft.com/microsoft-agent-365/developer/custom-client-app-registration)
-- [Plan an agent identity architecture](https://learn.microsoft.com/entra/agent-id/how-to-plan-agent-identity-architecture)
-- [Agent 365 DevTools](https://github.com/microsoft/Agent365-devTools)
+1. [Set up the agent blueprint](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/registration). This creates the blueprint, credentials, permissions, and supporting resources.
+2. [Test with Dev Tunnels](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/test-with-devtunnels) if your Teams SDK app runs locally.
+3. [Publish the agent](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/publish) and upload its package to the Microsoft 365 admin center.
+4. [Configure and create the agent instance](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/create-instance). This connects the blueprint to your Activity Protocol endpoint and creates the Agentic User you can message in Teams.
+
+The AI teammate experience requires a tenant in the Frontier preview and appropriate Microsoft 365 licenses. The Learn guides contain the current tenant, role, and license requirements.
+
+:::tip
+Your **Notification URL** in Teams Developer Portal is the public Activity Protocol endpoint for your app, typically `https://<host>/api/messages`.
+:::
 
 ## Values needed by the app
 
-An Agent Identity Blueprint uses the same authentication model as a standard Teams app. The blueprint ID is the application (client) ID.
+After Agent 365 setup, configure Teams SDK with the blueprint identity. It uses the same authentication settings as a standard Teams app, and the blueprint ID is the application (client) ID.
 
 | Agent 365 value      | App authentication setting                                                       |
 | -------------------- | -------------------------------------------------------------------------------- |
