@@ -18,7 +18,7 @@ Install the [`teams-dev` skill](/developer-tools/agent-skills) in Claude Code, G
 
 - Node.js 20 or later
 - An M365 account with **custom app upload (sideloading) enabled** on the tenant. Step 2 will check this.
-- A public HTTPS tunnel pointing at your local server (e.g. [DevTunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview), [ngrok](https://ngrok.com/)). Start it before step 4.
+- A public HTTPS tunnel pointing at your local server (e.g. [DevTunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview), [ngrok](https://ngrok.com/)). Start it before step 4 — see [Local Tunnels](/developer-tools/local-tunnels) if you need setup steps.
 
 ## 1. Install the CLI
 
@@ -79,7 +79,7 @@ The default template is `echo`. Run `teams project new <language> --help` to see
 :::note Start your tunnel first
 Teams must reach your bot over **public HTTPS** — your `localhost` port isn't reachable from Teams' servers. Before running the command below, start a tunnel (e.g. [DevTunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview) or [ngrok](https://ngrok.com/)) and replace `<tunnel-host>` with the hostname it gives you.
 
-[Learn more about local tunnels →](/cli/concepts/local-tunnels)
+Learn more: [Local Tunnels](/developer-tools/local-tunnels)
 :::
 
 Run from inside your project directory:
