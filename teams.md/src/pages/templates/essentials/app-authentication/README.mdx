@@ -5,6 +5,9 @@ languages: ['typescript','python','csharp']
 ---
 
 import LangLink from '@site/src/components/LangLink';
+import Language from '@site/src/components/Language';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # App Authentication
 
@@ -35,6 +38,14 @@ The Teams SDK automatically detects which authentication method to use based on 
 | set | not_set | set (different from CLIENT_ID) | Federated Identity Credentials (UMI) |
 | set | not_set | "system" | Federated Identity Credentials (System Identity) |
 
+<Language language="csharp">
+
+:::info[SDK 2.1]
+SDK 2.1 uses the Microsoft Authentication Library (MSAL) through standard ASP.NET Core configuration. That is why the C# configuration uses `AzureAd` and `AzureAd__*` environment variables instead of the SDK 2.0 `CLIENT_*` settings. The same configuration shape supports client secrets, managed identities, and federated identity credentials.
+:::
+
+</Language>
+
 ## Client Secret
 
 The simplest authentication method using a password-like secret.
@@ -45,19 +56,7 @@ First, complete the [Client Secret Setup](/teams/app-authentication/client-secre
 
 ### Configuration
 
-Set the following environment variables in your application:
-
-- `CLIENT_ID`: Your Application (client) ID
-- `CLIENT_SECRET`: The client secret value you created
-- `TENANT_ID`: The tenant id where your bot is registered
-
-```env
-CLIENT_ID=your-client-id-here
-CLIENT_SECRET=your-client-secret-here
-TENANT_ID=your-tenant-id
-```
-
-The SDK will automatically use Client Secret authentication when both `CLIENT_ID` and `CLIENT_SECRET` are provided.
+<LanguageInclude section="client-secret-configuration" />
 
 ## User Assigned Managed Identity
 
@@ -69,13 +68,11 @@ First, complete the [User Assigned Managed Identity Setup](/teams/app-authentica
 
 ### Configuration
 
-<LanguageInclude section="configure-application" />
+<LanguageInclude section="umi-configuration" />
 
 ## Federated Identity Credentials
 
 Advanced identity federation allowing you to assign managed identities directly to your App Registration.
-
-<LanguageInclude section="availability-note" />
 
 ### Setup
 
@@ -83,49 +80,7 @@ First, complete the [Federated Identity Credentials Setup](/teams/app-authentica
 
 ### Configuration
 
-Depending on the type of managed identity you select, set the environment variables accordingly.
-
-**For User Assigned Managed Identity:**
-
-Set the following environment variables:
-- `CLIENT_ID`: Your Application (client) ID
-- `MANAGED_IDENTITY_CLIENT_ID`: The Client ID for the User Assigned Managed Identity resource
-- **Do not set** `CLIENT_SECRET`
-- `TENANT_ID`: The tenant id where your bot is registered
-
-```env
-CLIENT_ID=your-app-client-id-here
-MANAGED_IDENTITY_CLIENT_ID=your-managed-identity-client-id-here
-# Do not set CLIENT_SECRET
-TENANT_ID=your-tenant-id
-```
-
-**For System Assigned Identity:**
-
-Set the following environment variables:
-- `CLIENT_ID`: Your Application (client) ID
-- `MANAGED_IDENTITY_CLIENT_ID`: `system`
-- **Do not set** `CLIENT_SECRET`
-- `TENANT_ID`: The tenant id where your bot is registered
-
-```env
-CLIENT_ID=your-app-client-id-here
-MANAGED_IDENTITY_CLIENT_ID=system
-# Do not set CLIENT_SECRET
-TENANT_ID=your-tenant-id
-```
-
-## Sovereign Cloud
-
-If your bot runs in a US Government (GCC-High, DoD) or China (21Vianet) cloud environment, add the `CLOUD` environment variable to your configuration:
-
-```env
-CLOUD=USGov
-```
-
-Valid values: `Public` (default), `USGov`, `USGovDoD`, `China`
-
-The SDK automatically configures all authentication endpoints for the specified cloud. No other changes are needed. See the <LangLink to="essentials/app-configuration/sovereign-cloud">Sovereign Cloud</LangLink> guide for details and programmatic configuration options.
+<LanguageInclude section="fic-configuration" />
 
 ## Troubleshooting
 

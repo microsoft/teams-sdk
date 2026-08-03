@@ -3,7 +3,7 @@ sidebar_position: 4
 sidebar_label: Bot-to-Bot with A2A
 title: Bot-to-Bot with A2A
 summary: Hand a user off between two Teams bots over the Agent2Agent protocol — the receiving bot opens a proactive 1:1 and greets the user with full context so the conversation continues seamlessly.
-languages: ['python', 'typescript']
+languages: ['python', 'typescript', 'csharp']
 ---
 
 import A2AImgUrl from '@site/static/screenshots/a2a.gif';
@@ -15,6 +15,14 @@ import Language from '@site/src/components/Language';
 
 :::warning[Our AI libraries are deprecated]
 The Teams SDK has deprecated its own AI libraries — the `@microsoft/teams.ai` packages (`ChatPrompt`, `Model`, and the older `@microsoft/teams.mcp` / `@microsoft/teams.a2a` plugins) — in favor of dedicated AI frameworks. Use the pattern shown in these guides instead: bring the OpenAI SDK (or any framework you like), and wire MCP and A2A directly into your Teams app.
+:::
+
+</Language>
+
+<Language language="csharp">
+
+:::warning[SDK 2.0 AI libraries are deprecated]
+For .NET, implement A2A with SDK 2.1 plus an external A2A protocol library. Use Teams SDK handlers for inbound user turns and proactive messaging, and use A2A messages for bot-to-bot handoff coordination.
 :::
 
 </Language>

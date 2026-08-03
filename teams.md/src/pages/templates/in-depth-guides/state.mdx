@@ -1,0 +1,80 @@
+---
+sidebar_position: 10
+title: State Management
+sidebar_label: 🗄️ State Management
+summary: Store and retrieve conversation and user state in your Teams bot using the built-in state management in Teams SDK for .NET 2.1.
+languages: ['csharp']
+---
+
+# State Management
+
+:::info[SDK 2.1]
+Built-in state management is a **Teams SDK for .NET 2.1** feature.
+:::
+
+The Teams SDK provides built-in `ConversationState` and `UserState` for storing per-conversation and per-user data across turns. State is backed by `IDistributedCache` — in-memory by default for local development, and swappable for any distributed cache provider (Redis, SQL, Azure Cache for Redis) for production without changing your handler code.
+
+## Setup
+
+Call `UseState()` inside `AddTeamsBotApplication()`:
+
+```csharp title="Program.cs"
+using Microsoft.Teams.Apps;
+
+WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
+builder.Services.AddTeamsBotApplication(options =>
+{
+    options.UseState();
+});
+
+WebApplication app = builder.Build();
+TeamsBotApplication teams = app.UseTeamsBotApplication();
+```
+
+## Reading and writing state
+
+Use `context.State.ConversationState` and `context.State.UserState` in any handler:
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    // Write
+    context.State.ConversationState.Set("lastMessage", context.Activity.Text ?? string.Empty);
+    context.State.UserState.Set("messageCount",
+        (context.State.UserState.Get<int>("messageCount")) + 1);
+
+    // Read
+    string? last = context.State.ConversationState.Get<string>("lastMessage");
+    int count = context.State.UserState.Get<int>("messageCount");
+
+    await context.SendAsync(
+        $"Message #{count}. Last message was: {last}",
+        cancellationToken);
+});
+```
+
+`ConversationState` is scoped to the current conversation. `UserState` is scoped to the current user across all conversations.
+
+## Scaling to distributed state
+
+For production or multi-instance deployments, register a distributed cache provider before calling `UseState()`. Your handler code stays exactly the same:
+
+```csharp title="Program.cs"
+using Microsoft.Teams.Apps;
+using StackExchange.Redis;
+
+WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
+
+// Register Redis — UseState() picks this up automatically
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+});
+
+builder.Services.AddTeamsBotApplication(options =>
+{
+    options.UseState();
+});
+```
+
+Any `IDistributedCache` implementation works — Redis, SQL Server (`AddDistributedSqlServerCache`), or Azure Cache for Redis.

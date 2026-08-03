@@ -1,4 +1,9 @@
 <!-- create-project -->
+## Project Setup
+
+:::tip
+If you're creating a new app, use the `graph` template. Skip this if you're adding auth to an existing app.
+:::
 
 Use your terminal to run the following command:
 
@@ -28,6 +33,10 @@ app = App(
 
 <!-- signing-in -->
 
+:::note
+This uses the Single Sign-On (SSO) authentication flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
+:::
+
 ```python
 @app.on_message
 async def handle_signin_message(ctx: ActivityContext[MessageActivity]):
@@ -49,6 +58,9 @@ async def handle_sign_in(event: SignInEvent):
 ```
 
 <!-- using-graph -->
+
+From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+
 
 ```python
 @app.on_message

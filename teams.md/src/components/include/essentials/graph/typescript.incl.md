@@ -30,10 +30,6 @@ npm install @microsoft/teams.graph-endpoints
 
 `app.graph`
 
-<!-- app-access-method -->
-
-to call the endpoint of your choice
-
 <!-- app-graph-example -->
 
 ```typescript
@@ -48,7 +44,9 @@ app.graph.call(endpoints.me.get).then((user) => {
   console.log(`User Job Title: ${user.jobTitle}`);
 });
 ```
-
+:::tip
+You also have access to the `appGraph` object in the activity handler. This is equivalent to `app.graph`.
+:::
 <!-- user-graph-intro -->
 
 You can also access the graph using the user's token from within a message handler via the `userGraph` prop.
@@ -67,18 +65,7 @@ app.on('message', async ({ activity, userGraph }) => {
   console.log(`User Job Title: ${me.jobTitle}`);
 });
 ```
-
-<!-- user-graph-object -->
-
-`userGraph`
-
-<!-- app-graph-in-handler -->
-
-`appGraph`
-
-<!-- app-graph-reference -->
-
-`app.graph`
+Here, the "userGraph" object is a scoped graph client for the user that sent the message.
 
 <!-- advanced-sections -->
 
