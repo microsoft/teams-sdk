@@ -824,6 +824,8 @@ function watch(): void {
   const templateWatcher = chokidar.watch(path.join(TEMPLATES_DIR, '**/*.mdx'), {
     persistent: true,
     ignoreInitial: true,
+    usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+    interval: Number(process.env.CHOKIDAR_INTERVAL ?? 500),
   });
 
   templateWatcher.on('add', (filePath: string) => {
@@ -842,6 +844,8 @@ function watch(): void {
   const inclWatcher = chokidar.watch(path.join(FRAGMENTS_DIR, '**/*.incl.md'), {
     persistent: true,
     ignoreInitial: true,
+    usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+    interval: Number(process.env.CHOKIDAR_INTERVAL ?? 500),
   });
 
   /**

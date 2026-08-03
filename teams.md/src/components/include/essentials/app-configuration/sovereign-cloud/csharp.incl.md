@@ -1,5 +1,11 @@
 <!-- configuration -->
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+The configuration below is only valid for **SDK 2.0** apps. It uses SDK 2.0 `Teams:Cloud` presets and per endpoint overrides. 
 In `appsettings.json`:
 
 ```json
@@ -8,7 +14,8 @@ In `appsettings.json`:
     "ClientId": "your-client-id",
     "ClientSecret": "your-client-secret",
     "TenantId": "your-tenant-id",
-    "Cloud": "USGov"
+    "Cloud": "USGov",
+    "LoginTenant": "your-tenant-id"
   }
 }
 ```
@@ -25,28 +32,43 @@ var app = new App(new AppOptions
 
 **Available cloud presets:** `CloudEnvironment.Public`, `CloudEnvironment.USGov`, `CloudEnvironment.USGovDoD`, `CloudEnvironment.China`
 
-<!-- per-endpoint-overrides -->
+Available override properties: `LoginEndpoint`, `LoginTenant`, `BotScope`, `TokenServiceUrl`, `OpenIdMetadataUrl`, `TokenIssuer`, `GraphScope`
 
-In `appsettings.json`:
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
-```json
+For 2.1, configure sovereign cloud endpoints as shown below.
+
+```json title="Properties/launchSettings.json (US Gov example)"
 {
-  "Teams": {
-    "Cloud": "China",
-    "LoginTenant": "your-tenant-id"
+  "profiles": {
+    "YourBot": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "AzureAd__Instance": "https://login.microsoftonline.us/",
+        "AzureAd__TenantId": "your-tenant-id",
+        "AzureAd__ClientId": "your-client-id",
+        "BotFramework__OpenIdMetadataUrl": "https://login.botframework.azure.us/v1/.well-known/openid-configuration",
+        "BotFramework__BotTokenIssuer": "https://api.botframework.us"
+      }
+    }
   }
 }
 ```
+
+For deployed environments, set equivalent values via app configuration or environment variables. When these aren't set, the SDK defaults to public-cloud endpoints.
+
+</TabItem>
+</Tabs>
+
+<!-- per-endpoint-overrides -->
+
+N/A
 
 <!-- troubleshooting-china-tenant -->
 
-In `appsettings.json`:
+N/A
 
-```json
-{
-  "Teams": {
-    "Cloud": "China",
-    "LoginTenant": "your-tenant-id"
-  }
-}
-```
+<!-- troubleshooting-cloud-env-ignored -->
+
+N/A

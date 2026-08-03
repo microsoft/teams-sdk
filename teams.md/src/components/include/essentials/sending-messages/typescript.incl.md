@@ -13,10 +13,7 @@ app.on('signin.verify-state', async ({ send }) => {
   await send('You have successfully signed in!');
 });
 ```
-
-<!-- signin-event-name -->
-
-`signin.verify-state`
+You are not restricted to only replying to `message` activities. In the above example, the handler is listening to `signin.verify-state` events, which are sent when a user successfully signs in.
 
 <!-- streaming-example -->
 

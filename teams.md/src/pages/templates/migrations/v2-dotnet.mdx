@@ -1,0 +1,664 @@
+---
+sidebar_position: 2
+sidebar_label: From SDK 2.0
+title: From SDK 2.0 to 2.1
+languages: ['csharp']
+summary: Migrate a Teams SDK for .NET 2.0 app to SDK 2.1, including startup, handlers, middleware, and auth configuration changes.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# From SDK 2.0 to 2.1
+
+:::info
+Use this guide to move an existing **Teams SDK for .NET 2.0** app to **SDK 2.1**.
+
+If you're starting a new app, target SDK 2.1 directly — no migration needed.
+:::
+
+## Migration highlights
+
+| Area | SDK 2.0 | SDK 2.1 (current) |
+|---|---|---|
+| App model | Plugin-oriented | Standard ASP.NET Core app |
+| Startup | `builder.AddTeams()` + `app.UseTeams()` | `builder.Services.AddTeamsBotApplication()` + `app.UseTeamsBotApplication()` |
+| Auth config | `Teams:*` settings | MSAL-native `AzureAd` + `BotFramework` sections |
+| Messaging helpers | `Send`/`Reply`/`Quote`, `MessageActivity`, `app.Send`/`app.Reply` | `SendAsync`/`ReplyAsync`/`QuoteAsync`, `MessageActivityInput`, `app.SendAsync`/`app.ReplyAsync` |
+| Cross-cutting pipeline | Plugin/event-bus patterns | `ITurnMiddleware` + DI |
+| Local unauthenticated dev | `skipAuth: true` | `AzureAd:DangerouslyAllowUnauthenticatedRequests=true` |
+
+## 1. Move to SDK 2.1 packages
+
+Update package references to use SDK 2.1 packages.
+
+Example `.csproj` change:
+
+<Tabs groupId="dotnet-package-migration" defaultValue="current">
+<TabItem value="legacy" label="Before (SDK 2.0)">
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Microsoft.Teams.Plugins.AspNetCore" Version="2.0.*" />
+</ItemGroup>
+```
+
+</TabItem>
+<TabItem value="current" label="After (SDK 2.1)" default>
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Microsoft.Teams.Apps" Version="2.1.*" />
+</ItemGroup>
+```
+
+</TabItem>
+</Tabs>
+
+## 2. Move to MSAL-native auth configuration
+
+SDK 2.1 moves from SDK-specific `Teams:*` auth settings to MSAL-native Microsoft Entra config under `AzureAd` (plus `BotFramework` service endpoints), aligned with standard ASP.NET Core configuration.
+
+<Tabs groupId="dotnet-config-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```json title="appsettings.json"
+{
+  "Teams": {
+    "ClientId": "your-client-id",
+    "ClientSecret": "your-client-secret",
+    "TenantId": "your-tenant-id",
+    "Cloud": "USGov"
+  }
+}
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```json title="appsettings.json"
+{
+  "AzureAd": {
+    "TenantId": "your-tenant-id",
+    "ClientId": "your-client-id",
+    "ClientCredentials": [
+      {
+        "SourceType": "ClientSecret",
+        "ClientSecret": "your-client-secret"
+      }
+    ]
+  }
+}
+```
+
+For sovereign cloud or non-public endpoints, add the corresponding service settings:
+
+```json title="appsettings.json"
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.us/"
+  },
+  "BotFramework": {
+    "OpenIdMetadataUrl": "https://login.botframework.azure.us/v1/.well-known/openid-configuration",
+    "BotTokenIssuer": "https://api.botframework.us"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 3. Replace startup/bootstrap code
+
+Update `Program.cs` to the SDK 2.1 hosting model:
+
+<Tabs groupId="dotnet-startup-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```csharp title="Program.cs"
+using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.AddTeams();
+
+var app = builder.Build();
+var teams = app.UseTeams();
+
+app.Run();
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```csharp title="Program.cs"
+using Microsoft.Teams.Apps;
+
+WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
+builder.Services.AddTeamsBotApplication();
+
+WebApplication app = builder.Build();
+TeamsBotApplication teams = app.UseTeamsBotApplication();
+
+app.Run();
+```
+
+</TabItem>
+</Tabs>
+
+## 4. Update helper calls to SDK 2.1 APIs
+
+Keep simple text helpers (`Send`/`Reply`) and update async call patterns for SDK 2.1.  
+When sending typed activities, use `MessageActivityInput`.
+
+<Tabs groupId="dotnet-helper-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+**Context helpers**
+
+```csharp
+app.OnMessage(async (context, cancellationToken) =>
+{
+    await context.Send("Acknowledged", cancellationToken);
+    await context.Reply("Got it!", cancellationToken);
+    await context.Quote("1772050244572", "Referencing an earlier message");
+
+    await context.Send(new MessageActivity("Hello from bot"), cancellationToken);
+    await context.Reply(new MessageActivity("Reply with activity object"), cancellationToken);
+    await context.Quote("1772050244572", new MessageActivity("Quoted reply with activity object"));
+});
+```
+
+**App helpers:**
+
+```csharp
+await app.Send(conversationId, "Welcome");
+await app.Send(
+    conversationId,
+    new MessageActivity("Welcome with activity object"),
+    cancellationToken: cancellationToken);
+
+await app.Reply(conversationId, "1772050244572", "Thread update");
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+**Context helpers**
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    await context.SendAsync("Acknowledged", cancellationToken);
+    await context.ReplyAsync("Got it!", cancellationToken);
+    await context.QuoteAsync("1772050244572", "Referencing an earlier message", cancellationToken);
+
+    await context.SendAsync(new MessageActivityInput("Hello from bot"), cancellationToken);
+    await context.ReplyAsync(new MessageActivityInput("Reply with activity object"), cancellationToken);
+    await context.QuoteAsync(
+        "1772050244572",
+        new MessageActivityInput("Quoted reply with activity object"),
+        cancellationToken);
+});
+```
+
+**App helpers:**
+
+```csharp
+await teams.SendAsync(
+    conversationId,
+    "Welcome",
+    cancellationToken: cancellationToken);
+await teams.SendAsync(
+    conversationId,
+    new MessageActivityInput("Welcome with activity object"),
+    serviceUrl: "https://smba.trafficmanager.net/teams/",
+    cancellationToken: cancellationToken);
+
+await teams.ReplyAsync(
+    conversationId,
+    "Flat chat update",
+    cancellationToken: cancellationToken);
+await teams.ReplyAsync(
+    conversationId,
+    "1772050244572",
+    "Thread update",
+    cancellationToken: cancellationToken);
+```
+
+</TabItem>
+</Tabs>
+
+## 5. OAuth migration
+
+In SDK 2.0, OAuth was typically handled through app-level sign-in events after invoking `context.SignIn(...)`.  
+In SDK 2.1, OAuth is modeled as named flows (`AddOAuthFlow` + `GetOAuthFlow`) with explicit success and failure callbacks per flow.
+
+Use these end-to-end OAuth patterns with three key handlers: `/signin`, sign-in success, and sign-in failure.
+
+<Tabs groupId="dotnet-oauth-consolidated" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```csharp
+teams.OnMessage("/signin", async (context, cancellationToken) =>
+{
+    await context.SignIn(new OAuthOptions
+    {
+        ConnectionName = "graph",
+        OAuthCardText = "Sign in to your account",
+        SignInButtonText = "Sign in"
+    }, cancellationToken);
+});
+
+teams.OnSignIn(async (_, teamsEvent, cancellationToken) =>
+{
+    var context = teamsEvent.Context;
+    await context.Send("Signed in.", cancellationToken);
+});
+
+teams.OnSignInFailure(async (context, cancellationToken) =>
+{
+    var failure = context.Activity.Value;
+    await context.Send($"Sign-in failed: {failure?.Code} - {failure?.Message}", cancellationToken);
+});
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```csharp
+builder.Services.AddTeamsBotApplication(options =>
+{
+    options.AddOAuthFlow("graph", oauth =>
+    {
+        oauth.OAuthCardText = "Sign in to Microsoft Graph";
+        oauth.SignInButtonText = "Sign in to Graph";
+    });
+});
+
+OAuthFlow graphAuth = teams.GetOAuthFlow("graph");
+
+graphAuth.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
+{
+    await context.SendAsync($"Signed in ({tokenResponse.ConnectionName}).", cancellationToken);
+});
+
+teams.OnMessage("/signin", async (context, cancellationToken) =>
+{
+    string? token = await graphAuth.SignInAsync(context, cancellationToken);
+    if (token is not null)
+    {
+        await context.SendAsync("You are already signed in.", cancellationToken);
+    }
+});
+
+graphAuth.OnSignInFailure(async (context, failure, cancellationToken) =>
+{
+    await context.SendAsync($"Sign-in failed: {failure?.Code} - {failure?.Message}", cancellationToken);
+});
+```
+
+</TabItem>
+</Tabs>
+
+## 6. Migrate to built-in state management
+
+SDK 2.1 state is cleaner: call `options.UseState()` and use `context.State.ConversationState` / `context.State.UserState` in handlers.
+
+It is also easy to scale. `UseState()` uses the standard ASP.NET Core `IDistributedCache` abstraction under the hood with an in-memory default for local development, and you can move to shared state by registering a distributed cache provider such as Redis without changing your handler state logic.
+
+<Tabs groupId="dotnet-state-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    context.Extra["lastText"] = context.Activity.Text;
+    await context.Storage.Set("conversation:lastText", context.Activity.Text ?? string.Empty);
+    await context.Send("Saved state.", cancellationToken);
+});
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```csharp
+builder.Services.AddTeamsBotApplication(options =>
+{
+    options.UseState();
+});
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    context.State.ConversationState.Set("lastText", context.Activity.Text ?? string.Empty);
+    string? lastText = context.State.ConversationState.Get<string>("lastText");
+    await context.SendAsync($"Saved state: {lastText}", cancellationToken);
+});
+```
+
+</TabItem>
+</Tabs>
+
+## 7. AI migration
+
+With 2.1, Teams SDK no longer includes dedicated AI libraries and has tightened its focus on providing a developer-friendly interface to Teams. 
+Keep `Microsoft.Teams.Apps` as your Teams transport/runtime layer and plug in a dedicated AI stack (for example Microsoft Agent Framework, OpenAI SDK, MCP, or A2A) from your handlers.
+
+For migration guidance and rationale, see the [AI libraries to agent frameworks blog](/blog/ai-libraries-to-agent-frameworks).
+
+<Tabs groupId="dotnet-ai-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```csharp
+using Microsoft.Teams.AI;
+using Microsoft.Teams.AI.Models.OpenAI;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.AddTeams();
+
+// SDK 2.0: AI model and prompt wired up alongside the app
+OpenAIChatModel model = new(new OpenAIModelOptions
+{
+    ApiKey = builder.Configuration["OpenAI:ApiKey"]!,
+    Model = "gpt-4o"
+});
+ChatPrompt prompt = new(model);
+
+var app = builder.Build();
+var teams = app.UseTeams();
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    await context.Typing(cancellationToken: cancellationToken);
+    Message reply = await prompt.Send(context.Activity.Text ?? string.Empty, cancellationToken);
+    await context.Send(reply.Text ?? string.Empty, cancellationToken);
+});
+
+app.Run();
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```csharp
+// SDK 2.1: Teams runtime handles transport; bring your own AI stack.
+// This example uses the OpenAI SDK directly — swap for any framework.
+using OpenAI.Chat;
+
+var builder = WebApplication.CreateSlimBuilder(args);
+builder.Services.AddTeamsBotApplication();
+
+// Register OpenAI client via DI
+builder.Services.AddSingleton(_ =>
+    new ChatClient("gpt-4o", builder.Configuration["OpenAI:ApiKey"]));
+
+var app = builder.Build();
+TeamsBotApplication teams = app.UseTeamsBotApplication();
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    ChatClient chatClient = context.Services.GetRequiredService<ChatClient>();
+
+    ChatCompletion completion = await chatClient.CompleteChatAsync(
+        [new UserChatMessage(context.Activity.Text ?? string.Empty)],
+        cancellationToken: cancellationToken);
+
+    await context.SendAsync(completion.Content[0].Text, cancellationToken);
+});
+
+app.Run();
+```
+
+</TabItem>
+</Tabs>
+
+## 8. Cards migration
+
+You can still use `Microsoft.Teams.Cards` in SDK 2.1. Build cards with the cards package, then serialize to `JsonElement` before attaching to `MessageActivityInput`.
+
+<Tabs groupId="dotnet-cards-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```csharp
+using Microsoft.Teams.Cards;
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    var card = new AdaptiveCard("1.5")
+    {
+        Body = new List<CardElement>
+        {
+            new TextBlock("Hello from SDK 2.0") { Wrap = true }
+        }
+    };
+    await context.Send(card, cancellationToken);
+});
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```csharp
+using System.Text.Json;
+using Microsoft.Teams.Cards;
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    var card = new AdaptiveCard
+    {
+        Version = "1.5",
+        Body = new List<CardElement>
+        {
+            new TextBlock("Hello from SDK 2.1") { Wrap = true }
+        }
+    };
+
+    JsonElement cardElement = JsonSerializer.SerializeToElement(card);
+
+    await context.SendAsync(
+        new MessageActivityInput()
+            .WithText("Card message")
+            .WithAdaptiveCardAttachment(cardElement),
+        cancellationToken);
+});
+```
+
+</TabItem>
+</Tabs>
+
+## 9. Streaming migration
+
+In SDK 2.0, streaming used `context.Stream.Emit(...)` to push chunks.  
+In SDK 2.1, `TeamsStreamingWriter` manages chunk updates and requires an explicit finalize step to complete the response.
+
+<Tabs groupId="dotnet-streaming-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    context.Stream.Emit("hello");
+    context.Stream.Emit(", ");
+    context.Stream.Emit("world!");
+    await Task.CompletedTask;
+});
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    TeamsStreamingWriter writer = TeamsStreamingWriter.CreateFromContext(context);
+    await writer.AppendResponseAsync("hello", cancellationToken);
+    await writer.AppendResponseAsync(", ", cancellationToken);
+    await writer.AppendResponseAsync("world!", cancellationToken);
+    await writer.FinalizeResponseAsync(cancellationToken: cancellationToken);
+});
+```
+
+</TabItem>
+</Tabs>
+
+## 10. Message extensions, task modules, files, and meetings
+
+This area has the biggest shape change beyond startup/auth. The handler names stay familiar (`OnQuery`, `OnTaskFetch`, `OnFileConsent`, `OnMeetingStart`), but the payload types and namespaces move to new feature-specific modules in SDK 2.1.
+
+Key updates to expect:
+
+- `Microsoft.Teams.Apps.Activities.*` invoke/event payloads move to feature namespaces like `Microsoft.Teams.Apps.MessageExtensions`, `TaskModules`, `Files`, and `Meetings`.
+- Invoke handlers now use typed `InvokeActivity<T>` values and return typed response objects (`MessageExtensionResponse`, `TaskModuleResponse`, `AdaptiveCardResponse`) instead of older activity-wrapper types.
+- Meeting events use typed event values like `MeetingStartValue` in `EventActivity<T>`.
+
+<Tabs groupId="dotnet-feature-namespace-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```csharp
+using Microsoft.Teams.Api.MessageExtensions;
+using Microsoft.Teams.Api.TaskModules;
+using Microsoft.Teams.Apps.Activities.Events;
+using Microsoft.Teams.Apps.Activities.Invokes;
+using Microsoft.Teams.Cards;
+
+// Message extension search query
+app.OnQuery(async (context, cancellationToken) =>
+{
+    var query = context.Activity.Value;
+    string searchText = query?.Parameters?.FirstOrDefault(p => p.Name == "searchQuery")?.Value ?? "";
+
+    return new Response(
+        new ComposeExtension
+        {
+            Type = ComposeExtensionType.Result,
+            AttachmentLayout = AttachmentLayout.List,
+            Attachments = new List<Microsoft.Teams.Api.MessageExtensions.Attachment>()
+        }
+    );
+});
+
+// Task module fetch
+app.OnTaskFetch(async (context, cancellationToken) =>
+{
+    return new Microsoft.Teams.Api.TaskModules.Response(
+        new Microsoft.Teams.Api.TaskModules.MessageTask("Task opened."));
+});
+
+// File consent
+app.OnFileConsent(async (context, cancellationToken) =>
+{
+    var consent = context.Activity.Value;
+    // consent.FileInfo contains name, contentUrl, etc.
+    await context.Send($"File received: {consent?.FileInfo?.Name}", cancellationToken);
+});
+
+// Meeting start
+app.OnMeetingStart(async (context, cancellationToken) =>
+{
+    var activity = context.Activity.Value;
+    await context.Send($"'{activity.Title}' has started.", cancellationToken);
+});
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```csharp
+using Microsoft.Teams.Apps.Files;
+using Microsoft.Teams.Apps.Meetings;
+using Microsoft.Teams.Apps.MessageExtensions;
+using Microsoft.Teams.Apps.TaskModules;
+
+teams.OnQuery(async (context, cancellationToken) =>
+{
+    MessageExtensionQuery? query = context.Activity.Value;
+    return MessageExtensionResponse.CreateBuilder()
+        .WithType(MessageExtensionResponseTypes.Message)
+        .WithText($"query: {query?.CommandId}")
+        .Build();
+});
+
+teams.OnTaskFetch(async (context, cancellationToken) =>
+{
+    return TaskModuleResponse.CreateBuilder()
+        .WithType(TaskModuleResponseTypes.Message)
+        .WithMessage("Task fetch handled.")
+        .Build();
+});
+
+teams.OnFileConsent(async (context, cancellationToken) =>
+{
+    var consent = context.Activity.Value;
+    await context.SendAsync($"File received: {consent?.FileInfo?.Name}", cancellationToken);
+});
+
+teams.OnMeetingStart(async (context, cancellationToken) =>
+{
+    var activity = context.Activity.Value;
+    await context.SendAsync($"'{activity.Title}' has started.", cancellationToken);
+});
+```
+
+</TabItem>
+</Tabs>
+
+## 11. Plugin/event-bus patterns → turn middleware
+
+SDK 2.1 removes plugin/event-bus style extensibility. Use `ITurnMiddleware` for cross-cutting behavior.
+
+```csharp
+using Microsoft.Teams.Apps;
+using Microsoft.Teams.Core;
+using Microsoft.Teams.Core.Schema;
+
+internal sealed class MyMiddleware : ITurnMiddleware
+{
+    public async Task OnTurnAsync(
+        BotApplication botApplication,
+        CoreActivity activity,
+        NextTurn nextTurn,
+        CancellationToken cancellationToken = default)
+    {
+        ....
+        await nextTurn(cancellationToken);
+    }
+}
+
+teams.UseMiddleware(new MyMiddleware());
+```
+
+## 12. Update local dev auth behavior
+
+Use this setting when testing locally with the Playground or another client that sends unauthenticated requests.
+
+<Tabs groupId="dotnet-skipauth-migration" defaultValue="current">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+```csharp title="Program.cs"
+// SDK 2.0: skipAuth passed directly into AddTeams()
+builder.AddTeams(skipAuth: true);
+```
+
+</TabItem>
+<TabItem value="current" label="SDK 2.1 (current)" default>
+
+```json title="Properties/launchSettings.json"
+{
+  "profiles": {
+    "YourBot": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "AzureAd__DangerouslyAllowUnauthenticatedRequests": "true"
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Related guides
+
+- [Quickstart](../getting-started/quickstart)
+- [Code basics](../getting-started/code-basics)
+- [Listening to activities](../essentials/on-activity)
+- [From BotBuilder](./botbuilder)

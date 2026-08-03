@@ -3,7 +3,7 @@ sidebar_position: 1
 sidebar_label: Build an agent in Teams
 title: Build an agent in Teams
 summary: Create an agent, add a local clarification tool and remote MCP tool servers, stream responses into Teams, and preserve conversation history across turns.
-languages: ['python', 'typescript']
+languages: ['python', 'typescript', 'csharp']
 ---
 
 import ClarificationCardImgUrl from '@site/static/screenshots/clarification.png';
@@ -15,6 +15,14 @@ import Language from '@site/src/components/Language';
 
 :::warning[Our AI libraries are deprecated]
 The Teams SDK has deprecated its own AI libraries — the `@microsoft/teams.ai` packages (`ChatPrompt`, `Model`, and the older `@microsoft/teams.mcp` / `@microsoft/teams.a2a` plugins) — in favor of dedicated AI frameworks. Use the pattern shown in these guides instead: bring the OpenAI SDK (or any framework you like), and wire MCP and A2A directly into your Teams app.
+:::
+
+</Language>
+
+<Language language="csharp">
+
+:::warning[SDK 2.0 AI libraries are deprecated]
+In .NET, use SDK 2.1 for AI integrations. Keep `Microsoft.Teams.Apps` focused on Teams activity routing/streaming, and compose AI behavior with external agent/model tooling.
 :::
 
 </Language>
