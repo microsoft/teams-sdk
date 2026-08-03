@@ -95,19 +95,15 @@ app.Run();
 </TabItem>
 </Tabs>
 
-<!-- plugin-events -->
-
-(onActivity, onActivitySent, etc.)
+<!-- plugins  -->
+N/A
 
 <!-- plugins-note -->
 
 :::note[Removed in SDK 2.1]
-Plugins have been removed in SDK 2.1. Because your app is a standard ASP.NET Core app, extend it with regular **middleware** and **dependency injection** instead — for per-turn logic, implement `ITurnMiddleware` and register it with `teams.UseMiddleware(...)` (see [Listening to Activities](../essentials/on-activity)).
+Plugins have been removed in SDK 2.1. Because your app is a standard ASP.NET Core app, extend it with regular **middleware** and **dependency injection** instead — for per-turn logic, implement `ITurnMiddleware` and register it with `teams.UseMiddleware(...)`.
 :::
 
-<!-- local-test-note -->
-
-To test your agent locally without sideloading into Teams, run the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)** alongside your agent. The playground is a separate CLI tool and does not require any change to your app code.
 
 <!-- message-handling-code -->
 

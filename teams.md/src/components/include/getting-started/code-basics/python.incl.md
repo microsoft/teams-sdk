@@ -23,18 +23,15 @@ from microsoft_teams.apps import ActivityContext, App
 app = App()
 
 ```
+The app configuration includes a variety of options that allow you to customize its behavior, including controlling the underlying server, authentication, and other settings.
 
-<!-- plugin-events -->
 
-(on_activity, on_activity_sent, etc.)
+<!-- plugins  -->.
+Plugins are a core part of the Teams SDK. They allow you to hook into various lifecycles of the application. The lifecycles include server events (start, stop, initialize, etc.), and also Teams Activity events (on_activity, on_activity_sent, etc.)
 
 <!-- plugins-note -->
 
 N/A
-
-<!-- local-test-note -->
-
-To test your agent locally without sideloading into Teams, run the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)** alongside your agent. The playground is a separate CLI tool and does not require any plugin in your app code.
 
 <!-- message-handling-code -->
 
