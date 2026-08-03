@@ -13,7 +13,7 @@ Now that you completed [the quickstart](../quickstart) and your agent is running
 
 - The CLI installed: `npm install -g @microsoft/teams.cli`
 - An M365 account with **custom app upload (sideloading) enabled** on the tenant
-- A public HTTPS tunnel pointing at your local server (e.g. [DevTunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview), [ngrok](https://ngrok.com/))
+- A public HTTPS tunnel pointing at your local server — see [Local Tunnels](/developer-tools/local-tunnels) if you haven't set one up yet
 
 If you haven't run through this before, the [Quickstart: Register your app](/get-started/quickstart-register) walks the full flow end-to-end. The summary below is for developers already familiar with the steps.
 
@@ -70,6 +70,7 @@ Congratulations! Now you have a fully functional agent running in Microsoft Team
 ## Troubleshooting
 
 - Run `teams app doctor` against your app to surface configuration issues.
+- Tunnel returning `502` or Teams can't reach your bot? See [Local Tunnels](/developer-tools/local-tunnels#troubleshooting).
 - For authentication problems, see [Authentication Troubleshooting](/teams/app-authentication/troubleshooting).
 - For manual Azure setup, see [Azure Configuration](/teams/azure-configuration).
 
