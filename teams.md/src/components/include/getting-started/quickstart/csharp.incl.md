@@ -105,7 +105,7 @@ The playground opens at [http://localhost:56150](http://localhost:56150). Send a
 <!-- manual-install -->
 
 ```sh
-dotnet add package Microsoft.Teams.Apps --prerelease
+dotnet add package Microsoft.Teams.Apps
 ```
 
 <!-- manual-code -->

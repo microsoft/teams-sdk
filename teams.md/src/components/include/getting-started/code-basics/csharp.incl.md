@@ -4,44 +4,16 @@ N/A
 
 <!-- project-structure -->
 
-<Tabs groupId="csharp-sdk-version" defaultValue="core">
-<TabItem value="legacy" label="SDK 2.0 (Legacy)">
-
 ```
 QuoteAgent/
 ├── Program.cs        # Main application startup code
+├── appsettings.json    # Configuration (logging, auth, etc.)
 ```
-
-</TabItem>
-<TabItem value="core" label="SDK 2.1 (current)" default>
-
-```
-QuoteAgent/
-├── Program.cs          # Application startup and activity handlers
-├── appsettings.json    # Configuration (logging, AzureAd auth, etc.)
-├── Properties/
-│   └── launchSettings.TEMPLATE.json  # Local profile template with AzureAd placeholders
-```
-
-</TabItem>
-</Tabs>
 
 <!-- project-structure-description -->
 
-<Tabs groupId="csharp-sdk-version" defaultValue="core">
-<TabItem value="legacy" label="SDK 2.0 (Legacy)">
-
-- **Program.cs**: Contains the main application code and is the entry point for your application.
-
-</TabItem>
-<TabItem value="core" label="SDK 2.1 (current)" default>
-
 - **Program.cs**: The entry point. A standard ASP.NET Core app that registers the Teams application into DI and wires it into the request pipeline.
-- **appsettings.json**: Standard ASP.NET Core configuration — logging levels and, when you deploy, the `AzureAd` section that holds your bot credentials.
-- **Properties/launchSettings.TEMPLATE.json**: Sample local launch profile with `AzureAd` environment variable placeholders. Copy this to `launchSettings.json` when configuring local credentials.
-
-</TabItem>
-</Tabs>
+- **appsettings.json**: Standard ASP.NET Core configuration — logging levels, bot credentials.
 
 <!-- app-class-code -->
 

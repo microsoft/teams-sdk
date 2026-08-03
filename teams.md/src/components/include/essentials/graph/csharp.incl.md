@@ -14,10 +14,6 @@ N/A
 
 `GraphServiceClient`
 
-<!-- app-access-method -->
-
-for app-level calls
-
 <!-- app-graph-example -->
 
 ```csharp
@@ -60,6 +56,8 @@ app.OnMessage(async (context, cancellationToken) =>
 });
 ```
 
+Here, the "context.UserGraph" object is a scoped graph client for the user that sent the message.
+
 </TabItem>
 <TabItem value="core" label="SDK 2.1 (current)" default>
 
@@ -86,17 +84,6 @@ teams.OnMessage(async (context, cancellationToken) =>
 </TabItem>
 </Tabs>
 
-<!-- user-graph-object -->
-
-`context.UserGraph` (SDK 2.0) / `context.GetUserGraphClient()` (SDK 2.1)
-
-<!-- app-graph-in-handler -->
-
-`GraphServiceClient`
-
-<!-- app-graph-reference -->
-
-your app-level `GraphServiceClient`
 
 <!-- advanced-sections -->
 
