@@ -38,6 +38,14 @@ The Teams SDK automatically detects which authentication method to use based on 
 | set | not_set | set (different from CLIENT_ID) | Federated Identity Credentials (UMI) |
 | set | not_set | "system" | Federated Identity Credentials (System Identity) |
 
+<Language language="csharp">
+
+:::info[SDK 2.1]
+SDK 2.1 uses the Microsoft Authentication Library (MSAL) through standard ASP.NET Core configuration. That is why the C# configuration uses `AzureAd` and `AzureAd__*` environment variables instead of the SDK 2.0 `CLIENT_*` settings. The same configuration shape supports client secrets, managed identities, and federated identity credentials.
+:::
+
+</Language>
+
 ## Client Secret
 
 The simplest authentication method using a password-like secret.

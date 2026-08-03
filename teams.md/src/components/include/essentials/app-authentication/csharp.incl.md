@@ -20,10 +20,6 @@ TENANT_ID=your-tenant-id
 
 Set the following environment variables in your application:
 
-- `ClientId`: Your Application (client) ID
-- `ClientSecret`: The client secret value you created
-- `TenantId`: The tenant id where your bot is registered
-
 ```json title="Properties/launchSettings.json"
 {
   "profiles": {
@@ -98,10 +94,6 @@ Set the following environment variables:
 Your application should automatically use User Assigned Managed Identity authentication when you provide the `ClientId` environment variable without a `ClientSecret`.
 
 Set the following environment variables in your application:
-
-- `ClientId`: Your Application (client) ID
-- **Do not set** `ClientSecret`
-- `TenantId`: The tenant id where your bot is registered
 
 ```json title="Properties/launchSettings.json"
 {

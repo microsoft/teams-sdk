@@ -1,6 +1,6 @@
 ---
 slug: announcing-teams-sdk-dotnet-2-1
-title: "Teams SDK for .Net 2.1 is now Generally Available"
+title: "Teams SDK for .NET 2.1 is now Generally Available"
 date: 2026-08-03
 authors:
   - name: Mehak Bindra
@@ -18,12 +18,13 @@ Install to get started:
 ```bash
 dotnet add package Microsoft.Teams.Apps
 ```
+If you're building on an existing app, see the [migration guide](/csharp/migrations/v2-dotnet) to plan your upgrade.
 
 <!-- truncate -->
 
 ## ASP.NET Core is now the foundation
 
-In 2.0, the SDK owned too much: a plugin architecture, a proprietary server lifecycle, a custom event bus, a separate dependency system, and full ownership of hosting, configuration, logging, HTTP, and storage. This meant every team had to work around the SDK instead of with the .NET ecosystem they already knew. In 2.1, the SDK steps back. It handles the Teams-specific parts (inbound activity validation, activity dispatch,  auth via MSAL and outbound message builders and clients) and hands everything else back to ASP.NET Core. A basic bot is now a small ASP.NET Core application with a message handler — services, configuration, logging, middleware, and authorization all work exactly as they do in any other .NET app.
+In 2.0, the SDK owned too much: a plugin architecture, a proprietary server lifecycle, a custom event bus, a separate dependency system, and full ownership of hosting, configuration, logging, HTTP, and storage. This meant every team had to work around the SDK instead of with the .NET ecosystem they already knew. In 2.1, the SDK steps back. It handles the Teams-specific parts (inbound activity validation, activity dispatch,  auth via MSAL and outbound message builders and clients) and hands everything else back to ASP.NET Core. A basic Teams agent is now a small ASP.NET Core application with a message handler — services, configuration, logging, middleware, and authorization all work exactly as they do in any other .NET app.
 
 Handlers in 2.1 are typed, readable, and composable, with regex routing for messages and a rich `context` object that gives you the typed activity, DI-resolved services, logging, and outbound helpers all in one place.
 
@@ -33,7 +34,7 @@ For the full overview, see the [migration guide](/csharp/migrations/v2-dotnet).
 
 ### Agentic identity
 
-With [Agent 365](https://learn.microsoft.com/microsoft-agent-365/), your bot can run as an **AI teammate**, a first-class Microsoft 365 entity with its own mailbox, Teams presence, and directory entry. The key difference from a traditional bot: an AI teammate calls APIs with its own identity, not app permissions. Actions are attributed to it in audit logs, and it's scoped to what it can access.
+Using the Teams SDK, you can bring an [Agent 365](https://learn.microsoft.com/microsoft-agent-365/) agentic identity to Teams as an **AI teammate**, a first-class Microsoft 365 entity with its own mailbox, Teams presence, and directory entry. Unlike a traditional bot, an AI teammate calls APIs with its own identity, not app permissions. Actions are attributed to it in audit logs, and it's scoped to what it can access.
 
 The SDK handles the token resolution automatically per turn. You don't change how you call APIs; you just optionally check whether the turn is agentic using `context.Activity.Recipient?.GetAgenticIdentity()`.
 
