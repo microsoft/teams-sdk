@@ -75,33 +75,4 @@ Slash commands arrive as normal message activities with the targeted flag set on
 
 <LanguageInclude section="activity-handlers-next" />
 
-<Language language="csharp">
-
-In SDK 2.1, activity handlers are **not** a `next()`-style chain — all matching handlers run in their registration order, and one handler does not stop the others from running. To short-circuit or wrap the pipeline (for example to stop processing on a condition), use turn middleware (`ITurnMiddleware`) and control flow by whether you `await nextTurn(...)`.
-
-
-:::note[SDK 2.0 (Legacy)]
-In SDK 2.0, activity handlers are chained. Call `context.Next()` to continue to the next matching handler; return without it to stop the chain. Registration order determines handler execution order.
-
-```csharp
-app.OnMessage(async (context, cancellationToken) =>
-{
-    if (context.Activity.Text == "/help")
-    {
-        await context.Send("Here are all the ways I can help you...", cancellationToken);
-        return; // stop chain
-    }
-
-    await context.Next(); // continue chain
-});
-
-app.OnMessage(async (context, cancellationToken) =>
-{
-    await context.Send($"Hello! you said {context.Activity.Text}", cancellationToken);
-});
-```
-:::
-
-</Language>
-
 <LanguageInclude section="activity-reference-footer" />

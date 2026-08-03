@@ -41,7 +41,7 @@ The Teams SDK automatically detects which authentication method to use based on 
 <Language language="csharp">
 
 :::info[SDK 2.1]
-With SDK 2.1, developers can authenticate their bot with any supported Microsoft Entra authentication solution. Configure the credential in the `AzureAd` section of `appsettings.json` using the [`Microsoft.Identity.Web` credential format](https://learn.microsoft.com/en-us/entra/msidweb/authentication/credentials-overview#configure-credentials-in-appsettingsjson). This supports client secrets, managed identities, and federated identity credentials.
+SDK 2.1 uses MSAL with standard ASP.NET Core configuration. Developers can authenticate their bot with any supported Microsoft Entra authentication solution by configuring the app according to the [`Microsoft.Identity.Web` credential format](https://learn.microsoft.com/en-us/entra/msidweb/authentication/credentials-overview#configure-credentials-in-appsettingsjson).
 :::
 
 </Language>
