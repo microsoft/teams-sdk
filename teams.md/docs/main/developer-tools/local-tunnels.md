@@ -73,7 +73,7 @@ devtunnel delete my-teams-app     # delete when no longer needed
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| `502 Bad Gateway` | Tunnel port protocol doesn't match your app | `devtunnel port delete my-teams-app -p 3978` then recreate with `--protocol http` |
+| `502 Bad Gateway` | Tunnel port protocol doesn't match your app | `devtunnel port delete my-teams-app -p 3978`, then `devtunnel port create my-teams-app -p 3978 --protocol http` |
 | Teams can't reach bot / install fails | Tunnel not hosting, or `--endpoint` doesn't match current URL | Confirm `devtunnel host` is running; re-check the registered endpoint |
 | Worked yesterday, not today | Hostname changed (ngrok) or host process stopped | Re-run the host command; re-register the endpoint if the hostname changed |
 | `curl` hangs or times out | Host process isn't running, or wrong port tunneled | Check the port your app actually logged on startup |
