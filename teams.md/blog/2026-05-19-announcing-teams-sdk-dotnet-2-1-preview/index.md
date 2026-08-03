@@ -280,11 +280,12 @@ The 2.1 preview consolidates into three packages. The following 2.0 packages hav
 | Removed package | Alternative |
 |---|---|
 | `Microsoft.Teams.AI` / `Microsoft.Teams.AI.Models.OpenAI` | `Microsoft.Extensions.AI`|
-| `Microsoft.Teams.Cards` | Use `TeamsActivityBuilder` with `AddAdaptiveCardAttachment()` |
 | `Microsoft.Teams.Extensions.Graph` | `Microsoft.Graph` |
 | `Microsoft.Teams.Apps.Testing` | Use standard .NET DI mocking |
 | `Microsoft.Teams.Common` (logging, HTTP) | Use `Microsoft.Extensions.Logging` and `HttpClient` via DI |
 | `Microsoft.Teams.Plugins.*` | Plugin architecture removed — use standard ASP.NET Core middleware and DI |
+
+`Microsoft.Teams.Cards` is still published and works with the 2.1 preview — keep using it to author Adaptive Cards. The only change is how you attach a card: `Send(AdaptiveCard)` and `Reply(AdaptiveCard)` overloads aren't available yet, so use `TeamsActivityBuilder` with `AddAdaptiveCardAttachment()` instead.
 
 For the full list of API changes, see the [Migration Guide](https://github.com/microsoft/teams.net/blob/main/core/docs/MigrationGuide.md).
 
