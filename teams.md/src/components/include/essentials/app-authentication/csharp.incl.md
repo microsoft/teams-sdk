@@ -18,19 +18,19 @@ TENANT_ID=your-tenant-id
 </TabItem>
 <TabItem value="core" label="SDK 2.1 (current)" default>
 
-Set the following environment variables in your application:
+Configure the following settings in `appsettings.json`:
 
-```json title="Properties/launchSettings.json"
+```json title="appsettings.json"
 {
-  "profiles": {
-    "MyBot": {
-      "environmentVariables": {
-        "AzureAd__ClientId": "your-client-id-here",
-        "AzureAd__TenantId": "your-tenant-id",
-        "AzureAd__ClientCredentials__0__SourceType": "ClientSecret",
-        "AzureAd__ClientCredentials__0__ClientSecret": "your-client-secret-here"
+  "AzureAd": {
+    "ClientId": "your-client-id-here",
+    "TenantId": "your-tenant-id",
+    "ClientCredentials": [
+      {
+        "SourceType": "ClientSecret",
+        "ClientSecret": "your-client-secret-here"
       }
-    }
+    ]
   }
 }
 ```
@@ -91,19 +91,15 @@ Set the following environment variables:
 </TabItem>
 <TabItem value="core" label="SDK 2.1 (current)" default>
 
-Your application should automatically use User Assigned Managed Identity authentication when you provide the `ClientId` environment variable without a `ClientSecret`.
+Your application should automatically use User Assigned Managed Identity authentication when you provide the `ClientId` without a `ClientSecret`.
 
-Set the following environment variables in your application:
+Configure the following settings in `appsettings.json`:
 
-```json title="Properties/launchSettings.json"
+```json title="appsettings.json"
 {
-  "profiles": {
-    "MyBot": {
-      "environmentVariables": {
-        "AzureAd__ClientId": "your-client-id-here",
-        "AzureAd__TenantId": "your-tenant-id"
-      }
-    }
+  "AzureAd": {
+    "ClientId": "your-client-id-here",
+    "TenantId": "your-tenant-id"
   }
 }
 ```
@@ -168,33 +164,33 @@ Set the following environment variables:
 </TabItem>
 <TabItem value="core" label="SDK 2.1 (current)" default>
 
-Depending on the type of managed identity you select, set the environment variables accordingly.
+Depending on the type of managed identity you select, configure the corresponding settings in `appsettings.json`.
 
-```json title="Properties/launchSettings.json"
+```json title="appsettings.json"
 {
-  "profiles": {
-    "MyBot": {
-      "environmentVariables": {
-        "AzureAd__ClientId": "your-app-client-id-here",
-        "AzureAd__TenantId": "your-tenant-id",
-        "AzureAd__ClientCredentials__0__SourceType": "SignedAssertionFromManagedIdentity",
-        "AzureAd__ClientCredentials__0__ManagedIdentityClientId": "your-managed-identity-client-id-here"
+  "AzureAd": {
+    "ClientId": "your-app-client-id-here",
+    "TenantId": "your-tenant-id",
+    "ClientCredentials": [
+      {
+        "SourceType": "SignedAssertionFromManagedIdentity",
+        "ManagedIdentityClientId": "your-managed-identity-client-id-here"
       }
-    }
+    ]
   }
 }
 ```
 
-For system-assigned identity, set:
+For system-assigned identity, omit `ManagedIdentityClientId`:
 
-```json title="Properties/launchSettings.json"
+```json title="appsettings.json"
 {
-  "profiles": {
-    "MyBot": {
-      "environmentVariables": {
-        "AzureAd__ClientId": "your-app-client-id-here",
-        "AzureAd__TenantId": "your-tenant-id",
-        "AzureAd__ClientCredentials__0__SourceType": "SignedAssertionFromManagedIdentity"
+  "AzureAd": {
+    "ClientId": "your-app-client-id-here",
+    "TenantId": "your-tenant-id",
+    "ClientCredentials": [
+      {
+        "SourceType": "SignedAssertionFromManagedIdentity"
       }
     }
   }

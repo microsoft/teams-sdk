@@ -107,6 +107,7 @@ The playground opens at [http://localhost:56150](http://localhost:56150). Send a
 ```sh
 dotnet add package Microsoft.Teams.Apps
 ```
+// Then register the Teams services on your existing app.
 
 <!-- manual-code -->
 
@@ -114,10 +115,7 @@ dotnet add package Microsoft.Teams.Apps
 using Microsoft.Teams.Apps;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Register the Teams services on your existing app
 builder.Services.AddTeamsBotApplication();
-
 var app = builder.Build();
 
 // Maps POST /api/messages onto your existing ASP.NET Core app
@@ -130,7 +128,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 
 app.Run();
 ```
-
+`app.UseTeamsBotApplication()` registers the Teams endpoint onto your existing ASP.NET Core app. 
 <!-- manual-more -->
 
 N/A

@@ -303,7 +303,7 @@ graphAuth.OnSignInFailure(async (context, failure, cancellationToken) =>
 
 SDK 2.1 state is cleaner: call `options.UseState()` and use `context.State.ConversationState` / `context.State.UserState` in handlers.
 
-It is also easy to scale. `UseState()` uses the standard ASP.NET Core `IDistributedCache` abstraction under the hood with an in-memory default for local development, and you can move to shared state by registering a distributed cache provider such as Redis without changing your handler state logic.
+It is also easy to scale. `UseState()` uses the standard ASP.NET Core `IDistributedCache` abstraction under the hood with an in-memory default for local development, and you can move to shared state by registering a distributed cache provider (for example Redis) without changing your handler state logic.
 
 <Tabs groupId="dotnet-state-migration" defaultValue="current">
 <TabItem value="legacy" label="SDK 2.0 (Legacy)">
@@ -609,7 +609,7 @@ using Microsoft.Teams.Apps;
 using Microsoft.Teams.Core;
 using Microsoft.Teams.Core.Schema;
 
-internal sealed class MyMiddleware : ITurnMiddleware
+internal sealed class LoggingMiddleware : ITurnMiddleware
 {
     public async Task OnTurnAsync(
         BotApplication botApplication,
@@ -617,12 +617,12 @@ internal sealed class MyMiddleware : ITurnMiddleware
         NextTurn nextTurn,
         CancellationToken cancellationToken = default)
     {
-        ....
+        Console.WriteLine($"Processing activity: {activity}");
         await nextTurn(cancellationToken);
     }
 }
 
-teams.UseMiddleware(new MyMiddleware());
+teams.UseMiddleware(new LoggingMiddleware());
 ```
 
 ## 12. Update local dev auth behavior
