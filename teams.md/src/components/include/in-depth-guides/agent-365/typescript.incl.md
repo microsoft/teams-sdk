@@ -4,8 +4,8 @@
 Agent 365 support is available starting in Teams SDK `2.1.0-preview.3` for TypeScript. Preview APIs can change before general availability.
 
 ```bash
-npm install @microsoft/teams.apps@2.1.0-preview.3 @microsoft/teams.api@2.1.0-preview.3
+npm install @microsoft/teams.apps@next @microsoft/teams.api@next
 ```
 
-Pin the exact preview version for every `@microsoft/teams.*` package your app installs directly. The `latest` npm tag still resolves to the 2.0.x stable line.
+Install every `@microsoft/teams.*` package your app uses directly with the `@next` tag. The `latest` tag still resolves to the 2.0.x stable line, and the `preview` tag is stale — it points to an older 2.0 preview.
 :::
