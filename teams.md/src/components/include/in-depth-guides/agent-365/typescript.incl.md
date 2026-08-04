@@ -6,6 +6,4 @@ Agent 365 support is available starting in Teams SDK `2.1.0-preview.3` for TypeS
 ```bash
 npm install @microsoft/teams.apps@next @microsoft/teams.api@next
 ```
-
-Use the `@next` tag when installing any `@microsoft/teams.*` package your app depends on directly.
 :::

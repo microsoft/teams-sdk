@@ -6,6 +6,4 @@ Agent 365 support is available starting in Teams SDK `2.1.0a1` for Python. Previ
 ```bash
 pip install --pre microsoft-teams-apps microsoft-teams-api
 ```
-
-Use `--pre` when installing any `microsoft-teams-*` package your app depends on directly.
 :::
