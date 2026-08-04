@@ -5,6 +5,10 @@ title: Quickstart
 summary: Quick start guide for Teams SDK using the Teams Developer CLI to create and run your first agent.
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Language from '@site/src/components/Language';
+
 # Quickstart
 
 Get started with Teams SDK quickly using the Teams Developer CLI.
@@ -27,7 +31,7 @@ teams --version
 ```
 
 :::info
-The [Teams Developer CLI](/cli/) is the command-line tool for scaffolding, registering, and managing Teams apps. It's currently in Preview.
+The [Teams Developer CLI](/cli/) is the command-line tool for scaffolding, registering, and managing Teams apps.
 :::
 
 ## Creating Your First Agent
@@ -56,11 +60,7 @@ If you already have a project and want to add Teams support, install the SDK dir
 
 <LanguageInclude section="manual-install" />
 
-Then initialize the Teams app with your existing server:
-
 <LanguageInclude section="manual-code" />
-
-`app.initialize()` registers the Teams endpoint on your server without starting a new one — you keep full control of your server lifecycle.
 
 <LanguageInclude section="manual-more" />
 

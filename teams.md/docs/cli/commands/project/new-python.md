@@ -11,14 +11,14 @@ Create a new Python Teams app
 ## Usage
 
 ```
-teams project new python <name> [options]
+teams project new python [name] [options]
 ```
 
 ## Arguments
 
 | Argument | Description | Required |
 |----------|-------------|----------|
-| `name` | App name | Yes |
+| `name` | Project name | No |
 
 ## Options
 

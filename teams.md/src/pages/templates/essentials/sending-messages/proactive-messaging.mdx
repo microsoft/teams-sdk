@@ -7,7 +7,7 @@ summary: Learn how to send proactive messages to users without waiting for them 
 
 # Proactive Messaging
 
-In [Sending Messages](./), you were shown how to respond to an event when it happens. However, there are times when you want to send a message to the user without them sending a message first. This is called proactive messaging. You can do this by using the `send` method in the `app` instance. This approach is useful for sending notifications or reminders to the user.
+In [Sending Messages](./), you were shown how to respond to an event when it happens. However, there are times when you want to send a message to the user without them sending a message first. This is called proactive messaging. You can do this by using the <LanguageInclude content={{"csharp": "`SendAsync`", "typescript": "`send`", "python": "`send`"}} /> method on your app instance. This approach is useful for sending notifications or reminders to the user.
 
 The main thing to note is that you need to have the <LanguageInclude section="conversation-id-field" /> of the chat or channel that you want to send the message to. It's a good idea to store this value somewhere from an activity handler so that you can use it for proactive messaging later.
 
@@ -23,8 +23,8 @@ In this example, you see how to get the <LanguageInclude section="conversation-i
 
 ## Targeted Proactive Messages
 
-:::info[Coming Soon]
-Targeted messages are coming soon in May 2026.
+:::info[Preview]
+Targeted messages are available in public preview. General availability is planned for a future release.
 :::
 
 Targeted messages, also known as ephemeral messages, are delivered to a specific user in a shared conversation. From a single user's perspective, they appear as regular inline messages in a conversation. Other participants won't see these messages.

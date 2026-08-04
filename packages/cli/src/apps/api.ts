@@ -1,12 +1,13 @@
 import AdmZip from 'adm-zip';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { AppSummary, AppDetails, AppBot } from './types.js';
+import type { AppSummary, AppDetails } from './types.js';
 import { importAppPackage } from './tdp.js';
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
 import { bumpPatchVersion, stableStringify } from '../utils/version.js';
 import { staticsDir } from '../project/paths.js';
+import { getCachedAppDetails, setCachedAppDetails } from './app-details-cache.js';
 
 /**
  * Teams app manifest.json structure (subset of fields we care about)
@@ -152,8 +153,21 @@ export async function downloadAppPackage(token: string, appId: string): Promise<
 /**
  * Fetch full app details using the v2 API endpoint.
  * Returns all editable fields plus internal properties that must be preserved on update.
+ *
+ * Results are cached in-memory for the lifetime of the process (see
+ * `app-details-cache.ts`). Pass `{ force: true }` to bypass the cache and read
+ * fresh from the server.
  */
-export async function fetchAppDetailsV2(token: string, teamsAppId: string): Promise<AppDetails> {
+export async function fetchAppDetailsV2(
+  token: string,
+  teamsAppId: string,
+  options?: { force?: boolean }
+): Promise<AppDetails> {
+  if (!options?.force) {
+    const cached = getCachedAppDetails(teamsAppId);
+    if (cached) return cached;
+  }
+
   const response = await apiFetch(`${TDP_BASE_URL}/appdefinitions/v2/${teamsAppId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -162,7 +176,9 @@ export async function fetchAppDetailsV2(token: string, teamsAppId: string): Prom
     throw new Error(`Failed to fetch app details: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  const details = (await response.json()) as AppDetails;
+  setCachedAppDetails(teamsAppId, details);
+  return details;
 }
 
 export interface UpdateAppDetailsResult extends AppDetails {
@@ -223,6 +239,7 @@ export async function updateAppDetails(
   }
 
   const details = (await response.json()) as AppDetails;
+  setCachedAppDetails(teamsAppId, details);
   return { ...details, versionBumped, previousVersion };
 }
 

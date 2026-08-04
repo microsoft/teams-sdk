@@ -26,7 +26,7 @@ teams app create [options]
 | `--azure` | [OPTIONAL] Create bot in Azure (requires az CLI) |
 | `--teams-managed` | [OPTIONAL] Create bot managed by Teams (default) |
 | `--service-management-reference <id>` | [OPTIONAL] ServiceTree service ID for Microsoft Entra app attribution |
-| `--single-tenant` | [OPTIONAL] Create a single-tenant Microsoft Entra app |
+| `--sign-in-audience <audience>` | [OPTIONAL] Microsoft Entra sign-in audience: myOrg or multipleOrgs |
 | `--subscription <id>` | [OPTIONAL] Azure subscription ID (defaults to az CLI default) |
 | `--resource-group <name>` | Azure resource group (required for --azure) |
 | `--create-resource-group` | [OPTIONAL] Create the resource group if it doesn't exist |
@@ -95,10 +95,10 @@ Only `CLIENT_ID` and `TENANT_ID` are output. You can generate a secret later wit
 
 ### Service-Attributed Apps
 
-Some tenants require new Microsoft Entra app registrations to be attributed to a service. Use `--service-management-reference` with the ServiceTree service ID, and `--single-tenant` when tenant policy requires a single-tenant app:
+Some tenants require new Microsoft Entra app registrations to be attributed to a service. Use `--service-management-reference` with the ServiceTree service ID, and `--sign-in-audience myOrg` when tenant policy requires a single-tenant app:
 
 ```bash
-teams app create --name "My Bot" --service-management-reference <service-id> --single-tenant --no-secret
+teams app create --name "My Bot" --service-management-reference <service-id> --sign-in-audience myOrg --no-secret
 ```
 
 ### Output

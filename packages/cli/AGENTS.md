@@ -130,7 +130,6 @@ Before creating a PR:
 
 Create AAD apps via TDP's `/aadapp/v2` endpoint (`createAadAppViaTdp` in `src/apps/tdp.ts`), NOT via Graph API directly. TDP's backend creates the service principal server-side, which is required for single-tenant bot registration.
 
-- `signInAudience`: Defaults to `AzureADMultipleOrgs`; `teams app create --single-tenant` uses `AzureADMyOrg` for tenants that require single-tenant app registrations.
 - `isSingleTenant`: Always `true` on bot registration (SFI requirement)
 - TDP returns a different `id` than Graph's object ID — use `getAadAppByClientId` to look up the Graph object ID before calling `addPassword`
 - Graph replication lag may require retries after TDP creates the app

@@ -37,6 +37,7 @@ async def handle_profile_command(ctx: ActivityContext[MessageActivity]):
 
     graph = ctx.user_graph
     # Fetch user profile
+    me = None
     if graph:
         me = await graph.me.get()
 

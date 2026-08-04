@@ -6,14 +6,12 @@ N/A
 
 ```
 quote-agent/
-|── appPackage/       # Teams app package files
 ├── src/
 │   └── index.ts      # Main application code
 ```
 
 <!-- project-structure-description -->
 
-- **appPackage/**: Contains the Teams app package files, including the `manifest.json` file and icons. This is required for [sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) the app into Teams for testing. The app manifest defines the app's metadata, capabilities, and permissions.
 - **src/**: Contains the main application code. The `index.ts` file is the entry point for your application.
 
 <!-- app-class-code -->
@@ -25,13 +23,15 @@ import { ConsoleLogger } from '@microsoft/teams.common/logging';
 const app = new App();
 ```
 
-<!-- plugin-events -->
+The app configuration includes a variety of options that allow you to customize its behavior, including controlling the underlying server, authentication, and other settings.
 
-(onActivity, onActivitySent, etc.)
 
-<!-- local-test-note -->
+<!-- plugins  -->
+Plugins are a core part of the Teams SDK. They allow you to hook into various lifecycles of the application. The lifecycles include server events (start, stop, initialize, etc.), and also Teams Activity events (onActivity, onActivitySent, etc.)
 
-To test your agent locally without sideloading into Teams, run the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)** alongside your agent. The playground is a separate CLI tool and does not require a plugin in your app code.
+<!-- plugins-note -->
+
+N/A
 
 <!-- message-handling-code -->
 

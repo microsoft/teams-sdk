@@ -4,7 +4,7 @@ import { App } from '@microsoft/teams.apps';
 import { ConsoleLogger } from '@microsoft/teams.common/logging';
 
 const app = new App({
-  logger: new ConsoleLogger('@tests/tab', { level: 'debug' }),
+  logger: new ConsoleLogger('tab', { level: 'debug' }),
 });
 
 app.tab('test', path.resolve('dist/client'));
@@ -22,7 +22,7 @@ app.function<{}, { message: string }>(
 
 app.on('message', async ({ activity, reply }) => {
   // simple echo bot
-  reply(`You said: ${activity.text}`);
+  await reply(`You said: ${activity.text}`);
 });
 
 app.start(process.env.PORT || 3978).catch(console.error);

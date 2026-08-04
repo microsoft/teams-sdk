@@ -3,6 +3,8 @@ import pc from 'picocolors';
 import type { AppSummary, AppDetails } from './types.js';
 import { fetchApp, fetchAppDetailsV2 } from './api.js';
 import { fetchBot } from './tdp.js';
+import { getCachedAppDetails } from './app-details-cache.js';
+import { getCachedBot } from './bot-cache.js';
 import { logger } from '../utils/logger.js';
 import { openInBrowser, printLinkBanner } from '../utils/browser.js';
 import { createSilentSpinner } from '../utils/spinner.js';
@@ -22,7 +24,15 @@ export async function fetchAppDetail(
   token: string,
   silent = false
 ): Promise<{ appDetails: AppDetails; endpoint: string | null }> {
-  const spinner = createSilentSpinner('Fetching details...', silent).start();
+  // Skip the spinner entirely when everything we need is already cached — no
+  // network round-trip means there's nothing to wait on.
+  const cachedDetails = getCachedAppDetails(appSummary.teamsAppId);
+  const cachedBotId = cachedDetails?.bots?.[0]?.botId;
+  const warm =
+    cachedDetails !== undefined &&
+    (cachedBotId === undefined || getCachedBot(cachedBotId) !== undefined);
+
+  const spinner = createSilentSpinner('Fetching details...', silent || warm).start();
 
   let appDetails: AppDetails;
   try {

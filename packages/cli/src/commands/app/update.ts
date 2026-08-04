@@ -10,7 +10,6 @@ import {
   fetchAppDetailsV2,
   showBasicInfoEditor,
   getBotLocation,
-  createTdpBotHandler,
   createAzureBotHandler,
   discoverAzureBot,
   extractDomain,

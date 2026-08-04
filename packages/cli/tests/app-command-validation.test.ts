@@ -238,7 +238,7 @@ describe('shared command validation', () => {
     );
   });
 
-  it('creates an app with service management reference and single tenant audience', async () => {
+  it('creates an app with service management reference and myOrg audience', async () => {
     const { appCreateCommand } = await import('../src/commands/app/create.js');
 
     await appCreateCommand.parseAsync(
@@ -249,7 +249,8 @@ describe('shared command validation', () => {
         'https://example.com/api/messages',
         '--service-management-reference',
         'service-tree-id',
-        '--single-tenant',
+        '--sign-in-audience',
+        'myOrg',
         '--no-secret',
         '--json',
       ],
@@ -291,6 +292,26 @@ describe('shared command validation', () => {
         },
       })
     );
+  });
+
+  it('rejects invalid sign-in audience values before auth', async () => {
+    const { appCreateCommand } = await import('../src/commands/app/create.js');
+
+    await expect(
+      appCreateCommand.parseAsync(
+        ['--name', 'Test App', '--sign-in-audience', 'personal', '--json'],
+        { from: 'user' }
+      )
+    ).rejects.toThrow('process.exit(1)');
+
+    expect(jsonOutput).toEqual({
+      ok: false,
+      error: {
+        code: 'VALIDATION_FORMAT',
+        message: '--sign-in-audience must be myOrg or multipleOrgs.',
+      },
+    });
+    expect(mockGetAccount).not.toHaveBeenCalled();
   });
 
   it('uses normalized values throughout app update', async () => {

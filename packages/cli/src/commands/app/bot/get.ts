@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import pc from 'picocolors';
 import { createSilentSpinner } from '../../../utils/spinner.js';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../../auth/index.js';
-import { fetchApp, fetchAppDetailsV2, getBotLocation } from '../../../apps/index.js';
+import { fetchAppDetailsV2, getBotLocation } from '../../../apps/index.js';
 import { pickApp } from '../../../utils/app-picker.js';
 import { isInteractive } from '../../../utils/interactive.js';
 import { CliError, wrapAction } from '../../../utils/errors.js';

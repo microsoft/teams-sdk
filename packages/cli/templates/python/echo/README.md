@@ -6,7 +6,6 @@ This is a minimal Microsoft Teams echo bot template using [microsoft-teams](http
 
 - `src/main.py`: Main application code for the Teams bot.
 - `pyproject.toml`: Project dependencies and metadata.
-- `apppackage/`: Teams app manifest and related files.
 
 ## Getting Started
 

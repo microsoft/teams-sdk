@@ -1,0 +1,243 @@
+name: CI - Templates
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'packages/cli/templates/**'
+      - 'packages/cli/**'
+      - '.github/workflows/ci-templates.yml'
+
+jobs:
+  templates-typescript:
+    name: TypeScript template (${{ matrix.template }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [echo, graph, tab]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CLI
+        run: npx turbo build --filter=@microsoft/teams.cli
+
+      - name: Scaffold template
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          APP_DIR="$(node "$GITHUB_WORKSPACE/packages/cli/dist/index.js" project new typescript app --template ${{ matrix.template }} --json | jq -r '.path')"
+          echo "Scaffolded to $APP_DIR"
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+
+      - name: Install app dependencies
+        run: npm install
+        working-directory: ${{ env.APP_DIR }}
+
+      - name: Build app
+        run: npm run build
+        working-directory: ${{ env.APP_DIR }}
+
+      - name: Typecheck app
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -euo pipefail
+          # The tsup build does NOT typecheck, so run tsc explicitly.
+          if [ "${{ matrix.template }}" = "tab" ]; then
+            # tab uses project references (tsconfig.json + tsconfig.app.json + tsconfig.node.json)
+            npx tsc -b --force
+          else
+            npx tsc --noEmit
+          fi
+
+      - name: Smoke boot
+        if: matrix.template == 'echo'
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -uo pipefail
+          npm start > "$RUNNER_TEMP/boot.log" 2>&1 &
+          BOOT_PID=$!
+          cleanup() {
+            kill "$BOOT_PID" 2>/dev/null || true
+            lsof -ti tcp:3978 | xargs -r kill 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          bound=0
+          for i in $(seq 1 30); do
+            if nc -z localhost 3978 2>/dev/null; then
+              bound=1
+              echo "Port 3978 bound after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          echo "--- boot log ---"
+          cat "$RUNNER_TEMP/boot.log" || true
+          if [ "$bound" -ne 1 ]; then
+            echo "::error::TypeScript echo app did not bind port 3978"
+            exit 1
+          fi
+
+  templates-csharp:
+    name: C# template (${{ matrix.template }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [echo]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CLI
+        run: npx turbo build --filter=@microsoft/teams.cli
+
+      - name: Scaffold template
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          APP_DIR="$(node "$GITHUB_WORKSPACE/packages/cli/dist/index.js" project new csharp app --template ${{ matrix.template }} --json | jq -r '.path')"
+          echo "Scaffolded to $APP_DIR"
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+
+      - name: Build app
+        run: dotnet build
+        working-directory: ${{ env.APP_DIR }}
+
+      - name: Smoke boot
+        if: matrix.template == 'echo'
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -uo pipefail
+          CSPROJ="$(find . -name '*.csproj' | head -1)"
+          echo "Running $CSPROJ"
+          dotnet run --project "$CSPROJ" > "$RUNNER_TEMP/boot.log" 2>&1 &
+          BOOT_PID=$!
+          cleanup() {
+            kill "$BOOT_PID" 2>/dev/null || true
+            lsof -ti tcp:3978 | xargs -r kill 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          bound=0
+          for i in $(seq 1 40); do
+            if nc -z localhost 3978 2>/dev/null; then
+              bound=1
+              echo "Port 3978 bound after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          echo "--- boot log ---"
+          cat "$RUNNER_TEMP/boot.log" || true
+          if [ "$bound" -ne 1 ]; then
+            echo "::error::C# echo app did not bind port 3978"
+            exit 1
+          fi
+
+  templates-python:
+    name: Python template (${{ matrix.template }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [echo, graph]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CLI
+        run: npx turbo build --filter=@microsoft/teams.cli
+
+      - name: Scaffold template
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          APP_DIR="$(node "$GITHUB_WORKSPACE/packages/cli/dist/index.js" project new python app --template ${{ matrix.template }} --json | jq -r '.path')"
+          echo "Scaffolded to $APP_DIR"
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+
+      - name: Install app (editable) + pyright
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -euo pipefail
+          uv venv
+          uv pip install -e .
+          # pyright lives in the pyproject dev dependency-group; install it explicitly.
+          uv pip install pyright
+
+      - name: Typecheck app
+        working-directory: ${{ env.APP_DIR }}
+        run: uv run pyright
+
+      - name: Smoke boot
+        if: matrix.template == 'echo'
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -uo pipefail
+          uv run python -m src.main > "$RUNNER_TEMP/boot.log" 2>&1 &
+          BOOT_PID=$!
+          cleanup() {
+            kill "$BOOT_PID" 2>/dev/null || true
+            lsof -ti tcp:3978 | xargs -r kill 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          bound=0
+          for i in $(seq 1 40); do
+            if nc -z localhost 3978 2>/dev/null; then
+              bound=1
+              echo "Port 3978 bound after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          echo "--- boot log ---"
+          cat "$RUNNER_TEMP/boot.log" || true
+          if [ "$bound" -ne 1 ]; then
+            echo "::error::Python echo app did not bind port 3978"
+            exit 1
+          fi
