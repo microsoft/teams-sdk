@@ -6,6 +6,14 @@ app.on('message', async ({ activity, send }) => {
 });
 ```
 
+<!-- outbound-activity-migration -->
+
+:::note[Outbound activity types]
+For new outbound activities, construct `MessageActivityInput` or `TypingActivityInput`. The inbound activity passed to a handler remains `MessageActivity` or `TypingActivity`.
+
+The legacy outbound builders are still accepted by deprecated send overloads for backward compatibility, but migrate new and updated code to the `*Input` types. If you construct streamed activities directly, use `addStreamFinal()` for the final message and don't set `streamSequence` on it; final messages must omit that field.
+:::
+
 <!-- signin-example -->
 
 ```typescript
@@ -35,7 +43,7 @@ app.on('message', async ({ activity, stream }) => {
 
 ```typescript
 app.on('message', async ({ send, activity }) => {
-  await send(new MessageActivity('hi!').addMention(activity.from));
+  await send(new MessageActivityInput('hi!').addMention(activity.from));
 });
 ```
 
@@ -46,12 +54,12 @@ app.on('message', async ({ send, activity }) => {
 <!-- targeted-send-example -->
 
 ```typescript
-import { MessageActivity } from '@microsoft/teams.api';
+import { MessageActivityInput } from '@microsoft/teams.api';
 
 app.on('message', async ({ send, activity }) => {
   // Using withRecipient with isTargeted=true explicitly targets the specified recipient
   await send(
-    new MessageActivity('This message is only visible to you!')
+    new MessageActivityInput('This message is only visible to you!')
       .withRecipient(activity.from, true)
   );
 });
@@ -63,7 +71,7 @@ N/A
 <!-- prompt-preview-proactive-example -->
 
 ```typescript
-import { Account, MessageActivity } from '@microsoft/teams.api';
+import { Account, MessageActivityInput } from '@microsoft/teams.api';
 
 const targetedMessageId = '1772050244572';
 const conversationId = '19:groupchat-id@thread.v2';
@@ -72,7 +80,7 @@ const userAccount: Account = {
   name: 'Adele Vance',
 };
 
-const targetedMessage = new MessageActivity('Here is the result!')
+const targetedMessage = new MessageActivityInput('Here is the result!')
   .addTargetedMessageInfo(targetedMessageId)
   .withRecipient(userAccount, true);
 
@@ -80,7 +88,7 @@ const targetedMessage = new MessageActivity('Here is the result!')
 await app.send(conversationId, targetedMessage);
 
 // OR public reply (everyone sees it)
-const publicMessage = new MessageActivity('Here is the result!')
+const publicMessage = new MessageActivityInput('Here is the result!')
   .addTargetedMessageInfo(targetedMessageId);
 await app.send(conversationId, publicMessage);
 ```
@@ -142,25 +150,25 @@ app.on('message', async ({ quote }) => {
 <!-- quoted-replies-builder-example -->
 
 ```typescript
-import { MessageActivity } from '@microsoft/teams.api';
+import { MessageActivityInput } from '@microsoft/teams.api';
 
 const parentMessageId = '1772050244572';
 const firstMessageId = '1772050244573';
 const secondMessageId = '1772050244574';
 
 // Single quote with response below it
-let msg = new MessageActivity()
+let msg = new MessageActivityInput()
   .addQuote(parentMessageId, 'Here is my response');
 await app.send(conversationId, msg);
 
 // Multiple quotes with interleaved responses
-msg = new MessageActivity()
+msg = new MessageActivityInput()
   .addQuote(firstMessageId, 'response to first')
   .addQuote(secondMessageId, 'response to second');
 await app.send(conversationId, msg);
 
 // Grouped quotes — omit response to group quotes together
-msg = new MessageActivity('see below for previous messages')
+msg = new MessageActivityInput('see below for previous messages')
   .addQuote(firstMessageId)
   .addQuote(secondMessageId, 'response to both');
 await app.send(conversationId, msg);

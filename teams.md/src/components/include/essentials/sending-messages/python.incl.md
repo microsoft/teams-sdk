@@ -6,6 +6,10 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     await ctx.send(f"You said '{ctx.activity.text}'")
 ```
 
+<!-- outbound-activity-migration -->
+
+N/A
+
 <!-- signin-example -->
 
 ```python

@@ -23,6 +23,10 @@ teams.OnMessage(async (context, cancellationToken) =>
   </TabItem>
 </Tabs>
 
+<!-- outbound-activity-migration -->
+
+N/A
+
 <!-- signin-example -->
 
 <Tabs groupId="csharp-sdk-version" defaultValue="core">

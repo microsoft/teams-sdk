@@ -204,7 +204,7 @@
     // highlight-error-end
     // highlight-success-start
 +    app.on('message', async ({ send }) => {
-+      await send(new MessageActivity().addAttachment(...));
++      await send(new MessageActivityInput().addAttachments(...));
 +    });
     // highlight-success-end
     ```
@@ -235,7 +235,7 @@
 
     app.on('message', async ({ send }) => {
       // highlight-next-line
-      await send(new MessageActivity().addAttachment(...));
+      await send(new MessageActivityInput().addAttachments(...));
     });
     ```
   </TabItem>
