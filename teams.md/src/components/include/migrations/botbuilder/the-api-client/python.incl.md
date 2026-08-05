@@ -51,7 +51,7 @@
 
 | BotBuilder (TeamsInfo) | Teams SDK (ApiClient) |
 |------------------------|----------------------|
-| `TeamsInfo.getMembers(context, user_id)` | `api.conversations.get_member_by_id(conversation_id, user_id)` |
+| `TeamsInfo.get_member(context, user_id)` | `api.conversations.get_member_by_id(conversation_id, user_id)` |
 | `TeamsInfo.get_team_details(context, team_id)` | `api.teams.get_by_id(team_id)` |
 | `TeamsInfo.get_meeting_info(context, meeting_id)` | `api.meetings.get_by_id(meeting_id)` |
 | `TeamsInfo.send_message_to_teams_channel(context, team_id, message)` | `api.conversations.create(CreateConversationParams)` then `api.conversations.create_activity(conversation_id, activity)` |
