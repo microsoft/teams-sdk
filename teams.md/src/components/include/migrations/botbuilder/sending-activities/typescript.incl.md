@@ -184,8 +184,10 @@
     ```typescript
     // highlight-error-line
 -    import { TeamsActivityHandler } from 'botbuilder';
-    // highlight-success-line
+    // highlight-success-start
++    import { MessageActivityInput } from '@microsoft/teams.api';
 +    import { AdaptiveCard, TextBlock } from '@microsoft/teams.cards';
+    // highlight-success-end
 
     // highlight-error-start
 -    export class ActivityHandler extends TeamsActivityHandler {
@@ -232,6 +234,7 @@
   </TabItem>
   <TabItem value="Teams SDK">
     ```typescript showLineNumbers
+    import { MessageActivityInput } from '@microsoft/teams.api';
 
     app.on('message', async ({ send }) => {
       // highlight-next-line
