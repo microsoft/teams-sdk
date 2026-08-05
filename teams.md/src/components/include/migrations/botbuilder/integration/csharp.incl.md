@@ -1,15 +1,16 @@
+<!-- plugin-overview -->
+
+N/A
+
 <!-- example -->
 
 <Tabs>
   <TabItem value="Program.cs" default>
     ```csharp
 
+    using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Integration.AspNet.Core;
-    using Microsoft.Teams.Api.Activities;
-    using Microsoft.Teams.Apps;
-    using Microsoft.Teams.Apps.Activities;
-    using Microsoft.Teams.Apps.Annotations;
-    using Microsoft.Teams.Plugins.AspNetCore.Extensions;
+    using Microsoft.Teams.Apps.BotBuilder;
 
     public static partial class Program
     {
@@ -18,7 +19,6 @@
             var builder = WebApplication.CreateBuilder(args);
             builder
                 .AddTeams()
-                // highlight-next-line
                 .AddBotBuilder<Bot, BotBuilderAdapter, ConfigurationBotFrameworkAuthentication>();
 
             var app = builder.Build();

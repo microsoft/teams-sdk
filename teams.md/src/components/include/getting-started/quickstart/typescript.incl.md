@@ -80,6 +80,7 @@ The playground opens at [http://localhost:56150](http://localhost:56150). Send a
 ```sh
 npm i @microsoft/teams.apps
 ```
+Then initialize the Teams app with your existing server:
 
 <!-- manual-code -->
 
@@ -109,6 +110,7 @@ await app.initialize();
 // Start your server as usual
 server.listen(3978);
 ```
+`app.initialize()` registers the Teams endpoint on your server without starting a new one — you keep full control of your server lifecycle.
 
 <!-- manual-more -->
 

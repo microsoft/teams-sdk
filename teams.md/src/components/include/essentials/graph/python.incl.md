@@ -14,10 +14,6 @@ N/A
 
 `app.graph`
 
-<!-- app-access-method -->
-
-to call the endpoint of your choice
-
 <!-- app-graph-example -->
 
 ```python
@@ -29,6 +25,9 @@ print(f"User Display Name: {user.display_name}")
 print(f"User Email: {user.mail}")
 print(f"User Job Title: {user.job_title}")
 ```
+:::tip
+You also have access to the `app_graph` object in the activity handler. This is equivalent to `app.graph`.
+:::
 
 <!-- user-graph-intro -->
 
@@ -45,18 +44,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     print(f"User Email: {user.mail}")
     print(f"User Job Title: {user.job_title}")
 ```
-
-<!-- user-graph-object -->
-
-`user_graph`
-
-<!-- app-graph-in-handler -->
-
-`app_graph`
-
-<!-- app-graph-reference -->
-
-`app.graph`
+Here, the "user_graph" object is a scoped graph client for the user that sent the message.
 
 <!-- advanced-sections -->
 

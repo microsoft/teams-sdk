@@ -77,23 +77,66 @@ export function removeEnvVar(filePath: string, key: string): void {
 
 // --- internal helpers ---
 
-function setNestedValue(obj: Record<string, unknown>, dotPath: string, value?: unknown): void {
+type JsonObject = Record<string, unknown>;
+type JsonArray = unknown[];
+type JsonContainer = JsonObject | JsonArray;
+
+function setNestedValue(obj: JsonObject, dotPath: string, value?: unknown): void {
   const parts = dotPath.split('.');
-  let current: Record<string, unknown> = obj;
+  let current: JsonContainer = obj;
 
   for (let i = 0; i < parts.length; i++) {
     const key = parts[i];
-    if (i === parts.length - 1) {
+    const isLast = i === parts.length - 1;
+
+    if (Array.isArray(current)) {
+      const index = parseArrayIndex(key, dotPath);
+      if (isLast) {
+        if (value === undefined) {
+          current.splice(index, 1);
+        } else {
+          current[index] = value;
+        }
+      } else {
+        const existing = current[index];
+        if (!isJsonContainer(existing)) {
+          current[index] = createContainer(parts[i + 1]);
+        }
+        current = current[index] as JsonContainer;
+      }
+      continue;
+    }
+
+    if (isLast) {
       if (value === undefined) {
         delete current[key];
       } else {
         current[key] = value;
       }
     } else {
-      if (!current[key] || typeof current[key] !== 'object') {
-        current[key] = {};
+      if (!isJsonContainer(current[key])) {
+        current[key] = createContainer(parts[i + 1]);
       }
-      current = current[key] as Record<string, unknown>;
+      current = current[key] as JsonContainer;
     }
   }
+}
+
+function isJsonContainer(value: unknown): value is JsonContainer {
+  return typeof value === 'object' && value !== null;
+}
+
+function createContainer(nextKey: string): JsonContainer {
+  return isArrayIndex(nextKey) ? [] : {};
+}
+
+function isArrayIndex(key: string): boolean {
+  return /^(0|[1-9]\d*)$/.test(key);
+}
+
+function parseArrayIndex(key: string, dotPath: string): number {
+  if (!isArrayIndex(key)) {
+    throw new Error(`Expected array index in path "${dotPath}", got "${key}".`);
+  }
+  return Number(key);
 }

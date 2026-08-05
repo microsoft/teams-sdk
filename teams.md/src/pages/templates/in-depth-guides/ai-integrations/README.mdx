@@ -2,7 +2,7 @@
 sidebar_position: 1
 title: AI Integrations
 summary: Plug AI agents into Teams apps — bring your own framework or the OpenAI SDK, add MCP tools and servers, and coordinate bots with A2A.
-languages: ['python', 'typescript']
+languages: ['python', 'typescript', 'csharp']
 ---
 
 import Language from '@site/src/components/Language';
@@ -13,6 +13,14 @@ import Language from '@site/src/components/Language';
 
 :::warning[Our AI libraries are deprecated]
 The Teams SDK has deprecated its own AI libraries — the `@microsoft/teams.ai` packages (`ChatPrompt`, `Model`, and the older `@microsoft/teams.mcp` / `@microsoft/teams.a2a` plugins) — in favor of dedicated AI frameworks. Use the pattern shown in these guides instead: bring the OpenAI SDK (or any framework you like), and wire MCP and A2A directly into your Teams app.
+:::
+
+</Language>
+
+<Language language="csharp">
+
+:::warning[SDK 2.0 AI libraries are deprecated]
+For .NET, AI-specific libraries and older patterns from SDK 2.0 are deprecated. In SDK 2.1, use `Microsoft.Teams.Apps` as the Teams transport/runtime layer and integrate your preferred AI stack (for example Microsoft Agent Framework, OpenAI SDK, MCP, and A2A) in your handlers.
 :::
 
 </Language>
