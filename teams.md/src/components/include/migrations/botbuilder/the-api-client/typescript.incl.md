@@ -32,7 +32,7 @@
   // highlight-error-end
   // highlight-success-start
 +  app.on('message', async ({ api, activity }) => {
-+    const members = await api.conversations.members(activity.conversation.id).get();
++    const members = await api.conversations.getMembers(activity.conversation.id);
 +  });
   // highlight-success-end
   ```
@@ -67,7 +67,7 @@
 
     app.on('message', async ({ api, activity }) => {
       // highlight-next-line
-      const members = await api.conversations.members(activity.conversation.id).get();
+      const members = await api.conversations.getMembers(activity.conversation.id);
     });
     ```
   </TabItem>
@@ -77,7 +77,7 @@
 
 | BotBuilder (TeamsInfo) | Teams SDK (ApiClient) |
 |------------------------|----------------------|
-| `TeamsInfo.getMember(context, userId)` | `api.conversations.members(conversationId).getById(userId)` |
+| `TeamsInfo.getMember(context, userId)` | `api.conversations.getMemberById(conversationId, userId)` |
 | `TeamsInfo.getTeamDetails(context, teamId)` | `api.teams.getById(teamId)` |
 | `TeamsInfo.getMeetingInfo(context, meetingId)` | `api.meetings.getById(meetingId)` |
-| `TeamsInfo.sendMessageToTeamsChannel(context, teamId, message)` | `api.conversations.create(CreateConversationParams)` then `api.conversations.activities(conversationId).create(activity)` |
+| `TeamsInfo.sendMessageToTeamsChannel(context, teamId, message)` | `api.conversations.create(CreateConversationParams)` then `api.conversations.createActivity(conversationId, activity)` |

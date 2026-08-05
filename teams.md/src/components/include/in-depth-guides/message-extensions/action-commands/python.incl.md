@@ -149,7 +149,7 @@ from microsoft_teams.apps import ActivityContext
 @app.on_message_ext_open
 async def handle_message_ext_open(ctx: ActivityContext[MessageExtensionFetchTaskInvokeActivity]):
     conversation_id = ctx.activity.conversation.id
-    members = await ctx.api.conversations.members(conversation_id).get_all()
+    members = await ctx.api.conversations.get_members(conversation_id)
     card = create_conversation_members_card(members)
 
     card_info = CardTaskModuleTaskInfo(
