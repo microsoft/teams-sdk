@@ -2,7 +2,7 @@
 
 ```typescript
 import { ChatPrompt, IChatModel } from '@microsoft/teams.ai';
-import { ActivityLike, IMessageActivity, MessageActivity } from '@microsoft/teams.api';
+import { ActivityLike, IMessageActivity } from '@microsoft/teams.api';
 // ...
 
 // This store would ideally be persisted in a database
@@ -25,14 +25,14 @@ import { ChatPrompt, IChatModel } from '@microsoft/teams.ai';
 import {
   ActivityLike,
   IMessageActivity,
-  MessageActivity,
+  MessageActivityInput,
   SentActivity,
 } from '@microsoft/teams.api';
 // ...
 
 const { id: sentMessageId } = await send(
   result.content != null
-    ? new MessageActivity(result.content)
+    ? new MessageActivityInput(result.content)
         .addAiGenerated()
         /** Add feedback buttons via this method */
         .addFeedback()

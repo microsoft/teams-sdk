@@ -5,7 +5,6 @@
 <!-- install-handler-example -->
 
 ```typescript
-import { MessageActivity } from '@microsoft/teams.api';
 import { App } from '@microsoft/teams.apps';
 // ...
 
@@ -26,7 +25,7 @@ app.on('install.add', async ({ activity, send }) => {
 <!-- send-proactive-example -->
 
 ```typescript
-import { MessageActivity } from '@microsoft/teams.api';
+import { MessageActivityInput } from '@microsoft/teams.api';
 import { App } from '@microsoft/teams.apps';
 // ...
 
@@ -35,7 +34,7 @@ const sendProactiveNotification = async (userId: string) => {
   if (!conversationId) {
     return;
   }
-  const activity = new MessageActivity('Hey! It\'s been a while. How are you?');
+  const activity = new MessageActivityInput('Hey! It\'s been a while. How are you?');
   await app.send(conversationId, activity);
 };
 ```
@@ -43,13 +42,13 @@ const sendProactiveNotification = async (userId: string) => {
 <!-- targeted-proactive-example -->
 
 ```typescript
-import { MessageActivity, Account } from '@microsoft/teams.api';
+import { Account, MessageActivityInput } from '@microsoft/teams.api';
 
 // When sending proactively, you must provide an explicit recipient account
 const sendTargetedNotification = async (conversationId: string, recipient: Account) => {
   await app.send(
     conversationId,
-    new MessageActivity('This is a private notification just for you!')
+    new MessageActivityInput('This is a private notification just for you!')
       .withRecipient(recipient, true)
   );
 };

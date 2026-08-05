@@ -846,7 +846,7 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
 +
 +      await prompt.send(client.activity.text, {
 +        onChunk: (chunk) => {
-+          client.stream.emit(new MessageActivity(chunk));
++          client.stream.emit(new MessageActivityInput(chunk));
 +        },
 +      });
 +    });
@@ -860,7 +860,7 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
     ```ts
     import '@azure/openai/types';
     import { ChatPrompt, Message } from '@microsoft/teams.ai';
-    import { MessageActivity } from '@microsoft/teams.api';
+    import { MessageActivityInput } from '@microsoft/teams.api';
     import { App } from '@microsoft/teams.apps';
     import { LocalStorage } from '@microsoft/teams.common/storage';
     import { OpenAIChatModel } from '@microsoft/teams.openai';
@@ -923,7 +923,7 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
 
       await prompt.send(client.activity.text, {
         onChunk: (chunk) => {
-          client.stream.emit(new MessageActivity(chunk));
+          client.stream.emit(new MessageActivityInput(chunk));
         },
       });
     });
@@ -1068,7 +1068,7 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
 +    // Reply with message including feedback buttons
 +    app.on('message', async (client) => {
 +      await client.send(
-+        new MessageActivity('Hey, give me feedback!')
++        new MessageActivityInput('Hey, give me feedback!')
 +          .addAiGenerated() // AI generated label
 +          .addFeedback() // Feedback buttons
 +      );
@@ -1084,12 +1084,12 @@ When we created Teams SDK, LLM's didn't natively support tool calling or orchest
   </TabItem>
   <TabItem value="v2" label="Teams SDK v2">
     ```ts
-    import { MessageActivity } from '@microsoft/teams.api';
+    import { MessageActivityInput } from '@microsoft/teams.api';
 
     // Reply with message including feedback buttons
     app.on('message', async (client) => {
       await client.send(
-        new MessageActivity('Hey, give me feedback!')
+        new MessageActivityInput('Hey, give me feedback!')
           .addAiGenerated() // AI generated label
           .addFeedback() // Feedback buttons
       );
