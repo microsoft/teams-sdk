@@ -6,14 +6,6 @@ app.on('message', async ({ activity, send }) => {
 });
 ```
 
-<!-- outbound-activity-migration -->
-
-:::note[Outbound activity types]
-For new outbound activities, construct `MessageActivityInput` or `TypingActivityInput`. The inbound activity passed to a handler remains `MessageActivity` or `TypingActivity`.
-
-The legacy outbound builders are still accepted by deprecated send overloads for backward compatibility, but migrate new and updated code to the `*Input` types. If you construct streamed activities directly, use `addStreamFinal()` for the final message and don't set `streamSequence` on it; final messages must omit that field.
-:::
-
 <!-- signin-example -->
 
 ```typescript
