@@ -15,7 +15,7 @@ describe('C# scaffold template', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it('uses the .NET 2.1 preview package and hosting API', async () => {
+  it('uses the stable .NET 2.1 package and hosting API', async () => {
     await scaffoldProject({
       name: 'PokemonCatcher',
       language: 'csharp',
@@ -28,7 +28,7 @@ describe('C# scaffold template', () => {
     const program = fs.readFileSync(path.join(projectDir, 'Program.cs'), 'utf8');
 
     expect(csproj).toContain(
-      '<PackageReference Include="Microsoft.Teams.Apps" Version="2.1.0-preview.*" />'
+      '<PackageReference Include="Microsoft.Teams.Apps" Version="2.1.0" />'
     );
     expect(csproj).not.toContain('Microsoft.Teams.Plugins.AspNetCore');
     expect(program).toContain('builder.Services.AddTeamsBotApplication();');
