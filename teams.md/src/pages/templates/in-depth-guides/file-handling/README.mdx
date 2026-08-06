@@ -1,0 +1,27 @@
+---
+sidebar_position: 1
+title: 'File Handling'
+suppressLanguageIncludeWarning: true
+---
+
+# File Handling
+
+This section covers how your app receives files and reads their bytes.
+
+:::info[Preview]
+File handling is being rolled out incrementally. Today the SDK supports **receiving** uploaded files in personal (1:1) chats via the TypeScript, Python, and C# SDKs.
+:::
+
+## Files vs. attachments
+
+In personal scope, everything a user sends alongside a message arrives in `activity.attachments`: uploaded files, but also Adaptive Cards, `@mentions`, link previews, and other non-file content. A **file** is the specific subset of attachments that represents an uploaded document, one whose `contentType` is `file.download.info`.
+
+The `ctx.files` accessor is the uploaded-file view over that raw array. It maps each uploaded file to a lazy handle you can download from, and skips everything else. The original `activity.attachments` array is always available when you need the raw payload or a non-file attachment.
+
+## In this section
+
+- **[Receiving Files](./receiving-files)** — read files a user uploads to your app, stream or download their bytes, and handle unsupported scopes and expired links.
+
+## Resources
+
+- [Files in Teams bots](https://learn.microsoft.com/en-us/microsoftteams/platform/bots/how-to/bots-filesv4)
