@@ -67,7 +67,8 @@ byte[] buffer = new byte[8192];
 int read;
 while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
 {
-    // process each chunk (e.g. pipe to a parser)
+    // process only the bytes read this iteration (e.g. pipe to a parser)
+    ReadOnlyMemory<byte> chunk = buffer.AsMemory(0, read);
 }
 ```
 

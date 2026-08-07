@@ -62,7 +62,7 @@ For large files or streaming pipelines, `stream()` hands you the raw byte stream
 <LanguageInclude section="streaming" />
 
 :::note
-An <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} /> handle holds no cached bytes: each call to `download()`, `text()`, `stream()`, or `saveAs()` fetches the file again. To read the same file several ways, call `download()` once and reuse the returned snapshot (see [Reusing a downloaded snapshot](#reusing-a-downloaded-snapshot)). This matters because a file's download link is short-lived and can expire between reads.
+An <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} /> handle holds no cached bytes: each call to `download()`, `text()`, `stream()`, or `saveAs()` fetches the file again. To read the same file several ways, call `download()` once and reuse the returned snapshot (see [Reusing a downloaded snapshot](#reusing-a-downloaded-snapshot)). This matters because a file's download link is short-lived: the URL embeds its own pre-authorized `tempauth` credential, which can expire between reads.
 :::
 
 ## File metadata
