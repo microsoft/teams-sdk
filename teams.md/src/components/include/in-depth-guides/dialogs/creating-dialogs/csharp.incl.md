@@ -4,6 +4,12 @@ To open a dialog, you need to supply a special type of action to the Adaptive Ca
 
 <!-- entry-point-code -->
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
 ```csharp
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
@@ -54,11 +60,65 @@ private static AdaptiveCard CreateDialogLauncherCard()
 }
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (current)" default>
+
+```csharp
+using Microsoft.Teams.Cards;
+
+//...
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    // Create the launcher adaptive card
+    var card = CreateDialogLauncherCard();
+    await context.SendAsync(card, cancellationToken);
+});
+
+private static AdaptiveCard CreateDialogLauncherCard()
+{
+    var card = new AdaptiveCard
+    {
+        Body = new List<CardElement>
+        {
+            new TextBlock("Select the examples you want to see!")
+            {
+                Size = TextSize.Large,
+                Weight = TextWeight.Bolder
+            }
+        },
+        Actions = new List<Action>
+        {
+            new TaskFetchAction(new { opendialogtype = "simple_form" })
+            {
+                Title = "Simple form test"
+            },
+            new TaskFetchAction(new { opendialogtype = "webpage_dialog" })
+            {
+                Title = "Webpage Dialog"
+            },
+            new TaskFetchAction(new { opendialogtype = "multi_step_form" })
+            {
+                Title = "Multi-step Form"
+            }
+        }
+    };
+
+    return card;
+}
+```
+
+</TabItem>
+</Tabs>
+
 <!-- dialog-open-intro -->
 
 Once an action is executed to open a dialog, the Teams client will send an event to the agent to request what the content of the dialog should be. When using `TaskFetchAction`, the data is nested inside an `MsTeams` property structure.
 
 <!-- dialog-open-code -->
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 using System.Text.Json;
@@ -99,7 +159,51 @@ public Microsoft.Teams.Api.TaskModules.Response OnTaskFetch([Context] Tasks.Fetc
 }
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (current)" default>
+
+```csharp
+using System.Text.Json;
+using Microsoft.Teams.Apps.TaskModules;
+
+//...
+
+teams.OnTaskFetch(async (context, cancellationToken) =>
+{
+    var data = context.Activity.Value?.Data as JsonElement?;
+    if (data == null)
+    {
+        return TaskModuleResponse.CreateBuilder()
+            .WithType(TaskModuleResponseTypes.Message)
+            .WithMessage("No data found in the activity value")
+            .Build();
+    }
+
+    var dialogType = data.Value.TryGetProperty("opendialogtype", out var dialogTypeElement) && dialogTypeElement.ValueKind == JsonValueKind.String
+        ? dialogTypeElement.GetString()
+        : null;
+
+    return dialogType switch
+    {
+        "simple_form" => CreateSimpleFormDialog(),
+        "webpage_dialog" => CreateWebpageDialog(_configuration, context.Log),
+        "multi_step_form" => CreateMultiStepFormDialog(),
+        "mixed_example" => CreateMixedExampleDialog(),
+        _ => TaskModuleResponse.CreateBuilder()
+            .WithType(TaskModuleResponseTypes.Message)
+            .WithMessage("Unknown dialog type")
+            .Build()
+    };
+});
+```
+
+</TabItem>
+</Tabs>
+
 <!-- rendering-card-code -->
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 using System.Text.Json;
@@ -167,7 +271,81 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateSimpleFormDialog()
 }
 ```
 
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (current)" default>
+
+```csharp
+using System.Text.Json;
+using Microsoft.Teams.Apps.Schema;
+using Microsoft.Teams.Apps.TaskModules;
+using Microsoft.Teams.Cards;
+
+//...
+
+private static TaskModuleResponse CreateSimpleFormDialog()
+{
+    var choices = new List<Choice>
+    {
+        new Choice { Title = "Option 1", Value = "opt1" },
+        new Choice { Title = "Option 2", Value = "opt2" },
+        new Choice { Title = "Option 3", Value = "opt3" }
+    };
+
+    var dialogCard = new AdaptiveCard
+    {
+        Body = new List<CardElement>
+        {
+            new TextBlock("This is a simple form")
+            {
+                Size = TextSize.Large,
+                Weight = TextWeight.Bolder
+            },
+            new TextInput
+            {
+                Id = "name",
+                Label = "Name",
+                Placeholder = "Enter your name",
+                IsRequired = true
+            },
+            new ChoiceSetInput
+            {
+                Id = "preference",
+                Label = "Select your preference",
+                Choices = choices,
+                Style = StyleEnum.Compact
+            }
+        },
+        Actions = new List<Action>
+        {
+            new SubmitAction
+            {
+                Title = "Submit",
+                Data = new { submissiondialogtype = "simple_form" }
+            }
+        }
+    };
+
+    TeamsAttachment taskModuleCardResponse = TeamsAttachment.CreateBuilder()
+        .WithAdaptiveCard(JsonSerializer.SerializeToElement(dialogCard))
+        .Build();
+
+    return TaskModuleResponse.CreateBuilder()
+        .WithType(TaskModuleResponseTypes.Continue)
+        .WithTitle("Simple Form Dialog")
+        .WithHeight("medium")
+        .WithWidth("medium")
+        .WithCard(taskModuleCardResponse)
+        .Build();
+}
+```
+
+</TabItem>
+</Tabs>
+
 <!-- rendering-webpage-code -->
+
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```csharp
 using Microsoft.Teams.Api.TaskModules;
@@ -180,12 +358,7 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateWebpageDialog(ICon
     var botEndpoint = configuration["BotEndpoint"];
     if (string.IsNullOrEmpty(botEndpoint))
     {
-        log.Warn("No remote endpoint detected. Using webpages for dialog will not work as expected");
         botEndpoint = "http://localhost:3978"; // Fallback for local development
-    }
-    else
-    {
-        log.Info($"Using BotEndpoint: {botEndpoint}/tabs/dialog-form");
     }
 
     var taskInfo = new TaskInfo
@@ -204,6 +377,43 @@ private static Microsoft.Teams.Api.TaskModules.Response CreateWebpageDialog(ICon
         new Microsoft.Teams.Api.TaskModules.ContinueTask(taskInfo));
 }
 ```
+
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (current)" default>
+
+```csharp
+using Microsoft.Teams.Apps.Schema;
+using Microsoft.Teams.Apps.TaskModules;
+
+//...
+
+private static InvokeResponse<TaskModuleResponse> CreateWebpageDialog(IConfiguration configuration)
+{
+    var botEndpoint = configuration["BotEndpoint"] ?? "http://localhost:3978";
+
+    // The TaskModuleResponse builder supports card-based dialogs only.
+    // For URL-based dialogs, construct the response manually.
+    // This server needs to be publicly accessible, set up the teams.js client library
+    // (https://www.npmjs.com/package/@microsoft/teams-js), and be registered in the manifest.
+    return new InvokeResponse<TaskModuleResponse>(200, new TaskModuleResponse
+    {
+        Task = new Microsoft.Teams.Apps.TaskModules.Response
+        {
+            Type = TaskModuleResponseTypes.Continue,
+            Value = new
+            {
+                title = "Webpage Dialog",
+                url = $"{botEndpoint}/tabs/dialog-form",
+                height = 800,
+                width = 1000
+            }
+        }
+    });
+}
+```
+
+</TabItem>
+</Tabs>
 
 <!-- embedded-web-content -->
 

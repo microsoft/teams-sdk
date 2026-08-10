@@ -15,9 +15,7 @@ async def handle_sign_in(event: SignInEvent):
     await event.activity_ctx.send("You are now signed in!")
 ```
 
-<!-- signin-event-name -->
-
-`sign_in`
+You are not restricted to only replying to `message` activities. In the above example, the handler is listening to `sign_in` events, which are sent when a user successfully signs in.
 
 <!-- streaming-example -->
 

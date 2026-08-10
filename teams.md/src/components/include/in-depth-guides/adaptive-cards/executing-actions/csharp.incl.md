@@ -200,97 +200,167 @@ private static AdaptiveCard CreateProfileCardWithValidation()
 
 Card actions arrive as `card.action` activities in your app. These give you access to the validated input values plus any `data` values you had configured to be sent back to you.
 
-```csharp
-using System.Text.Json;
-using Microsoft.Teams.Api.Activities.Invokes.AdaptiveCards;
-using Microsoft.Teams.Apps;
-using Microsoft.Teams.Apps.Annotations;
-using Microsoft.Teams.Common.Logging;
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-//...
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+    ```csharp
+    using System.Text.Json;
+    using Microsoft.Teams.Api.AdaptiveCards;
+    using Microsoft.Teams.Apps.Annotations;
 
-teams.OnAdaptiveCardAction(async (context, cancellationToken) =>
-{
-    var activity = context.Activity;
-    context.Log.Info("[CARD_ACTION] Card action received");
-
-    var data = activity.Value?.Action?.Data;
-
-    context.Log.Info($"[CARD_ACTION] Raw data: {JsonSerializer.Serialize(data)}");
-
-    if (data == null)
+    [TeamsController]
+    public class AdaptiveCardController
     {
-        context.Log.Error("[CARD_ACTION] No data in card action");
-        return new ActionResponse.Message("No data specified") { StatusCode = 400 };
-    }
-
-    string? action = data.TryGetValue("action", out var actionObj) ? actionObj?.ToString() : null;
-
-    if (string.IsNullOrEmpty(action))
-    {
-        context.Log.Error("[CARD_ACTION] No action specified in card data");
-        return new ActionResponse.Message("No action specified") { StatusCode = 400 };
-    }
-    context.Log.Info($"[CARD_ACTION] Processing action: {action}");
-
-    string? GetFormValue(string key)
-    {
-        if (data.TryGetValue(key, out var val))
+        [AdaptiveCard.Action]
+        public async Task<ActionResponse> OnAction([Context] IContext context, CancellationToken cancellationToken)
         {
-            if (val is JsonElement element)
-                return element.GetString();
-            return val?.ToString();
+            var data = context.Activity.Value?.Action?.Data;
+
+            if (data == null)
+                return new ActionResponse.Message("No data specified") { StatusCode = 400 };
+
+            string? action = data.TryGetValue("action", out var actionObj) ? actionObj?.ToString() : null;
+
+            if (string.IsNullOrEmpty(action))
+                return new ActionResponse.Message("No action specified") { StatusCode = 400 };
+
+            string? GetFormValue(string key)
+            {
+                if (data.TryGetValue(key, out var val))
+                {
+                    if (val is JsonElement element)
+                        return element.GetString();
+                    return val?.ToString();
+                }
+                return null;
+            }
+
+            switch (action)
+            {
+                case "submit_basic":
+                    var notifyValue = GetFormValue("notify") ?? "false";
+                    await context.Client.Send($"Basic card submitted! Notify setting: {notifyValue}");
+                    break;
+
+                case "submit_feedback":
+                    var feedbackText = GetFormValue("feedback") ?? "No feedback provided";
+                    await context.Client.Send($"Feedback received: {feedbackText}");
+                    break;
+
+                case "create_task":
+                    var title = GetFormValue("title") ?? "Untitled";
+                    var priority = GetFormValue("priority") ?? "medium";
+                    var dueDate = GetFormValue("due_date") ?? "No date";
+                    await context.Client.Send($"Task created!\nTitle: {title}\nPriority: {priority}\nDue: {dueDate}");
+                    break;
+
+                case "save_profile":
+                    var name = GetFormValue("name") ?? "Unknown";
+                    var email = GetFormValue("email") ?? "No email";
+                    var subscribe = GetFormValue("subscribe") ?? "false";
+                    var age = GetFormValue("age");
+                    var location = GetFormValue("location") ?? "Not specified";
+
+                    var response = $"Profile saved!\nName: {name}\nEmail: {email}\nSubscribed: {subscribe}";
+                    if (!string.IsNullOrEmpty(age))
+                        response += $"\nAge: {age}";
+                    if (location != "Not specified")
+                        response += $"\nLocation: {location}";
+
+                    await context.Client.Send(response);
+                    break;
+
+                case "test_json":
+                    await context.Client.Send("JSON deserialization test successful!");
+                    break;
+
+                default:
+                    return new ActionResponse.Message("Unknown action") { StatusCode = 400 };
+            }
+
+            return new ActionResponse.Message("Action processed successfully");
         }
-        return null;
     }
+    ```
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+    ```csharp
+    using System.Text.Json;
+    using Microsoft.Teams.Apps;
 
-    switch (action)
+    bot.OnAdaptiveCardAction(async (context, cancellationToken) =>
     {
-        case "submit_basic":
-            var notifyValue = GetFormValue("notify") ?? "false";
-            await context.Send($"Basic card submitted! Notify setting: {notifyValue}", cancellationToken);
-            break;
+        var data = context.Activity.Value?.Action?.Data;
 
-        case "submit_feedback":
-            var feedbackText = GetFormValue("feedback") ?? "No feedback provided";
-            await context.Send($"Feedback received: {feedbackText}", cancellationToken);
-            break;
+        if (data == null)
+            return AdaptiveCardResponse.CreateMessageResponse("No data specified", 400);
 
-        case "create_task":
-            var title = GetFormValue("title") ?? "Untitled";
-            var priority = GetFormValue("priority") ?? "medium";
-            var dueDate = GetFormValue("due_date") ?? "No date";
-            await context.Send($"Task created!\nTitle: {title}\nPriority: {priority}\nDue: {dueDate}", cancellationToken);
-            break;
+        string? action = data.TryGetValue("action", out var actionObj) ? actionObj?.ToString() : null;
 
-        case "save_profile":
-            var name = GetFormValue("name") ?? "Unknown";
-            var email = GetFormValue("email") ?? "No email";
-            var subscribe = GetFormValue("subscribe") ?? "false";
-            var age = GetFormValue("age");
-            var location = GetFormValue("location") ?? "Not specified";
+        if (string.IsNullOrEmpty(action))
+            return AdaptiveCardResponse.CreateMessageResponse("No action specified", 400);
 
-            var response = $"Profile saved!\nName: {name}\nEmail: {email}\nSubscribed: {subscribe}";
-            if (!string.IsNullOrEmpty(age))
-                response += $"\nAge: {age}";
-            if (location != "Not specified")
-                response += $"\nLocation: {location}";
+        string? GetFormValue(string key)
+        {
+            if (data.TryGetValue(key, out var val))
+            {
+                if (val is JsonElement element)
+                    return element.GetString();
+                return val?.ToString();
+            }
+            return null;
+        }
 
-            await context.Send(response, cancellationToken);
-            break;
+        switch (action)
+        {
+            case "submit_basic":
+                var notifyValue = GetFormValue("notify") ?? "false";
+                await context.SendAsync($"Basic card submitted! Notify setting: {notifyValue}", cancellationToken);
+                break;
 
-        case "test_json":
-            await context.Send("JSON deserialization test successful!", cancellationToken);
-            break;
+            case "submit_feedback":
+                var feedbackText = GetFormValue("feedback") ?? "No feedback provided";
+                await context.SendAsync($"Feedback received: {feedbackText}", cancellationToken);
+                break;
 
-        default:
-            context.Log.Error($"[CARD_ACTION] Unknown action: {action}");
-            return new ActionResponse.Message("Unknown action") { StatusCode = 400 };
-    }
+            case "create_task":
+                var title = GetFormValue("title") ?? "Untitled";
+                var priority = GetFormValue("priority") ?? "medium";
+                var dueDate = GetFormValue("due_date") ?? "No date";
+                await context.SendAsync($"Task created!\nTitle: {title}\nPriority: {priority}\nDue: {dueDate}", cancellationToken);
+                break;
 
-    return new ActionResponse.Message("Action processed successfully") { StatusCode = 200 };
-});
-```
+            case "save_profile":
+                var name = GetFormValue("name") ?? "Unknown";
+                var email = GetFormValue("email") ?? "No email";
+                var subscribe = GetFormValue("subscribe") ?? "false";
+                var age = GetFormValue("age");
+                var location = GetFormValue("location") ?? "Not specified";
+
+                var response = $"Profile saved!\nName: {name}\nEmail: {email}\nSubscribed: {subscribe}";
+                if (!string.IsNullOrEmpty(age))
+                    response += $"\nAge: {age}";
+                if (location != "Not specified")
+                    response += $"\nLocation: {location}";
+
+                await context.SendAsync(response, cancellationToken);
+                break;
+
+            case "test_json":
+                await context.SendAsync("JSON deserialization test successful!", cancellationToken);
+                break;
+
+            default:
+                return AdaptiveCardResponse.CreateMessageResponse("Unknown action", 400);
+        }
+
+        return AdaptiveCardResponse.CreateMessageResponse("Action processed successfully");
+    });
+    ```
+  </TabItem>
+</Tabs>
 
 :::note
 The `data` values come from JSON and need to be extracted using the helper method shown above to handle different JSON element types.
@@ -337,26 +407,35 @@ private static AdaptiveCard CreateDynamicSearchCard()
 
 <!-- dynamic-search-handler -->
 
-```csharp
-using Microsoft.Teams.Apps;
-using Microsoft.Teams.Apps.Handlers;
+<Tabs groupId="csharp-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+    :::note
+    Dynamic typeahead search for Adaptive Cards is not supported in SDK 2.0. Use SDK 2.1 for this feature.
+    :::
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+    ```csharp
+    using Microsoft.Teams.Apps;
+    using Microsoft.Teams.Apps.Handlers;
 
-var games = new[] { "Super Mario Odyssey", "Metroid Dread", "Splatoon 3" };
+    var games = new[] { "Super Mario Odyssey", "Metroid Dread", "Splatoon 3" };
 
-teams.OnSearch((context, cancellationToken) =>
-{
-    var query = context.Activity.Value?.QueryText?.ToLowerInvariant() ?? "";
-    var results = games
-        .Where(g => g.ToLowerInvariant().Contains(query))
-        .Select(g => new SearchResult { Title = g, Value = g })
-        .ToList();
-
-    var response = new SearchResponse
+    bot.OnSearch((context, cancellationToken) =>
     {
-        Value = new SearchResponseValue { Results = results }
-    };
+        var query = context.Activity.Value?.QueryText?.ToLowerInvariant() ?? "";
+        var results = games
+            .Where(g => g.ToLowerInvariant().Contains(query))
+            .Select(g => new SearchResult { Title = g, Value = g })
+            .ToList();
 
-    return Task.FromResult(new InvokeResponse<SearchResponse>(200, response));
-});
-```
+        var response = new SearchResponse
+        {
+            Value = new SearchResponseValue { Results = results }
+        };
+
+        return Task.FromResult(new InvokeResponse<SearchResponse>(200, response));
+    });
+    ```
+  </TabItem>
+</Tabs>
 

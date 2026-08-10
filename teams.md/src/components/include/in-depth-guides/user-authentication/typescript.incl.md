@@ -1,4 +1,9 @@
 <!-- create-project -->
+## Project Setup
+
+:::tip
+If you're creating a new app, use the `graph` template. Skip this if you're adding auth to an existing app.
+:::
 
 Use your terminal to run the following command:
 
@@ -26,6 +31,10 @@ const app = new App({
 
 <!-- signing-in -->
 
+:::note
+This uses the Single Sign-On (SSO) authentication flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
+:::
+
 ```ts
 app.message('/signin', async ({ signin, send }) => {
   if (await signin()) {
@@ -45,6 +54,9 @@ app.event('signin', async ({ send, token }) => {
 ```
 
 <!-- using-graph -->
+
+From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+
 
 ```ts
 import * as endpoints from '@microsoft/teams.graph-endpoints';

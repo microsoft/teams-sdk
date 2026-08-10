@@ -58,7 +58,6 @@ If you scaffolded with `teams project new csharp`, your `Program.cs` already loo
 
 ```csharp
 using Microsoft.Teams.Apps;
-using Microsoft.Teams.Apps.Handlers;
 
 WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
 builder.Services.AddTeamsBotApplication();
