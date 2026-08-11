@@ -79,7 +79,7 @@ while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
 | `UniqueId` | The OneDrive/SharePoint drive-item id, when the platform provides it. Present only for files backed by ODSP storage. |
 | `Name` | File name including its extension (e.g. `report.pdf`). |
 | `Extension` | File extension without the dot (e.g. `pdf`), from the platform-supplied `fileType`. Absent when the platform omits it. |
-| `ContentType` | The file's MIME type, when Teams provides it with the file; otherwise unset. The type resolved from the download response is on the returned downloaded file, not written back here. |
+| `ContentType` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `Extension`. To learn the type of the bytes you actually received, read `ContentType` on the downloaded file, which is resolved from the download response. |
 | `Scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `Source` | Where the SDK found the file. Currently always `botActivity`. |
 | `WebUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |

@@ -69,7 +69,7 @@ for await (const chunk of stream) {
 | `uniqueId` | The OneDrive/SharePoint drive-item id, when the platform provides it. Present only for files backed by ODSP storage. |
 | `name` | File name including its extension (e.g. `report.pdf`). |
 | `extension` | File extension without the dot (e.g. `pdf`), from the platform-supplied `fileType`. Absent when the platform omits it. |
-| `contentType` | The file's MIME type, when Teams provides it with the file; otherwise unset. The type resolved from the download response is on the returned downloaded file, not written back here. |
+| `contentType` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `extension`. To learn the type of the bytes you actually received, read `contentType` on the downloaded file, which is resolved from the download response. |
 | `scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `source` | Where the SDK found the file. Currently always `botActivity`. |
 | `webUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
