@@ -67,6 +67,8 @@ export const CLARIFICATION_TOOL_SCHEMA = {
     options: {
       type: 'array',
       items: { type: 'string' },
+      minItems: 2,
+      maxItems: 4,
     },
   },
   required: ['question', 'options'],
@@ -78,7 +80,7 @@ async function executeClarificationTool(
   pendingCards: AdaptiveCard[]
 ): Promise<string> {
   if (!isClarificationArgs(input)) {
-    throw new Error('request_clarification requires a question and 2-4 options.');
+    return 'request_clarification requires a question and 2-4 options.';
   }
   pendingCards.push(buildClarificationCard(input));
   return 'Clarification card attached.';
@@ -93,6 +95,21 @@ function isClarificationArgs(value: unknown): value is ClarificationArgs {
     input.options.length >= 2 &&
     input.options.length <= 4 &&
     input.options.every((option) => typeof option === 'string')
+  );
+}
+
+function buildClarificationCard(args: ClarificationArgs): AdaptiveCard {
+  return new AdaptiveCard(
+    new TextBlock(args.question, { weight: 'Bolder', size: 'Medium', wrap: true }),
+    new ChoiceSetInput(
+      ...args.options.map((option) => ({ title: option, value: option }))
+    )
+      .withId(CLARIFICATION_INPUT_ID)
+      .withIsRequired(true)
+  ).withActions(
+    new ExecuteAction({ title: 'Submit' })
+      .withData(new SubmitData(CLARIFICATION_VERB))
+      .withAssociatedInputs('auto')
   );
 }
 ```
