@@ -73,9 +73,9 @@ for await (const chunk of stream) {
 | `scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `source` | Where the SDK found the file. Currently always `botActivity`. |
 | `webUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
-| `raw` | The original wire attachment (the metadata object, not the bytes) — see [Accessing the raw attachment](#accessing-the-raw-attachment). |
+| `raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
-<!-- reusing-snapshot -->
+<!-- reusing-downloaded-file -->
 
 ```typescript
 const downloaded = await file.download();

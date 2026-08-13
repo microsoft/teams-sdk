@@ -83,9 +83,9 @@ while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
 | `Scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `Source` | Where the SDK found the file. Currently always `botActivity`. |
 | `WebUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
-| `Raw` | The original wire attachment (the metadata object, not the bytes) — see [Accessing the raw attachment](#accessing-the-raw-attachment). |
+| `Raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
-<!-- reusing-snapshot -->
+<!-- reusing-downloaded-file -->
 
 ```csharp
 DownloadedFile downloaded = await file.DownloadAsync(cancellationToken);
