@@ -46,7 +46,7 @@ if file:
 <!-- saving-to-disk -->
 
 ```python
-await file.save_as("./uploads/report.pdf")
+await file.save_as("./downloads/report.pdf")
 ```
 
 <!-- streaming -->

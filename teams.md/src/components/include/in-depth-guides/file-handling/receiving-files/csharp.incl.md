@@ -55,7 +55,7 @@ if (file is not null)
 <!-- saving-to-disk -->
 
 ```csharp
-await file.SaveAsAsync("./uploads/report.pdf", cancellationToken);
+await file.SaveAsAsync("./downloads/report.pdf", cancellationToken);
 ```
 
 <!-- streaming -->

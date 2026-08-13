@@ -49,7 +49,7 @@ if (file) {
 <!-- saving-to-disk -->
 
 ```typescript
-await file.saveAs('./uploads/report.pdf');
+await file.saveAs('./downloads/report.pdf');
 ```
 
 <!-- streaming -->
