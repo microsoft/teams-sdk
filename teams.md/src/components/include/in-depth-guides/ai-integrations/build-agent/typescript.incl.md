@@ -1,187 +1,263 @@
 <!-- intro -->
 
-This guide walks through building a Teams agent with the [OpenAI SDK](https://github.com/openai/openai-node) against Azure OpenAI. The TypeScript SDK stays agnostic about the intelligence layer — you bring the model client and the tool-call loop, and the Teams SDK handles activity routing, streaming, and Teams-native affordances like Adaptive Cards and feedback controls.
+This guide uses the multi-provider [`ai-mcp` sample](https://github.com/microsoft/teams.ts/tree/main/examples/ai-mcp). Azure OpenAI and Anthropic Claude share the same Teams handlers, MCP connection, local tools, citations, cards, and feedback. Only the provider implementation owns model-specific messages and tool-loop behavior.
 
-The agent loop here is driven by the OpenAI SDK's `runTools()` helper, which auto-executes each tool's `function` callback and feeds the result back to the model until it produces final text — so you don't hand-roll the tool-dispatch loop yourself.
-
-:::note
-This sample is bound to the OpenAI chat-completions wire protocol — Azure OpenAI and vanilla OpenAI both work; non-OpenAI providers do not.
-:::
-
-Full source: [examples/ai-mcp](https://github.com/microsoft/teams.ts/tree/main/examples/ai-mcp).
+Set `AI_PROVIDER=azure-openai` or `AI_PROVIDER=anthropic`. The rest of the Teams application remains unchanged.
 
 <!-- define-agent -->
 
-The "agent" is the model client plus a system prompt. The OpenAI SDK's `AzureOpenAI` client is the model backend, and `runTools()` (shown below) is the loop that drives instructions and tools together.
+The handlers depend on a small provider-neutral contract:
+
+```typescript
+export interface IAgentRunner {
+  run(conversationId: string, userText: string, stream: IStreamer): Promise<AgentRunResult>;
+}
+```
+
+Create the implementation that matches your configured provider:
+
+<Tabs groupId="ai-provider">
+  <TabItem value="azure-openai" label="Azure OpenAI">
 
 ```typescript
 import { AzureOpenAI } from 'openai';
 
-const client = new AzureOpenAI({
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT!,
-  apiKey: process.env.AZURE_OPENAI_API_KEY!,
-  deployment: process.env.AZURE_OPENAI_MODEL_DEPLOYMENT_NAME!,
-  apiVersion: process.env.AZURE_OPENAI_API_VERSION || '2024-10-21',
+const deployment = required('AZURE_OPENAI_MODEL_DEPLOYMENT_NAME');
+const agent: IAgentRunner = new Agent({
+  client: new AzureOpenAI({
+    endpoint: required('AZURE_OPENAI_ENDPOINT'),
+    apiKey: required('AZURE_OPENAI_API_KEY'),
+    deployment,
+    apiVersion: process.env.AZURE_OPENAI_API_VERSION || '2024-10-21',
+  }),
+  deploymentName: deployment,
+  mcpTools,
+  log,
 });
-
-const SYSTEM_PROMPT = 'You are a helpful Teams assistant.';
 ```
+
+  </TabItem>
+  <TabItem value="anthropic" label="Anthropic Claude">
+
+```typescript
+import Anthropic from '@anthropic-ai/sdk';
+
+const agent: IAgentRunner = new AnthropicAgent({
+  client: new Anthropic({
+    apiKey: required('ANTHROPIC_API_KEY'),
+  }),
+  model: required('ANTHROPIC_MODEL'),
+  mcpTools,
+  log,
+});
+```
+
+  </TabItem>
+</Tabs>
 
 <!-- local-tool -->
 
-Tools are declared as `RunnableToolFunction`s — the OpenAI SDK runs each tool's `function` callback during the tool loop. The callback pushes the card into a per-turn bucket the handler inspects after the run completes, and returns a short placeholder string.
+Keep tool behavior independent of the model provider. The clarification tool validates its input, creates the card, and returns text that can be sent back to either model:
 
 ```typescript
-import type { RunnableToolFunction } from 'openai/lib/RunnableFunction';
-import { AdaptiveCard, ChoiceSetInput, ExecuteAction, SubmitData, TextBlock } from '@microsoft/teams.cards';
-
-type ClarificationArgs = { question: string; options: string[] };
-
-export const CLARIFICATION_VERB = 'clarification';
-export const CLARIFICATION_INPUT_ID = 'clarificationChoice';
-
-function buildClarificationTool(pendingCards: AdaptiveCard[]): RunnableToolFunction<ClarificationArgs> {
-  return {
-    type: 'function',
-    function: {
-      name: 'request_clarification',
-      description: 'Show an Adaptive Card asking the user to clarify their request when ambiguous.',
-      parameters: {
-        type: 'object',
-        properties: {
-          question: { type: 'string', description: 'The clarification question to ask the user.' },
-          options: {
-            type: 'array',
-            items: { type: 'string' },
-            description: '2-4 candidate interpretations the user can pick between.',
-          },
-        },
-        required: ['question', 'options'],
-        additionalProperties: false,
-      },
-      function: async (args: ClarificationArgs) => {
-        pendingCards.push(buildClarificationCard(args));
-        return 'Clarification card attached.';
-      },
-      parse: (raw: string) => JSON.parse(raw) as ClarificationArgs,
+export const CLARIFICATION_TOOL_SCHEMA = {
+  type: 'object',
+  properties: {
+    question: { type: 'string' },
+    options: {
+      type: 'array',
+      items: { type: 'string' },
     },
-  };
+  },
+  required: ['question', 'options'],
+  additionalProperties: false,
+};
+
+async function executeClarificationTool(
+  input: unknown,
+  pendingCards: AdaptiveCard[]
+): Promise<string> {
+  if (!isClarificationArgs(input)) {
+    throw new Error('request_clarification requires a question and 2-4 options.');
+  }
+  pendingCards.push(buildClarificationCard(input));
+  return 'Clarification card attached.';
 }
 
-function buildClarificationCard(args: ClarificationArgs): AdaptiveCard {
-  return new AdaptiveCard(
-    new TextBlock(args.question, { weight: 'Bolder', size: 'Medium', wrap: true }),
-    new ChoiceSetInput(...args.options.map((opt) => ({ title: opt, value: opt })))
-      .withId(CLARIFICATION_INPUT_ID)
-      .withIsRequired(true)
-  ).withActions(
-    new ExecuteAction({ title: 'Submit' })
-      .withData(new SubmitData(CLARIFICATION_VERB))
-      .withAssociatedInputs('auto')
+function isClarificationArgs(value: unknown): value is ClarificationArgs {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const input = value as Record<string, unknown>;
+  return (
+    typeof input.question === 'string' &&
+    Array.isArray(input.options) &&
+    input.options.length >= 2 &&
+    input.options.length <= 4 &&
+    input.options.every((option) => typeof option === 'string')
   );
 }
 ```
 
-See [clarification cards](./teams-enhancements#clarification-cards) for how the user's choice flows back in.
+Adapt the same schema at the provider boundary:
+
+<Tabs groupId="ai-provider">
+  <TabItem value="azure-openai" label="Azure OpenAI">
+
+```typescript
+const tool: RunnableToolFunction<ClarificationArgs> = {
+  type: 'function',
+  function: {
+    name: 'request_clarification',
+    description: 'Ask the user to clarify an ambiguous request.',
+    parameters: CLARIFICATION_TOOL_SCHEMA,
+    function: (input) => executeClarificationTool(input, pendingCards),
+    parse: (raw) => JSON.parse(raw) as ClarificationArgs,
+  },
+};
+```
+
+  </TabItem>
+  <TabItem value="anthropic" label="Anthropic Claude">
+
+```typescript
+const tool: Anthropic.Tool = {
+  name: 'request_clarification',
+  description: 'Ask the user to clarify an ambiguous request.',
+  input_schema: {
+    ...CLARIFICATION_TOOL_SCHEMA,
+    type: 'object',
+  },
+};
+```
+
+When Claude returns this tool name, call `executeClarificationTool(toolUse.input, pendingCards)`. The runtime guard validates Anthropic's `unknown` input before the card is built.
+
+  </TabItem>
+</Tabs>
 
 <!-- mcp-tools -->
 
-Connect to the MCP server once at startup, list its tools, and wrap each one as a `RunnableToolFunction`. The callback invokes the server and returns the result text to the model.
+Connect to the MCP server once, retain its provider-neutral definitions, and centralize execution:
 
 ```typescript
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import type { RunnableToolFunction } from 'openai/lib/RunnableFunction';
-
 const client = new Client({ name: 'ai-mcp-sample', version: '0.0.0' });
-await client.connect(new StreamableHTTPClientTransport(new URL('https://learn.microsoft.com/api/mcp')));
+await client.connect(
+  new StreamableHTTPClientTransport(new URL('https://learn.microsoft.com/api/mcp'))
+);
 
-const { tools } = await client.listTools();
-
-const mcpTools: RunnableToolFunction<Record<string, unknown>>[] = tools.map((tool) => ({
-  type: 'function',
-  function: {
-    name: tool.name,
-    description: tool.description ?? '',
-    parameters: (tool.inputSchema as Record<string, unknown>) ?? { type: 'object' },
-    function: async (args: Record<string, unknown>) => {
-      const result = await client.callTool({ name: tool.name, arguments: args });
-      return stringifyResult(result.content);
-    },
-    parse: (raw: string) => JSON.parse(raw) as Record<string, unknown>,
-  },
+const listed = await client.listTools();
+const tools = listed.tools.map((tool) => ({
+  name: tool.name,
+  description: tool.description ?? '',
+  parameters: tool.inputSchema,
 }));
+
+async function executeMcpTool(name: string, input: Record<string, unknown>): Promise<string> {
+  const result = await client.callTool({ name, arguments: input });
+  const text = stringifyResult(result.content);
+  citations.tryExtract(text);
+  return text;
+}
 ```
+
+For Azure OpenAI, expose each schema as `function.parameters`. For Anthropic, expose it as `input_schema`. Both adapters call the same `executeMcpTool` function.
 
 <!-- running -->
 
-`runTools()` sends the request with your tool definitions, auto-invokes any tool the model calls, re-prompts with the result, and repeats until the model produces final text. `content` events fire for each text delta — forward them straight to the Teams stream.
+The Teams handler is identical for both providers:
 
 ```typescript
-const runner = client.chat.completions.runTools({
-  model: deployment,
-  messages: history,
-  tools: [clarificationTool, ...mcpTools],
-  stream: true,
+app.on('message', async ({ activity, stream }) => {
+  const userText = activity.stripMentionsText().text ?? '';
+  const result = await agent.run(activity.conversation.id, userText, stream);
+  shipResult(result, stream, activity.from.id);
 });
-
-runner.on('content', (delta: string) => stream.emit(delta));
-await runner.done();
 ```
+
+Each provider calls `stream.emit(delta)` as text arrives. The handler receives a common `AgentRunResult` containing final text, citations, follow-up prompts, and any pending clarification card.
 
 <!-- memory -->
 
-Keep one `ChatCompletionMessageParam[]` per Teams conversation. After each run, sync the runner's view — it includes the system, user, and every tool-call / tool-result / assistant message added during the loop — back into your map so the next turn sees the full prior context.
+Each provider keeps its native message format in a per-conversation map and serializes concurrent turns for the same conversation.
+
+<Tabs groupId="ai-provider">
+  <TabItem value="azure-openai" label="Azure OpenAI">
 
 ```typescript
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-
 const histories = new Map<string, ChatCompletionMessageParam[]>();
 
-function getOrCreateHistory(convId: string): ChatCompletionMessageParam[] {
-  let history = histories.get(convId);
-  if (!history) {
-    history = [{ role: 'system', content: SYSTEM_PROMPT }];
-    histories.set(convId, history);
-  }
-  return history;
-}
-
-// after runner.done():
-const ran = runner.messages as ChatCompletionMessageParam[];
-history.splice(0, history.length, ...ran);
+const runner = client.chat.completions.runTools({
+  model: deployment,
+  messages: history,
+  tools,
+  stream: true,
+});
+runner.on('content', (delta) => stream.emit(delta));
+await runner.done();
+history.splice(0, history.length, ...runner.messages);
 ```
+
+`runTools()` appends assistant tool calls and tool results while it executes the loop.
+
+  </TabItem>
+  <TabItem value="anthropic" label="Anthropic Claude">
+
+```typescript
+const histories = new Map<string, Anthropic.MessageParam[]>();
+
+const modelStream = client.messages
+  .stream({
+    model,
+    max_tokens: 4096,
+    system: SYSTEM_PROMPT,
+    messages: history,
+    tools,
+  })
+  .on('text', (delta) => stream.emit(delta));
+
+const response = await modelStream.finalMessage();
+history.push({ role: 'assistant', content: toAssistantContent(response.content) });
+```
+
+If the response contains `tool_use` blocks, execute them, append matching `tool_result` blocks as a user message, and call `messages.stream()` again. Stop when the response contains no client tool calls.
+
+  </TabItem>
+</Tabs>
 
 <!-- citations -->
 
-The extraction lives in a small `CitationCollector`. Each MCP tool callback feeds its raw result into `tryExtract`, which parses the search payload and assigns every source a stable 1-based position. The same collector instance is captured by every tool call on a turn.
+The extraction lives in a small `CitationCollector`. Every MCP execution feeds its raw result into `tryExtract`, which parses search payloads and assigns each source a stable 1-based position.
 
 ```typescript
-type CitationEntry = { position: number; url: string; title: string; snippet: string };
+type CitationEntry = {
+  position: number;
+  url: string;
+  title: string;
+  snippet: string;
+};
 
 export class CitationCollector {
   private readonly entries = new Map<string, CitationEntry>();
 
   tryExtract(result: string): void {
-    let doc: any;
+    let doc: unknown;
     try {
       doc = JSON.parse(result);
     } catch {
-      return; // non-JSON tool results are ignored
+      return;
     }
-    for (const item of doc?.results ?? []) {
+
+    for (const item of findResults(doc) ?? []) {
       const url = item.contentUrl ?? item.link;
       if (!url || this.entries.has(url)) continue;
-      const snippet = (item.content ?? item.description ?? '').slice(0, 160);
       this.entries.set(url, {
         position: this.entries.size + 1,
         url,
         title: item.title ?? '',
-        snippet,
+        snippet: (item.content ?? item.description ?? '').slice(0, 160),
       });
     }
   }
 }
 ```
 
-To wire it in, call `citations.tryExtract(text)` inside each MCP tool's callback before returning the result. The collected entries are attached to the final reply in [Enhancing the Teams Experience](./teams-enhancements#citations).
+The collected entries are attached to the final reply in [Enhancing the Teams Experience](./teams-enhancements#citations).
