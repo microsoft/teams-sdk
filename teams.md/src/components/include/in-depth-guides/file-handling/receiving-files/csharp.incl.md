@@ -3,16 +3,16 @@
 ```csharp
 teamsApp.OnMessage(async (context, cancellationToken) =>
 {
-    IList<IncomingFile> uploaded = await context.Files.ListAsync(cancellationToken);
+    IList<IncomingFile> attached = await context.Files.ListAsync(cancellationToken);
 
-    if (uploaded.Count == 0)
+    if (attached.Count == 0)
     {
         await context.ReplyAsync("Send me a file and I will read it.", cancellationToken);
         return;
     }
 
-    string names = string.Join(", ", uploaded.Select(f => f.Name));
-    await context.ReplyAsync($"You sent {uploaded.Count} file(s): {names}", cancellationToken);
+    string names = string.Join(", ", attached.Select(f => f.Name));
+    await context.ReplyAsync($"You sent {attached.Count} file(s): {names}", cancellationToken);
 });
 ```
 

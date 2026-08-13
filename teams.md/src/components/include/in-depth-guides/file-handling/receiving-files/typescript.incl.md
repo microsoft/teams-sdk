@@ -2,14 +2,14 @@
 
 ```typescript
 app.on('message', async ({ files, send }) => {
-  const uploaded = await files.list();
+  const attached = await files.list();
 
-  if (uploaded.length === 0) {
+  if (attached.length === 0) {
     await send('Send me a file and I will read it.');
     return;
   }
 
-  await send(`You sent ${uploaded.length} file(s): ${uploaded.map((f) => f.name).join(', ')}`);
+  await send(`You sent ${attached.length} file(s): ${attached.map((f) => f.name).join(', ')}`);
 });
 ```
 

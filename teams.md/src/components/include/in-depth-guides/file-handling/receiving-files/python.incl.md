@@ -3,14 +3,14 @@
 ```python
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]) -> None:
-    uploaded = await ctx.files.list()
+    attached = await ctx.files.list()
 
-    if not uploaded:
+    if not attached:
         await ctx.reply("Send me a file and I will read it.")
         return
 
-    names = ", ".join(f.name for f in uploaded)
-    await ctx.reply(f"You sent {len(uploaded)} file(s): {names}")
+    names = ", ".join(f.name for f in attached)
+    await ctx.reply(f"You sent {len(attached)} file(s): {names}")
 ```
 
 <!-- first-file -->
