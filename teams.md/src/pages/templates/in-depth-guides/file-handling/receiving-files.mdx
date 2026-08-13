@@ -31,15 +31,13 @@ Teams only offers users the option to attach a file in 1:1 with a bot when your 
 
 ## Access attached files
 
-The accessor <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> is available on every activity context, but only inbound message activities carry attachments, so it is empty everywhere else. Use <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> to get all files attached to the current message, or <LanguageInclude content={{"typescript": "`first()`", "python": "`first()`", "csharp": "`FirstAsync()`"}} /> for the common single-file case:
+The accessor <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> is available on every activity context, but only inbound message activities carry attachments, so it is empty everywhere else. Use <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> to get all files attached to the current message, or <LanguageInclude content={{"typescript": "`first()`", "python": "`first()`", "csharp": "`FirstAsync()`"}} /> for the common single-file case. Both hand back the file's metadata rather than its contents, so listing is cheap even when the attached files are large:
 
 <LanguageInclude section="accessing-files" />
 
 Listing with <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> returns the attached files in the same order they arrived. It never throws: activities with no attachments (or non-message activities) return an empty list, and malformed file entries are skipped rather than failing the whole batch.
 
 <LanguageInclude section="first-file" />
-
-Both calls hand back metadata only. Nothing is fetched over the network until you ask for bytes, so listing files is cheap even when the attachments are large.
 
 ### File metadata
 
