@@ -14,9 +14,9 @@ File handling is being rolled out incrementally. Today the SDK supports **receiv
 
 ## Files vs. attachments
 
-In personal scope, everything a user sends alongside a message arrives in `activity.attachments`: uploaded files, but also Adaptive Cards, `@mentions`, link previews, and other non-file content. A **file** is the specific subset of attachments that represents an uploaded document, one whose `contentType` is `file.download.info`.
+In personal scope, everything a user sends alongside a message arrives in <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} />: uploaded files, but also Adaptive Cards, `@mentions`, link previews, and other non-file content. A **file** is the specific subset of attachments that represents an uploaded document, one whose <LanguageInclude content={{"typescript": "`contentType`", "python": "`content_type`", "csharp": "`ContentType`"}} /> is `file.download.info`.
 
-The `ctx.files` accessor is the uploaded-file view over that raw array. It maps each uploaded file to a lazy handle you can download from, and skips everything else. The original `activity.attachments` array is always available when you need the raw payload or a non-file attachment.
+The <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> accessor is the uploaded-file view over that raw array. It maps each uploaded file to a lazy handle you can download from, and skips everything else. The original <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> array is always available when you need the raw payload or a non-file attachment.
 
 ## In this section
 
