@@ -1,0 +1,27 @@
+---
+sidebar_position: 1
+title: 'File Handling'
+suppressLanguageIncludeWarning: true
+---
+
+# File Handling
+
+This section covers how your app receives files and reads their bytes.
+
+:::info[Preview]
+File handling is being rolled out incrementally. Today the SDK supports **receiving** files attached to messages in personal (1:1) chats via the TypeScript, Python, and C# SDKs.
+:::
+
+## Files vs. attachments
+
+In personal scope, <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> carries every non-text part of a received message: files the user attached, but also Adaptive Cards, `@mentions`, link previews, and other content the client or the platform adds. A **file** is the specific subset of attachments that describes a document the user attached, one whose <LanguageInclude content={{"typescript": "`contentType`", "python": "`content_type`", "csharp": "`ContentType`"}} /> is `file.download.info`.
+
+The <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> accessor is the attached-file view over that raw array. It maps each attached file to a lazy handle you can download from, and skips everything else. The original <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> array is always available when you need the raw payload or a non-file attachment.
+
+## In this section
+
+- **[Receiving Files](./receiving-files)** — read files a user attaches to a message, stream or download their bytes, and handle unsupported scopes and expired links.
+
+## Resources
+
+- [Files in Teams bots](https://learn.microsoft.com/en-us/microsoftteams/platform/bots/how-to/bots-filesv4)
