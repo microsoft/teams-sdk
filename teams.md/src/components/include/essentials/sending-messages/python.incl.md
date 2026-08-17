@@ -64,9 +64,6 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     )
 ```
 
-<!-- targeted-preview-note -->
-N/A
-
 <!-- prompt-preview-proactive-example -->
 
 ```python

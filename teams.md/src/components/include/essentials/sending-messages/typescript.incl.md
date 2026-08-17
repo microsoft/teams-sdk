@@ -59,9 +59,6 @@ app.on('message', async ({ send, activity }) => {
 });
 ```
 
-<!-- targeted-preview-note -->
-N/A
-
 <!-- prompt-preview-proactive-example -->
 
 ```typescript
