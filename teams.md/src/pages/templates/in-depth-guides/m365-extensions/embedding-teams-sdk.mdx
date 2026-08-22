@@ -1,0 +1,63 @@
+---
+sidebar_position: 2
+title: 'Embedding the Teams SDK'
+sidebar_label: 'Embedding the Teams SDK'
+summary: Wire the Teams SDK into an existing Microsoft 365 Agents SDK app with M365 Extensions. Covers the one-call setup, how Teams-channel routing decides between the two SDKs, bypassing Teams routing for specific activities, and reaching host-only APIs from Teams SDK handlers.
+languages: ['python', 'typescript', 'csharp']
+---
+
+# Embedding the Teams SDK
+
+M365 Extensions installs a middleware on an existing [Microsoft 365 Agents SDK](https://github.com/microsoft/Agents) app's adapter that routes matching Teams-channel activities to a Teams SDK app, while everything else — non-Teams channels, and Teams turns with no matching Teams SDK route — continues through the host app unchanged.
+
+## Install
+
+<LanguageInclude section="install" />
+
+## Wire the Teams SDK into your host app
+
+A single call creates the Teams SDK app and installs the routing middleware. It borrows the host app's `clientId`, `tenantId`, and token provider from the Agents SDK's connection manager, so outbound Teams API calls (sending messages, adding reactions, and so on) are authenticated with the same identity as the host app — no separate credential configuration is needed.
+
+<LanguageInclude section="wiring" />
+
+The Teams SDK app returned by this call is a normal app instance: register routes on it with the same APIs you would use in a standalone Teams SDK app (message handlers, dialogs, message reactions, and so on).
+
+## How routing works
+
+For every inbound turn, the middleware:
+
+1. Checks whether the activity arrived on the Teams channel (including Teams sub-channels, e.g. `msteams:COPILOT`). Non-Teams channels always continue straight to the host app.
+2. For Teams-channel turns, checks whether a route was registered to bypass Teams routing for this activity (see [Bypass Teams routing](#bypass-teams-routing-for-specific-activities)). If so, the turn continues to the host app.
+3. Otherwise, checks whether the Teams SDK app has a route that matches the activity. If it does, the Teams SDK handles the turn and the host app's handler for that turn is skipped. If no route matches, the turn falls through to the host app.
+
+You can run the same Teams-channel check yourself, for example to change host-app behavior based on the channel:
+
+<LanguageInclude section="is-teams-channel" />
+
+| Channel | Teams SDK route matches | Teams SDK route doesn't match |
+|---|---|---|
+| Teams (`msteams`) | Handled by the Teams SDK | Falls through to the host app |
+| Any other channel | N/A — Teams routing never applies | Handled by the host app |
+
+## Bypass Teams routing for specific activities
+
+Some activities need to stay on the host app even though they arrive on the Teams channel and would otherwise match a Teams SDK route — for example, keeping `signin/*` invokes on the host app's own OAuth flow. Pass a predicate to opt specific turns out of Teams routing:
+
+<LanguageInclude section="bypass" />
+
+## Reach host-only APIs from Teams SDK handlers
+
+The TypeScript SDK exposes an `agentSdkContext()` accessor for the host app's turn context from inside a Teams SDK handler, for the duration of a turn the middleware bridged to the Teams SDK. This is useful for reaching host-only facilities — such as the host app's own authorization handlers or state — that the Teams SDK context doesn't model:
+
+<LanguageInclude section="host-context" />
+
+:::note
+This accessor throws when called outside a bridged turn, for example from a detached background task. The Python and C# SDKs don't expose an equivalent public accessor yet.
+:::
+
+## Next steps
+
+- [teams.ts M365 Extensions example](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions) — full multichannel, multi-auth sample.
+- [teams.py M365 Extensions example](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)
+- [teams.net M365ExtensionsBot sample](https://github.com/microsoft/teams.net/tree/main/samples/M365ExtensionsBot)
+- [Microsoft 365 Agents SDK](https://github.com/microsoft/Agents)

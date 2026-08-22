@@ -1,0 +1,33 @@
+---
+sidebar_position: 1
+title: 'M365 Extensions'
+suppressLanguageIncludeWarning: true
+---
+
+# M365 Extensions
+
+This section covers **M365 Extensions**, the package that embeds a Teams SDK `App` inside an existing [Microsoft 365 Agents SDK](https://github.com/microsoft/Agents) host application. Teams activities that match a Teams SDK route are handled by the Teams SDK; everything else — non-Teams channels and Teams turns with no matching route — falls through to the host app's existing handlers.
+
+:::info[Preview]
+M365 Extensions is a new integration point (<LanguageInclude content={{"typescript": "`@microsoft/teams.m365extensions`", "python": "`microsoft-teams-m365extensions`", "csharp": "`Microsoft.Teams.M365Extensions`"}} />) and is not yet published to public package registries for every language. Check your package manager for the latest available version before depending on it.
+:::
+
+## Why use M365 Extensions
+
+Teams SDK M365 Extensions let you layer Teams-native features — Adaptive Cards, dialogs (task modules), message reactions, targeted (ephemeral) messages — onto an agent that is already built on the Microsoft 365 Agents SDK, without rewriting its existing message handling. This is the opposite direction of a typical migration: instead of porting a whole app to the Teams SDK, you attach the Teams SDK to specific Teams-channel behavior and keep everything else on the Agents SDK.
+
+A single call does the wiring:
+
+- it borrows the host app's identity (client ID, tenant ID, and token provider) from the Agents SDK's connection manager, so no separate credential configuration is needed for outbound Teams API calls;
+- it installs a middleware on the host's adapter that inspects each turn and either routes it to the Teams SDK or lets it continue to the host app unchanged.
+
+## In this section
+
+- **[Embedding the Teams SDK](./embedding-teams-sdk)** — wire the Teams SDK into an existing Microsoft 365 Agents SDK app, understand the routing rules, bypass Teams routing for specific activities, and reach host-only APIs from Teams SDK handlers.
+
+## Resources
+
+- [Microsoft 365 Agents SDK](https://github.com/microsoft/Agents)
+- [teams.ts M365 Extensions example](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions)
+- [teams.py M365 Extensions example](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)
+- [teams.net M365ExtensionsBot sample](https://github.com/microsoft/teams.net/tree/main/samples/M365ExtensionsBot)
