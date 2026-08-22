@@ -1,0 +1,57 @@
+---
+sidebar_position: 2
+title: 'Embedding the Teams SDK'
+sidebar_label: 'Embedding the Teams SDK'
+summary: Embed the Teams SDK inside an existing Microsoft 365 Agents SDK app with M365 Extensions. Covers the one-call setup, how each turn is routed between the two SDKs, bypassing Teams routing for specific activities, and reaching host-only APIs from Teams SDK handlers.
+languages: ['python', 'typescript', 'csharp']
+---
+
+# Embedding the Teams SDK
+
+M365 Extensions install a middleware on your existing [Microsoft 365 Agents SDK](https://github.com/microsoft/Agents) app that routes matching Teams-channel activities to a Teams SDK app. Everything else — non-Teams channels, and Teams turns with no matching Teams SDK route — continues through your host app untouched.
+
+## Install
+
+<LanguageInclude section="install" />
+
+## Wire the Teams SDK into your host app
+
+A single call creates the Teams SDK app and installs the routing middleware. It reads your host app's `clientId`, `tenantId`, and token provider from the Agents SDK connection manager, so outbound Teams API calls (sending messages, adding reactions, and so on) are authenticated with the same identity as the host app — you don't configure a second credential.
+
+<LanguageInclude section="wiring" />
+
+The object returned to you is an ordinary Teams SDK app. Register routes on it exactly as you would in a standalone Teams SDK app — message handlers, dialogs, message reactions, and the rest.
+
+## How each turn is routed
+
+The middleware runs on every inbound turn and decides between the two SDKs in three steps:
+
+1. **Is it a Teams turn?** It checks whether the activity arrived on the Teams channel, including Teams sub-channels such as `msteams:COPILOT`. Anything else goes straight to the host app.
+2. **Should Teams routing be bypassed?** For a Teams turn, it evaluates the optional bypass predicate (see [Bypass Teams routing](#bypass-teams-routing-for-specific-activities)). If the predicate returns true, the turn continues to the host app.
+3. **Does a Teams SDK route match?** If the Teams SDK app has a route for the activity, the Teams SDK handles it and the host app does not see the turn. If no route matches, the turn falls through to the host app.
+
+| Activity                  | Teams SDK route matches     | No Teams SDK route            |
+| ------------------------- | --------------------------- | ----------------------------- |
+| Teams channel (`msteams`) | Handled by the Teams SDK    | Falls through to the host app |
+| Any other channel         | Teams routing never applies | Handled by the host app       |
+
+You can run the same Teams-channel check yourself — for example, to branch host-app behavior on the channel:
+
+<LanguageInclude section="is-teams-channel" />
+
+## Bypass Teams routing for specific activities
+
+Some Teams-channel activities should stay on the host app even though a Teams SDK route would otherwise match them. The common case is keeping `signin/*` invokes on the host app's own OAuth flow. Pass a predicate to opt those turns out of Teams routing:
+
+<LanguageInclude section="bypass" />
+
+## Reach host-only APIs from Teams SDK handlers
+
+<LanguageInclude section="host-context" />
+
+## Next steps
+
+- [teams.ts M365 Extensions example](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions) — a full multichannel, multi-auth sample.
+- [teams.py M365 Extensions example](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)
+- [teams.net M365ExtensionsBot sample](https://github.com/microsoft/teams.net/tree/main/samples/M365ExtensionsBot)
+- [Microsoft 365 Agents SDK](https://github.com/microsoft/Agents)

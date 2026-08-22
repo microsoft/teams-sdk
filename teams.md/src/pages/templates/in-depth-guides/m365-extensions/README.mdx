@@ -1,0 +1,33 @@
+---
+sidebar_position: 1
+title: 'M365 Extensions'
+suppressLanguageIncludeWarning: true
+---
+
+# M365 Extensions
+
+**M365 Extensions** let you embed the Teams SDK inside an app you already built on the [Microsoft 365 Agents SDK](https://github.com/microsoft/Agents). Instead of rewriting your agent, you attach the Teams SDK to it: Teams activities that match a Teams SDK route are handled by the Teams SDK, and everything else — non-Teams channels, and Teams turns with no matching route — keeps flowing through your existing Agents SDK handlers.
+
+:::info[Preview]
+The M365 Extensions package (<LanguageInclude content={{"typescript": "`@microsoft/teams.m365extensions`", "python": "`microsoft-teams-m365extensions`", "csharp": "`Microsoft.Teams.M365Extensions`"}} />) is new and may not yet be published to every public package registry. Confirm the version available to your package manager before you depend on it.
+:::
+
+## Why embed instead of migrate
+
+If you already have an Agents SDK app running across multiple channels, a full migration to the Teams SDK is often more than you need. M365 Extensions give you a middle path: keep the Agents SDK app as-is, and opt individual Teams behaviors into the Teams SDK so you can use Teams-native features — Adaptive Cards, dialogs (task modules), message reactions, and targeted (ephemeral) messages — without touching how the rest of your channels are handled.
+
+The integration is deliberately small:
+
+- **Shared identity.** The bridge reads your host app's client ID, tenant ID, and token provider from the Agents SDK connection manager, so outbound Teams API calls reuse the host app's credentials. There is no second credential to configure.
+- **Transparent routing.** A middleware on the host adapter inspects each turn and either hands it to the Teams SDK (when a Teams SDK route matches) or lets it continue to the host app unchanged.
+
+## In this section
+
+- **[Embedding the Teams SDK](./embedding-teams-sdk)** — install the package, wire the Teams SDK into your host app with a single call, understand how each turn is routed, bypass Teams routing for specific activities, and reach host-only APIs from inside a Teams SDK handler.
+
+## Resources
+
+- [Microsoft 365 Agents SDK](https://github.com/microsoft/Agents)
+- [teams.ts M365 Extensions example](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions)
+- [teams.py M365 Extensions example](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)
+- [teams.net M365ExtensionsBot sample](https://github.com/microsoft/teams.net/tree/main/samples/M365ExtensionsBot)
