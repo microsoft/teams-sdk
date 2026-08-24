@@ -15,16 +15,34 @@ Use the Teams SDK for Teams-native features such as targeted messages, reactions
 ## How It Works
 
 ```mermaid
-flowchart LR
-    Channels["Teams, Web Chat, or Email"] --> Adapter["Agents SDK adapter"]
-    Adapter --> Bridge{"M365 Extensions middleware"}
-    Bridge -->|"Teams activity with<br/>a matching Teams SDK route"| TeamsApp["Teams SDK App"]
-    TeamsApp --> TeamsHandlers["Teams SDK handlers<br/>and API client"]
-    Bridge -->|"Unmatched Teams activity<br/>or non-Teams channel"| AgentApp["Agents SDK AgentApplication"]
-    AgentApp --> AgentHandlers["Agents SDK handlers"]
+flowchart TD
+    Install["useTeamsSdk / use_teams_sdk"] --> Create["Create a Teams SDK App"]
+    Install --> TokenProvider["Create a Teams SDK token provider<br/>backed by the Agents SDK connection manager"]
+    Install --> Register["Install TeamsMiddleware<br/>on the Agents SDK adapter"]
+
+    Turn["Agents SDK TurnContext"] --> Register
+    Register --> IsTeams{"Teams channel?"}
+    IsTeams -->|"No"| Next["Call next()<br/>Agents SDK handles the turn"]
+    IsTeams -->|"Yes"| Bypass{"Bypass predicate matches?"}
+    Bypass -->|"Yes"| Next
+    Bypass -->|"No"| Match{"Matching Teams SDK route?"}
+    Match -->|"No"| Next
+    Match -->|"Yes"| Process["Create a Teams SDK event and<br/>process it with the Teams SDK App"]
+    Process --> Handler["Teams SDK handler"]
+    Handler --> Api["Teams SDK API client"]
+    Api --> TokenProvider
+    Process --> Invoke{"Invoke activity?"}
+    Invoke -->|"Yes"| Response["Propagate the invoke response<br/>through the Agents SDK TurnContext"]
 ```
 
-For each activity, the middleware first checks the channel. Non-Teams activities continue directly through the Agents SDK pipeline. For a Teams activity, the Teams SDK handles it only when a matching route exists; otherwise, the activity falls through to the Agents SDK app.
+The package performs two jobs:
+
+1. **Bootstrap the bridge.** `useTeamsSdk` or `use_teams_sdk` reads the default client and tenant configuration from the Agents SDK connection manager, creates the Teams SDK `App`, and installs `TeamsMiddleware` on the Agents SDK adapter.
+2. **Share authentication.** The bridge gives the Teams SDK app a token provider backed by the Agents SDK connection manager. During a turn, it selects the provider for that turn's identity and service URL; outside a turn, it uses the default connection. The Teams SDK doesn't maintain a second set of credentials.
+3. **Intercept Teams turns.** `TeamsMiddleware` ignores non-Teams channels and any activity accepted by the optional bypass predicate. Those activities continue through the Agents SDK pipeline.
+4. **Match before handling.** For a Teams activity, the middleware asks the Teams SDK router whether a handler matches. If none does, it calls the next Agents SDK handler instead of consuming the activity.
+5. **Run the Teams SDK handler.** For a matching route, the middleware wraps the activity and token as a Teams SDK event, keeps the host `TurnContext` available for the duration of processing, and invokes the Teams SDK app.
+6. **Return invoke responses.** If a Teams SDK handler returns a response to an invoke activity, the middleware sends that response back through the original Agents SDK `TurnContext`.
 
 ## How to Use It
 
@@ -64,4 +82,3 @@ M365 Extensions preserve the Agents SDK app's multichannel reach:
 | Email activity | Agents SDK |
 
 The <LanguageInclude section="m365-extensions-sample-link" /> demonstrates all three channels. Its `help` command renders an Adaptive Card through the Teams SDK in Teams, while Web Chat and email receive the Agents SDK's text response. Teams-only commands such as `targeted` and `react` fall through on the other channels.
-
