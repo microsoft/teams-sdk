@@ -14,6 +14,9 @@
     "typescript",
     "python"
   ],
+  "in-depth-guides/m365-extensions": [
+    "csharp"
+  ],
   "in-depth-guides/observability/logging": [
     "csharp"
   ],
