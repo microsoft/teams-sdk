@@ -10,7 +10,7 @@ languages: ['python', 'typescript']
 
 M365 Extensions let you extend an existing Teams SDK application to channels such as Web Chat and Email without rewriting any Teams-specific capabilities.
 
-Add a Microsoft Agents SDK `AgentApplication` as the multichannel host, then register your existing Teams SDK handlers on the bridged `App` returned by `useTeamsSdk` or `use_teams_sdk`.
+Add a Microsoft Agents SDK `AgentApplication` as the multichannel host, then register your existing Teams SDK handlers on the bridged `App` returned by `useTeamsSdk` (Typescript) or `use_teams_sdk` (Python).
 
 Matching Teams activities continue through your Teams SDK handlers, while non-Teams activities and unmatched Teams activities flow through the Agents SDK application.
 
@@ -22,7 +22,7 @@ M365 Extensions works with your existing Teams SDK configuration and handlers. R
 
 ## Key Benefits
 
-### Extend Your Teams SDK App to More Channels
+### Extend Your Teams SDK App to Multiple Channels
 
 Connect your existing Teams SDK application to channels such as Web Chat and Email without rewriting your Teams-specific logic.
 
@@ -37,9 +37,9 @@ Existing Teams-specific handlers, such as this targeted message handler, continu
 
 <LanguageInclude section="targeted-message" />
 
-For a complete targeted-message implementation, including inbound detection, updates, and deletion, see the <LanguageInclude section="targeted-message-sample-link" />.
+For a complete targeted-message implementation, see the <LanguageInclude section="targeted-message-sample-link" />.
 
-The <LanguageInclude section="m365-extensions-sample-link" /> demonstrates a single application running across Teams, Web Chat, and Email.
+For a full multi-channel example, the <LanguageInclude section="m365-extensions-sample-link" /> demonstrates a single application running across Teams, Web Chat, and Email.
 
 ### Access Teams Capabilities from Agents SDK Handlers
 
@@ -51,8 +51,8 @@ Check that the activity came from Teams before calling APIs that are only suppor
 
 ## How It Works
 
-M365 Extensions adds a lightweight bridge to your existing Teams SDK application. Aside from app initialization, your Teams-specific code stays the same.
+M365 Extensions adds a lightweight middleware bridge to your existing Teams SDK application. Aside from app initialization, your Teams-specific code stays the same.
 
-1. **Add the bridge.** Call `useTeamsSdk` (TS) or `use_teams_sdk` (PY) to connect your app to the Agents SDK.
+1. **Add the bridge.** Call `useTeamsSdk` (Typescript) or `use_teams_sdk` (Python) to connect your app to Agents SDK.
 2. **Keep your Teams logic.** Existing handlers and API client calls continue handling Teams activities.
 3. **Add more channels.** Web Chat, Email, and unmatched Teams activities flow to the Agents SDK.
