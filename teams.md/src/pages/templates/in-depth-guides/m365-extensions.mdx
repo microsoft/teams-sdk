@@ -10,7 +10,7 @@ languages: ['python', 'typescript']
 
 M365 Extensions let you extend an existing Teams SDK application to channels such as Web Chat and Email without rewriting any Teams-specific capabilities.
 
-Add a Microsoft Agents SDK `AgentApplication` as the multichannel host, then register your existing Teams SDK handlers on the bridged `App` returned by `useTeamsSdk` (Typescript) or `use_teams_sdk` (Python).
+Add a Microsoft Agents SDK `AgentApplication` as the multichannel host, then register your existing Teams SDK handlers on the bridged `App` returned by `useTeamsSdk` (TypeScript) or `use_teams_sdk` (Python).
 
 Matching Teams activities continue through your Teams SDK handlers, while non-Teams activities and unmatched Teams activities flow through the Agents SDK application.
 
