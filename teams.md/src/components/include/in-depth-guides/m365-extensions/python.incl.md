@@ -6,7 +6,7 @@ Install the M365 Extensions package alongside the Microsoft Agents SDK:
 pip install microsoft-teams-m365extensions
 ```
 
-Create the Agents SDK app and pass its connection manager to `use_teams_sdk`:
+Add an Agents SDK host to your existing Teams SDK application, then replace your current `App` initialization with `use_teams_sdk`:
 
 ```python
 from os import environ
@@ -21,13 +21,14 @@ from microsoft_teams.m365extensions import use_teams_sdk
 agents_sdk_config = load_configuration_from_env(dict(environ))
 connection_manager = MsalConnectionManager(**agents_sdk_config)
 adapter = CloudAdapter(connection_manager=connection_manager)
+
 agent_app = AgentApplication[TurnState](
     options=ApplicationOptions(storage=MemoryStorage(), adapter=adapter),
     connection_manager=connection_manager,
     **agents_sdk_config,
 )
 
-teams_app = use_teams_sdk(agent_app, connection_manager)
+app = use_teams_sdk(agent_app, connection_manager)
 ```
 
 <!-- targeted-message -->
@@ -39,7 +40,7 @@ from microsoft_teams.api import Account, MessageActivity, MessageActivityInput
 from microsoft_teams.apps import ActivityContext
 
 
-@teams_app.on_message_pattern(re.compile(r"^targeted$", re.IGNORECASE))
+@app.on_message_pattern(re.compile(r"^targeted$", re.IGNORECASE))
 async def targeted_message(ctx: ActivityContext[MessageActivity]):
     sender = ctx.activity.from_
     targeted = MessageActivityInput(
@@ -78,7 +79,7 @@ async def agents_sdk_reaction(context: TurnContext, _state: TurnState):
     response = await context.send_activity("Adding then removing a reaction.")
     api = ApiClient(
         service_url=context.activity.service_url,
-        options=teams_app.api.http,
+        options=app.api.http,
     )
     conversation_id = context.activity.conversation.id
 

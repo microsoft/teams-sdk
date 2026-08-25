@@ -6,7 +6,7 @@ Install the M365 Extensions package alongside the Microsoft Agents SDK:
 npm install @microsoft/teams.m365extensions
 ```
 
-Create the Agents SDK app and pass its connection manager to `useTeamsSdk`:
+Add an Agents SDK host to your existing Teams SDK application, then replace your current `App` initialization with `useTeamsSdk`:
 
 ```typescript
 import {
@@ -23,13 +23,14 @@ const authConfig = getAuthConfigWithDefaults({
   clientSecret: process.env.CLIENT_SECRET,
   tenantId: process.env.TENANT_ID,
 });
+
 const adapter = new CloudAdapter(authConfig);
 const agentApp = new AgentApplication<TurnState>({
   storage: new MemoryStorage(),
   adapter,
 });
 
-const teamsApp = useTeamsSdk(agentApp, adapter.connectionManager);
+const app = useTeamsSdk(agentApp, adapter.connectionManager);
 ```
 
 <!-- targeted-message -->
@@ -37,7 +38,7 @@ const teamsApp = useTeamsSdk(agentApp, adapter.connectionManager);
 ```typescript
 import { MessageActivityInput } from '@microsoft/teams.api';
 
-teamsApp.message(/^targeted$/i, async ({ send, activity }) => {
+app.message(/^targeted$/i, async ({ send, activity }) => {
   const sender = activity.from;
   const targetedMessage = new MessageActivityInput(
     'This message is only visible to you.'
@@ -66,7 +67,7 @@ agentApp.onMessage(/^agents sdk react$/i, async (context) => {
   }
 
   const response = await context.sendActivity('Adding then removing a reaction.');
-  const api = teamsApp.api.fromServiceUrl({
+  const api = app.api.fromServiceUrl({
     serviceUrl: context.activity.serviceUrl!,
   });
   const conversationId = context.activity.conversation!.id;
@@ -80,4 +81,3 @@ agentApp.onMessage(/^agents sdk react$/i, async (context) => {
 <!-- m365-extensions-sample-link -->
 
 [TypeScript M365 Extensions sample](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions)
-
