@@ -57,6 +57,36 @@ The <LanguageInclude section="m365-extensions-sample-link" /> demonstrates this 
 
 ## How It Works
 
+```mermaid
+flowchart TD
+    User["User"]
+
+    subgraph HTTP["HTTP Endpoint Layer"]
+        Messages["/api/messages"]
+        Adapter["CloudAdapter.ProcessAsync"]
+        Messages -->|calls| Adapter
+    end
+
+    Middleware{"Teams SDK Middleware<br/>channel == Teams<br/>AND handler exists<br/>AND not bypassed?"}
+
+    subgraph Agents["Agents SDK Application"]
+        OnTurn["AgentApplication.OnTurnAsync()"]
+        AgentsHandler["Activity Handler"]
+        OnTurn --> AgentsHandler
+    end
+
+    subgraph TeamsSDK["Teams SDK Application"]
+        TeamsBot["TeamsBotApplication"]
+        TeamsHandler["Activity Handler"]
+        TeamsBot --> TeamsHandler
+    end
+
+    User -->|triggers activity| Messages
+    Adapter -->|middleware pipeline| Middleware
+    Middleware -->|yes| TeamsBot
+    Middleware -->|no| OnTurn
+```
+
 The key intuitions:
 
 - **One call wires everything.** `AddTeamsSdk<T>()` registers your Teams SDK bot and installs routing middleware on the Agents SDK adapter, reusing the Agents SDK connection identity for Teams API calls.
