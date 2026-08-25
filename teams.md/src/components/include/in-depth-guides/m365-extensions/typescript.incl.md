@@ -3,7 +3,7 @@
 Install the M365 Extensions package alongside the Microsoft Agents SDK:
 
 ```bash
-npm install @microsoft/teams.m365extensions
+npm install @microsoft/agents-hosting @microsoft/teams.m365extensions
 ```
 
 Add an Agents SDK host to your existing Teams SDK application, then replace your current `App` initialization with `useTeamsSdk`:
