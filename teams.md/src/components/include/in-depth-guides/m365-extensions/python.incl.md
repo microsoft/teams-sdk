@@ -1,6 +1,6 @@
 <!-- setup -->
 
-Install the M365 Extensions package alongside the Microsoft Agents SDK:
+Install the Microsoft 365 Extensions package alongside the Microsoft Agents SDK:
 
 ```bash
 pip install microsoft-agents-activity microsoft-agents-authentication-msal microsoft-agents-hosting-aiohttp microsoft-agents-hosting-core microsoft-teams-m365extensions

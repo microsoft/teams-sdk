@@ -1,6 +1,6 @@
 <!-- setup -->
 
-Install the M365 Extensions package alongside the Microsoft Agents SDK:
+Install the Microsoft 365 Extensions package alongside the Microsoft Agents SDK:
 
 ```bash
 npm install @microsoft/agents-hosting @microsoft/teams.m365extensions
