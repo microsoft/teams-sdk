@@ -8,9 +8,11 @@ languages: ['python', 'typescript']
 
 # M365 Extensions
 
-M365 Extensions let you extend an existing Teams SDK application to channels such as Web Chat and Email without rewriting any Teams-specific capabilities.
+M365 Extensions let you extend an existing Teams SDK application to channels such as Direct Line and Email without rewriting any Teams-specific capabilities.
 
-Add a Microsoft Agents SDK `AgentApplication` as the multichannel host, then register your existing Teams SDK handlers on the bridged `App` returned by `useTeamsSdk` (TypeScript) or `use_teams_sdk` (Python).
+Register your existing Teams SDK handlers on the `App` returned by `useTeamsSdk` (TypeScript) or `use_teams_sdk` (Python).
+M365 Extensions work with your existing Teams SDK configuration and handlers.
+This app is a bridge where Microsoft Agents SDK `AgentApplication` acts the multichannel host.
 
 Matching Teams activities continue through your Teams SDK handlers, while non-Teams activities and unmatched Teams activities flow through the Agents SDK application.
 
@@ -18,50 +20,42 @@ Matching Teams activities continue through your Teams SDK handlers, while non-Te
 
 <LanguageInclude section="setup" />
 
-M365 Extensions work with your existing Teams SDK configuration and handlers. Register your Teams-specific routes on the returned Teams SDK app and your multichannel routes on the Agents SDK app.
-
 ## Key Benefits
 
-### Extend Your Teams SDK App to Multiple Channels
+### Extend Your Teams App to Other Channels
 
-Connect your existing Teams SDK application to channels such as Web Chat and Email without rewriting your Teams-specific logic.
+Through this extension, you can connect your existing Teams SDK app to other channels such as Direct Line and Email without rewriting your Teams-specific logic.
 
 | Activity | Route |
 | --- | --- |
 | Teams activity matching a Teams SDK handler | Teams SDK |
 | Teams activity without a matching Teams SDK handler | Agents SDK |
-| Web Chat / Direct Line activity | Agents SDK |
+| Direct Line / Direct Line activity | Agents SDK |
 | Email activity | Agents SDK |
 
-Existing Teams-specific handlers, such as this targeted message handler, continue to work:
 
-<LanguageInclude section="targeted-message" />
-
-For a complete targeted-message implementation, see the <LanguageInclude content={{"typescript": "[TypeScript targeted messages sample](https://github.com/microsoft/teams.ts/tree/main/examples/targeted-messages)", "python": "[Python targeted messages sample](https://github.com/microsoft/teams.py/tree/main/examples/targeted-messages)"}} />.
-
-Use an Agents SDK handler to identify the channel and confirm how each activity was routed:
+#### Example Message Handler
+You can use the Agents SDK handler to identify the incoming channel and confirm how each activity was routed.
+The incoming activity is recognized as Teams if the `channelId="msteams"`.
 
 <LanguageInclude section="channel-routing" />
 
-The same handler receives activities from Web Chat and Email through the Agents SDK.
+#### Direct Line
 
-#### Web Chat
-
-![The channel command in Web Chat returning an Agents SDK response that identifies Direct Line as a non-Teams channel that passed straight through.](/screenshots/m365-extensions-web-chat.png)
+![The channel command in Direct Line returning an Agents SDK response that identifies Direct Line as a non-Teams channel that passed straight through.](/screenshots/m365-extensions-web-chat.png)
 
 #### Email
 
 ![The channel command sent through Email returning an Agents SDK response that identifies Email as a non-Teams channel that passed straight through.](/screenshots/m365-extensions-email.png)
 
-For a full multi-channel example, the <LanguageInclude content={{"typescript": "[TypeScript M365 Extensions sample](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions)", "python": "[Python M365 Extensions sample](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)"}} /> demonstrates a single application running across Teams, Web Chat, and Email.
-
-### Access Teams Capabilities from Agents SDK Handlers
+### Access Rich Teams Capabilities from Agents SDK
 
 When an Agents SDK handler receives a Teams activity, it can use the Teams SDK API client to access Teams-specific capabilities, such as message reactions:
 
 <LanguageInclude section="agents-sdk-reaction" />
 
-Check that the activity came from Teams before calling APIs that are only supported by the Teams channel.
+
+For a full example, the <LanguageInclude content={{"typescript": "[TypeScript M365 Extensions sample](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions)", "python": "[Python M365 Extensions sample](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)"}} /> demonstrates a single application running across Teams, Web Chat, and Email.
 
 ## How It Works
 
@@ -69,4 +63,4 @@ M365 Extensions adds a lightweight middleware bridge to your existing Teams SDK 
 
 1. **Add the bridge.** Call `useTeamsSdk` (Typescript) or `use_teams_sdk` (Python) to connect your app to Agents SDK.
 2. **Keep your Teams logic.** Existing handlers and API client calls continue handling Teams activities.
-3. **Add more channels.** Web Chat, Email, and unmatched Teams activities flow to the Agents SDK.
+3. **Add more channels.** Direct Line, Email, and unmatched Teams activities flow to the Agents SDK.

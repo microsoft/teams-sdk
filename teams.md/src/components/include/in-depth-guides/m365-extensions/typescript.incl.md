@@ -33,24 +33,6 @@ const agentApp = new AgentApplication<TurnState>({
 const app = useTeamsSdk(agentApp, adapter.connectionManager);
 ```
 
-<!-- targeted-message -->
-
-```typescript
-import { MessageActivityInput } from '@microsoft/teams.api';
-
-app.message(/^targeted$/i, async ({ send, activity }) => {
-  const sender = activity.from;
-  const targetedMessage = new MessageActivityInput(
-    'This message is only visible to you.'
-  ).withRecipient(
-    { id: sender.id, name: sender.name ?? '', role: 'user' },
-    true
-  );
-
-  await send(targetedMessage);
-});
-```
-
 <!-- channel-routing -->
 
 ```typescript

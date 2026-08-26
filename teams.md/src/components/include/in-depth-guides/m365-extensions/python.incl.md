@@ -31,28 +31,6 @@ agent_app = AgentApplication[TurnState](
 app = use_teams_sdk(agent_app, connection_manager)
 ```
 
-<!-- targeted-message -->
-
-```python
-import re
-
-from microsoft_teams.api import Account, MessageActivity, MessageActivityInput
-from microsoft_teams.apps import ActivityContext
-
-
-@app.on_message_pattern(re.compile(r"^targeted$", re.IGNORECASE))
-async def targeted_message(ctx: ActivityContext[MessageActivity]):
-    sender = ctx.activity.from_
-    targeted = MessageActivityInput(
-        text="This message is only visible to you."
-    ).with_recipient(
-        Account(id=sender.id, name=sender.name),
-        is_targeted=True,
-    )
-
-    await ctx.send(targeted)
-```
-
 <!-- channel-routing -->
 
 ```python
