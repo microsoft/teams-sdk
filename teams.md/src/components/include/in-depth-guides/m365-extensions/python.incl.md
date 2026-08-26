@@ -53,9 +53,18 @@ async def targeted_message(ctx: ActivityContext[MessageActivity]):
     await ctx.send(targeted)
 ```
 
-<!-- targeted-message-sample-link -->
+<!-- channel-routing -->
 
-[Python targeted messages sample](https://github.com/microsoft/teams.py/tree/main/examples/targeted-messages)
+```python
+@AGENT_SDK_APP.message(_command("channel"))
+async def _channel(context: TurnContext, _state: TurnState):
+    via = (
+        "Teams turn with no matching teams.py route → fell through"
+        if is_teams_channel(context.activity)
+        else "non-Teams channel → passed straight through"
+    )
+    await context.send_activity(f"[Agent SDK] channelId={context.activity.channel_id} ({via})")
+```
 
 <!-- agents-sdk-reaction -->
 
@@ -87,7 +96,3 @@ async def agents_sdk_reaction(context: TurnContext, _state: TurnState):
     await asyncio.sleep(2)
     await api.conversations.delete_reaction(conversation_id, response.id, "like")
 ```
-
-<!-- m365-extensions-sample-link -->
-
-[Python M365 Extensions sample](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)

@@ -37,9 +37,23 @@ Existing Teams-specific handlers, such as this targeted message handler, continu
 
 <LanguageInclude section="targeted-message" />
 
-For a complete targeted-message implementation, see the <LanguageInclude section="targeted-message-sample-link" />.
+For a complete targeted-message implementation, see the <LanguageInclude content={{"typescript": "[TypeScript targeted messages sample](https://github.com/microsoft/teams.ts/tree/main/examples/targeted-messages)", "python": "[Python targeted messages sample](https://github.com/microsoft/teams.py/tree/main/examples/targeted-messages)"}} />.
 
-For a full multi-channel example, the <LanguageInclude section="m365-extensions-sample-link" /> demonstrates a single application running across Teams, Web Chat, and Email.
+Use an Agents SDK handler to identify the channel and confirm how each activity was routed:
+
+<LanguageInclude section="channel-routing" />
+
+The same handler receives activities from Web Chat and Email through the Agents SDK.
+
+#### Web Chat
+
+![The channel command in Web Chat returning an Agents SDK response that identifies Direct Line as a non-Teams channel that passed straight through.](/screenshots/m365-extensions-web-chat.png)
+
+#### Email
+
+![The channel command sent through Email returning an Agents SDK response that identifies Email as a non-Teams channel that passed straight through.](/screenshots/m365-extensions-email.png)
+
+For a full multi-channel example, the <LanguageInclude content={{"typescript": "[TypeScript M365 Extensions sample](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions)", "python": "[Python M365 Extensions sample](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)"}} /> demonstrates a single application running across Teams, Web Chat, and Email.
 
 ### Access Teams Capabilities from Agents SDK Handlers
 

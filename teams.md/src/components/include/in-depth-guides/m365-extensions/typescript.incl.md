@@ -51,9 +51,16 @@ app.message(/^targeted$/i, async ({ send, activity }) => {
 });
 ```
 
-<!-- targeted-message-sample-link -->
+<!-- channel-routing -->
 
-[TypeScript targeted messages sample](https://github.com/microsoft/teams.ts/tree/main/examples/targeted-messages)
+```typescript
+AGENT_SDK_APP.onMessage(command('channel'), async (context: TurnContext) => {
+  const via = isTeamsChannel(context.activity)
+    ? 'Teams turn with no matching teams.ts route → fell through'
+    : 'non-Teams channel → passed straight through';
+  await context.sendActivity(`[Agent SDK] channelId=${context.activity.channelId} (${via})`);
+});
+```
 
 <!-- agents-sdk-reaction -->
 
@@ -77,7 +84,3 @@ agentApp.onMessage(/^agents sdk react$/i, async (context) => {
   await api.conversations.deleteReaction(conversationId, response!.id!, 'like');
 });
 ```
-
-<!-- m365-extensions-sample-link -->
-
-[TypeScript M365 Extensions sample](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions)
