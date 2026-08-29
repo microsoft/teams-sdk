@@ -1,6 +1,6 @@
 <!-- intro -->
 
-This guide is based on [`core/samples/McpServer`](https://github.com/microsoft/teams.net/tree/main/core/samples/McpServer): a single ASP.NET process hosts both Teams (`/api/messages`) and MCP (`/mcp`).
+This guide is based on [`samples/McpServer`](https://github.com/microsoft/teams.net/tree/main/samples/McpServer): a single ASP.NET process hosts both Teams (`/api/messages`) and MCP (`/mcp`).
 
 <!-- define-tool -->
 
