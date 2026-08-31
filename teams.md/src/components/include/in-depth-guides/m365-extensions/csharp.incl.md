@@ -1,12 +1,14 @@
 <!-- setup -->
 
-Install the M365 Extensions package alongside the Microsoft Agents SDK:
+Install the Microsoft 365 Extensions package alongside the Microsoft Agents SDK:
 
 ```bash
+dotnet add package Microsoft.Agents.Hosting.AspNetCore
+dotnet add package Microsoft.Agents.Authentication.Msal
 dotnet add package Microsoft.Teams.M365Extensions
 ```
 
-Register your existing Teams SDK bot as middleware on your Agents SDK `AgentApplication` with `AddTeamsSdk`. The bridge reuses the Agents SDK connection identity, so you don't configure a second set of credentials:
+Add an Agents SDK host to your existing Teams SDK application, then register your Teams SDK bot with `AddTeamsSdk`:
 
 ```csharp
 using Microsoft.Agents.Storage;
