@@ -1,26 +1,29 @@
 ---
 sidebar_position: 1
-title: 'File Handling'
+title: 'File and Image Handling'
 suppressLanguageIncludeWarning: true
 ---
 
-# File Handling
+# File and Image Handling
 
-This section covers how your app receives files and reads their bytes.
+This section covers how your app receives files and inline images and reads their bytes.
 
 :::info[Preview]
-File handling is being rolled out incrementally. Today the SDK supports **receiving** files attached to messages in personal (1:1) chats via the TypeScript, Python, and C# SDKs.
+The high-level file API is being rolled out incrementally. Today it supports **receiving** files attached to messages in personal (1:1) chats via the TypeScript, Python, and C# SDKs. Inline images use the raw activity attachments instead.
 :::
 
 ## Files vs. attachments
 
-In personal scope, <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> carries every non-text part of a received message: files the user attached, but also Adaptive Cards, `@mentions`, link previews, and other content the client or the platform adds. A **file** is the specific subset of attachments that describes a document the user attached, one whose <LanguageInclude content={{"typescript": "`contentType`", "python": "`content_type`", "csharp": "`ContentType`"}} /> is `file.download.info`.
+On incoming messages, <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> carries every non-text part: files the user attached, inline images, Adaptive Cards, `@mentions`, link previews, and other content the client or the platform adds. A **file** is the specific subset of attachments that describes a document the user attached, one whose <LanguageInclude content={{"typescript": "`contentType`", "python": "`content_type`", "csharp": "`ContentType`"}} /> is `file.download.info`.
 
 The <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> accessor is the attached-file view over that raw array. It maps each attached file to a lazy handle you can download from, and skips everything else. The original <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> array is always available when you need the raw payload or a non-file attachment.
+
+An **inline image** is an image attachment with an authenticated download URL, commonly paired with an HTML attachment that describes where the image appeared in the composed message. Inline images are not surfaced by the high-level file API.
 
 ## In this section
 
 - **[Receiving Files](./receiving-files)** — read files a user attaches to a message, stream or download their bytes, and handle unsupported scopes and expired links.
+- **[Receiving Inline Images](./receiving-inline-images)** — identify images pasted into a message and download their bytes with the authenticated HTTP client.
 
 ## Resources
 
