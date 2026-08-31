@@ -13,7 +13,8 @@ teams.OnMessage(async (context, cancellationToken) =>
 {
     TeamsAttachment? image = context.Activity.Attachments?.FirstOrDefault(
         attachment =>
-            attachment.ContentType.Value.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+            attachment.ContentType is not null
+            && attachment.ContentType.Value.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
             && attachment.ContentUrl is not null);
 
     if (image?.ContentUrl is Uri contentUrl)
