@@ -163,7 +163,8 @@ function processLanguageIncludeTags(
               }
             }
           }
-          return languageComponents.join('\n');
+          // Inline variants must be joined without a separator: a newline between them survives as whitespace once the non-matching languages render nothing, producing a stray space before any following punctuation.
+          return languageComponents.join(isBlock ? '\n' : '');
         } catch (error) {
           console.warn(`generate-language-docs warning: Error parsing inline content: ${error}`);
           return match; // Return original tag on error
@@ -554,7 +555,20 @@ function copyCategoryFiles(): void {
         // Copy category file to all language directories with unique keys
         const categoryContent = JSON.parse(readFileUtf8Normalized(sourcePath));
 
+        // Optional `languages` array restricts which language sidebars get this
+        // category (e.g. a section that only exists for some languages). The key
+        // is stripped from the written output so Docusaurus never sees it.
+        const { languages: restrictLanguages, ...categoryRest } = categoryContent;
+        const allowedLanguages =
+          Array.isArray(restrictLanguages) && restrictLanguages.length > 0
+            ? restrictLanguages
+            : LANGUAGES;
+
         for (const lang of LANGUAGES) {
+          if (!allowedLanguages.includes(lang)) {
+            continue;
+          }
+
           const targetDir = path.join(DOCS_BASE, lang, relativePath);
           const targetPath = path.join(targetDir, '_category_.json');
 
@@ -565,7 +579,7 @@ function copyCategoryFiles(): void {
 
           // Add unique key based on language and relative path
           const modifiedContent = {
-            ...categoryContent,
+            ...categoryRest,
             key: `${lang}-${relativePath.replace(/[/\\]/g, '-') || 'root'}`,
           };
 
@@ -811,6 +825,8 @@ function watch(): void {
   const templateWatcher = chokidar.watch(path.join(TEMPLATES_DIR, '**/*.mdx'), {
     persistent: true,
     ignoreInitial: true,
+    usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+    interval: Number(process.env.CHOKIDAR_INTERVAL ?? 500),
   });
 
   templateWatcher.on('add', (filePath: string) => {
@@ -829,6 +845,8 @@ function watch(): void {
   const inclWatcher = chokidar.watch(path.join(FRAGMENTS_DIR, '**/*.incl.md'), {
     persistent: true,
     ignoreInitial: true,
+    usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+    interval: Number(process.env.CHOKIDAR_INTERVAL ?? 500),
   });
 
   /**

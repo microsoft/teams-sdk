@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "target": "ESNext",
     "moduleResolution": "NodeNext",
+    "skipLibCheck": true,
     "strict": true,
     "noImplicitAny": true,
     "declaration": true,

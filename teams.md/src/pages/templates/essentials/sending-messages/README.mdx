@@ -4,17 +4,22 @@ summary: Guide to sending messages from your Teams SDK agent, including replies,
 title: Sending Messages
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Sending Messages
 
 Sending messages is a core part of an agent's functionality. With all activity handlers, a `send` method is provided which allows your handlers to send a message back to the user to the relevant conversation.
+
+:::info[SDK 2.1]
+In SDK 2.1, the per-turn `context.Send`, `context.Reply`, and `context.Quote` helpers work the same way. The main difference is **streaming** — see the tabbed examples below.
+:::
 
 <LanguageInclude section="basic-message-example" />
 
 In the above example, the handler gets a `message` activity, and uses the `send` method to send a reply to the user.
 
 <LanguageInclude section="signin-example" />
-
-You are not restricted to only replying to `message` activities. In the above example, the handler is listening to <LanguageInclude section="signin-event-name" /> events, which are sent when a user successfully signs in.
 
 :::tip
 This shows an example of sending a text message. Additionally, you are able to send back things like [adaptive cards](../../in-depth-guides/adaptive-cards) by using the same `send` method. Look at the [adaptive card](../../in-depth-guides/adaptive-cards) section for more details.
@@ -40,17 +45,11 @@ Sending a message at `@mentions` a user is as simple including the details of th
 
 ## Targeted Messages
 
-:::info[Coming Soon]
-Targeted messages are coming soon in May 2026.
-:::
-
 Targeted messages, also known as ephemeral messages, are delivered to a specific user in a shared conversation. From a single user's perspective, they appear as regular inline messages in a conversation. Other participants won't see these messages, making them useful for authentication flows, help or error responses, personal reminders, or sharing contextual information without cluttering the group conversation.
 
 To send a targeted message when responding to an incoming activity, use the <LanguageInclude section="targeted-method-name" /> method with the recipient account and set the targeting flag to true.
 
 <LanguageInclude section="targeted-send-example" />
-
-<LanguageInclude section="targeted-preview-note" />
 
 ### Prompt Preview
 
@@ -74,7 +73,7 @@ In a public reply, the same prompt preview appears above the bot response and is
 
 In reactive scenarios, when replying to an inbound targeted activity through <LanguageInclude section="context-send-method-name" /> or <LanguageInclude section="context-reply-method-name" />, the SDK automatically includes targeted message info.
 
-For proactive scenarios (using <LanguageInclude content={{"csharp": "`app.Send()`", "typescript": "`app.send()`", "python": "`app.send()`"}} />), attach targeted message info using the targeted message ID you are replying to.
+For proactive scenarios (using <LanguageInclude content={{"csharp": "`app.SendAsync()`", "typescript": "`app.send()`", "python": "`app.send()`"}} />), attach targeted message info using the targeted message ID you are replying to.
 
 <LanguageInclude section="prompt-preview-proactive-example" />
 
@@ -95,10 +94,6 @@ When your agent receives a message in a thread, the conversation context already
 For proactive threading (sending to a thread outside of a handler), see [Proactive Messaging](./proactive-messaging#proactive-threading).
 
 ## Quoted Replies
-
-:::info[Coming Soon]
-Quoted replies are coming soon in May 2026.
-:::
 
 Quoted replies let your agent reference a previous message in the conversation. When a user sends a message that quotes another message, your agent receives structured metadata about the quoted content. Your agent can also send messages that quote previous messages.
 

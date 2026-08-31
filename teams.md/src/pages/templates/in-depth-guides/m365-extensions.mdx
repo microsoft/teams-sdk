@@ -1,95 +1,66 @@
 ---
-sidebar_position: 10
-title: M365 Extensions
-sidebar_label: M365 Extensions
-summary: Add multichannel reach to an existing Teams SDK agent by embedding it as middleware in a Microsoft Agents SDK AgentApplication.
-languages: ['csharp']
+sidebar_position: 8
+title: Microsoft 365 Extensions
+sidebar_label: Microsoft 365 Extensions
+summary: Bridge Teams SDK and Agents SDK for multichannel.
+languages: ['python', 'typescript', 'csharp']
 ---
 
-# M365 Extensions
+# Microsoft 365 Extensions
 
-You already have a Teams SDK agent. M365 Extensions let you give it **multichannel** reach (one codebase that runs across Teams, Web Chat / Direct Line, email (Outlook), and other Microsoft Agents SDK channels) **by embedding your Teams SDK app as middleware in a Microsoft Agents SDK `AgentApplication`**. Your Teams-specific handlers keep working, and the Agents SDK handles everything else.
+Microsoft 365 Extensions let you extend an existing Teams SDK application to channels such as Direct Line and Email without rewriting any Teams-specific capabilities.
 
-Practically, adding M365 Extensions to a Teams SDK agent lets you:
+Register your existing Teams SDK handlers on the `App` returned by `useTeamsSdk` (TypeScript) or `use_teams_sdk` (Python), or embed your Teams SDK bot as middleware with `AddTeamsSdk` (C#).
+Microsoft 365 Extensions work with your existing Teams SDK configuration and handlers.
+This app is a bridge where Microsoft Agents SDK `AgentApplication` acts the multichannel host.
 
-- **Reach beyond Teams.** The same agent responds on Web Chat, Direct Line, email, and other Agents SDK channels without rewriting your Teams handlers.
-- **Keep Teams-native features.** Targeted messages, reactions, quoted replies, dialogs, and task modules still run through the Teams SDK when the activity comes from Teams.
-- **Share one identity.** Teams API calls reuse the Agents SDK connection identity and tokens, so there's no second set of credentials to configure.
+Matching Teams activities continue through your Teams SDK handlers, while non-Teams activities and unmatched Teams activities flow through the Agents SDK application.
 
 ## How to Use It
 
 <LanguageInclude section="setup" />
 
-The bridge derives the Teams SDK app's identity and outbound tokens from the Agents SDK connection manager, so it works with your existing Teams SDK configuration. Don't pass separate client ID, tenant ID, or token options. If you're coming from a standalone Teams SDK app, move that configuration into the Agents SDK connection format.
+## Key Benefits
 
-Register Teams-specific routes on your Teams SDK bot. Register multichannel routes on your Agents SDK `AgentApplication`.
+### Extend Your Teams App to Other Channels
 
-## Scenarios
+Through this extension, you can connect your existing Teams SDK app to other channels such as Direct Line and Email without rewriting your Teams-specific logic.
 
-### Handle a Teams-Only Interaction with the Teams SDK
-
-Your Teams SDK bot supports the same handlers as a standalone Teams SDK application. This handler sends an ephemeral message that only the sender can see:
-
-<LanguageInclude section="targeted-message" />
-
-For the full handler in context, see the <LanguageInclude section="targeted-message-sample-link" />.
-
-### Reach Teams from an Agents SDK Handler
-
-A route registered on the Agents SDK sees every channel. Guard Teams-only APIs with a channel check, then reuse the bridged Teams SDK API client. This also enables cross-channel flows. For example, an activity arrives from Outlook while your agent delivers an update *into* Teams:
-
-<LanguageInclude section="cross-channel" />
-
-The API client uses the same Teams credentials and HTTP configuration the bridge established, so you don't manage a separate Teams client. For the full handler in context, see the <LanguageInclude section="cross-channel-sample-link" />.
-
-### Route Across Teams and Other Channels
-
-M365 Extensions preserve the Agents SDK app's multichannel reach:
-
-| Activity | Handled by |
+| Activity | Route |
 | --- | --- |
-| Teams activity matching a Teams SDK route | Teams SDK |
-| Teams activity with no matching Teams SDK route | Agents SDK |
-| Web Chat / Direct Line activity | Agents SDK |
-| Email (Outlook) activity | Agents SDK |
+| Teams activity matching a Teams SDK handler | Teams SDK |
+| Teams activity without a matching Teams SDK handler | Agents SDK |
+| Direct Line / Direct Line activity | Agents SDK |
+| Email activity | Agents SDK |
 
-The <LanguageInclude section="m365-extensions-sample-link" /> demonstrates this across channels: Teams-only commands run through the Teams SDK, while Web Chat and email fall through to the Agents SDK.
+
+#### Example Message Handler
+You can use the Agents SDK message handler to identify the incoming channel and confirm how each activity was routed.
+The incoming activity is recognized as Teams if the `channelId="msteams"`.
+
+<LanguageInclude section="channel-routing" />
+
+#### Direct Line
+
+![The channel command in Direct Line returning an Agents SDK response that identifies Direct Line as a non-Teams channel that passed straight through.](/screenshots/m365-extensions-web-chat.png)
+
+#### Email
+
+![The channel command sent through Email returning an Agents SDK response that identifies Email as a non-Teams channel that passed straight through.](/screenshots/m365-extensions-email.png)
+
+### Access Rich Teams Capabilities from Agents SDK
+
+When an Agents SDK handler receives a Teams activity, it can use the Teams SDK API client to access Teams-specific capabilities, such as message reactions:
+
+<LanguageInclude section="agents-sdk-reaction" />
+
+
+For a full example, the <LanguageInclude content={{"typescript": "[TypeScript Microsoft 365 Extensions sample](https://github.com/microsoft/teams.ts/tree/main/examples/m365extensions)", "python": "[Python Microsoft 365 Extensions sample](https://github.com/microsoft/teams.py/tree/main/examples/m365extensions)", "csharp": "[.NET Microsoft 365 Extensions sample](https://github.com/microsoft/teams.net/tree/main/samples/M365ExtensionsBot)"}} /> demonstrates a single application running across Teams, Web Chat, and Email.
 
 ## How It Works
 
-```mermaid
-flowchart TD
-    User["User"]
+Microsoft 365 Extensions adds a lightweight middleware bridge to your existing Teams SDK application. Aside from app initialization, your Teams-specific code stays the same.
 
-    subgraph HTTP["HTTP Endpoint Layer"]
-        Messages["/api/messages"]
-        Adapter["CloudAdapter.ProcessAsync"]
-        Messages -->|calls| Adapter
-    end
-
-    Middleware{"Teams SDK Middleware<br/>channel == Teams<br/>AND handler exists<br/>AND not bypassed?"}
-
-    subgraph Agents["Agents SDK Application"]
-        OnTurn["AgentApplication.OnTurnAsync()"]
-        AgentsHandler["Activity Handler"]
-        OnTurn --> AgentsHandler
-    end
-
-    subgraph TeamsSDK["Teams SDK Application"]
-        TeamsBot["TeamsBotApplication"]
-        TeamsHandler["Activity Handler"]
-        TeamsBot --> TeamsHandler
-    end
-
-    User -->|triggers activity| Messages
-    Adapter -->|middleware pipeline| Middleware
-    Middleware -->|yes| TeamsBot
-    Middleware -->|no| OnTurn
-```
-
-The key intuitions:
-
-- **One call wires everything.** `AddTeamsSdk<T>()` registers your Teams SDK bot and installs routing middleware on the Agents SDK adapter, reusing the Agents SDK connection identity for Teams API calls.
-- **Non-Teams activities pass straight through.** They continue down the Agents SDK pipeline untouched.
-- **Teams activities match before handling.** If a Teams activity matches a Teams SDK route, the Teams SDK handles it; otherwise it falls through to the Agents SDK. Nothing is consumed without a matching route.
-- **Bypass when you need to.** An optional `shouldBypassTeams` predicate forces specific Teams activities (such as `signin/*` invokes) to stay on the Agents SDK pipeline.
+1. **Add the bridge.** Call `useTeamsSdk` (TypeScript), `use_teams_sdk` (Python), or `AddTeamsSdk` (C#) to connect your app to Agents SDK.
+2. **Keep your Teams logic.** Existing handlers and API client calls continue handling Teams activities.
+3. **Add more channels.** Direct Line, Email, and unmatched Teams activities flow to the Agents SDK.

@@ -63,6 +63,19 @@ describe('writeEnvFile', () => {
     expect(content).not.toContain('CLIENT_ID=old-value');
     expect(content).toContain('OTHER=keep');
   });
+
+  it('removes an existing CLIENT_SECRET when the secret is undefined', () => {
+    const filePath = tmpFile('.env');
+    files.push(filePath);
+    fs.writeFileSync(filePath, 'CLIENT_ID=old-id\nCLIENT_SECRET=stale-secret\nTENANT_ID=old-tenant\n');
+
+    writeEnvFile(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('CLIENT_ID=id-123');
+    expect(content).toContain('TENANT_ID=tenant-456');
+    expect(content).not.toContain('CLIENT_SECRET');
+  });
 });
 
 // ── writeJsonCredentials ─────────────────────────────────────────────
@@ -136,6 +149,27 @@ describe('writeJsonCredentials', () => {
     expect(json.Teams.ClientSecret).toBe('test-client-secret');
     expect(json.Teams.TenantId).toBe('test-tenant-id');
   });
+
+  it('removes an existing ClientSecret when the secret is undefined', () => {
+    const filePath = tmpFile('appsettings.json');
+    files.push(filePath);
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify(
+        { Teams: { AppId: 'keep-me', ClientId: 'old-id', ClientSecret: 'stale-secret', TenantId: 'old-tenant' } },
+        null,
+        2
+      )
+    );
+
+    writeJsonCredentials(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    expect(json.Teams.AppId).toBe('keep-me');
+    expect(json.Teams.ClientId).toBe('id-123');
+    expect(json.Teams.TenantId).toBe('tenant-456');
+    expect(json.Teams).not.toHaveProperty('ClientSecret');
+  });
 });
 
 // ── outputCredentials (format dispatch) ──────────────────────────────
@@ -177,6 +211,20 @@ describe('outputCredentials', () => {
     expect(content).toContain('CLIENT_ID=test-client-id');
     expect(content).toContain('CLIENT_SECRET=test-client-secret');
     expect(content).toContain('TENANT_ID=test-tenant-id');
+  });
+
+  it('does not print terminal credentials section when writing to a file', async () => {
+    const { logger } = await import('../src/utils/logger.js');
+    const filePath = tmpFile('.env');
+    files.push(filePath);
+
+    outputCredentials(filePath, TEST_VALUES, 'Credentials:');
+
+    const output = vi.mocked(logger.info).mock.calls.map(([message]) => message).join('\n');
+    expect(output).toContain(`Credentials written to ${filePath}`);
+    expect(output).not.toContain('Credentials:');
+    expect(output).not.toContain('CLIENT_ID=');
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('writes JSON format for paths ending in .json', () => {

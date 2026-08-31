@@ -4,6 +4,10 @@ summary: Guide to handling Teams-specific activities like chat messages, card ac
 title: Listening to Activities
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Language from '@site/src/components/Language';
+
 # Listening To Activities
 
 An **Activity** is the Teams‑specific payload that flows between the user and your bot.
@@ -34,10 +38,6 @@ Here is an example of a basic message handler:
 
 ## Slash Commands
 
-:::info[Preview]
-Slash commands are coming soon in May 2026.
-:::
-
 Slash commands are manifest-declared commands users run from the compose box. To enable slash commands, set `supportsTargetedMessages: true` in your app manifest under the `bots` section. You can opt in with an explicit command list by declaring specific commands using `commandLists` with `triggers: ["slash"]`, which Teams shows in the slash menu when a user types `/`. Without a command list, users can still invoke your agent via `/agent-name` and provide free-form input.
 
 ```json
@@ -67,14 +67,8 @@ Slash commands arrive as normal message activities with the targeted flag set on
 
 <LanguageInclude section="slash-command-example" />
 
-## Middleware pattern
+## Activity handler chaining
 
-<LanguageInclude section="middleware-intro" />
-
-<LanguageInclude section="middleware-examples" />
-
-:::info
-Just like other middlewares, if you stop the chain by not calling `next()`, the activity will not be passed to the next handler. The order of registration for the handlers also matters as that determines how the handlers will be called.
-:::
+<LanguageInclude section="activity-handlers-next" />
 
 <LanguageInclude section="activity-reference-footer" />

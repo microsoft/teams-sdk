@@ -1,0 +1,107 @@
+---
+sidebar_position: 2
+title: 'Receiving Files'
+sidebar_label: 'Receiving Files'
+summary: Read files a user attaches to a message in your Teams app. List attached files on an incoming message, download or stream their bytes, and handle expired links and unsupported scopes.
+languages: ['python', 'typescript', 'csharp']
+suppressLanguageIncludeWarning: true
+---
+
+# Receiving Files
+
+Teams users can send files to agents by attaching them to chat messages. When users send files to an agent in 1:1 chat, they arrive as part of the context of the received message activity. <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> provides lazy access to the metadata and bytes of each attached file.
+
+An attached file is not delivered inline with the message. Teams stores the file in the sender's OneDrive or SharePoint and hands your agent a small metadata attachment describing it, including a short-lived, pre-authorized URL in personal scopes. Reading the contents means fetching the bytes from that URL over the network, so the SDK defers that work until you ask for it.
+
+This API covers file downloads in **personal (1:1) chats**. In **channels**, the attached file isn't delivered to the bot on the activity, so those files follow a separate, Microsoft Graph-based retrieval path. Group-chat behavior varies by how the file is stored. See [Conversation scope support](#conversation-scope-support).
+
+## Enable file support in your manifest
+
+Teams only offers users the option to attach a file in 1:1 with a bot when your app manifest opts in. Set `supportsFiles` to `true` on your bot entry; without it the compose box shows no attach affordance for your agent, no file reaches your handler, and <LanguageInclude content={{"typescript": "`ctx.files.list()`", "python": "`ctx.files.list()`", "csharp": "`context.Files.ListAsync()`"}} /> is always empty:
+
+```json
+"bots": [
+  {
+    "botId": "${{BOT_ID}}",
+    "scopes": ["personal"],
+    "supportsFiles": true
+  }
+]
+```
+
+## Access attached files
+
+The accessor <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> is available on every activity context, but only inbound message activities carry attachments, so it is empty everywhere else. Use <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> to get all files attached to the current message, or <LanguageInclude content={{"typescript": "`first()`", "python": "`first()`", "csharp": "`FirstAsync()`"}} /> for the common single-file case. Both hand back the file's metadata rather than its contents, so listing is cheap even when the attached files are large:
+
+<LanguageInclude section="accessing-files" />
+
+Listing with <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> returns the attached files in the same order they arrived. It never throws: activities with no attachments (or non-message activities) return an empty list, and malformed file entries are skipped rather than failing the whole batch.
+
+<LanguageInclude section="first-file" />
+
+### File metadata
+
+Each <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} /> carries metadata describing the file, populated from what the platform reports:
+
+<LanguageInclude section="metadata-table" />
+
+## Read a file
+
+The most common path is <LanguageInclude content={{"typescript": "`download()`", "python": "`download()`", "csharp": "`DownloadAsync()`"}} />, which fetches the whole file and buffers it into an in-memory copy you own:
+
+<LanguageInclude section="reading-download" />
+
+For text files, <LanguageInclude content={{"typescript": "`text()`", "python": "`text()`", "csharp": "`TextAsync()`"}} /> is a shortcut for <LanguageInclude content={{"typescript": "`download()`", "python": "`download()`", "csharp": "`DownloadAsync()`"}} /> followed by decoding:
+
+<LanguageInclude section="reading-text" />
+
+:::note
+Decoding with <LanguageInclude content={{"typescript": "`text()`", "python": "`text()`", "csharp": "`TextAsync()`"}} /> reads the downloaded bytes as UTF-8 by default, and is lossy: bytes that are not valid for the encoding become the replacement character (`U+FFFD`) instead of throwing. To decode a different encoding, pass <LanguageInclude content={{"typescript": "an encoding name (e.g. `file.text('latin1')`)", "python": "an encoding name (e.g. `file.text(\"latin1\")`)", "csharp": "an `Encoding` (e.g. `file.TextAsync(Encoding.Latin1)`)"}} />. For binary files, read the raw bytes instead.
+:::
+
+To save a file to disk without holding it all in memory, use <LanguageInclude content={{"typescript": "`saveAs()`", "python": "`save_as()`", "csharp": "`SaveAsAsync()`"}} />, which streams straight to the path:
+
+<LanguageInclude section="saving-to-disk" />
+
+For large files or streaming pipelines, <LanguageInclude content={{"typescript": "`stream()`", "python": "`stream()`", "csharp": "`StreamAsync()`"}} /> hands you the raw byte stream so you can process it as it arrives:
+
+<LanguageInclude section="streaming" />
+
+An <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} /> handle holds no cached bytes: each call to <LanguageInclude content={{"typescript": "`download()`, `text()`, `stream()`, or `saveAs()`", "python": "`download()`, `text()`, `stream()`, or `save_as()`", "csharp": "`DownloadAsync()`, `TextAsync()`, `StreamAsync()`, or `SaveAsAsync()`"}} /> fetches the file again. This matters because a file's download link is short-lived: the URL embeds its own pre-authorized `tempauth` credential, which can expire between reads. To read the same file several ways, call <LanguageInclude content={{"typescript": "`download()`", "python": "`download()`", "csharp": "`DownloadAsync()`"}} /> once and reuse the downloaded file it returns, which is a point-in-time copy whose readers never re-fetch:
+
+<LanguageInclude section="reusing-downloaded-file" />
+
+<LanguageInclude section="downloaded-table" />
+
+## Handle errors
+
+Byte retrieval can fail for a few well-defined reasons. Both error types are exported from the SDK:
+
+<LanguageInclude section="errors-import" />
+
+- **File URL expired**: the file's short-lived download link expired before the bytes could be fetched. Its reason distinguishes the two cases:
+  - *first fetch*: the link had already lapsed on the first read attempt, so no bytes were retrieved.
+  - *re-read*: an earlier download succeeded, but a later re-read through the same handle came too late. Avoid this by downloading once and reusing the downloaded file.
+- **File scope not supported**: <LanguageInclude content={{"typescript": "`download()`", "python": "`download()`", "csharp": "`DownloadAsync()`"}} /> was called on a file from a conversation scope this API doesn't fetch bytes for (anything other than personal 1:1). Exposes the scope.
+
+<LanguageInclude section="errors-handling" />
+
+## Access the raw attachment
+
+Every file the accessor returns retains its original wire attachment on <LanguageInclude content={{"typescript": "`raw`", "python": "`raw`", "csharp": "`Raw`"}} />, for diagnostics or for the rare case where you need a field the typed surface does not expose:
+
+<LanguageInclude section="raw-attachment" />
+
+Attachments that are **not** files (Adaptive Cards, mentions, link previews), and malformed file entries the accessor skips, are not returned by <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> and therefore have no <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} />. Reach those directly through <LanguageInclude content={{"typescript": "`ctx.activity.attachments`", "python": "`ctx.activity.attachments`", "csharp": "`context.Activity.Attachments`"}} />.
+
+## Conversation scope support
+
+Listing with <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> surfaces the files Teams delivers on the incoming activity. Today that is the **personal (1:1)** chat path, where the file arrives with a short-lived, pre-authorized download link.
+
+In **channels**, the attached file isn't delivered to the bot on the activity (Teams drops the attachment), so <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> doesn't surface it; channel files follow a separate, Microsoft Graph-based retrieval path. Group-chat behavior varies by how the file is stored. When <LanguageInclude content={{"typescript": "`download()`, `stream()`, `text()`, or `saveAs()`", "python": "`download()`, `stream()`, `text()`, or `save_as()`", "csharp": "`DownloadAsync()`, `StreamAsync()`, `TextAsync()`, or `SaveAsAsync()`"}} /> is called on a surfaced file whose scope isn't personal (1:1), it raises the file-scope-not-supported error.
+
+Downloading in personal (1:1) chats is identity-agnostic: the file arrives with a pre-authorized link that needs no token, so a traditional bot and an agentic user call the same <LanguageInclude content={{"typescript": "`download()`", "python": "`download()`", "csharp": "`DownloadAsync()`"}} /> with the same behavior.
+
+## Next steps
+
+- See [Files in Teams bots](https://learn.microsoft.com/en-us/microsoftteams/platform/bots/how-to/bots-filesv4) for the platform-side file model.

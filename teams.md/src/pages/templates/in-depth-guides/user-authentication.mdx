@@ -1,9 +1,11 @@
 ---
-sidebar_position: 4
+sidebar_position: 7
 sidebar_label: 🔒 User Authentication
 title: 🔒 User Authentication
 summary: API guide to implement User Authentication with SSO in Teams Apps.
 ---
+
+import Language from '@site/src/components/Language';
 
 # 🔒 User Authentication
 
@@ -19,16 +21,6 @@ User authentication does not work with the developer tools setup. You have to ru
 
 :::info
 It is possible to authenticate the user into [other auth providers](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-identity-providers?view=azure-bot-service-4.0&tabs=adv2%2Cga2#other-identity-providers) like Facebook, Github, Google, Dropbox, and so on.
-:::
-
-Once you have configured your Azure Bot resource OAuth settings, as described in the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0), add the following code to your `App`:
-
-## Project Setup
-
-### Create an app with the `graph` template
-
-:::tip
-Skip this step if you want to add the auth configurations to an existing app.
 :::
 
 <LanguageInclude section="create-project" />
@@ -55,15 +47,13 @@ If you'd rather have an AI coding assistant run the setup, install the [`teams-d
 Make sure you use the same name you used when creating the OAuth connection in the Azure Bot Service resource.
 :::
 
+<Language language={['typescript', 'python']}>
 :::note
 In many templates, `graph` is the default name of the OAuth connection, but you can change that by supplying a different connection name in your app configuration.
 :::
+</Language>
 
 ## Signing In
-
-:::note
-This uses the Single Sign-On (SSO) authentication flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
-:::
 
 You must call the `signin` method inside your route handler, for example: to signin when receiving the `/signin` message:
 
@@ -75,12 +65,10 @@ You can subscribe to the `signin` event, that will be triggered once the OAuth f
 
 <LanguageInclude section="signin-event" />
 
-## Start using the graph client
-
-From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+## Start using the client
 
 :::note
-The default OAuth configuration requests the `User.ReadBasic.All` permission. It is possible to request other permissions by modifying the App Registration for the bot on Azure.
+The default graph configuration requests the `User.ReadBasic.All` permission. It is possible to request other permissions by modifying the App Registration for the bot on Azure.
 :::
 
 <LanguageInclude section="using-graph" />
@@ -90,6 +78,18 @@ The default OAuth configuration requests the `User.ReadBasic.All` permission. It
 You can signout by calling the `signout` method, this will remove the token from the User Token service cache
 
 <LanguageInclude section="signing-out" />
+
+## Resuming Pending Messages After Sign-In
+
+When a user isn't signed in and your message handler calls the sign-in method, an OAuth card is sent and the current turn ends. The sign-in completes on a *separate turn* — meaning the original message text is not available in the sign-in success context.
+
+To avoid ignoring what the user originally asked, store the pending message before initiating sign-in, then retrieve and process it once sign-in succeeds:
+
+<LanguageInclude section="pending-messages" />
+
+:::tip
+For production apps, consider using a persistent store (database, Redis, etc.) instead of an in-memory map so pending messages survive restarts. You should also implement expiration or cleanup logic (e.g., a TTL) to discard stale entries when sign-in is cancelled, times out, or fails.
+:::
 
 ## Handling Sign-In Failures
 

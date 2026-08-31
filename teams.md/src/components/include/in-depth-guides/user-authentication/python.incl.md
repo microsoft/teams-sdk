@@ -1,4 +1,9 @@
 <!-- create-project -->
+## Project Setup
+
+:::tip
+If you're creating a new app, use the `graph` template. Skip this if you're adding auth to an existing app.
+:::
 
 Use your terminal to run the following command:
 
@@ -10,7 +15,6 @@ This command:
 
 1. Creates a new directory called `oauth-app`.
 2. Bootstraps the graph agent template files into it under `oauth-app/src`.
-3. Creates your agent's manifest files, including a `manifest.json` file and placeholder icons in the `oauth-app/appPackage` directory.
 
 <!-- configure-oauth -->
 
@@ -28,6 +32,10 @@ app = App(
 ```
 
 <!-- signing-in -->
+
+:::note
+This uses the Single Sign-On (SSO) authentication flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
+:::
 
 ```python
 @app.on_message
@@ -50,6 +58,9 @@ async def handle_sign_in(event: SignInEvent):
 ```
 
 <!-- using-graph -->
+
+From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+
 
 ```python
 @app.on_message
@@ -84,6 +95,47 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
 
     await ctx.sign_out()
     await ctx.send("You have been signed out!")
+```
+
+<!-- pending-messages -->
+
+```python
+from microsoft_teams.apps import App, ActivityContext, SignInEvent
+from microsoft_teams.apps.routing.activity_context import SignInOptions
+from microsoft_teams.api import MessageActivity
+
+app = App()
+
+pending_messages: dict[str, dict] = {}
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    # sign_in() returns the token if already signed in, or None if OAuth card was sent
+    token = await ctx.sign_in(SignInOptions(
+        oauth_card_text="To help with that, I need to sign you in first."
+    ))
+
+    if token is None:
+        # OAuth card sent — store the original message for later
+        pending_messages[ctx.activity.from_.id] = {
+            "text": ctx.activity.text,
+            "activity": ctx.activity,
+        }
+        return
+
+    # User is already signed in — process normally
+    await process_message(ctx.activity.text, ctx)
+
+@app.event("sign_in")
+async def handle_sign_in(event: SignInEvent):
+    user_id = event.activity_ctx.activity.from_.id
+    pending = pending_messages.pop(user_id, None)
+
+    if pending:
+        await event.activity_ctx.send("Successfully signed in! Processing your original request...")
+        await process_message(pending["text"], event.activity_ctx)
+    else:
+        await event.activity_ctx.send("You are now signed in!")
 ```
 
 <!-- signin-failure -->

@@ -7,6 +7,7 @@ node_modules
 
 # Local env files
 .env
+.teams_env
 .env.local
 .env.development.local
 .env.test.local

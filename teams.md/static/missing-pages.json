@@ -1,71 +1,35 @@
 {
+  "essentials/middleware-and-errors": [
+    "typescript",
+    "python"
+  ],
   "essentials/on-activity/activity-ref": [
     "csharp",
     "python"
   ],
-  "in-depth-guides/ai": [
-    "python"
-  ],
-  "in-depth-guides/ai-integrations": [
-    "typescript",
+  "essentials/on-event": [
     "csharp"
   ],
-  "in-depth-guides/ai-integrations/a2a": [
+  "in-depth-guides/agentic-identity": [
     "typescript",
+    "python"
+  ],
+  "in-depth-guides/observability/logging": [
     "csharp"
   ],
-  "in-depth-guides/ai-integrations/build-agent-maf": [
-    "typescript",
+  "in-depth-guides/observability/middleware": [
     "csharp"
   ],
-  "in-depth-guides/ai-integrations/mcp-server": [
-    "typescript",
-    "csharp"
-  ],
-  "in-depth-guides/ai-integrations/teams-enhancements": [
-    "typescript",
-    "csharp"
-  ],
-  "in-depth-guides/ai/a2a": [
-    "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/a2a/a2a-client": [
-    "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/a2a/a2a-server": [
-    "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/chat": [
-    "python"
-  ],
-  "in-depth-guides/ai/function-calling": [
-    "python"
-  ],
-  "in-depth-guides/ai/keeping-state": [
-    "python"
-  ],
-  "in-depth-guides/ai/mcp": [
-    "python"
-  ],
-  "in-depth-guides/ai/mcp/mcp-client": [
-    "python"
-  ],
-  "in-depth-guides/ai/mcp/mcp-server": [
-    "csharp",
-    "python"
-  ],
-  "in-depth-guides/ai/setup-and-prereqs": [
-    "python"
-  ],
-  "in-depth-guides/m365-extensions": [
+  "in-depth-guides/observability/opentelemetry": [
     "typescript",
     "python"
   ],
   "in-depth-guides/server/http-server": [
     "csharp"
+  ],
+  "in-depth-guides/state": [
+    "typescript",
+    "python"
   ],
   "in-depth-guides/tabs": [
     "python"
@@ -93,7 +57,16 @@
     "csharp",
     "python"
   ],
-  "migrations": [
+  "migrations/botbuilder/proactive-activities": [
+    "csharp"
+  ],
+  "migrations/botbuilder/sending-activities": [
+    "csharp"
+  ],
+  "migrations/botbuilder/the-api-client": [
+    "csharp"
+  ],
+  "migrations/botbuilder/user-authentication": [
     "csharp"
   ],
   "migrations/slack-bolt": [
@@ -102,6 +75,10 @@
   ],
   "migrations/v1": [
     "csharp"
+  ],
+  "migrations/v2-dotnet": [
+    "typescript",
+    "python"
   ],
   "migrations/v2-previews": [
     "csharp",

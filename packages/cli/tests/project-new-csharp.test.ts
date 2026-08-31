@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../src/utils/interactive.js', () => ({
   confirmAction: vi.fn().mockResolvedValue(true),
+  isAutoConfirm: vi.fn().mockReturnValue(false),
+  isInteractive: vi.fn().mockReturnValue(false),
 }));
 
 vi.mock('../src/utils/logger.js', () => ({
@@ -69,6 +71,37 @@ describe('project new csharp', () => {
       expect.objectContaining({
         name: expectedName,
         targetDir: path.join(tempDir, expectedName),
+      })
+    );
+  });
+
+  it('maps credentials to the .NET 2.1 AzureAd config shape', async () => {
+    const { projectNewCsharpCommand } = await import('../src/commands/project/new/csharp.js');
+    const { scaffoldProject } = await import('../src/project/scaffold.js');
+
+    await projectNewCsharpCommand.parseAsync(
+      [
+        'pokemon-catcher',
+        '--template',
+        'echo',
+        '--client-id',
+        'client-id',
+        '--client-secret',
+        'client-secret',
+        '--tenant-id',
+        'tenant-id',
+      ],
+      { from: 'user' }
+    );
+
+    expect(scaffoldProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        envVars: {
+          'AzureAd.ClientId': 'client-id',
+          'AzureAd.TenantId': 'tenant-id',
+          'AzureAd.ClientCredentials.0.SourceType': 'ClientSecret',
+          'AzureAd.ClientCredentials.0.ClientSecret': 'client-secret',
+        },
       })
     );
   });

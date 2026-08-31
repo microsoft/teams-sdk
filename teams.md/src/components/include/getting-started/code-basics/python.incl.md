@@ -6,14 +6,12 @@ N/A
 
 ```
 quote-agent/
-|── appPackage/       # Teams app package files
 ├── src
     ├── main.py       # Main application code
 ```
 
 <!-- project-structure-description -->
 
-- **appPackage/**: Contains the Teams app package files, including the `manifest.json` file and icons. This is required for [sideloading](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) the app into Teams for testing. The app manifest defines the app's metadata, capabilities, and permissions.
 - **src/**: Contains the main application code. The `main.py` file is the entry point for your application.
 
 <!-- app-class-code -->
@@ -25,14 +23,15 @@ from microsoft_teams.apps import ActivityContext, App
 app = App()
 
 ```
+The app configuration includes a variety of options that allow you to customize its behavior, including controlling the underlying server, authentication, and other settings.
 
-<!-- plugin-events -->
 
-(on_activity, on_activity_sent, etc.)
+<!-- plugins  -->.
+Plugins are a core part of the Teams SDK. They allow you to hook into various lifecycles of the application. The lifecycles include server events (start, stop, initialize, etc.), and also Teams Activity events (on_activity, on_activity_sent, etc.)
 
-<!-- local-test-note -->
+<!-- plugins-note -->
 
-To test your agent locally without sideloading into Teams, run the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)** alongside your agent. The playground is a separate CLI tool and does not require any plugin in your app code.
+N/A
 
 <!-- message-handling-code -->
 
