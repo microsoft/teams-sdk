@@ -14,7 +14,7 @@ The high-level file API is being rolled out incrementally. Today it supports **r
 
 ## Files vs. attachments
 
-On incoming messages, <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> carries every non-text part: files the user attached, inline images, Adaptive Cards, `@mentions`, link previews, and other content the client or the platform adds. A **file** is the specific subset of attachments that describes a document the user attached, one whose <LanguageInclude content={{"typescript": "`contentType`", "python": "`content_type`", "csharp": "`ContentType`"}} /> is `file.download.info`.
+In personal scope, <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> carries every non-text part: files the user attached, inline images, Adaptive Cards, `@mentions`, link previews, and other content the client or the platform adds. A **file** is the specific subset of attachments that describes a document the user attached, one whose <LanguageInclude content={{"typescript": "`contentType`", "python": "`content_type`", "csharp": "`ContentType`"}} /> is `file.download.info`.
 
 The <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> accessor is the attached-file view over that raw array. It maps each attached file to a lazy handle you can download from, and skips everything else. The original <LanguageInclude content={{"typescript": "`activity.attachments`", "python": "`activity.attachments`", "csharp": "`Activity.Attachments`"}} /> array is always available when you need the raw payload or a non-file attachment.
 
