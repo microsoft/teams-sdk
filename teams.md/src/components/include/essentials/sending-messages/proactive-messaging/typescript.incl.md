@@ -58,14 +58,6 @@ const sendTargetedNotification = async (conversationId: string, recipient: Accou
 
 `app.reply()`
 
-<!-- to-thread-id-method-name -->
-
-`toThreadedConversationId()`
-
-<!-- app-send-method-name -->
-
-`app.send()`
-
 <!-- threading-proactive-example -->
 
 ```typescript

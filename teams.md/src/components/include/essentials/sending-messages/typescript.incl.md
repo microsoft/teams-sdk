@@ -27,10 +27,6 @@ app.on('message', async ({ activity, stream }) => {
 });
 ```
 
-<!-- mention-method-name -->
-
-`addMention`
-
 <!-- mention-example -->
 
 ```typescript
@@ -40,10 +36,6 @@ app.on('message', async ({ send, activity }) => {
   await send(new MessageActivityInput('hi!').addMention(activity.from));
 });
 ```
-
-<!-- targeted-method-name -->
-
-`withRecipient`
 
 <!-- targeted-send-example -->
 

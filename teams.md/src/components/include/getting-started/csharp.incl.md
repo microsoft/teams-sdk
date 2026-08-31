@@ -9,7 +9,3 @@
 
 You'll find **SDK 2.0 / SDK 2.1** tabs throughout this guide wherever the two versions differ. If you're starting a new project, use **SDK 2.1** — it's the recommended path going forward. Use the **SDK 2.0** tabs only when maintaining or migrating an existing 2.0 app. For the full overview, read the [Teams SDK 2.1 announcement](/blog/announcing-teams-sdk-dotnet-2-1), or jump straight to the [TeamsBot sample](https://github.com/microsoft/teams.net/tree/main/core/samples/TeamsBot).
 :::
-
-<!-- language-name -->
-
-C#

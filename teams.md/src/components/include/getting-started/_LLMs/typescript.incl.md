@@ -1,7 +1,3 @@
-<!-- language-name -->
-
-TypeScript
-
 <!-- file-links -->
 
 **Small**: [llms_typescript.txt](https://microsoft.github.io/teams-sdk/llms_docs/llms_typescript.txt) - This file contains an index of the various pages in the TypeScript documentation. The agent needs to selectively read the relevant pages to answer questions and help with development.

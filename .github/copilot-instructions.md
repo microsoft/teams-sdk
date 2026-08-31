@@ -63,6 +63,10 @@ Every command MUST support `--json` (boolean flag, marked `[OPTIONAL]`). Each co
 - Extract reusable logic into shared modules (`src/utils/`, action files like `manifest/actions.ts`, `secret/generate.ts`).
 - Never duplicate business logic across interactive menus and CLI subcommands — both should call the same shared function.
 
+### Documentation
+
+- Use `<LanguageInclude content={{...}} />` for short inline language-specific content, especially one-word or one-line snippets; reserve file-backed `<LanguageInclude section="..." />` fragments for multiline or substantial content.
+
 ### Build
 
 Always run `npm run build` after changes — the CLI runs from `dist/`, not source. `tsc --noEmit` only type-checks. From the monorepo root, use `npx turbo build --filter=@microsoft/teams.cli`.

@@ -10,10 +10,6 @@ With `microsoft-teams-cards` you can build these cards entirely in Python while 
 
 `microsoft-teams-cards` exposes small **builder helpers** including `Card`, `TextBlock`, `ToggleInput`, `ExecuteAction`, _etc._
 
-<!-- language-name -->
-
-Python
-
 <!-- builder-example -->
 
 ```python
@@ -105,10 +101,6 @@ card = AdaptiveCard.model_validate(
 # Send the card as an attachment
 message = MessageActivityInput(text="Hello text!").add_card(card)
 ```
-
-<!-- card-interface -->
-
-`AdaptiveCard`
 
 <!-- example-intro -->
 

@@ -1,7 +1,3 @@
-<!-- api-object-name -->
-
-`context.Api` (and `teams.Api` at the app level)
-
 <!-- api-table -->
 
 | Area            | Description                                                                                                                                                          |
@@ -9,10 +5,6 @@
 | `Conversations` | Gives your application the ability to perform activities on conversations (send, update, delete messages, etc.), or create conversations (like 1:1 chat with a user) |
 | `Meetings`      | Gives your application access to meeting details and participant information via `GetByIdAsync` and `GetParticipantAsync`                                             |
 | `Teams`         | Gives your application access to team or channel details                                                                                                             |
-
-<!-- api-object-description -->
-
-`Api`
 
 <!-- handler-example -->
 

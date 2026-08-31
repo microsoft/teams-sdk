@@ -54,14 +54,6 @@ async def send_targeted_notification(conversation_id: str, recipient: Account):
 
 `app.reply()`
 
-<!-- to-thread-id-method-name -->
-
-`to_threaded_conversation_id()`
-
-<!-- app-send-method-name -->
-
-`app.send()`
-
 <!-- threading-proactive-example -->
 
 ```python

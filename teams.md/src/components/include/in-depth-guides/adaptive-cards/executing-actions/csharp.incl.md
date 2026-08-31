@@ -46,10 +46,6 @@ var card = new AdaptiveCard
 };
 ```
 
-<!-- json-safety-note -->
-
-N/A
-
 <!-- raw-json-example -->
 
 ```csharp
@@ -438,4 +434,3 @@ private static AdaptiveCard CreateDynamicSearchCard()
     ```
   </TabItem>
 </Tabs>
-

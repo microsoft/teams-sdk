@@ -113,14 +113,6 @@ public static async Task SendTargetedNotification(
 
 `app.Reply()`
 
-<!-- to-thread-id-method-name -->
-
-`Conversation.ToThreadedConversationId()`
-
-<!-- app-send-method-name -->
-
-`app.Send()` (SDK 2.0) / `app.SendAsync()` (SDK 2.1)
-
 <!-- threading-proactive-example -->
 
 <Tabs groupId="csharp-sdk-version" defaultValue="core">

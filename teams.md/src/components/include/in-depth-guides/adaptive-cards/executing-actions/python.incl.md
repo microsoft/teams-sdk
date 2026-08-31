@@ -24,10 +24,6 @@ action_set = ActionSet(
             ),
 ```
 
-<!-- json-safety-note -->
-
-You get type safety for free in Python.
-
 <!-- raw-json-example -->
 
 ```python
@@ -269,4 +265,3 @@ async def handle_search(ctx: ActivityContext[SearchInvokeActivity]) -> SearchRes
     ]
     return SearchResponse(value=SearchInvokeResponseValue(results=results))
 ```
-

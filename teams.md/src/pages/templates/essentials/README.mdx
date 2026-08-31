@@ -63,9 +63,9 @@ SDK 2.0 routed both incoming and outgoing events through a **plugin event bus** 
 flowchart LR
     Teams["Teams"]
     Server["App Server"]
-    AppEventHandlers["<LanguageInclude section="event-handler-label" />"]
+    AppEventHandlers["<LanguageInclude content={{"typescript": "Event Handler (app.event())", "csharp": "Activity Handling (middleware)", "python": "Event Handler decorator (@app.event())"}} />"]
     AppRouter["Activity Event Router"]
-    AppActivityHandlers["<LanguageInclude section="activity-handler-label" />"]
+    AppActivityHandlers["<LanguageInclude content={{"typescript": "Activity Handlers (app.on())", "csharp": "Activity Handlers (OnMessage, ...)", "python": "Activity Handler decorators (@app.on_activity())"}} />"]
 
     Teams --> |Activity| Server
     Teams --> |Signed In| Server

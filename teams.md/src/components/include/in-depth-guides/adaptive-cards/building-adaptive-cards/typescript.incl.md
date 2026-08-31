@@ -10,10 +10,6 @@ With `@microsoft/teams.cards` you can build these cards entirely in TypeScript/J
 
 `@microsoft/teams.cards` exposes small **builder helpers** including `Card`, `TextBlock`, `ToggleInput`, `ExecuteAction`, _etc._
 
-<!-- language-name -->
-
-TypeScript/JavaScript
-
 <!-- builder-example -->
 
 ```ts
@@ -103,10 +99,6 @@ const rawCard: IAdaptiveCard = {
   version: '1.5',
 };
 ```
-
-<!-- card-interface -->
-
-`IAdaptiveCard`
 
 <!-- example-intro -->
 

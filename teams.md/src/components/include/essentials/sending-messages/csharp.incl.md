@@ -96,10 +96,6 @@ teams.OnMessage(async (context, cancellationToken) =>
   </TabItem>
 </Tabs>
 
-<!-- mention-method-name -->
-
-`AddMention`
-
 <!-- mention-example -->
 
 <Tabs groupId="csharp-sdk-version" defaultValue="core">
@@ -128,10 +124,6 @@ teams.OnMessage(async (context, cancellationToken) =>
 
   </TabItem>
 </Tabs>
-
-<!-- targeted-method-name -->
-
-`WithRecipient`
 
 <!-- targeted-send-example -->
 

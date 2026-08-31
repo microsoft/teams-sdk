@@ -23,10 +23,6 @@ new ActionSet(
 );
 ```
 
-<!-- json-safety-note -->
-
-You get type safety for free in TypeScript.
-
 <!-- raw-json-example -->
 
 ```typescript
@@ -297,4 +293,3 @@ app.on('card.search', async ({ activity }) => {
   };
 });
 ```
-

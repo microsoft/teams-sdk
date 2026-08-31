@@ -43,6 +43,6 @@ For reactive threading (within a handler), see [Threading](./#threading).
 
 ### Thread ID Helper
 
-For advanced scenarios, the <LanguageInclude section="to-thread-id-method-name" /> helper constructs the threaded conversation ID directly. Use it with <LanguageInclude section="app-send-method-name" /> when you need full control.
+For advanced scenarios, the <LanguageInclude content={{"typescript": "`toThreadedConversationId()`", "csharp": "`Conversation.ToThreadedConversationId()`", "python": "`to_threaded_conversation_id()`"}} /> helper constructs the threaded conversation ID directly. Use it with <LanguageInclude content={{"typescript": "`app.send()`", "csharp": "`app.Send()` (SDK 2.0) / `app.SendAsync()` (SDK 2.1)", "python": "`app.send()`"}} /> when you need full control.
 
 <LanguageInclude section="threading-helper-example" />

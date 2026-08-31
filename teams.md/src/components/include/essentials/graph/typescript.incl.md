@@ -1,7 +1,3 @@
-<!-- package-info -->
-
-`@microsoft/teams.graph`, `@microsoft/teams.graph-endpoints` and `@microsoft/teams.graph-endpoints-beta` packages
-
 <!-- migration-note -->
 
 :::note
@@ -25,10 +21,6 @@ To use this SDK to call Graph APIs, the first step is to install the optional en
 ```sh
 npm install @microsoft/teams.graph-endpoints
 ```
-
-<!-- app-graph-object -->
-
-`app.graph`
 
 <!-- app-graph-example -->
 

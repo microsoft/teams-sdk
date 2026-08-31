@@ -1,11 +1,3 @@
-<!-- default-logger -->
-
-`ConsoleLogger`
-
-<!-- package-name -->
-
-`@microsoft/teams.common`
-
 <!-- custom-logger-example -->
 
 ```typescript

@@ -1,11 +1,3 @@
-<!-- default-logger -->
-
-Python's standard `logging` module, using `logging.getLogger(__name__)` per module.
-
-<!-- package-name -->
-
-`microsoft-teams-common`
-
 <!-- custom-logger-example -->
 
 The Python SDK uses standard `logging` — there's no custom logger to inject into `App`. To see SDK log output, attach a handler to the `microsoft_teams` logger hierarchy. The SDK ships a `ConsoleFormatter` with color-coded output if you want it:

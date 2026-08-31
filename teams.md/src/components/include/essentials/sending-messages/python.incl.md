@@ -33,10 +33,6 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         ctx.stream.emit(message)
 ```
 
-<!-- mention-method-name -->
-
-`add_mention`
-
 <!-- mention-example -->
 
 ```python
@@ -44,10 +40,6 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 async def handle_message(ctx: ActivityContext[MessageActivity]):
   await ctx.send(MessageActivityInput(text='hi!').add_mention(account=ctx.activity.from_))
 ```
-
-<!-- targeted-method-name -->
-
-`with_recipient`
 
 <!-- targeted-send-example -->
 

@@ -1,7 +1,3 @@
-<!-- language-name -->
-
-Python
-
 <!-- file-links -->
 
 **Small**: [llms_python.txt](https://microsoft.github.io/teams-sdk/llms_docs/llms_python.txt) - This file contains an index of the various pages in the Python documentation. The agent needs to selectively read the relevant pages to answer questions and help with development.

@@ -9,7 +9,7 @@ summary: Guide to using the Microsoft Graph API client to access Microsoft 365 d
 
 [Microsoft Graph](https://docs.microsoft.com/en-us/graph/overview) gives you access to the wider Microsoft 365 ecosystem. You can enrich your application with data from across Microsoft 365.
 
-The SDK gives your application easy access to the Microsoft Graph API via the <LanguageInclude section="package-info" />.
+The SDK gives your application easy access to the Microsoft Graph API via the <LanguageInclude content={{"typescript": "`@microsoft/teams.graph`, `@microsoft/teams.graph-endpoints` and `@microsoft/teams.graph-endpoints-beta` packages", "csharp": "`Microsoft.Graph` package", "python": "`microsoft-teams-graph` package"}} />.
 
 <LanguageInclude section="migration-note" />
 
@@ -19,7 +19,7 @@ The SDK gives your application easy access to the Microsoft Graph API via the <L
 
 Microsoft Graph can be accessed by your application using its own application token, or by using the user's token. If you need access to resources that your application may not have, but your user does, you will need to use the user's scoped graph client. To grant explicit consent for your application to access resources on behalf of a user, follow the [auth guide](../in-depth-guides/user-authentication).
 
-To access the graph using the Graph using the app, you may use the <LanguageInclude section="app-graph-object" /> object to call the endpoint of your choice.
+To access the graph using the Graph using the app, you may use the <LanguageInclude content={{"typescript": "`app.graph`", "csharp": "`GraphServiceClient`", "python": "`app.graph`"}} /> object to call the endpoint of your choice.
 
 <LanguageInclude section="app-graph-example" />
 

@@ -1,7 +1,3 @@
-<!-- default-framework -->
-
-[Express](https://expressjs.com/)
-
 <!-- adapter-interface -->
 
 ```typescript

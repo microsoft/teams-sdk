@@ -1,7 +1,3 @@
-<!-- package-info -->
-
-`Microsoft.Graph` package
-
 <!-- migration-note -->
 
 N/A
@@ -9,10 +5,6 @@ N/A
 <!-- package-overview -->
 
 N/A
-
-<!-- app-graph-object -->
-
-`GraphServiceClient`
 
 <!-- app-graph-example -->
 

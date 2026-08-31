@@ -10,10 +10,6 @@ With `Microsoft.Teams.Cards` you can build these cards entirely in C# while enjo
 
 `Microsoft.Teams.Cards` exposes small **builder helpers** including `AdaptiveCard`, `TextBlock`, `ToggleInput`, `ExecuteAction`, _etc._
 
-<!-- language-name -->
-
-C#
-
 <!-- builder-example -->
 
 ```csharp
@@ -218,10 +214,6 @@ var textBlock = new TextBlock("Test")
     ```
   </TabItem>
 </Tabs>
-
-<!-- card-interface -->
-
-`AdaptiveCard`
 
 <!-- example-intro -->
 

@@ -1,7 +1,3 @@
-<!-- default-framework -->
-
-[FastAPI](https://fastapi.tiangolo.com/)
-
 <!-- adapter-interface -->
 
 ```python

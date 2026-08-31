@@ -8,7 +8,7 @@ summary: How to self-manage the HTTP server — bring your own Express, FastAPI,
 
 # Self-Managing Your Server
 
-By default, `app.start()` spins up an HTTP server, registers the Teams endpoint, and manages the full lifecycle for you. Under the hood, the SDK uses <LanguageInclude section="default-framework" /> as its built-in HTTP framework. But if you need to self-manage your server — because you have an existing app, need custom server configuration (TLS, workers, middleware), or use a different HTTP framework — the SDK supports that through the `HttpServerAdapter` interface.
+By default, `app.start()` spins up an HTTP server, registers the Teams endpoint, and manages the full lifecycle for you. Under the hood, the SDK uses <LanguageInclude content={{"typescript": "[Express](https://expressjs.com/)", "python": "[FastAPI](https://fastapi.tiangolo.com/)"}} /> as its built-in HTTP framework. But if you need to self-manage your server — because you have an existing app, need custom server configuration (TLS, workers, middleware), or use a different HTTP framework — the SDK supports that through the `HttpServerAdapter` interface.
 
 ## How It Works
 
