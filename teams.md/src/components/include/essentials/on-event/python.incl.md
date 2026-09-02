@@ -33,6 +33,10 @@ flowchart LR
 Event handler registration uses `@app.event("<event_name>")` with an async function that receives an event object specific to the event type (e.g., `ErrorEvent`, `ActivityEvent`).
 :::
 
+:::tip
+The `sign_in` event fires for every OAuth connection. To react to just one, use that flow's `@flow.on_signin` handler instead. See the [auth guide](../in-depth-guides/user-authentication).
+:::
+
 <!-- example-1 -->
 
 ```python

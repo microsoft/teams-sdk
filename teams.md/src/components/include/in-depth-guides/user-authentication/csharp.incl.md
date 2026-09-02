@@ -253,6 +253,14 @@ teams.OnMessage("/signout github", async (context, cancellationToken) =>
   </TabItem>
 </Tabs>
 
+<!-- multiple-connections -->
+
+N/A
+
+<!-- connection-status -->
+
+N/A
+
 <!-- pending-messages -->
 
 <Tabs groupId="csharp-sdk-version" defaultValue="core">

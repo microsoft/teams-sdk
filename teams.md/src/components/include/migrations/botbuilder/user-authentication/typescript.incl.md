@@ -140,28 +140,22 @@
     <TabItem value="Teams SDK">
       ```typescript showLineNumbers
       import { App } from '@microsoft/teams.apps';
-      import { ConsoleLogger } from '@microsoft/teams.common/logging';
 
-      const app = new App({
-        oauth: {
-          defaultConnectionName: process.env.connectionName
-        }
+      const app = new App();
+      const flow = app.addOAuthFlow(process.env.connectionName!);
+
+      app.message('/signout', async (ctx) => {
+        if (!(await flow.isSignedIn(ctx))) return;
+        await flow.signOut(ctx);
+        await ctx.send('You have been signed out.');
       });
 
-      app.message('/signout', async ({ send, signout, isSignedIn }) => {
-        if (!isSignedIn) return;
-        await signout();
-        await send('You have been signed out.');
+      app.on('message', async (ctx) => {
+        await flow.signIn(ctx);
       });
 
-      app.on('message', async ({ send, signin }) => {
-        if (!await signin()) {
-          return;
-        }
-      });
-
-      app.event('signin', async ({ send }) => {
-        await send('You have been signed in.');
+      flow.onSignInComplete(async (ctx) => {
+        await ctx.send('You have been signed in.');
       });
 
       (async () => {

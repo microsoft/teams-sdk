@@ -49,9 +49,15 @@ You also have access to the `appGraph` object in the activity handler. This is e
 :::
 <!-- user-graph-intro -->
 
-You can also access the graph using the user's token from within a message handler via the `userGraph` prop.
+You can also access the graph using the user's token from within a message handler.
 
 <!-- user-graph-example -->
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="typescript-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.1 (Legacy)">
 
 ```typescript
 import * as endpoints from '@microsoft/teams.graph-endpoints';
@@ -66,6 +72,34 @@ app.on('message', async ({ activity, userGraph }) => {
 });
 ```
 Here, the "userGraph" object is a scoped graph client for the user that sent the message.
+
+</TabItem>
+<TabItem value="core" label="SDK 2.2 (current)" default>
+
+Build the client from an OAuth flow's token, so it's always scoped to the connection that owns it.
+
+```typescript
+import { Client as GraphClient } from '@microsoft/teams.graph';
+import * as endpoints from '@microsoft/teams.graph-endpoints';
+
+const graph = app.addOAuthFlow('graph');
+
+// Gets details of the current user
+app.on('message', async (ctx) => {
+  const token = await graph.signIn(ctx);
+  if (!token) return; // OAuth card sent — resumes on the callback turn
+
+  const client = new GraphClient({ token: () => token }, { baseUrlRoot: app.graphBaseUrl });
+  const me = await client.call(endpoints.me.get);
+  console.log(`User ID: ${me.id}`);
+  console.log(`User Display Name: ${me.displayName}`);
+  console.log(`User Email: ${me.mail}`);
+  console.log(`User Job Title: ${me.jobTitle}`);
+});
+```
+
+</TabItem>
+</Tabs>
 
 <!-- advanced-sections -->
 
@@ -84,7 +118,7 @@ The equivalent using the graph client would look like this:
 ```ts
 import { users } from '@microsoft/teams.graph-endpoints';
 
-const chat = await userGraph.call(users.teamwork.installedApps.chat.get, {
+const chat = await client.call(users.teamwork.installedApps.chat.get, {
   'user-id': user.id,
   'userScopeTeamsAppInstallation-id': appInstallationId,
   $select: ['id'],

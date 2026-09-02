@@ -91,24 +91,23 @@
     from microsoft_teams.apps import ActivityContext, App, SignInEvent
     from microsoft_teams.api import MessageActivity
 
-    app = App(default_connection_name=connection_name)
+    app = App()
+    flow = app.add_oauth_flow(connection_name)
 
     @app.on_message_pattern("/signout")
-    async def on_signout(context: ActivityContext[MessageActivity]):
-        if not context.is_signed_in:
+    async def on_signout(ctx: ActivityContext[MessageActivity]):
+        if not await flow.is_signed_in(ctx):
             return
-        await context.sign_out()
-        await context.send("You have been signed out.")
+        await flow.sign_out(ctx)
+        await ctx.send("You have been signed out.")
 
     @app.on_message
-    async def on_message(context: ActivityContext[MessageActivity]):
-        if not context.is_signed_in:
-            await context.sign_in()
-            return
+    async def on_message(ctx: ActivityContext[MessageActivity]):
+        await flow.sign_in(ctx)
 
-    @app.event("sign_in")
+    @flow.on_signin
     async def on_signin(event: SignInEvent):
-        await context.send("You have been signed in.")
+        await event.activity_ctx.send("You have been signed in.")
     ```
 
   </TabItem>
