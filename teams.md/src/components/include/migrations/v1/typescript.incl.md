@@ -578,37 +578,32 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     // highlight-error-end
     // highlight-success-start
 +    const app = new App({
-+      oauth: {
-+        defaultConnectionName: 'graph',
-+      },
 +      logger: new ConsoleLogger('@tests/auth', { level: 'debug' }),
 +    });
 +
-+    app.message('/signout', async ({ isSignedIn, signout, send }) => {
-+      if (!isSignedIn) return;
-+      await signout();
-+      await send('you have been signed out!');
++    const graph = app.addOAuthFlow('graph');
++
++    app.message('/signout', async (ctx) => {
++      if (!(await graph.isSignedIn(ctx))) return;
++      await graph.signOut(ctx);
++      await ctx.send('you have been signed out!');
 +    });
 +
 +    app.message('/help', async ({ send }) => {
 +      await send('your help text');
 +    });
 +
-+    app.on('message', async ({ signin, userGraph, log }) => {
-+      if (!await signin({
++    app.on('message', async (ctx) => {
++      const token = await graph.signIn(ctx, {
 +        oauthCardText: 'Sign in to your account',
 +        signInButtonText: 'Sign in',
-+      })) {
-+        return;
-+      }
-+      const me = await userGraph.me.get();
-+      log.info(`user "${me.displayName}" already signed in!`);
++      });
++      if (!token) return;
++      ctx.log.info('user already signed in!');
 +    });
 +
-+    app.event('signin', async ({ userGraph, send, token }) => {
-+      const me = await userGraph.me.get();
-+      await send(`user "${me.displayName}" signed in.`);
-+      await send(`Token string length: ${token.token.length}`);
++    graph.onSignInComplete(async (ctx, token) => {
++      await ctx.send(`signed in. Token string length: ${token.token.length}`);
 +    });
     // highlight-success-end
     ```
@@ -617,44 +612,40 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
   <TabItem value="v2" label="Teams SDK v2">
     ```ts
     const app = new App({
-      oauth: {
-        // oauth configurations
-        /**
-         * The name of the auth connection to use.
-         * It should be the same as the OAuth connection name defined in the Azure Bot configuration.
-         */
-        defaultConnectionName: 'graph',
-      },
       logger: new ConsoleLogger('@tests/auth', { level: 'debug' }),
     });
 
-    app.message('/signout', async ({ isSignedIn, signout, send }) => {
-      if (!isSignedIn) return;
-      await signout(); // call signout for your auth connection...
-      await send('you have been signed out!');
+    /**
+     * Register the auth connection.
+     * The name should match the OAuth connection name defined in the Azure Bot configuration.
+     */
+    const graph = app.addOAuthFlow('graph');
+
+    app.message('/signout', async (ctx) => {
+      if (!(await graph.isSignedIn(ctx))) return;
+      await graph.signOut(ctx); // call signOut for this auth connection...
+      await ctx.send('you have been signed out!');
     });
 
     app.message('/help', async ({ send }) => {
       await send('your help text');
     });
 
-    app.on('message', async ({ signin, userGraph, log }) => {
-      if (!await signin({
+    app.on('message', async (ctx) => {
+      const token = await graph.signIn(ctx, {
         // Customize the OAuth card text (only renders in OAuth flow, not SSO)
         oauthCardText: 'Sign in to your account',
         signInButtonText: 'Sign in',
-      })) { // call signin for your auth connection...
-        return;
-      }
+      });
 
-      const me = await userGraph.me.get();
-      log.info(`user "${me.displayName}" already signed in!`);
+      // An OAuth card was sent — the flow resumes on the callback turn.
+      if (!token) return;
+
+      ctx.log.info('user already signed in!');
     });
 
-    app.event('signin', async ({ userGraph, send, token }) => {
-      const me = await userGraph.me.get();
-      await send(`user "${me.displayName}" signed in.`);
-      await send(`Token string length: ${token.token.length}`);
+    graph.onSignInComplete(async (ctx, token) => {
+      await ctx.send(`signed in. Token string length: ${token.token.length}`);
     });
     ```
 
