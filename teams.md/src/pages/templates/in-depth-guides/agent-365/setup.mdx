@@ -1,0 +1,45 @@
+---
+title: Set up Agent 365
+sidebar_position: 2
+summary: Set up Agent 365, then configure the identity values required by Teams SDK.
+suppressLanguageIncludeWarning: true
+---
+
+import LangLink from '@site/src/components/LangLink';
+
+# Set up Agent 365
+
+Set up Agent 365 before you configure Teams SDK. Microsoft Learn owns the current requirements, permissions, CLI commands, publication flow, and tenant administration steps.
+
+## Follow the Agent 365 setup
+
+Start with [Get started with Agent 365 development](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/get-started). Choose the **AI teammate** capability. It uses an agent identity blueprint and creates instances with their own Microsoft 365 user identity.
+
+We recommend the [AI-guided setup](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/get-started#ai-guided-setup). It checks prerequisites and guides you through Agent 365 CLI installation, blueprint setup, deployment, and publishing.
+
+If you prefer to complete each stage yourself, follow these Learn guides in order:
+
+1. [Set up the agent blueprint](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/registration). This creates the blueprint, credentials, permissions, and supporting resources.
+2. [Test with Dev Tunnels](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/test-with-devtunnels) if your Teams SDK app runs locally.
+3. [Publish the agent](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/publish) and upload its package to the Microsoft 365 admin center.
+4. [Configure the agent and create an instance](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/create-instance). This connects the blueprint to your Activity Protocol endpoint. After the agent is published and configured, users can request new instances directly from Teams.
+
+For setup and instance issues, see [Troubleshoot Agent 365](https://learn.microsoft.com/en-us/microsoft-agent-365/developer/troubleshooting).
+
+:::tip
+Your **Notification URL** in Teams Developer Portal is the public Activity Protocol endpoint for your app, typically `https://<host>/api/messages`.
+:::
+
+## Values needed by the app
+
+After Agent 365 setup, configure Teams SDK with the blueprint identity. It uses the same authentication settings as a standard Teams app, and the blueprint ID is the application (client) ID.
+
+| Agent 365 value      | App authentication setting                                                       |
+| -------------------- | -------------------------------------------------------------------------------- |
+| Blueprint ID         | Application (client) ID (`CLIENT_ID`)                                            |
+| Blueprint credential | Client secret, user-assigned managed identity, or federated identity credentials |
+| Tenant ID            | Tenant ID (`TENANT_ID`)                                                          |
+
+Configure these values as described in <LangLink to="essentials/app-authentication/">App Authentication</LangLink>.
+
+Agentic App Instance and Agentic User IDs are optional. Use them when your app needs to load a specific identity for a proactive operation.
