@@ -92,7 +92,7 @@ Every file the accessor returns retains its original wire attachment on <Languag
 
 <LanguageInclude section="raw-attachment" />
 
-Attachments that are **not** files (Adaptive Cards, mentions, link previews), and malformed file entries the accessor skips, are not returned by <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> and therefore have no <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} />. Reach those directly through <LanguageInclude content={{"typescript": "`ctx.activity.attachments`", "python": "`ctx.activity.attachments`", "csharp": "`context.Activity.Attachments`"}} />.
+Attachments that are **not** files (inline images, Adaptive Cards, mentions, link previews), and malformed file entries the accessor skips, are not returned by <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> and therefore have no <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} />. Reach those directly through <LanguageInclude content={{"typescript": "`ctx.activity.attachments`", "python": "`ctx.activity.attachments`", "csharp": "`context.Activity.Attachments`"}} />. For image attachments, see [Receiving Inline Images](./receiving-inline-images).
 
 ## Conversation scope support
 
