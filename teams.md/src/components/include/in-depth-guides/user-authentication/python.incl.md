@@ -22,7 +22,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs groupId="python-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 from microsoft_teams.apps import App
@@ -35,7 +35,7 @@ app = App(
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 Register the connections you plan to use. `add_oauth_flow` returns the object that owns one.
 
@@ -67,7 +67,7 @@ This uses the Single Sign-On (SSO) authentication flow. To learn more about all 
 :::
 
 <Tabs groupId="python-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.on_message
@@ -81,7 +81,7 @@ async def handle_signin_message(ctx: ActivityContext[MessageActivity]):
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```python
 @app.on_message_pattern("/signin")
@@ -98,7 +98,7 @@ async def handle_signin_message(ctx: ActivityContext[MessageActivity]):
 <!-- signin-event -->
 
 <Tabs groupId="python-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.event("sign_in")
@@ -108,7 +108,7 @@ async def handle_sign_in(event: SignInEvent):
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 The handler is scoped to its connection, so there's no need to branch on the connection name.
 
@@ -134,7 +134,7 @@ A flow can have more than one handler. They run in registration order and are is
 From this point, you can query graph for the signed-in user, for example to reply to the `/whoami` message, or in any other route.
 
 <Tabs groupId="python-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 Use the `is_signed_in` flag and the `user_graph` client.
 
@@ -152,7 +152,7 @@ async def handle_whoami_message(ctx: ActivityContext[MessageActivity]):
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 Build the client from the flow's token, so it always talks to the connection that owns it.
 
@@ -177,7 +177,7 @@ async def handle_whoami_message(ctx: ActivityContext[MessageActivity]):
 <!-- signing-out -->
 
 <Tabs groupId="python-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.on_message
@@ -192,7 +192,7 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```python
 @app.on_message_pattern("/signout")
@@ -257,7 +257,7 @@ async def handle_status(ctx: ActivityContext[MessageActivity]):
 <!-- pending-messages -->
 
 <Tabs groupId="python-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 from microsoft_teams.apps import App, ActivityContext, SignInEvent
@@ -296,7 +296,7 @@ async def handle_sign_in(event: SignInEvent):
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```python
 from microsoft_teams.apps import App, ActivityContext, SignInEvent
@@ -339,7 +339,7 @@ async def on_graph_signin(event: SignInEvent):
 <!-- signin-failure -->
 
 <Tabs groupId="python-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.on_signin_failure()
@@ -354,7 +354,7 @@ Registering a custom handler does **not** replace the built-in default handler. 
 :::
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```python
 from microsoft_teams.apps import SignInFailureEvent

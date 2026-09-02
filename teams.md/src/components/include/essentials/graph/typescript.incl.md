@@ -57,7 +57,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs groupId="typescript-sdk-version" defaultValue="core">
-<TabItem value="legacy" label="SDK 2.1 (Legacy)">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```typescript
 import * as endpoints from '@microsoft/teams.graph-endpoints';
@@ -74,7 +74,7 @@ app.on('message', async ({ activity, userGraph }) => {
 Here, the "userGraph" object is a scoped graph client for the user that sent the message.
 
 </TabItem>
-<TabItem value="core" label="SDK 2.2 (current)" default>
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
 Build the client from an OAuth flow's token, so it's always scoped to the connection that owns it.
 

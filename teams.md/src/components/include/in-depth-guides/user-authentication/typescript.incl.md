@@ -22,7 +22,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs groupId="typescript-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```ts
 import { App } from '@microsoft/teams.apps';
@@ -37,7 +37,7 @@ const app = new App({
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 Register the connections you plan to use. `addOAuthFlow` returns the object that owns one.
 
@@ -69,7 +69,7 @@ This uses the Single Sign-On (SSO) authentication flow. To learn more about all 
 :::
 
 <Tabs groupId="typescript-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```ts
 app.message('/signin', async ({ signin, send }) => {
@@ -80,7 +80,7 @@ app.message('/signin', async ({ signin, send }) => {
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```ts
 app.message('/signin', async (ctx) => {
@@ -97,7 +97,7 @@ app.message('/signin', async (ctx) => {
 <!-- signin-event -->
 
 <Tabs groupId="typescript-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```ts
 app.event('signin', async ({ send, token }) => {
@@ -108,7 +108,7 @@ app.event('signin', async ({ send, token }) => {
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 The callback is scoped to its connection, so there's no need to branch on the connection name.
 
@@ -132,7 +132,7 @@ Each flow holds a single completion callback — registering again replaces the 
 From this point, you can query graph for the signed-in user, for example to reply to the `/whoami` message, or in any other route.
 
 <Tabs groupId="typescript-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 Use the `isSignedIn` flag and the `userGraph` client.
 
@@ -161,7 +161,7 @@ app.on('message', async ({ send, activity, signin }) => {
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 Build the client from the flow's token, so it always talks to the connection that owns it.
 
@@ -187,7 +187,7 @@ app.message('/whoami', async (ctx) => {
 <!-- signing-out -->
 
 <Tabs groupId="typescript-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```ts
 app.message('/signout', async ({ send, signout, isSignedIn }) => {
@@ -198,7 +198,7 @@ app.message('/signout', async ({ send, signout, isSignedIn }) => {
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```ts
 app.message('/signout', async (ctx) => {
@@ -254,7 +254,7 @@ app.message('/status', async (ctx) => {
 <!-- pending-messages -->
 
 <Tabs groupId="typescript-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```ts
 const pendingMessages = new Map<string, { text: string; activity: any }>();
@@ -293,7 +293,7 @@ app.event('signin', async ({ send, userGraph, activity }) => {
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```ts
 const pendingMessages = new Map<string, string>();
@@ -333,7 +333,7 @@ graph.onSignInComplete(async (ctx, token) => {
 <!-- signin-failure -->
 
 <Tabs groupId="typescript-sdk-version" defaultValue="core">
-  <TabItem value="legacy" label="SDK 2.1 (Legacy)">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```ts
 app.on('signin.failure', async ({ activity, send }) => {
@@ -344,7 +344,7 @@ app.on('signin.failure', async ({ activity, send }) => {
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2 (current)" default>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
 
 ```ts
 graph.onSignInFailure(async (ctx, failure) => {
