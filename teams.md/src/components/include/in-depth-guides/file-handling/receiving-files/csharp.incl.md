@@ -124,9 +124,18 @@ catch (FileUrlExpiredException err) when (err.Reason == FileUrlExpiredReason.Fir
 {
     await context.ReplyAsync("That file link has expired before it could be read.", cancellationToken);
 }
+catch (FileRetrievalException err)
+{
+    await context.ReplyAsync($"Could not read that file as {err.Actor?.ToString() ?? "this app"}: {err.Reason}.", cancellationToken);
+}
 catch (FileScopeNotSupportedException err)
 {
     await context.ReplyAsync($"Downloading files from {err.Scope} conversations is not supported yet.", cancellationToken);
+}
+catch (FileException)
+{
+    // Any future inbound-file failure lands here rather than escaping unhandled.
+    await context.ReplyAsync("That file could not be read.", cancellationToken);
 }
 ```
 

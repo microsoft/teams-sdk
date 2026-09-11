@@ -100,7 +100,12 @@ await downloaded.saveAs('./copy.bin');   // write to disk, no re-fetch
 <!-- errors-import -->
 
 ```typescript
-import { FileScopeNotSupportedError, FileUrlExpiredError } from '@microsoft/teams.apps';
+import {
+  FileError,
+  FileRetrievalError,
+  FileScopeNotSupportedError,
+  FileUrlExpiredError,
+} from '@microsoft/teams.apps';
 ```
 
 <!-- errors-handling -->
@@ -112,8 +117,13 @@ try {
 } catch (err) {
   if (err instanceof FileUrlExpiredError && err.reason === 'firstFetch') {
     await send('That file link has expired before it could be read.');
+  } else if (err instanceof FileRetrievalError) {
+    await send(`Could not read that file as ${err.actor ?? 'this app'}: ${err.reason}.`);
   } else if (err instanceof FileScopeNotSupportedError) {
     await send(`Downloading files from ${err.scope} conversations is not supported yet.`);
+  } else if (err instanceof FileError) {
+    // Any future inbound-file failure lands here rather than escaping unhandled.
+    await send('That file could not be read.');
   }
 }
 ```

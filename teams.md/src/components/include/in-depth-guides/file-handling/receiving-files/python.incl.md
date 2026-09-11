@@ -93,7 +93,12 @@ await downloaded.save_as("./copy.bin") # write to disk, no re-fetch
 <!-- errors-import -->
 
 ```python
-from microsoft_teams.apps import FileScopeNotSupportedError, FileUrlExpiredError
+from microsoft_teams.apps import (
+    FileError,
+    FileRetrievalError,
+    FileScopeNotSupportedError,
+    FileUrlExpiredError,
+)
 ```
 
 <!-- errors-handling -->
@@ -105,8 +110,13 @@ try:
 except FileUrlExpiredError as err:
     if err.reason == "first_fetch":
         await ctx.reply("That file link has expired before it could be read.")
+except FileRetrievalError as err:
+    await ctx.reply(f"Could not read that file as {err.actor or 'this app'}: {err.reason}.")
 except FileScopeNotSupportedError as err:
     await ctx.reply(f"Downloading files from {err.scope} conversations is not supported yet.")
+except FileError:
+    # Any future inbound-file failure lands here rather than escaping unhandled.
+    await ctx.reply("That file could not be read.")
 ```
 
 <!-- raw-attachment -->
