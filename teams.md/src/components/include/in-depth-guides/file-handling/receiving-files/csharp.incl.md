@@ -82,7 +82,7 @@ while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
 | `ContentType` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `Extension`. To learn the type of the bytes you actually received, read `ContentType` on the downloaded file, which is resolved from the download response. |
 | `Scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `Source` | Where the SDK found the file. Currently always `botActivity`. |
-| `WebUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
+| `ContentUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
 | `Raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
 <!-- reusing-downloaded-file -->

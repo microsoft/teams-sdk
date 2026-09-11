@@ -72,7 +72,7 @@ for await (const chunk of stream) {
 | `contentType` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `extension`. To learn the type of the bytes you actually received, read `contentType` on the downloaded file, which is resolved from the download response. |
 | `scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `source` | Where the SDK found the file. Currently always `botActivity`. |
-| `webUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
+| `contentUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
 | `raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
 <!-- reusing-downloaded-file -->
