@@ -124,9 +124,13 @@ catch (FileUrlExpiredException err) when (err.Reason == FileUrlExpiredReason.Fir
 {
     await context.ReplyAsync("That file link has expired before it could be read.", cancellationToken);
 }
-catch (FileRetrievalException err)
+catch (FileCredentialException err)
 {
-    await context.ReplyAsync($"Could not read that file as {err.Actor?.ToString() ?? "this app"}: {err.Reason}.", cancellationToken);
+    await context.ReplyAsync($"Could not read that file as {err.Actor?.ToString() ?? "the identity used"}: no Graph credential was available.", cancellationToken);
+}
+catch (FileAccessException err)
+{
+    await context.ReplyAsync($"Could not read that file as {err.Actor?.ToString() ?? "the identity used"}: the service returned {err.Status}.", cancellationToken);
 }
 catch (FileScopeNotSupportedException err)
 {

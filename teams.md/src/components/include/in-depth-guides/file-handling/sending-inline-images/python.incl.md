@@ -49,7 +49,8 @@ async def handle_message(ctx: ActivityContext[MessageActivity]) -> None:
 import base64
 from pathlib import Path
 
-from microsoft_teams.api import MessageActivityInput
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
 
 
 @app.on_message

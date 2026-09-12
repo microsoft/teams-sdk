@@ -101,8 +101,9 @@ await downloaded.saveAs('./copy.bin');   // write to disk, no re-fetch
 
 ```typescript
 import {
+  FileAccessError,
+  FileCredentialError,
   FileError,
-  FileRetrievalError,
   FileScopeNotSupportedError,
   FileUrlExpiredError,
 } from '@microsoft/teams.apps';
@@ -117,8 +118,10 @@ try {
 } catch (err) {
   if (err instanceof FileUrlExpiredError && err.reason === 'firstFetch') {
     await send('That file link has expired before it could be read.');
-  } else if (err instanceof FileRetrievalError) {
-    await send(`Could not read that file as ${err.actor ?? 'this app'}: ${err.reason}.`);
+  } else if (err instanceof FileCredentialError) {
+    await send(`Could not read that file as ${err.actor ?? 'the identity used'}: no Graph credential was available.`);
+  } else if (err instanceof FileAccessError) {
+    await send(`Could not read that file as ${err.actor ?? 'the identity used'}: the service returned ${err.status}.`);
   } else if (err instanceof FileScopeNotSupportedError) {
     await send(`Downloading files from ${err.scope} conversations is not supported yet.`);
   } else if (err instanceof FileError) {

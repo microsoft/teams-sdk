@@ -94,8 +94,9 @@ await downloaded.save_as("./copy.bin") # write to disk, no re-fetch
 
 ```python
 from microsoft_teams.apps import (
+    FileAccessError,
+    FileCredentialError,
     FileError,
-    FileRetrievalError,
     FileScopeNotSupportedError,
     FileUrlExpiredError,
 )
@@ -110,8 +111,10 @@ try:
 except FileUrlExpiredError as err:
     if err.reason == "first_fetch":
         await ctx.reply("That file link has expired before it could be read.")
-except FileRetrievalError as err:
-    await ctx.reply(f"Could not read that file as {err.actor or 'this app'}: {err.reason}.")
+except FileCredentialError as err:
+    await ctx.reply(f"Could not read that file as {err.actor or 'the identity used'}: no Graph credential was available.")
+except FileAccessError as err:
+    await ctx.reply(f"Could not read that file as {err.actor or 'the identity used'}: the service returned {err.status}.")
 except FileScopeNotSupportedError as err:
     await ctx.reply(f"Downloading files from {err.scope} conversations is not supported yet.")
 except FileError:

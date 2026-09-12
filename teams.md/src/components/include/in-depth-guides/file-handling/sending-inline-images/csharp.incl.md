@@ -82,6 +82,18 @@ teamsApp.OnMessage(async (context, cancellationToken) =>
 <!-- multiple-images -->
 
 ```csharp
+TeamsAttachment salesChart = TeamsAttachment.CreateBuilder()
+    .WithContentType(new AttachmentContentType("image/png"))
+    .WithContentUrl(new Uri("https://contoso.com/charts/sales.png"))
+    .WithName("sales.png")
+    .Build();
+
+TeamsAttachment trafficChart = TeamsAttachment.CreateBuilder()
+    .WithContentType(new AttachmentContentType("image/png"))
+    .WithContentUrl(new Uri("https://contoso.com/charts/traffic.png"))
+    .WithName("traffic.png")
+    .Build();
+
 await context.SendAsync(
     new MessageActivityInput()
         .WithText("This week at a glance:")

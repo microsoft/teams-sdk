@@ -92,10 +92,11 @@ Byte retrieval can fail for a few well-defined reasons. All of them share a comm
 | Error | Raised when | Carries |
 |---|---|---|
 | **File URL expired** | The short-lived, pre-authorized download link lapsed before the bytes were fetched. | `reason`: <br/> **first fetch**, the link had already lapsed so no bytes were retrieved; <br /> **re-read**, an earlier download succeeded, but a later read through the same handle came after expiry. Avoid this by downloading once and reusing the downloaded file. |
-| **File retrieval failed** | The Graph read an agentic user's file needs was refused by the storage service, or ruled out before the request because no credential was available. | `reason`: **no Graph credential** or **access denied**<sup><a href="#access-denied">1</a></sup>. <br/> `actor`<sup><a href="#actor">2</a></sup>: the identity that was refused. <br /> `details`: what the service said, if anything. |
+| **No Graph credential** | The Graph read an agentic user's file needs was ruled out before the request, because no credential was available. | `actor`<sup><a href="#actor">2</a></sup>: the identity a credential was being resolved for. <br /> `cause`: why acquiring the token failed, when it failed rather than simply returning nothing. |
+| **File access denied** | The Graph read an agentic user's file needs was refused by the storage service. | `status`: `401` when the token itself was rejected, `403` when the identity lacks the grant<sup><a href="#access-denied">1</a></sup>. <br/> `actor`<sup><a href="#actor">2</a></sup>: the identity that was refused. <br /> `details`: what the service said, if anything. |
 | **File scope not supported** | Download was called on a file from a conversation scope this API does not yet support, meaning anything other than personal (1:1). | `scope`: the conversation scope. |
 
-<sup id="access-denied">1</sup> **Access denied** deliberately collapses causes the SDK cannot differentiate: an unconsented permission, a file the identity was never granted, and an item that does not exist all arrive as `403`. There is no separate "file not found" case to branch on; `details` carries the service's own text for diagnosis.
+<sup id="access-denied">1</sup> A **`403`** deliberately collapses causes the SDK cannot differentiate: an unconsented permission, a file the identity was never granted, and an item that does not exist all arrive the same way. There is no separate "file not found" case to branch on; `details` carries the service's own text for diagnosis. A `401` is a different problem, which is why the status is reported rather than folded in: the token was rejected, so the fix is the token rather than the sharing.
 
 <sup id="actor">2</sup> `actor` names which identity the read was attempted as. The SDK chooses it, and today there are two:
 
@@ -122,7 +123,7 @@ Attachments that are **not** files (inline images, Adaptive Cards, mentions, lin
 
 Listing with <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> surfaces the files Teams delivers on the incoming activity. Today that is the **personal (1:1)** chat path.
 
-In **channels**, the attached file isn't delivered to a traditional bot on the activity (the attachment is dropped), so <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> doesn't surface it. Group-chat behavior varies by how the file is stored. Agentic Users will have attachments on the activity but is not explicitly supported by the API today. 
+In **channels**, the attached file isn't delivered to a traditional bot on the activity (the attachment is dropped), so <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> doesn't surface it. Group-chat behavior varies by how the file is stored. Agentic Users will have attachments on the activity but are not explicitly supported by the API today. 
 
 When <LanguageInclude content={{"typescript": "`download()`, `stream()`, `text()`, or `saveAs()`", "python": "`download()`, `stream()`, `text()`, or `save_as()`", "csharp": "`DownloadAsync()`, `StreamAsync()`, `TextAsync()`, or `SaveAsAsync()`"}} /> is called on a surfaced file whose scope isn't personal (1:1), it raises the `file-scope-not-supported` error.
 
