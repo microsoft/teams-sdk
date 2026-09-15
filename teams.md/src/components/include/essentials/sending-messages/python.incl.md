@@ -33,6 +33,50 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         ctx.stream.emit(message)
 ```
 
+<!-- streaming-handoff-example -->
+
+```python
+import time
+
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    opened = time.monotonic()
+
+    text = ""
+    editing = False
+    message_id: str | None = None
+    last_edit = 0.0
+
+    async for chunk in run_agent(ctx.activity.text):
+        text += chunk
+
+        # Phase 1: real streaming, handed off before the service window closes.
+        if not editing and time.monotonic() - opened < 110:
+            ctx.stream.emit(chunk)
+            continue
+
+        # Hand off once, keeping the finalized message's id.
+        if not editing:
+            sent = await ctx.stream.close()
+            message_id = sent.id if sent else None
+            editing = True
+
+        # Phase 2: plain edits on the same message. No two minute ceiling.
+        if message_id and time.monotonic() - last_edit > 3:
+            await ctx.send(MessageActivityInput(text=text).with_id(message_id))
+            last_edit = time.monotonic()
+
+    if not editing:
+        await ctx.stream.close()
+    elif message_id:
+        await ctx.send(MessageActivityInput(text=text).with_id(message_id))
+```
+
+Setting an id on an outgoing activity routes the send through the update path, so each edit replaces the finalized message instead of posting a new one.
+
 <!-- mention-method-name -->
 
 `add_mention`
