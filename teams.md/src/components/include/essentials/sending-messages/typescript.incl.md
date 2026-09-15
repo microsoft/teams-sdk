@@ -27,6 +27,51 @@ app.on('message', async ({ activity, stream }) => {
 });
 ```
 
+<!-- streaming-handoff-example -->
+
+```typescript
+import { MessageActivityInput } from '@microsoft/teams.api';
+
+app.on('message', async ({ activity, send, stream }) => {
+  const opened = Date.now();
+
+  let text = '';
+  let editing = false;
+  let messageId: string | undefined;
+  let lastEdit = 0;
+
+  for await (const chunk of runAgent(activity.text)) {
+    text += chunk;
+
+    // Phase 1: real streaming, handed off before the service window closes.
+    if (!editing && Date.now() - opened < 110_000) {
+      stream.emit(chunk);
+      continue;
+    }
+
+    // Hand off once, keeping the finalized message's id.
+    if (!editing) {
+      messageId = (await stream.close())?.id;
+      editing = true;
+    }
+
+    // Phase 2: plain edits on the same message. No two minute ceiling.
+    if (messageId && Date.now() - lastEdit > 3_000) {
+      await send(new MessageActivityInput(text).withId(messageId));
+      lastEdit = Date.now();
+    }
+  }
+
+  if (!editing) {
+    await stream.close();
+  } else if (messageId) {
+    await send(new MessageActivityInput(text).withId(messageId));
+  }
+});
+```
+
+Setting an id on an outgoing activity routes the send through the update path, so each edit replaces the finalized message instead of posting a new one.
+
 <!-- mention-method-name -->
 
 `addMention`
