@@ -32,14 +32,16 @@ You may also stream messages to the user which can be useful for long messages, 
 <LanguageInclude section="streaming-example" />
 
 :::note
-Streaming is currently only supported in 1:1 conversations, not group chats or channels
+Streaming is currently only supported in 1:1 conversations, not group chats or channels. Teams also supports only one concurrent streaming response per chat at a time.
+
+Every inbound activity gets its own stream, and the SDK closes that stream at the end of the turn but does not serialize turns for you. If your agent can be re-prompted while it is still responding, serialize turns per conversation or finalize the in-flight stream before starting the next one.
 :::
 
 ![Animated image showing agent response text incrementally appearing in the chat window.](/screenshots/streaming-chat.gif)
 
 ### The two minute streaming limit
 
-Teams keeps a streamed message open for two minutes, measured from its first chunk. After that the service rejects further chunks with a `403` and the [error code](https://learn.microsoft.com/en-us/microsoftteams/platform/bots/streaming-ux#error-codes) `ContentStreamNotAllowed` (`Content stream finished due to exceeded streaming time.`).
+Teams keeps a streamed message open for two minutes, measured from its first chunk. After that the service rejects further chunks for that message with a `403` and the [error code](https://learn.microsoft.com/en-us/microsoftteams/platform/bots/streaming-ux#error-codes) `ContentStreamNotAllowed` (`Content stream finished due to exceeded streaming time.`). The window is scoped to the individual streamed message rather than to your agent, so [a later streamed message](#starting-another-streamed-message) opens a fresh one.
 
 However, hitting the limit does not mean the response is lost. The SDK marks the stream as timed out and stops pushing chunks, but it keeps buffering everything your agent produces, and <LanguageInclude content={{"typescript": "`stream.close()`", "python": "`ctx.stream.close()`", "csharp": "`writer.FinalizeResponseAsync()`"}} /> finalizes by updating the original message in place with the full buffered text. 
 
@@ -53,7 +55,7 @@ To outlast the window, hand off before it closes: stream normally, then finalize
 
 <LanguageInclude section="streaming-handoff-example" />
 
-Plain updates are throttled more aggressively than streamed chunks, so it is recommended to send updates in 1-2 second increments, as opposed to by tokens.
+Plain updates are subject to ordinary activity throttling rather than the streaming path's allowance, so pace them at a cadence measured in seconds rather than sending one per token.
 
 ### Starting another streamed message
 
