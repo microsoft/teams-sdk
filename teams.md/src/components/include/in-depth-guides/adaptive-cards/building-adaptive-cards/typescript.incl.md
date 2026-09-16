@@ -159,7 +159,7 @@ app.on('message', async ({ send, activity }) => {
   );
   await send(card);
   // Or build a complex activity out that includes the card:
-  // const message  = new MessageActivity('Enter this form').addCard('adaptive', card);
+  // const message = new MessageActivityInput('Enter this form').addCard('adaptive', card);
   // await send(message);
 });
 ```

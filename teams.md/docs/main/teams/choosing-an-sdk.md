@@ -45,7 +45,7 @@ Everything in the cross-channel essentials above, **plus** the Teams-native surf
 |---|---|
 | @Mentions | Mention a specific user in a message; receive a `mention` activity when the bot is mentioned |
 | Reactions | Add / remove emoji reactions on messages |
-| Targeted (ephemeral) messages *(preview)* | Deliver a message to a specific user in a shared conversation; other participants don't see it |
+| Targeted (ephemeral) messages | Deliver a message to a specific user in a shared conversation; other participants don't see it |
 | Quoted replies | Parse incoming quoted-reply context; send replies that auto-quote the user's message or quote a specific message by ID |
 | Threaded replies | Reply to a specific message in a channel; channel reply chains |
 | Channel events | Channel created / renamed / deleted; team member changes |

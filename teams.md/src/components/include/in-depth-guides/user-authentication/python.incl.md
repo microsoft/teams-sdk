@@ -18,24 +18,56 @@ This command:
 
 <!-- configure-oauth -->
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="python-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
 ```python
-from teams import App
-from teams.api import MessageActivity, SignInEvent
-from teams.apps import ActivityContext
-from teams.logger import ConsoleLogger, ConsoleLoggerOptions
+from microsoft_teams.apps import App
 
 app = App(
     # The name of the auth connection to use.
-    # It should be the same as the Oauth connection name defined in the Azure Bot configuration.
+    # It should be the same as the OAuth connection name defined in the Azure Bot configuration.
     default_connection_name="graph",
-    logger=ConsoleLogger().create_logger("auth", options=ConsoleLoggerOptions(level="debug")))
+)
 ```
+
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+
+Register the connections you plan to use. `add_oauth_flow` returns the object that owns one.
+
+```python
+from microsoft_teams.apps import App
+
+app = App()
+
+graph = app.add_oauth_flow(
+    "graph",
+    oauth_card_text="Sign in to your account",
+    sign_in_button_text="Sign in",
+)
+```
+
+Both card options are optional. Use `app.get_oauth_flow("graph")` to get the flow again from another module.
+
+:::note
+Registering a flow enables per-turn state unless you set `state` yourself, so sign-in callbacks that don't name a connection can be traced back to the one that started them.
+:::
+
+  </TabItem>
+</Tabs>
 
 <!-- signing-in -->
 
 :::note
 This uses the Single Sign-On (SSO) authentication flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
 :::
+
+<Tabs groupId="python-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.on_message
@@ -48,7 +80,25 @@ async def handle_signin_message(ctx: ActivityContext[MessageActivity]):
         await ctx.sign_in()
 ```
 
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+
+```python
+@app.on_message_pattern("/signin")
+async def handle_signin_message(ctx: ActivityContext[MessageActivity]):
+    """Handle message activities for signing in."""
+    token = await graph.sign_in(ctx)
+    if token:
+        await ctx.send("You are already signed in.")
+```
+
+  </TabItem>
+</Tabs>
+
 <!-- signin-event -->
+
+<Tabs groupId="python-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.event("sign_in")
@@ -57,10 +107,36 @@ async def handle_sign_in(event: SignInEvent):
     await event.activity_ctx.send("You are now signed in!")
 ```
 
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+
+The handler is scoped to its connection, so there's no need to branch on the connection name.
+
+```python
+@graph.on_signin
+async def on_graph_signin(event: SignInEvent):
+    """Only fires for the `graph` connection."""
+    await event.activity_ctx.send(
+        f"Signed in on {event.connection_name}. "
+        "Type **/whoami** to see your profile or **/signout** to sign out."
+    )
+```
+
+:::note
+A flow can have more than one handler. They run in registration order and are isolated — if one raises, the error is logged and the rest still run. The app-wide `sign_in` event also still fires for every connection.
+:::
+
+  </TabItem>
+</Tabs>
+
 <!-- using-graph -->
 
-From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+From this point, you can query graph for the signed-in user, for example to reply to the `/whoami` message, or in any other route.
 
+<Tabs groupId="python-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
+
+Use the `is_signed_in` flag and the `user_graph` client.
 
 ```python
 @app.on_message
@@ -73,17 +149,35 @@ async def handle_whoami_message(ctx: ActivityContext[MessageActivity]):
     # Access user's Microsoft Graph data
     me = await ctx.user_graph.me.get()
     await ctx.send(f"Hello {me.display_name}! Your email is {me.mail or me.user_principal_name}")
-
-@app.on_message
-async def handle_all_messages(ctx: ActivityContext[MessageActivity]):
-    """Handle all other messages."""
-    if ctx.is_signed_in:
-        await ctx.send(f'You said: "{ctx.activity.text}". Please type **/whoami** to see your profile or **/signout** to sign out.')
-    else:
-        await ctx.send(f'You said: "{ctx.activity.text}". Please type **/signin** to sign in.')
 ```
 
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+
+Build the client from the flow's token, so it always talks to the connection that owns it.
+
+```python
+from microsoft_teams.graph import get_graph_client
+
+@app.on_message_pattern("/whoami")
+async def handle_whoami_message(ctx: ActivityContext[MessageActivity]):
+    """Handle messages to show user information from Microsoft Graph."""
+    token = await graph.sign_in(ctx)
+    if token is None:
+        return  # OAuth card sent — resumes on the callback turn
+
+    client = get_graph_client(token)
+    me = await client.me.get()
+    await ctx.send(f"Hello {me.display_name}! Your email is {me.mail or me.user_principal_name}")
+```
+
+  </TabItem>
+</Tabs>
+
 <!-- signing-out -->
+
+<Tabs groupId="python-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.on_message
@@ -97,16 +191,82 @@ async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
     await ctx.send("You have been signed out!")
 ```
 
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+
+```python
+@app.on_message_pattern("/signout")
+async def handle_signout_message(ctx: ActivityContext[MessageActivity]):
+    """Handle sign out requests."""
+    await graph.sign_out(ctx)
+    await ctx.send("You have been signed out!")
+```
+
+  </TabItem>
+</Tabs>
+
+<!-- multiple-connections -->
+
+```python
+app = App()
+
+graph = app.add_oauth_flow("graph", oauth_card_text="Sign in with Microsoft")
+github = app.add_oauth_flow("github", oauth_card_text="Sign in with GitHub")
+
+@app.on_message_pattern("/graph")
+async def handle_graph(ctx: ActivityContext[MessageActivity]):
+    token = await graph.sign_in(ctx)
+    if token:
+        await send_graph_profile(ctx, token)
+
+@app.on_message_pattern("/github")
+async def handle_github(ctx: ActivityContext[MessageActivity]):
+    token = await github.sign_in(ctx)
+    if token:
+        await send_github_profile(ctx, token)
+
+@graph.on_signin
+async def on_graph_signin(event: SignInEvent):
+    await send_graph_profile(event.activity_ctx, event.token_response.token)
+
+@github.on_signin
+async def on_github_signin(event: SignInEvent):
+    await send_github_profile(event.activity_ctx, event.token_response.token)
+
+@app.on_message_pattern("/signout github")
+async def handle_signout_github(ctx: ActivityContext[MessageActivity]):
+    await github.sign_out(ctx)
+    await ctx.send("Signed out of GitHub.")
+```
+
+Signing out of one connection leaves the other signed in.
+
+<!-- connection-status -->
+
+```python
+@app.on_message_pattern("/status")
+async def handle_status(ctx: ActivityContext[MessageActivity]):
+    statuses = await ctx.get_connection_status()
+    lines = [
+        f"- `{status.connection_name}`: {'signed in' if status.has_token else 'signed out'}"
+        for status in statuses
+    ]
+    await ctx.send("\n".join(lines))
+```
+
 <!-- pending-messages -->
+
+<Tabs groupId="python-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 from microsoft_teams.apps import App, ActivityContext, SignInEvent
-from microsoft_teams.apps.routing.activity_context import SignInOptions
+from microsoft_teams.apps.routing import SignInOptions
 from microsoft_teams.api import MessageActivity
 
 app = App()
 
-pending_messages: dict[str, dict] = {}
+pending_messages: dict[str, str] = {}
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
@@ -117,10 +277,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
     if token is None:
         # OAuth card sent — store the original message for later
-        pending_messages[ctx.activity.from_.id] = {
-            "text": ctx.activity.text,
-            "activity": ctx.activity,
-        }
+        pending_messages[ctx.activity.from_.id] = ctx.activity.text
         return
 
     # User is already signed in — process normally
@@ -133,12 +290,56 @@ async def handle_sign_in(event: SignInEvent):
 
     if pending:
         await event.activity_ctx.send("Successfully signed in! Processing your original request...")
-        await process_message(pending["text"], event.activity_ctx)
+        await process_message(pending, event.activity_ctx)
     else:
         await event.activity_ctx.send("You are now signed in!")
 ```
 
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+
+```python
+from microsoft_teams.apps import App, ActivityContext, SignInEvent
+from microsoft_teams.apps.routing import SignInOptions
+from microsoft_teams.api import MessageActivity
+
+app = App()
+graph = app.add_oauth_flow("graph")
+
+pending_messages: dict[str, str] = {}
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    # sign_in() returns the token if already signed in, or None if an OAuth card was sent
+    token = await graph.sign_in(ctx, SignInOptions(
+        oauth_card_text="To help with that, I need to sign you in first."
+    ))
+
+    if token is None:
+        pending_messages[ctx.activity.from_.id] = ctx.activity.text
+        return
+
+    await process_message(ctx.activity.text, ctx, token)
+
+@graph.on_signin
+async def on_graph_signin(event: SignInEvent):
+    user_id = event.activity_ctx.activity.from_.id
+    pending = pending_messages.pop(user_id, None)
+
+    if pending:
+        await event.activity_ctx.send("Successfully signed in! Processing your original request...")
+        await process_message(pending, event.activity_ctx, event.token_response.token)
+    else:
+        await event.activity_ctx.send("You are now signed in!")
+```
+
+  </TabItem>
+</Tabs>
+
 <!-- signin-failure -->
+
+<Tabs groupId="python-sdk-version" defaultValue="core">
+  <TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.on_signin_failure()
@@ -149,12 +350,28 @@ async def handle_signin_failure(ctx):
 ```
 
 :::note
-In Python, registering a custom handler does **not** replace the built-in default handler. Both will run as part of the middleware chain.
+Registering a custom handler does **not** replace the built-in default handler. Both will run as part of the middleware chain.
 :::
 
+  </TabItem>
+  <TabItem value="core" label="SDK 2.1 (current)" default>
+
+```python
+from microsoft_teams.apps import SignInFailureEvent
+
+@graph.on_signin_failure
+async def on_graph_signin_failure(event: SignInFailureEvent):
+    ctx = event.activity_ctx
+    ctx.logger.error(f"Graph sign-in failed: {event.code} - {event.message}")
+    await ctx.send("Graph sign-in failed.")
+```
+
+A flow can have more than one failure handler; they run in registration order and are isolated from each other.
+
+  </TabItem>
+</Tabs>
+
 <!-- regional-bot -->
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
 ## Regional Configs
 You may be building a regional bot that is deployed in a specific Azure region (such as West Europe, East US, etc.) rather than global. This is important for organizations that have data residency requirements or want to reduce latency by keeping data and authentication flows within a specific area.

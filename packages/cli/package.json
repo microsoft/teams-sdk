@@ -63,7 +63,7 @@
     "@types/node": "^22.10.0",
     "tsx": "^4.22.4",
     "typescript": "^5.8.2",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.11"
   },
   "publishConfig": {
     "access": "public"

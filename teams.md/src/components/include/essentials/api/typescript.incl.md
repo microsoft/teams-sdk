@@ -18,7 +18,7 @@
 
 ```typescript
 app.on('message', async ({ activity, api }) => {
-  const members = await api.conversations.members(activity.conversation.id).get();
+  const members = await api.conversations.getMembers(activity.conversation.id);
 });
 ```
 

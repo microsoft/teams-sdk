@@ -42,10 +42,18 @@ app.event('error', ({ error }) => {
 When a user signs in using `OAuth` or `SSO`, use the graph api to fetch their profile and say hello.
 
 ```typescript
+import { Client as GraphClient } from '@microsoft/teams.graph';
 import * as endpoints from '@microsoft/teams.graph-endpoints';
 
-app.event('signin', async ({ activity, send, userGraph }) => {
-  const me = await userGraph.call(endpoints.me.get);
-  await send(`👋 Hello ${me.name}`);
+const graph = app.addOAuthFlow('graph');
+
+graph.onSignInComplete(async (ctx, token) => {
+  const client = new GraphClient({ token: () => token.token }, { baseUrlRoot: app.graphBaseUrl });
+  const me = await client.call(endpoints.me.get);
+  await ctx.send(`👋 Hello ${me.displayName}`);
 });
 ```
+
+:::tip
+The app-wide `signin` event fires for every connection. To react to just one, use its flow's `onSignInComplete` callback as shown above. See the [auth guide](../in-depth-guides/user-authentication).
+:::

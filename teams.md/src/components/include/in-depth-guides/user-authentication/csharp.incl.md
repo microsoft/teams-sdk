@@ -253,6 +253,67 @@ teams.OnMessage("/signout github", async (context, cancellationToken) =>
   </TabItem>
 </Tabs>
 
+<!-- multiple-connections -->
+
+```csharp
+builder.Services.AddTeamsBotApplication(options =>
+{
+    options.AddOAuthFlow("graph", oauth => oauth.OAuthCardText = "Sign in with Microsoft");
+    options.AddOAuthFlow("github", oauth => oauth.OAuthCardText = "Sign in with GitHub");
+});
+
+OAuthFlow graphAuth = teams.GetOAuthFlow("graph");
+OAuthFlow githubAuth = teams.GetOAuthFlow("github");
+
+teams.OnMessage("/graph", async (context, cancellationToken) =>
+{
+    string? token = await graphAuth.SignInAsync(context, cancellationToken);
+    if (token is not null)
+    {
+        await SendGraphProfileAsync(context, token, cancellationToken);
+    }
+});
+
+teams.OnMessage("/github", async (context, cancellationToken) =>
+{
+    string? token = await githubAuth.SignInAsync(context, cancellationToken);
+    if (token is not null)
+    {
+        await SendGitHubProfileAsync(context, token, cancellationToken);
+    }
+});
+
+graphAuth.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
+    await SendGraphProfileAsync(context, tokenResponse.Token, cancellationToken));
+
+githubAuth.OnSignInComplete(async (context, tokenResponse, cancellationToken) =>
+    await SendGitHubProfileAsync(context, tokenResponse.Token, cancellationToken));
+
+teams.OnMessage("/signout github", async (context, cancellationToken) =>
+{
+    await githubAuth.SignOutAsync(context, cancellationToken);
+    await context.SendAsync("Signed out of GitHub.", cancellationToken);
+});
+```
+
+Signing out of one connection leaves the other signed in.
+
+<!-- connection-status -->
+
+```csharp
+using Microsoft.Teams.Core;
+
+teams.OnMessage("/status", async (context, cancellationToken) =>
+{
+    IList<GetTokenStatusResult> statuses = await graphAuth.GetConnectionStatusAsync(context, cancellationToken);
+    IEnumerable<string> lines = statuses.Select(status =>
+        $"- `{status.ConnectionName}`: {(status.HasToken == true ? "signed in" : "signed out")}");
+    await context.SendAsync(string.Join("\n", lines), cancellationToken);
+});
+```
+
+`GetConnectionStatusAsync` reports every connection registered on the bot, so calling it on any flow returns the same list.
+
 <!-- pending-messages -->
 
 <Tabs groupId="csharp-sdk-version" defaultValue="core">

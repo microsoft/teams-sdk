@@ -11,7 +11,7 @@ await runner.done();
 `addAiGenerated()` marks the message as system-generated.
 
 ```typescript
-const reply = new MessageActivity().addAiGenerated();
+const reply = new MessageActivityInput().addAiGenerated();
 stream.emit(reply);
 ```
 
@@ -20,7 +20,7 @@ stream.emit(reply);
 `addFeedback('custom')` enables the thumbs up/down controls and lets you surface a custom feedback form when users respond.
 
 ```typescript
-const reply = new MessageActivity().addAiGenerated().addFeedback('custom');
+const reply = new MessageActivityInput().addAiGenerated().addFeedback('custom');
 stream.emit(reply);
 ```
 
@@ -31,7 +31,7 @@ function shipResult(result: AgentRunResult, stream: IStreamer, recipientId: stri
   if (result.pendingCard) {
     // Clarification card — discard any streamed text, then emit card-only.
     stream.clearText();
-    stream.emit(new MessageActivity().addCard('adaptive', result.pendingCard).addAiGenerated());
+    stream.emit(new MessageActivityInput().addCard('adaptive', result.pendingCard).addAiGenerated());
     return;
   }
   // normal reply: attach follow-ups, citations, feedback (below).
@@ -98,7 +98,7 @@ finalMarker.withSuggestedActions({
 Use the `CitationCollector` from [Build an agent](./build-agent#grounding-responses-with-citations). `attachCitations` reads the `[N]` markers out of the streamed text and writes a citation entity onto the final activity for each one it has data for.
 
 ```typescript
-attachCitations(activity: MessageActivity, fullText: string): number {
+attachCitations(activity: MessageActivityInput, fullText: string): number {
   const used = new Set<number>();
   for (const match of fullText.matchAll(/\[(\d+)\]/g)) used.add(Number(match[1]));
 
@@ -119,7 +119,7 @@ attachCitations(activity: MessageActivity, fullText: string): number {
 Assemble the final marker activity with everything at once — the AI label, custom feedback, citations, and follow-up chips — then emit it so the streamer folds them into the final message:
 
 ```typescript
-const finalMarker = new MessageActivity().addAiGenerated().addFeedback('custom');
+const finalMarker = new MessageActivityInput().addAiGenerated().addFeedback('custom');
 result.citations.attachCitations(finalMarker, result.fullText);
 if (result.followUps.length > 0) {
   finalMarker.withSuggestedActions({

@@ -23,10 +23,6 @@
   "in-depth-guides/server/http-server": [
     "csharp"
   ],
-  "in-depth-guides/state": [
-    "typescript",
-    "python"
-  ],
   "in-depth-guides/tabs": [
     "python"
   ],
