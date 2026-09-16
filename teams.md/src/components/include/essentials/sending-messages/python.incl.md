@@ -43,8 +43,7 @@ from microsoft_teams.apps import ActivityContext
 
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
-    opened = time.monotonic()
-
+    opened: float | None = None
     text = ""
     editing = False
     message_id: str | None = None
@@ -53,8 +52,11 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     async for chunk in run_agent(ctx.activity.text):
         text += chunk
 
-        # Phase 1: real streaming, handed off before the service window closes.
-        if not editing and time.monotonic() - opened < 110:
+        # Phase 1: real streaming. The window opens on the first streamed chunk,
+        # not when the handler starts, so the clock starts here.
+        if not editing and (opened is None or time.monotonic() - opened < 110):
+            if opened is None:
+                opened = time.monotonic()
             ctx.stream.emit(chunk)
             continue
 
@@ -73,6 +75,9 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         await ctx.stream.close()
     elif message_id:
         await ctx.send(MessageActivityInput(text=text).with_id(message_id))
+    else:
+        # close() published nothing, so send the buffered text rather than drop it.
+        await ctx.send(MessageActivityInput(text=text))
 ```
 
 Setting an id on an outgoing activity routes the send through the update path, so each edit replaces the finalized message instead of posting a new one.
