@@ -66,7 +66,7 @@ async for chunk in file.stream():
 | `content_type` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `extension`. To learn the type of the bytes you actually received, read `content_type` on the downloaded file, which is resolved from the download response. |
 | `scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `source` | Where the SDK found the file. Currently always `botActivity`. |
-| `web_url` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
+| `content_url` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
 | `raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
 <!-- reusing-downloaded-file -->
@@ -93,7 +93,13 @@ await downloaded.save_as("./copy.bin") # write to disk, no re-fetch
 <!-- errors-import -->
 
 ```python
-from microsoft_teams.apps import FileScopeNotSupportedError, FileUrlExpiredError
+from microsoft_teams.apps import (
+    FileAccessError,
+    FileCredentialError,
+    FileError,
+    FileScopeNotSupportedError,
+    FileUrlExpiredError,
+)
 ```
 
 <!-- errors-handling -->
@@ -105,8 +111,15 @@ try:
 except FileUrlExpiredError as err:
     if err.reason == "first_fetch":
         await ctx.reply("That file link has expired before it could be read.")
+except FileCredentialError as err:
+    await ctx.reply(f"Could not read that file as {err.actor or 'the identity used'}: no Graph credential was available.")
+except FileAccessError as err:
+    await ctx.reply(f"Could not read that file as {err.actor or 'the identity used'}: the service returned {err.status}.")
 except FileScopeNotSupportedError as err:
     await ctx.reply(f"Downloading files from {err.scope} conversations is not supported yet.")
+except FileError:
+    # Any future inbound-file failure lands here rather than escaping unhandled.
+    await ctx.reply("That file could not be read.")
 ```
 
 <!-- raw-attachment -->

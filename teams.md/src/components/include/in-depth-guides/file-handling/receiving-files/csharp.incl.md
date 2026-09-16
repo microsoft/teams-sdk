@@ -82,7 +82,7 @@ while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
 | `ContentType` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `Extension`. To learn the type of the bytes you actually received, read `ContentType` on the downloaded file, which is resolved from the download response. |
 | `Scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `Source` | Where the SDK found the file. Currently always `botActivity`. |
-| `WebUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
+| `ContentUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
 | `Raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
 <!-- reusing-downloaded-file -->
@@ -124,9 +124,22 @@ catch (FileUrlExpiredException err) when (err.Reason == FileUrlExpiredReason.Fir
 {
     await context.ReplyAsync("That file link has expired before it could be read.", cancellationToken);
 }
+catch (FileCredentialException err)
+{
+    await context.ReplyAsync($"Could not read that file as {err.Actor?.ToString() ?? "the identity used"}: no Graph credential was available.", cancellationToken);
+}
+catch (FileAccessException err)
+{
+    await context.ReplyAsync($"Could not read that file as {err.Actor?.ToString() ?? "the identity used"}: the service returned {err.Status}.", cancellationToken);
+}
 catch (FileScopeNotSupportedException err)
 {
     await context.ReplyAsync($"Downloading files from {err.Scope} conversations is not supported yet.", cancellationToken);
+}
+catch (FileException)
+{
+    // Any future inbound-file failure lands here rather than escaping unhandled.
+    await context.ReplyAsync("That file could not be read.", cancellationToken);
 }
 ```
 

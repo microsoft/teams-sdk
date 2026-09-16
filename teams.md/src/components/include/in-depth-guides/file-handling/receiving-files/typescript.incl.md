@@ -72,7 +72,7 @@ for await (const chunk of stream) {
 | `contentType` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `extension`. To learn the type of the bytes you actually received, read `contentType` on the downloaded file, which is resolved from the download response. |
 | `scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `source` | Where the SDK found the file. Currently always `botActivity`. |
-| `webUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
+| `contentUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
 | `raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
 <!-- reusing-downloaded-file -->
@@ -100,7 +100,13 @@ await downloaded.saveAs('./copy.bin');   // write to disk, no re-fetch
 <!-- errors-import -->
 
 ```typescript
-import { FileScopeNotSupportedError, FileUrlExpiredError } from '@microsoft/teams.apps';
+import {
+  FileAccessError,
+  FileCredentialError,
+  FileError,
+  FileScopeNotSupportedError,
+  FileUrlExpiredError,
+} from '@microsoft/teams.apps';
 ```
 
 <!-- errors-handling -->
@@ -112,8 +118,15 @@ try {
 } catch (err) {
   if (err instanceof FileUrlExpiredError && err.reason === 'firstFetch') {
     await send('That file link has expired before it could be read.');
+  } else if (err instanceof FileCredentialError) {
+    await send(`Could not read that file as ${err.actor ?? 'the identity used'}: no Graph credential was available.`);
+  } else if (err instanceof FileAccessError) {
+    await send(`Could not read that file as ${err.actor ?? 'the identity used'}: the service returned ${err.status}.`);
   } else if (err instanceof FileScopeNotSupportedError) {
     await send(`Downloading files from ${err.scope} conversations is not supported yet.`);
+  } else if (err instanceof FileError) {
+    // Any future inbound-file failure lands here rather than escaping unhandled.
+    await send('That file could not be read.');
   }
 }
 ```
