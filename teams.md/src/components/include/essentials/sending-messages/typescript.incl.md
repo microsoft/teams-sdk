@@ -33,8 +33,7 @@ app.on('message', async ({ activity, stream }) => {
 import { MessageActivityInput } from '@microsoft/teams.api';
 
 app.on('message', async ({ activity, send, stream }) => {
-  const opened = Date.now();
-
+  let opened: number | undefined;
   let text = '';
   let editing = false;
   let messageId: string | undefined;
@@ -43,8 +42,10 @@ app.on('message', async ({ activity, send, stream }) => {
   for await (const chunk of runAgent(activity.text)) {
     text += chunk;
 
-    // Phase 1: real streaming, handed off before the service window closes.
-    if (!editing && Date.now() - opened < 110_000) {
+    // Phase 1: real streaming. The window opens on the first streamed chunk,
+    // not when the handler starts, so the clock starts here.
+    if (!editing && (opened === undefined || Date.now() - opened < 110_000)) {
+      opened ??= Date.now();
       stream.emit(chunk);
       continue;
     }
@@ -66,6 +67,9 @@ app.on('message', async ({ activity, send, stream }) => {
     await stream.close();
   } else if (messageId) {
     await send(new MessageActivityInput(text).withId(messageId));
+  } else {
+    // close() published nothing, so send the buffered text rather than drop it.
+    await send(new MessageActivityInput(text));
   }
 });
 ```
