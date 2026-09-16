@@ -30,10 +30,6 @@ flowchart LR
 
 One blueprint can power many agents. Your code uses the Agentic User and app instance IDs to load the correct configuration, state, and permissions for each agent.
 
-`AgenticIdentity` is an SDK type, not another platform identity. Use it to scope proactive sends, API clients, and telemetry. Its shape determines how narrowly the operation is scoped.
-
-The blueprint ID is required for every scope. Agentic App Instance and Agentic User IDs are optional in the SDK type because not every identity payload includes them. The tenant ID is required when an operation acquires a token.
-
 For a deeper identity architecture overview, see [Plan an agent identity architecture](https://learn.microsoft.com/entra/agent-id/how-to-plan-agent-identity-architecture).
 
 ## How Agent 365 compares to a standard bot
