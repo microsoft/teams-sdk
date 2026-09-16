@@ -1,7 +1,7 @@
 ---
 title: Concepts and Benefits
 sidebar_position: 1
-summary: Understand Agent Identity Blueprints, Agentic App Instances, Agentic Users, and the benefits of Agent 365.
+summary: Understand Agentic Blueprint IDs, Agentic App Instances, Agentic Users, and the benefits of Agent 365.
 suppressLanguageIncludeWarning: true
 ---
 
@@ -9,19 +9,19 @@ suppressLanguageIncludeWarning: true
 
 [Microsoft Agent 365](https://learn.microsoft.com/microsoft-agent-365/) is the control plane for AI agents across your organization. It gives agents identities and provides tools to deploy, observe, secure, and govern them across Microsoft 365.
 
-Teams SDK provides the Activity Protocol and identity-aware messaging layer for Agent 365 agents in Teams. One reusable blueprint runtime can serve multiple app instances and Agentic Users while the SDK preserves the correct identity for messages, API calls, lifecycle events, and telemetry.
+Teams SDK provides the Activity Protocol and identity-aware messaging layer for Agentic Users in Teams. One reusable blueprint runtime can serve multiple app instances and Agentic Users while the SDK preserves the correct identity for messages, API calls, lifecycle events, and telemetry.
 
 ## Identity model
 
 | Concept                      | Purpose                                                                                                                                              |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Agent Identity Blueprint** | The reusable application, credentials, permissions, and runtime that define an agent.                                                                |
+| **Agentic Blueprint ID**     | Identifies the reusable application, credentials, permissions, and runtime that define an agent.                                                     |
 | **Agentic App Instance**     | A concrete app or workload identity created from the blueprint.                                                                                      |
 | **Agentic User (AU)**        | The Microsoft 365 user identity associated with an app instance. It can have a directory profile, manager, mailbox, permissions, and Teams presence. |
 
 ```mermaid
 flowchart LR
-  B[Agent Identity Blueprint<br/>shared code and credentials]
+  B[Agentic Blueprint ID<br/>shared code and credentials]
   B --> I1[Agentic App Instance A]
   B --> I2[Agentic App Instance B]
   I1 --> U1[Agentic User A]
@@ -32,7 +32,7 @@ One blueprint can power many agents. Your code uses the Agentic User and app ins
 
 For a deeper identity architecture overview, see [Plan an agent identity architecture](https://learn.microsoft.com/entra/agent-id/how-to-plan-agent-identity-architecture).
 
-## How Agent 365 compares to a standard bot
+## How Agentic Users Compare to a Standard Bot
 
 Agent 365 uses the same Teams activity and app authentication model as a standard bot. The main difference is how the app represents and selects the identity that interacts with users.
 
