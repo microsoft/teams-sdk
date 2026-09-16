@@ -96,6 +96,84 @@ teams.OnMessage(async (context, cancellationToken) =>
   </TabItem>
 </Tabs>
 
+<!-- streaming-handoff-example -->
+
+This pattern uses the SDK 2.1 `TeamsStreamingWriter`. There is no SDK 2.0 (Legacy) variant on this page.
+
+`FinalizeResponseAsync` does not return the finalized message, so the id of the streamed message is not available to the caller. The continuation is therefore sent as one follow-up message, which is then edited in place for the rest of the run. That follow-up carries only the text produced after the handoff, because the streamed message already published everything before it, so the two messages read in sequence.
+
+```csharp
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    TeamsStreamingWriter writer = TeamsStreamingWriter.CreateFromContext(context);
+    string conversationId = context.Activity.Conversation.Id;
+
+    StringBuilder continuation = new();
+    DateTimeOffset? opened = null;
+    bool handedOff = false;
+    string? messageId = null;
+    DateTimeOffset lastEdit = DateTimeOffset.MinValue;
+
+    await foreach (string chunk in RunAgentAsync(context.Activity.Text, cancellationToken))
+    {
+        // Phase 1: real streaming. The window opens on the first streamed chunk,
+        // not when the handler starts, so the clock starts here.
+        if (!handedOff && (opened is null || DateTimeOffset.UtcNow - opened < TimeSpan.FromSeconds(110)))
+        {
+            opened ??= DateTimeOffset.UtcNow;
+            await writer.AppendResponseAsync(chunk, cancellationToken);
+            continue;
+        }
+
+        // This chunk was never streamed, so it belongs to the continuation.
+        continuation.Append(chunk);
+
+        // Hand off once: finalize the streamed message, then open the follow-up that carries the rest.
+        if (!handedOff)
+        {
+            await writer.FinalizeResponseAsync(cancellationToken: cancellationToken);
+            handedOff = true;
+
+            SendActivityResponse? sent = await context.SendAsync(
+                new MessageActivityInput().WithText(continuation.ToString()), cancellationToken);
+
+            messageId = sent?.Id;
+            lastEdit = DateTimeOffset.UtcNow;
+            continue;
+        }
+
+        // Phase 2: plain edits on the follow-up. No two minute ceiling.
+        if (messageId is not null && DateTimeOffset.UtcNow - lastEdit > TimeSpan.FromSeconds(3))
+        {
+            await context.Api.Conversations.UpdateActivityAsync(
+                conversationId,
+                messageId,
+                new MessageActivityInput().WithText(continuation.ToString()),
+                cancellationToken: cancellationToken);
+
+            lastEdit = DateTimeOffset.UtcNow;
+        }
+    }
+
+    if (!handedOff)
+    {
+        await writer.FinalizeResponseAsync(cancellationToken: cancellationToken);
+    }
+    else if (messageId is not null)
+    {
+        await context.Api.Conversations.UpdateActivityAsync(
+            conversationId,
+            messageId,
+            new MessageActivityInput().WithText(continuation.ToString()),
+            cancellationToken: cancellationToken);
+    }
+});
+```
+
+`handedOff` decides whether the stream still needs finalizing, which is why it is tracked separately from `messageId`. The follow-up is sent exactly once, in the same iteration that sets `handedOff`, so a missing id cannot cause a second send. It does mean the continuation stops updating at that point: `SendAsync` returns `SendActivityResponse?` with a nullable `Id`, and if no id comes back there is no way to edit that message, nor does the SDK expose the finalized streamed message's id as a fallback.
+
+`context.SendAsync` always creates a new activity, even when the activity carries an id, so plain edits go through `context.Api.Conversations.UpdateActivityAsync`. Use `writer.TimedOut` to check whether the stream tripped the limit before you handed off.
+
 <!-- mention-method-name -->
 
 `AddMention`
