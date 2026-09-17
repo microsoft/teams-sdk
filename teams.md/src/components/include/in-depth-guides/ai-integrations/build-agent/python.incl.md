@@ -1,22 +1,35 @@
 <!-- intro -->
 
-This guide walks through building a Teams agent with [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/) (MAF) — Microsoft's open-source SDK for AI agents. MAF gives you typed primitives — `Agent`, `tool`, `AgentSession`, `FunctionMiddleware` — that wrap the underlying model API, the tool-dispatch loop, and conversation history into composable pieces, so you don't hand-roll chat completions or thread tool calls yourself. It works against multiple model backends (OpenAI, Azure OpenAI, and others) and scales from a single chat agent up to coordinated multi-agent workflows.
+This guide uses [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/) (MAF) as the boundary between Teams and the model backend. MAF provides typed primitives — `Agent`, `tool`, `AgentSession`, and `FunctionMiddleware` — for tool dispatch, conversation history, and streaming.
 
-In a Teams app, MAF runs the agent loop (model calls, tool invocations, and per-conversation memory) while the Teams SDK handles activity routing, streaming, and Teams-native affordances like Adaptive Cards and feedback controls.
+The checked-in `ai-mcp` sample installs the Azure OpenAI and Anthropic connectors. The Teams handlers and Teams-native response features depend on the framework's `Agent`, not directly on either provider connector.
 
 Full source: [examples/ai-mcp](https://github.com/microsoft/teams.py/tree/main/examples/ai-mcp).
 
 <!-- define-agent -->
 
+Select a provider during startup, then construct the same Agent Framework `Agent`:
+
 ```python
 from agent_framework import Agent
+from agent_framework.anthropic import AnthropicClient
 from agent_framework.openai import OpenAIChatClient
 
-client = OpenAIChatClient(
-    model=getenv("AZURE_OPENAI_MODEL"),
-    azure_endpoint=getenv("AZURE_OPENAI_ENDPOINT"),
-    api_key=getenv("AZURE_OPENAI_API_KEY"),
-)
+provider = getenv("AI_PROVIDER", "azure-openai").strip().lower()
+
+if provider == "anthropic":
+    client = AnthropicClient(
+        model=getenv("ANTHROPIC_MODEL"),
+        api_key=getenv("ANTHROPIC_API_KEY"),
+    )
+elif provider == "azure-openai":
+    client = OpenAIChatClient(
+        model=getenv("AZURE_OPENAI_MODEL"),
+        azure_endpoint=getenv("AZURE_OPENAI_ENDPOINT"),
+        api_key=getenv("AZURE_OPENAI_API_KEY"),
+    )
+else:
+    raise ValueError(f"Unsupported AI_PROVIDER {provider!r}.")
 
 agent = Agent(
     client=client,

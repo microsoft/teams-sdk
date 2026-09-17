@@ -26,6 +26,7 @@ await writer.FinalizeResponseAsync(msg, cancellationToken);
 <!-- feedback -->
 
 Enable built-in thumbs up/down controls on the reply and surface a custom feedback form when users respond.
+
 ```csharp
 MessageActivityInput reply = new MessageActivityInput().AddAIGenerated().AddFeedback(FeedbackTypes.Custom);
 await writer.FinalizeResponseAsync(msg, cancellationToken);
