@@ -26,7 +26,7 @@ Sending an image needs no Microsoft Graph permission and no user sign-in. The me
 
 ## Image limits
 
-Teams renders inline images within fixed platform limits. According to [Use picture messages](https://learn.microsoft.com/en-us/microsoftteams/platform/bots/build-conversational-capability#use-picture-messages), images can be up to **1024x1024 pixels** and **1 MB**, in **PNG**, **JPEG**, or **GIF** format. Animated GIFs are not supported. No validation is performed on MIME type, dimensions, or size of an outgoing attachment, so an image outside these bounds may send successfully but fail to render on the client.
+Teams renders inline images within fixed platform limits. See [Use picture messages](https://learn.microsoft.com/en-us/microsoftteams/platform/bots/build-conversational-capability#use-picture-messages) for the current dimensions, file size, format, and animation restrictions. No validation is performed on MIME type, dimensions, or size of an outgoing attachment, so an image outside these bounds may send successfully but fail to render on the client.
 
 The [Teams chat and channel size notes](https://learn.microsoft.com/en-us/microsoftteams/limits-specifications-teams) explicitly exclude base64-encoded images from the approximate 100 KB post-size calculation, so base64 expansion does not reduce the documented 1 MB picture limit.
 
