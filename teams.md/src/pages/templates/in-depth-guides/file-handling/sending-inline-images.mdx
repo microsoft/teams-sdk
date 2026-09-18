@@ -40,7 +40,7 @@ The URL must be reachable by the client without your agent's credentials. A link
 
 ## Send image bytes inline
 
-When the bytes only exist in memory or on your agent's disk, encode them as base64 and send them as a data URI. The [Bot Framework wire format](https://learn.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-add-media-attachments?view=azure-bot-service-4.0) carries the data URI in the attachment's `contentUrl` property of the activity JSON. The MIME type appears twice: once in the attachment's content type, and once inside the data URI. Keep them consistent with each other and with the actual bytes:
+When the bytes only exist in memory or on your agent's disk, encode them as base64 and send them as a data URI. See [Add media attachments to messages](https://learn.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-add-media-attachments?view=azure-bot-service-4.0) for the underlying attachment wire format. The MIME type appears twice: once in the attachment's content type, and once inside the data URI. Keep them consistent with each other and with the actual bytes:
 
 <LanguageInclude section="inline-bytes" />
 
