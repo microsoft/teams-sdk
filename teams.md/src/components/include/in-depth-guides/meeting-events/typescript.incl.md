@@ -15,9 +15,10 @@ app.on('meetingStart', async ({ activity, send }) => {
       wrap: true,
       weight: 'Bolder'
     }),
-    new ActionSet(
-      new OpenUrlAction(meetingData.JoinUrl).withTitle('Join the meeting')
-    )
+    // Meetings held inside a channel have no join URL, so there is no action to offer.
+    ...(meetingData.JoinUrl
+      ? [new ActionSet(new OpenUrlAction(meetingData.JoinUrl).withTitle('Join the meeting'))]
+      : [])
   );
 
   await send(card);
