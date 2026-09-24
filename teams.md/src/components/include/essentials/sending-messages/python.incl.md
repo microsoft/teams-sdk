@@ -33,6 +33,61 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         ctx.stream.emit(message)
 ```
 
+<!-- streaming-pacing-details -->
+
+`ctx.stream.emit()` is fire and forget. It appends to a queue and returns immediately instead of awaiting the network, and a flush then drains the whole queue into one accumulated buffer and sends it as a single typing activity. When further chunks arrive while a send is already in flight, the next flush is scheduled 0.5s later, which is what collapses a fast loop into roughly two sends per second. Chunks that arrive slower than a round trip are sent as they come, so the SDK never adds latency to a slow producer.
+
+Failed sends of streamed chunks are retried for you with exponential backoff: up to 8 attempts, waiting 0.5s, 1s, 2s, and then 4s for each remaining attempt. The final send from `ctx.stream.close()` uses the library defaults instead, up to 5 attempts with full jitter, so each of those waits is a random value up to the same doubling 0.5s, 1s, 2s, 4s bounds rather than the bound itself. Both are blind retries on transient failures rather than rate limit aware backoff, since the SDK does not read `Retry-After` or treat `429` specially. Terminal `403`s are deliberately excluded, so a stream that has already timed out or been cancelled is never retried back to life.
+
+<!-- streaming-handoff-example -->
+
+```python
+import time
+
+from microsoft_teams.api import MessageActivity, MessageActivityInput
+from microsoft_teams.apps import ActivityContext
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    opened: float | None = None
+    text = ""
+    editing = False
+    message_id: str | None = None
+    last_edit = 0.0
+
+    async for chunk in run_agent(ctx.activity.text):
+        text += chunk
+
+        # Phase 1: real streaming. The window opens on the first streamed chunk,
+        # not when the handler starts, so the clock starts here.
+        if not editing and (opened is None or time.monotonic() - opened < 110):
+            if opened is None:
+                opened = time.monotonic()
+            ctx.stream.emit(chunk)
+            continue
+
+        # Hand off once, keeping the finalized message's id.
+        if not editing:
+            sent = await ctx.stream.close()
+            message_id = sent.id if sent else None
+            editing = True
+
+        # Phase 2: plain edits on the same message. No two minute ceiling.
+        if message_id and time.monotonic() - last_edit > 3:
+            await ctx.send(MessageActivityInput(text=text).with_id(message_id))
+            last_edit = time.monotonic()
+
+    if not editing:
+        await ctx.stream.close()
+    elif message_id:
+        await ctx.send(MessageActivityInput(text=text).with_id(message_id))
+    else:
+        # close() published nothing, so send the buffered text rather than drop it.
+        await ctx.send(MessageActivityInput(text=text))
+```
+
+Setting an id on an outgoing activity routes the send through the update path, so each edit replaces the finalized message instead of posting a new one.
+
 <!-- mention-method-name -->
 
 `add_mention`
