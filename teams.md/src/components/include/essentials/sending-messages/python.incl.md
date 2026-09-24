@@ -33,6 +33,12 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
         ctx.stream.emit(message)
 ```
 
+<!-- streaming-pacing-details -->
+
+`ctx.stream.emit()` is fire and forget. It appends to a queue and returns immediately instead of awaiting the network, and a flush then drains the whole queue into one accumulated buffer and sends it as a single typing activity. When further chunks arrive while a send is already in flight, the next flush is scheduled 0.5s later, which is what collapses a fast loop into roughly two sends per second. Chunks that arrive slower than a round trip are sent as they come, so the SDK never adds latency to a slow producer.
+
+Failed sends of streamed chunks are retried for you with exponential backoff: up to 8 attempts, waiting 0.5s, 1s, 2s, and then 4s for each remaining attempt. The final send from `ctx.stream.close()` uses the library defaults instead, up to 5 attempts with full jitter, so each of those waits is a random value up to the same doubling 0.5s, 1s, 2s, 4s bounds rather than the bound itself. Both are blind retries on transient failures rather than rate limit aware backoff, since the SDK does not read `Retry-After` or treat `429` specially. Terminal `403`s are deliberately excluded, so a stream that has already timed out or been cancelled is never retried back to life.
+
 <!-- streaming-handoff-example -->
 
 ```python

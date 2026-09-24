@@ -96,6 +96,16 @@ teams.OnMessage(async (context, cancellationToken) =>
   </TabItem>
 </Tabs>
 
+<!-- streaming-pacing-details -->
+
+This describes the SDK 2.1 `TeamsStreamingWriter`.
+
+`writer.AppendResponseAsync()` sends inline rather than queueing: it is awaited, and it makes the HTTP call itself. Every call appends your chunk to the accumulated buffer, but if less than 500ms has passed since the last chunk went out it returns without sending, and that gate is what keeps a fast loop from flooding the streaming API.
+
+Because the gate has no trailing timer, a burst that ends inside that 500ms window leaves its final delta buffered but not yet on screen. It goes out with the next `AppendResponseAsync()` that clears the gate, or with `FinalizeResponseAsync()`, so no text is lost, though the tail of a short response can appear only once the stream finalizes.
+
+`TeamsStreamingWriter` does not retry. Each chunk is a single attempt, so a transient failure is not retried for you. A timed out or cancelled stream is handled internally, and any other streaming error is thrown to your handler.
+
 <!-- streaming-handoff-example -->
 
 This pattern uses the SDK 2.1 `TeamsStreamingWriter`. There is no SDK 2.0 (Legacy) variant on this page.

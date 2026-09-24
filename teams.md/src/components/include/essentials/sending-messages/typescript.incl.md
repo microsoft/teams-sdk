@@ -27,6 +27,12 @@ app.on('message', async ({ activity, stream }) => {
 });
 ```
 
+<!-- streaming-pacing-details -->
+
+`stream.emit()` is fire and forget. It appends to a queue and returns immediately instead of awaiting the network, and a flush then drains the whole queue into one accumulated buffer and sends it as a single typing activity. When further chunks arrive while a send is already in flight, the next flush is scheduled 500ms later, which is what collapses a fast loop into roughly two sends per second. Chunks that arrive slower than a round trip are sent as they come, so the SDK never adds latency to a slow producer.
+
+Failed sends are retried for you with exponential backoff: up to 5 attempts, waiting 500ms, 1s, 2s, and 4s between them. This is a blind retry on transient failures rather than rate limit aware backoff, since the SDK does not read `Retry-After` or treat `429` specially. Terminal `403`s are deliberately excluded, so a stream that has already timed out or been cancelled is never retried back to life.
+
 <!-- streaming-handoff-example -->
 
 ```typescript
