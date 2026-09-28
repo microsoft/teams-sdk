@@ -1,6 +1,6 @@
 <!-- prerequisites -->
 
-- **Node.js** v.20 or higher. Install or upgrade from [nodejs.org](https://nodejs.org/).
+- **Node.js** v.22.12 or higher. Install or upgrade from [nodejs.org](https://nodejs.org/).
 
 <!-- create-command -->
 
