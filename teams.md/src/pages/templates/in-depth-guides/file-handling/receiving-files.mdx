@@ -13,7 +13,7 @@ Teams users can send files to agents by attaching them to chat messages. When us
 
 An attached file is not delivered inline with the message. Teams stores the file in OneDrive or SharePoint and hands your agent a small metadata attachment describing it, including a short-lived, pre-authorized URL in personal scopes for traditional bots, while agentic users must make a Graph call via the `contentUrl`. Reading the contents means fetching the bytes from either URL over the network, so the download itself is deferred until explicitly called.
 
-This API covers file downloads in **personal (1:1) chats** for every agent. Agentic users can also download files in **group chats** and **channels**; traditional bots don't receive files there. See [Conversation scope support](#conversation-scope-support).
+This API covers file downloads in **personal (1:1) chats** for every agent. Agentic users can also download files in **group chats** and **channels** starting in version 2.2.0; traditional bots don't receive files there. See [Conversation scope support](#conversation-scope-support).
 
 ## Enable file support in your manifest for traditional bots
 
@@ -129,7 +129,7 @@ Downloading in personal (1:1) chats depends on the URL the platform sends, not o
 
 An **agentic user** receives no pre-authorized link. Its attachment data carries only a `contentUrl` locating the item in OneDrive or SharePoint, so the SDK resolves the bytes through Microsoft Graph's `/shares` endpoint using the agent's own credential. The call behavior is unchanged from above; only the downloading route underneath differs.
 
-If an agentic user does not have sufficient permissions, the read fails with <LanguageInclude content={{"typescript": "`FileCredentialError`", "python": "`FileCredentialError`", "csharp": "`FileCredentialException`"}} /> or <LanguageInclude content={{"typescript": "`FileAccessError`", "python": "`FileAccessError`", "csharp": "`FileAccessException`"}} /> (see [Handle errors](#handle-errors)), which names the identity involved rather than reporting the file as missing.
+If an agentic user has no usable Graph credential, the read fails with <LanguageInclude content={{"typescript": "`FileCredentialError`", "python": "`FileCredentialError`", "csharp": "`FileCredentialException`"}} />; if the storage service refuses the read, for example because the file isn't shared with the agent, it fails with <LanguageInclude content={{"typescript": "`FileAccessError`", "python": "`FileAccessError`", "csharp": "`FileAccessException`"}} /> (see [Handle errors](#handle-errors)). Both name the identity involved rather than reporting the file as missing.
 
 ### Group chats and channels
 
