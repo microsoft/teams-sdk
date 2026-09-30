@@ -1,0 +1,60 @@
+---
+sidebar_position: 1
+sidebar_label: Agent quickstart
+title: AI agent quickstart
+summary: Run the same Teams agent with either Azure OpenAI or Anthropic Claude, including streaming, MCP tools, citations, cards, and follow-up prompts.
+languages: ['typescript', 'csharp', 'python']
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# AI agent quickstart
+
+Run a working Teams agent and choose the model provider through configuration. The Teams application code stays the same: Teams SDK handles activities, streaming, cards, citations, and feedback while the provider implementation handles model messages and tool calls.
+
+## Prerequisites
+
+<LanguageInclude section="prerequisites" />
+
+## Get the sample
+
+<LanguageInclude section="get-sample" />
+
+## Register the Teams app
+
+Expose the local `/api/messages` endpoint with a development tunnel, then create the Teams app:
+
+<LanguageInclude section="register-app" />
+
+The CLI writes the Teams credentials to the sample's `.env` file.
+
+## Choose a model provider
+
+<LanguageInclude section="provider-config" />
+
+## Run the agent
+
+<LanguageInclude section="run-sample" />
+
+At startup, the sample connects to the Microsoft Learn MCP server before listening for Teams activities.
+
+## Try it in Teams
+
+Install the app using the link returned by `teams app create`, then try:
+
+- `Tell me about streaming` to display a clarification card.
+- `How do I stream in the Teams SDK?` to search Microsoft Learn and return citations.
+- `How do I list users with Microsoft Graph?` to invoke an MCP tool and return suggested follow-up prompts.
+
+## Keep Teams code provider-neutral
+
+<LanguageInclude section="provider-boundary" />
+
+The provider implementations differ internally, but both return the same result shape to the Teams handlers.
+
+## Next steps
+
+- [Build an agent in Teams](./build-agent) explains the tool loops, memory, and citation flow.
+- [Enhance the Teams Experience](./teams-enhancements) covers clarification cards, feedback, citations, and follow-up prompts.
+- <LanguageInclude section="sample-link" />
