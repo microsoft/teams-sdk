@@ -201,8 +201,8 @@ async function prepareAppCreate(
     const transport = await select<'http' | 'socket'>({
       message: 'How should Teams deliver messages to your bot?',
       choices: [
-        { name: 'HTTP endpoint', value: 'http' },
-        { name: 'Socket mode', value: 'socket' },
+        { name: 'Socket mode (Easy to get started, no endpoint needed)', value: 'socket' },
+        { name: 'HTTP endpoint (Best used for production bots or with devtunnels)', value: 'http' },
       ],
     });
     socketMode = transport === 'socket';
