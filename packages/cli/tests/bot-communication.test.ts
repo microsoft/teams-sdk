@@ -1,4 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.hoisted(() => {
+  process.env.TEAMS_DEV_API = '1';
+});
 
 interface RecordedCall {
   url: string;
@@ -120,5 +124,29 @@ describe('bot communication configuration', () => {
 
     expect(calls).toHaveLength(1);
     expect(result.changed).toBe(false);
+  });
+});
+
+describe('bot communication configuration without TEAMS_DEV_API', () => {
+  beforeEach(() => {
+    calls.length = 0;
+    delete process.env.TEAMS_DEV_API;
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    process.env.TEAMS_DEV_API = '1';
+    vi.resetModules();
+  });
+
+  it('is unavailable and makes no network calls', async () => {
+    const mod = await import('../src/apps/bot-communication.js');
+
+    expect(mod.isBotCommunicationApiAvailable()).toBe(false);
+    await expect(mod.getBotCommunicationConfiguration('t', CLIENT_ID)).rejects.toMatchObject({
+      code: 'API_ERROR',
+      suggestion: expect.stringContaining('TEAMS_DEV_API=1'),
+    });
+    expect(calls).toHaveLength(0);
   });
 });

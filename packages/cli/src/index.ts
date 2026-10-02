@@ -12,6 +12,7 @@ import { handleJsonHelp } from './utils/json-help.js';
 import { logger, setVerbose } from './utils/logger.js';
 import { isInteractive, setAutoConfirm } from './utils/interactive.js';
 import { checkForUpdates } from './utils/update-check.js';
+import { DEV_API_ENV_VAR, TDP_HOST, isDevApiEnabled } from './utils/tdp-host.js';
 import pc from 'picocolors';
 
 // Safety net: catch CliError thrown from shared utilities in non-wrapped commands
@@ -54,6 +55,9 @@ program
     }
     if (opts.yes) {
       setAutoConfirm(true);
+    }
+    if (isDevApiEnabled()) {
+      logger.warn(pc.yellow(`${DEV_API_ENV_VAR} is set: using ${TDP_HOST}`));
     }
     if (!opts.disableAutoUpdate && actionCommand.name() !== 'self-update') {
       await checkForUpdates();

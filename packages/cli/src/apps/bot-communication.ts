@@ -1,8 +1,10 @@
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
+import { BOT_COMMUNICATION_BASE_URL, DEV_API_ENV_VAR } from '../utils/tdp-host.js';
 
-// TODO(prod): switch to the prod host/path once TDP ships the bot communication API to prod.
-const BOT_COMMUNICATION_BASE_URL = 'https://dev-int.teams.microsoft.com/cosmictestamer';
+export function isBotCommunicationApiAvailable(): boolean {
+  return BOT_COMMUNICATION_BASE_URL !== undefined;
+}
 
 export type MessageNotificationMode = 'atMentionedMessagesOnly' | 'allMessages' | 'unknownFutureValue';
 
@@ -93,6 +95,13 @@ function toCompleteConfiguration(
 }
 
 function communicationConfigurationUrl(clientId: string): string {
+  if (BOT_COMMUNICATION_BASE_URL === undefined) {
+    throw new CliError(
+      'API_ERROR',
+      'Bot communication configuration is not available in this environment yet.',
+      `Set ${DEV_API_ENV_VAR}=1 to use the dev-int Teams Developer Portal.`
+    );
+  }
   return `${BOT_COMMUNICATION_BASE_URL}/v1.0/applications/${encodeURIComponent(clientId)}/bot/communicationConfiguration`;
 }
 
