@@ -11,6 +11,7 @@ const mockCreateManifestZip = vi.fn();
 const mockImportAppPackage = vi.fn();
 const mockIsBotCommunicationApiAvailable = vi.fn().mockReturnValue(false);
 const mockSetSocketMode = vi.fn();
+const mockGetBotLocation = vi.fn().mockResolvedValue('tm');
 
 vi.mock('../src/apps/index.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/apps/index.js')>();
@@ -22,7 +23,7 @@ vi.mock('../src/apps/index.js', async (importOriginal) => {
     updateAppDetails: mockUpdateAppDetails,
     fetchAppDetailsV2: mockFetchAppDetailsV2,
     showBasicInfoEditor: vi.fn(),
-    getBotLocation: vi.fn().mockResolvedValue('tm'),
+    getBotLocation: mockGetBotLocation,
     createTdpBotHandler: vi.fn().mockReturnValue({
       createBot: mockCreateBot,
     }),
@@ -458,5 +459,156 @@ describe('app create --socket', () => {
     expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_MISSING' } });
     expect(mockGetAccount).not.toHaveBeenCalled();
     expect(mockSetSocketMode).not.toHaveBeenCalled();
+  });
+});
+
+describe('app update --socket / --http', () => {
+  async function freshUpdateCommand() {
+    vi.resetModules();
+    const { appUpdateCommand } = await import('../src/commands/app/update.js');
+    return appUpdateCommand;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    jsonOutput = null;
+    mockGetAccount.mockResolvedValue({ tenantId: 'fake-tenant-id' });
+    mockGetBotLocation.mockResolvedValue('tm');
+    mockFetchApp.mockResolvedValue({
+      appId: 'aad-object-id',
+      appName: 'Test App',
+      teamsAppId: 'some-app-id',
+      version: '1.0.0',
+      updatedAt: null,
+      bots: [{ botId: 'bot-id' }],
+    });
+    mockFetchBot.mockResolvedValue({
+      botId: 'bot-id',
+      name: 'Test Bot',
+      messagingEndpoint: 'https://old.example.com/api/messages',
+      callingEndpoint: null,
+      description: '',
+      configuredChannels: ['msteams'],
+      isSingleTenant: true,
+    });
+    mockFetchAppDetailsV2.mockResolvedValue({
+      teamsAppId: 'some-app-id',
+      version: '1.0.0',
+      validDomains: [],
+      bots: [{ botId: 'bot-id', scopes: ['personal'] }],
+    });
+    mockIsBotCommunicationApiAvailable.mockReturnValue(true);
+    mockSetSocketMode.mockResolvedValue({ configuration: {}, changed: true });
+  });
+
+  afterAll(() => {
+    mockIsBotCommunicationApiAvailable.mockReturnValue(false);
+  });
+
+  it('enables socket mode with --socket', async () => {
+    const command = await freshUpdateCommand();
+
+    await command.parseAsync(['some-app-id', '--socket', '--json'], { from: 'user' });
+
+    expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', true);
+    expect(mockUpdateBot).not.toHaveBeenCalled();
+    expect(jsonOutput).toMatchObject({
+      teamsAppId: 'some-app-id',
+      botId: 'bot-id',
+      updated: { socketMode: true },
+    });
+  });
+
+  it('disables socket mode with --http', async () => {
+    const command = await freshUpdateCommand();
+
+    await command.parseAsync(['some-app-id', '--http', '--json'], { from: 'user' });
+
+    expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', false);
+    expect(jsonOutput).toMatchObject({ updated: { socketMode: false } });
+  });
+
+  it('sets the endpoint before switching to HTTP with --http --endpoint', async () => {
+    const command = await freshUpdateCommand();
+
+    await command.parseAsync(
+      ['some-app-id', '--http', '--endpoint', 'https://new.example.com/api/messages', '--json'],
+      { from: 'user' }
+    );
+
+    expect(mockUpdateBot).toHaveBeenCalledWith(
+      'fake-token',
+      expect.objectContaining({ messagingEndpoint: 'https://new.example.com/api/messages' })
+    );
+    expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', false);
+    expect(mockUpdateBot.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSetSocketMode.mock.invocationCallOrder[0]
+    );
+    expect(jsonOutput).toMatchObject({
+      updated: { endpoint: 'https://new.example.com/api/messages', socketMode: false },
+    });
+  });
+
+  it('does not change messaging mode for --endpoint alone', async () => {
+    const command = await freshUpdateCommand();
+
+    await command.parseAsync(
+      ['some-app-id', '--endpoint', 'https://new.example.com/api/messages', '--json'],
+      { from: 'user' }
+    );
+
+    expect(mockSetSocketMode).not.toHaveBeenCalled();
+  });
+
+  it('rejects --socket with --http before auth', async () => {
+    const command = await freshUpdateCommand();
+
+    await expect(
+      command.parseAsync(['some-app-id', '--socket', '--http', '--json'], { from: 'user' })
+    ).rejects.toThrow('process.exit(1)');
+
+    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
+
+  it('rejects --socket with --endpoint before auth', async () => {
+    const command = await freshUpdateCommand();
+
+    await expect(
+      command.parseAsync(
+        ['some-app-id', '--socket', '--endpoint', 'https://new.example.com/api/messages', '--json'],
+        { from: 'user' }
+      )
+    ).rejects.toThrow('process.exit(1)');
+
+    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
+
+  it('rejects mode flags when the API is unavailable (TEAMS_DEV_API unset)', async () => {
+    mockIsBotCommunicationApiAvailable.mockReturnValue(false);
+    const command = await freshUpdateCommand();
+
+    await expect(
+      command.parseAsync(['some-app-id', '--http', '--json'], { from: 'user' })
+    ).rejects.toThrow('process.exit(1)');
+
+    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_MISSING' } });
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
+
+  it('rejects Azure bots before any mutation', async () => {
+    mockGetBotLocation.mockResolvedValue('azure');
+    const command = await freshUpdateCommand();
+
+    await expect(
+      command.parseAsync(['some-app-id', '--socket', '--name', 'New Name', '--json'], {
+        from: 'user',
+      })
+    ).rejects.toThrow('process.exit(1)');
+
+    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
+    expect(mockSetSocketMode).not.toHaveBeenCalled();
+    expect(mockUpdateAppDetails).not.toHaveBeenCalled();
   });
 });
