@@ -46,7 +46,11 @@ program
   .helpOption('-h, --help', 'Display help (use with --json for structured output)')
   .addHelpText('after', () => {
     const status = isInteractive() ? pc.green('on') : pc.yellow('off');
-    return `\nInteractive mode: ${status}\n  Set ${pc.cyan('TEAMS_NO_INTERACTIVE=1')} to disable, unset to enable.`;
+    const devApi = isDevApiEnabled() ? pc.yellow('on') : pc.dim('off');
+    return (
+      `\nInteractive mode: ${status}\n  Set ${pc.cyan('TEAMS_NO_INTERACTIVE=1')} to disable, unset to enable.` +
+      `\n\nDev API: ${devApi}\n  Set ${pc.cyan(`${DEV_API_ENV_VAR}=1`)} to use the dev-int Teams Developer Portal (enables socket mode), unset for prod.`
+    );
   })
   .hook('preAction', async (thisCommand, actionCommand) => {
     const opts = thisCommand.optsWithGlobals();
