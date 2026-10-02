@@ -9,6 +9,8 @@ const mockCreateBot = vi.fn();
 const mockCreateAadAppViaTdp = vi.fn();
 const mockCreateManifestZip = vi.fn();
 const mockImportAppPackage = vi.fn();
+const mockIsBotCommunicationApiAvailable = vi.fn().mockReturnValue(false);
+const mockSetSocketMode = vi.fn();
 
 vi.mock('../src/apps/index.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/apps/index.js')>();
@@ -35,6 +37,8 @@ vi.mock('../src/apps/index.js', async (importOriginal) => {
     getAadAppByClientId: vi.fn().mockResolvedValue({ id: 'aad-object-id' }),
     createManifestZip: mockCreateManifestZip,
     importAppPackage: mockImportAppPackage,
+    isBotCommunicationApiAvailable: mockIsBotCommunicationApiAvailable,
+    setSocketMode: mockSetSocketMode,
     installLink: vi.fn((id: string, tenantId: string) =>
       `https://teams.microsoft.com/l/app/${id}?installAppPackage=true&appTenantId=${tenantId}`
     ),
@@ -355,5 +359,104 @@ describe('shared command validation', () => {
         }),
       })
     );
+  });
+});
+
+describe('app create --socket', () => {
+  // Commander keeps parsed option values on the command instance, so load a
+  // fresh command per test to keep --socket from leaking between parses.
+  async function freshCreateCommand() {
+    vi.resetModules();
+    const { appCreateCommand } = await import('../src/commands/app/create.js');
+    return appCreateCommand;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    jsonOutput = null;
+    mockGetAccount.mockResolvedValue({ tenantId: 'fake-tenant-id' });
+    mockCreateBot.mockResolvedValue(undefined);
+    mockCreateAadAppViaTdp.mockResolvedValue({
+      id: 'aad-object-id',
+      appId: 'fake-client-id',
+      displayName: 'TestAadApp',
+    });
+    mockCreateManifestZip.mockReturnValue(Buffer.from('fake-zip'));
+    mockImportAppPackage.mockResolvedValue({ teamsAppId: 'fake-teams-app-id' });
+    mockIsBotCommunicationApiAvailable.mockReturnValue(true);
+    mockSetSocketMode.mockResolvedValue({ configuration: {}, changed: true });
+  });
+
+  afterAll(() => {
+    mockIsBotCommunicationApiAvailable.mockReturnValue(false);
+  });
+
+  it('creates a Teams-managed bot without an endpoint and enables socket mode', async () => {
+    const command = await freshCreateCommand();
+
+    await command.parseAsync(['--name', 'Socket Bot', '--socket', '--json'], { from: 'user' });
+
+    expect(mockCreateBot).toHaveBeenCalledWith({
+      botId: 'fake-client-id',
+      name: 'Socket Bot',
+      endpoint: undefined,
+    });
+    expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'fake-client-id', true);
+    expect(jsonOutput).toEqual(
+      expect.objectContaining({ endpoint: null, socketMode: true })
+    );
+  });
+
+  it('reports socketModeError in JSON when enabling fails', async () => {
+    mockSetSocketMode.mockRejectedValue(new Error('Forbidden'));
+    const command = await freshCreateCommand();
+
+    await command.parseAsync(['--name', 'Socket Bot', '--socket', '--json'], { from: 'user' });
+
+    expect(jsonOutput).toEqual(
+      expect.objectContaining({
+        teamsAppId: 'fake-teams-app-id',
+        socketMode: false,
+        socketModeError: 'Forbidden',
+      })
+    );
+  });
+
+  it('rejects --socket with --endpoint before auth', async () => {
+    const command = await freshCreateCommand();
+
+    await expect(
+      command.parseAsync(
+        ['--name', 'Bot', '--socket', '--endpoint', 'https://example.com/api/messages', '--json'],
+        { from: 'user' }
+      )
+    ).rejects.toThrow('process.exit(1)');
+
+    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
+
+  it('rejects --socket with --azure before auth', async () => {
+    const command = await freshCreateCommand();
+
+    await expect(
+      command.parseAsync(['--name', 'Bot', '--socket', '--azure', '--json'], { from: 'user' })
+    ).rejects.toThrow('process.exit(1)');
+
+    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
+
+  it('rejects --socket when the API is unavailable (TEAMS_DEV_API unset)', async () => {
+    mockIsBotCommunicationApiAvailable.mockReturnValue(false);
+    const command = await freshCreateCommand();
+
+    await expect(
+      command.parseAsync(['--name', 'Bot', '--socket', '--json'], { from: 'user' })
+    ).rejects.toThrow('process.exit(1)');
+
+    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_MISSING' } });
+    expect(mockGetAccount).not.toHaveBeenCalled();
+    expect(mockSetSocketMode).not.toHaveBeenCalled();
   });
 });
