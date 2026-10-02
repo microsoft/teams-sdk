@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { select, input, checkbox } from '@inquirer/prompts';
 import pc from 'picocolors';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../auth/index.js';
@@ -19,9 +19,14 @@ import {
   uploadIcon,
   formatVersionBumpReinstallHint,
   logVersionBumpReinstallHint,
+  getBotCommunicationConfiguration,
+  isBotCommunicationApiAvailable,
+  setSocketMode,
 } from '../../apps/index.js';
 import { ensureAz } from '../../utils/az.js';
+import { confirmAction } from '../../utils/interactive.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
+import { BOT_COMMUNICATION_BASE_URL, DEV_API_ENV_VAR } from '../../utils/tdp-host.js';
 import { readAndValidateIcon } from '../../utils/icon.js';
 import { outputJson } from '../../utils/json-output.js';
 import { logger } from '../../utils/logger.js';
@@ -71,6 +76,8 @@ export function buildScopeUpdates(appDetails: AppDetails, newScopes: BotScope[])
 
 interface UpdateOptions {
   endpoint?: string;
+  socket?: boolean;
+  http?: boolean;
   scopes?: string;
   name?: string;
   longName?: string;
@@ -95,6 +102,7 @@ interface AppUpdateOutput {
   needsReinstall?: boolean;
   updated: {
     endpoint?: string;
+    socketMode?: boolean;
     shortName?: string;
     longName?: string;
     shortDescription?: string;
@@ -141,6 +149,8 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 
   let bot: BotDetails | null = null;
   let botLocation: BotLocation | null = null;
+  // null = unknown or not applicable (no bot, Azure bot, API unavailable, or read failed)
+  let socketMode: boolean | null = null;
   if (appDetails.bots && appDetails.bots.length > 0) {
     const botId = appDetails.bots[0].botId;
     botLocation = await getBotLocation(token, botId);
@@ -149,6 +159,14 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
         bot = await fetchBot(token, botId);
       } catch {
         // Bot fetch failed, skip
+      }
+      if (isBotCommunicationApiAvailable()) {
+        try {
+          const config = await getBotCommunicationConfiguration(token, botId);
+          socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
+        } catch {
+          // Leave as unknown; the menu entry still lets the user set it.
+        }
       }
     }
   }
@@ -161,6 +179,11 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
     if (bot) {
       logger.info(`${pc.dim('Endpoint:')} ${bot.messagingEndpoint || pc.yellow('(not set)')}`);
     }
+    const showMessagingMode = botLocation === 'tm' && isBotCommunicationApiAvailable();
+    if (showMessagingMode) {
+      const label = socketMode === null ? pc.yellow('(unknown)') : socketMode ? 'Socket mode' : 'HTTP';
+      logger.info(`${pc.dim('Messaging:')} ${label}`);
+    }
 
     const showEndpoint = bot || botLocation === 'azure';
     const hasBots = appDetails.bots && appDetails.bots.length > 0;
@@ -169,6 +192,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       choices: [
         { name: 'Basic info', value: 'edit-basic-info' },
         ...(showEndpoint ? [{ name: 'Endpoint', value: 'edit-endpoint' }] : []),
+        ...(showMessagingMode ? [{ name: 'Messaging mode', value: 'edit-messaging-mode' }] : []),
         ...(hasBots ? [{ name: 'Scopes', value: 'edit-scopes' }] : []),
         { name: 'Icons', value: 'edit-icons' },
         { name: 'Back', value: 'back' },
@@ -179,6 +203,39 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 
     if (action === 'edit-basic-info') {
       appDetails = await showBasicInfoEditor(appDetails, token);
+      continue;
+    }
+
+    if (action === 'edit-messaging-mode') {
+      const botId = appDetails.bots![0].botId;
+      // Unknown current mode offers socket mode, since that's the new capability.
+      const enable = socketMode !== true;
+      const current =
+        socketMode === null ? 'Current mode is unknown' : `Currently using ${socketMode ? 'socket mode' : 'HTTP endpoint'}`;
+      const confirmed = await confirmAction(
+        `${current}. Switch to ${enable ? 'socket mode' : 'HTTP endpoint'}?`
+      );
+      if (!confirmed) {
+        logger.info(pc.dim('\nNo changes made.'));
+        continue;
+      }
+
+      const modeSpinner = createSilentSpinner(
+        enable ? 'Enabling socket mode...' : 'Switching to HTTP...'
+      ).start();
+      try {
+        await setSocketMode(token, botId, enable);
+        modeSpinner.success({ text: enable ? 'Socket mode enabled' : 'Switched to HTTP' });
+        socketMode = enable;
+      } catch (error) {
+        modeSpinner.error({ text: 'Failed to update messaging mode' });
+        logger.error(pc.red(error instanceof Error ? error.message : String(error)));
+        continue;
+      }
+
+      if (!enable && bot && !bot.messagingEndpoint) {
+        logger.warn(pc.yellow('No messaging endpoint is set. Choose "Endpoint" to set one.'));
+      }
       continue;
     }
 
@@ -334,6 +391,16 @@ export const appUpdateCommand = new Command('update')
   .description("Update a Teams app's properties")
   .argument('[appId]', 'App ID')
   .option('--endpoint <url>', '[OPTIONAL] Set the bot messaging endpoint URL')
+  .addOption(
+    new Option('--socket', '[OPTIONAL] Switch the bot to socket mode (Teams-managed bots only)').hideHelp(
+      BOT_COMMUNICATION_BASE_URL === undefined
+    )
+  )
+  .addOption(
+    new Option('--http', '[OPTIONAL] Switch the bot to HTTP endpoint delivery (Teams-managed bots only)').hideHelp(
+      BOT_COMMUNICATION_BASE_URL === undefined
+    )
+  )
   .option('--scopes <scopes>', '[OPTIONAL] Set bot scopes (comma-separated: personal,team,groupChat,copilot)')
   .option('--name <name>', '[OPTIONAL] Set the app short name (max 30 chars)')
   .option('--long-name <name>', '[OPTIONAL] Set the app long name (max 100 chars)')
@@ -356,6 +423,8 @@ export const appUpdateCommand = new Command('update')
       // Check if any mutation flags were provided
       const hasMutationFlags =
         options.endpoint !== undefined ||
+        options.socket !== undefined ||
+        options.http !== undefined ||
         options.scopes !== undefined ||
         options.name !== undefined ||
         options.longName !== undefined ||
@@ -380,6 +449,23 @@ export const appUpdateCommand = new Command('update')
       }
 
       // Validate inputs upfront (before auth/API calls)
+      if (options.socket && options.http) {
+        throw new CliError('VALIDATION_CONFLICT', 'Cannot specify both --socket and --http.');
+      }
+      if (options.socket && options.endpoint !== undefined) {
+        throw new CliError(
+          'VALIDATION_CONFLICT',
+          'Cannot specify both --socket and --endpoint.',
+          'Use --http --endpoint <url> to switch to an HTTP endpoint.'
+        );
+      }
+      if ((options.socket || options.http) && !isBotCommunicationApiAvailable()) {
+        throw new CliError(
+          'VALIDATION_MISSING',
+          'Messaging mode changes are not available in this environment yet.',
+          `Set ${DEV_API_ENV_VAR}=1 to use the dev-int Teams Developer Portal.`
+        );
+      }
       const colorIconData = options.colorIcon
         ? readAndValidateIcon(options.colorIcon, 192)
         : undefined;
@@ -491,6 +577,22 @@ export const appUpdateCommand = new Command('update')
       let endpointBotId: string | undefined;
       let endpointValidDomains: string[] | undefined;
 
+      // Check messaging-mode preconditions before any mutation
+      const wantsModeChange = options.socket === true || options.http === true;
+      let modeBotId: string | undefined;
+      if (wantsModeChange) {
+        if (!app.bots || app.bots.length === 0) {
+          throw new CliError('NOT_FOUND_BOT', 'This app has no bots.');
+        }
+        modeBotId = app.bots[0].botId;
+        if ((await getBotLocation(token, modeBotId)) === 'azure') {
+          throw new CliError(
+            'VALIDATION_CONFLICT',
+            'Messaging mode changes are only supported for Teams-managed bots.'
+          );
+        }
+      }
+
       // --- Endpoint ---
       if (options.endpoint) {
         if (!app.bots || app.bots.length === 0) {
@@ -552,6 +654,35 @@ export const appUpdateCommand = new Command('update')
         allUpdates.endpoint = options.endpoint;
       }
 
+      // --- Messaging mode (runs after --endpoint so --http --endpoint never leaves the bot without one) ---
+      if (wantsModeChange && modeBotId) {
+        const enable = options.socket === true;
+        const modeSpinner = createSilentSpinner(
+          enable ? 'Enabling socket mode...' : 'Switching to HTTP...',
+          silent
+        ).start();
+        const { changed } = await setSocketMode(token, modeBotId, enable);
+        if (changed) {
+          modeSpinner.success({ text: enable ? 'Socket mode enabled' : 'Switched to HTTP' });
+        } else {
+          modeSpinner.success({
+            text: enable ? 'Socket mode already enabled' : 'Already using HTTP',
+          });
+        }
+        allUpdates.socketMode = enable;
+        endpointBotId ??= modeBotId;
+
+        if (!enable && options.endpoint === undefined && !options.json) {
+          const bot = await fetchBot(token, modeBotId).catch(() => null);
+          if (bot && !bot.messagingEndpoint) {
+            logger.warn(
+              pc.yellow('No messaging endpoint is set. Run ') +
+                pc.cyan(`teams app update ${appId} --endpoint <url>`)
+            );
+          }
+        }
+      }
+
       // --- Scopes ---
       if (options.scopes !== undefined) {
         if (!app.bots || app.bots.length === 0) {
@@ -587,7 +718,7 @@ export const appUpdateCommand = new Command('update')
       }
 
       // Apply basic info updates (endpoint and icons use separate API calls)
-      const { endpoint: _ep, scopes: _sc, colorIcon: _ci, outlineIcon: _oi, ...basicInfoUpdates } = allUpdates;
+      const { endpoint: _ep, socketMode: _sm, scopes: _sc, colorIcon: _ci, outlineIcon: _oi, ...basicInfoUpdates } = allUpdates;
       if (Object.keys(basicInfoUpdates).length > 0) {
         const spinner = createSilentSpinner('Updating app details...', silent).start();
         await updateAppDetails(token, appId, basicInfoUpdates, { autoBumpVersion: false });

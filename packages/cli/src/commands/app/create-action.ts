@@ -12,6 +12,7 @@ import {
   type BotScope,
   installLink,
   portalLink,
+  setSocketMode,
 } from '../../apps/index.js';
 import { getAccount, getTokenSilent, graphScopes, teamsDevPortalScopes } from '../../auth/index.js';
 import type { EnvValues } from '../../utils/env.js';
@@ -22,6 +23,7 @@ export type AppCreateSignInAudience = 'AzureADMyOrg' | 'AzureADMultipleOrgs';
 export interface AppCreateInput {
   name: string;
   endpoint: string | undefined;
+  socketMode: boolean;
   serviceManagementReference: string | undefined;
   signInAudience: AppCreateSignInAudience;
   generateSecret: boolean;
@@ -49,6 +51,10 @@ export interface AppCreateResult {
   installLink: string;
   portalLink: string;
   botLocation: 'teams-managed' | 'azure';
+  /** True only when socket mode was requested and successfully enabled. */
+  socketMode: boolean;
+  /** Set when socket mode was requested but enabling it failed; the app and bot still exist. */
+  socketModeError: string | undefined;
   secretSkipped: boolean;
   credentials: EnvValues;
 }
@@ -68,6 +74,13 @@ export async function createApp(
       'VALIDATION_MISSING',
       'Azure context is required when creating an Azure bot.',
       'Provide an Azure subscription and resource group, or use Teams-managed bot hosting.'
+    );
+  }
+  if (input.socketMode && input.botLocation === 'azure') {
+    throw new CliError(
+      'VALIDATION_CONFLICT',
+      'Socket mode is only supported for Teams-managed bots.',
+      'Use Teams-managed bot hosting.'
     );
   }
 
@@ -165,6 +178,20 @@ export async function createApp(
   await handler.createBot({ botId: clientId, name: input.name, endpoint: input.endpoint });
   progress?.success('Bot registered');
 
+  let socketMode = false;
+  let socketModeError: string | undefined;
+  if (input.socketMode) {
+    progress?.start('Enabling socket mode...');
+    try {
+      await setSocketMode(tdpToken, clientId, true);
+      socketMode = true;
+      progress?.success('Socket mode enabled');
+    } catch (error) {
+      socketModeError = error instanceof Error ? error.message : String(error);
+      progress?.error('Failed to enable socket mode');
+    }
+  }
+
   const credentials: EnvValues = {
     CLIENT_ID: clientId,
     ...(secretText !== undefined && { CLIENT_SECRET: secretText }),
@@ -179,6 +206,8 @@ export async function createApp(
     installLink: installLink(teamsAppId, account.tenantId),
     portalLink: portalLink(teamsAppId),
     botLocation: input.botLocation === 'tm' ? 'teams-managed' : 'azure',
+    socketMode,
+    socketModeError,
     secretSkipped: !input.generateSecret,
     credentials,
   };

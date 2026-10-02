@@ -12,6 +12,7 @@ import { handleJsonHelp } from './utils/json-help.js';
 import { logger, setVerbose } from './utils/logger.js';
 import { isInteractive, setAutoConfirm } from './utils/interactive.js';
 import { checkForUpdates } from './utils/update-check.js';
+import { DEV_API_ENV_VAR, TDP_HOST, isDevApiEnabled } from './utils/tdp-host.js';
 import pc from 'picocolors';
 
 // Safety net: catch CliError thrown from shared utilities in non-wrapped commands
@@ -45,7 +46,11 @@ program
   .helpOption('-h, --help', 'Display help (use with --json for structured output)')
   .addHelpText('after', () => {
     const status = isInteractive() ? pc.green('on') : pc.yellow('off');
-    return `\nInteractive mode: ${status}\n  Set ${pc.cyan('TEAMS_NO_INTERACTIVE=1')} to disable, unset to enable.`;
+    const devApi = isDevApiEnabled() ? pc.yellow('on') : pc.dim('off');
+    return (
+      `\nInteractive mode: ${status}\n  Set ${pc.cyan('TEAMS_NO_INTERACTIVE=1')} to disable, unset to enable.` +
+      `\n\nDev API: ${devApi}\n  Set ${pc.cyan(`${DEV_API_ENV_VAR}=1`)} to use the dev-int Teams Developer Portal (enables socket mode), unset for prod.`
+    );
   })
   .hook('preAction', async (thisCommand, actionCommand) => {
     const opts = thisCommand.optsWithGlobals();
@@ -54,6 +59,9 @@ program
     }
     if (opts.yes) {
       setAutoConfirm(true);
+    }
+    if (isDevApiEnabled()) {
+      logger.warn(pc.yellow(`${DEV_API_ENV_VAR} is set: using ${TDP_HOST}`));
     }
     if (!opts.disableAutoUpdate && actionCommand.name() !== 'self-update') {
       await checkForUpdates();

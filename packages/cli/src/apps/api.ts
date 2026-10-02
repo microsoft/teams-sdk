@@ -5,6 +5,7 @@ import type { AppSummary, AppDetails } from './types.js';
 import { importAppPackage } from './tdp.js';
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
+import { TDP_BASE_URL } from '../utils/tdp-host.js';
 import { bumpPatchVersion, stableStringify } from '../utils/version.js';
 import { staticsDir } from '../project/paths.js';
 import { getCachedAppDetails, setCachedAppDetails } from './app-details-cache.js';
@@ -45,8 +46,6 @@ export interface TeamsManifest {
   };
   [key: string]: unknown;
 }
-
-const TDP_BASE_URL = 'https://dev.teams.microsoft.com/api';
 
 const TDP_PAGE_SIZE = 15;
 
