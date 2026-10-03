@@ -1,0 +1,45 @@
+---
+sidebar_position: 6
+sidebar_label: 'Error Handling'
+title: 'Error Handling'
+---
+
+# Error Handling
+
+A widget can fail at four distinct points: when your app sends the message, when the payload is malformed, when a tool call runs, and when the Teams client renders the HTML. Each surfaces differently, and only some are reported back to your app.
+
+:::warning Preview
+HTML Widgets are in preview and the API surface may change.
+:::
+
+## Sending a widget
+
+A widget travels inside a normal message, so sending one is a normal message send. If the Bot Connector rejects the request you get a standard Bot Framework HTTP error, such as `400` for a malformed activity, `401` or `403` for authentication problems, or `429` when throttled. See [HTTP status codes](https://learn.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-4.0#http-status-codes) in the Bot Framework Connector reference for the full list. Handle these the way you handle any other message send failure.
+
+## Payload validation
+
+The build helpers (<LanguageInclude content={{"typescript": "`buildHtmlWidgetMessage` and `buildHtmlWidgetMarkdown`", "python": "`build_html_widget_message` and `build_html_widget_markdown`", "csharp": "`BuildHtmlWidgetMessage` and `BuildHtmlWidgetMarkdown`"}} />) validate the payload before producing the message. They <LanguageInclude content={{"typescript": "throw an `Error`", "python": "raise a `ValueError`", "csharp": "throw an `ArgumentException`"}} /> when:
+
+- `name` is empty,
+- `html` is empty, or
+- `domain` is not a valid `https://` URL.
+
+Catching this at send time surfaces problems that would otherwise become a silent client-side "Couldn't load widget" failure with no signal back to your app.
+
+<LanguageInclude section="payload-validation" />
+
+## Tool call errors
+
+When a widget calls one of your tools, return a result with <LanguageInclude content={{"typescript": "`isError: true`", "python": "`is_error=True`", "csharp": "`IsError = true`"}} /> to signal a failure the widget can render. This is an application-level error carried in a successful invoke response, not a transport failure, so the widget receives it and can show its own error state. See [Handling tool calls](./handling-tool-calls) for the full handler.
+
+<LanguageInclude section="tool-error" />
+
+## Render errors are not reported back
+
+If the Teams client cannot render the widget HTML it shows a "Couldn't load widget" message inline in the chat. This is a client-side failure: it is **not** delivered to your app as an activity, invoke, or callback. Your app has no way to detect it after the message is sent.
+
+Because of this, treat rendering as fire-and-forget and prevent problems before they ship:
+
+- Let the build helpers validate the payload, as shown above, rather than assembling the fenced code block by hand.
+- Use the [security policy](./security-policy) helpers so external references are not blocked at render time.
+- Test the widget end to end in a real client before shipping.
