@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.hoisted(() => {
-  process.env.TEAMS_DEV_API = '1';
-});
+// Mock the host module instead of setting TEAMS_DEV_API so process.env is never mutated.
+vi.mock('../src/utils/tdp-host.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/utils/tdp-host.js')>()),
+  BOT_COMMUNICATION_BASE_URL: 'https://dev-int.teams.microsoft.com/cosmictestamer',
+}));
 
 interface RecordedCall {
   url: string;
@@ -130,12 +132,15 @@ describe('bot communication configuration', () => {
 describe('bot communication configuration without TEAMS_DEV_API', () => {
   beforeEach(() => {
     calls.length = 0;
-    delete process.env.TEAMS_DEV_API;
     vi.resetModules();
+    vi.doMock('../src/utils/tdp-host.js', async (importOriginal) => ({
+      ...(await importOriginal<typeof import('../src/utils/tdp-host.js')>()),
+      BOT_COMMUNICATION_BASE_URL: undefined,
+    }));
   });
 
   afterEach(() => {
-    process.env.TEAMS_DEV_API = '1';
+    vi.doUnmock('../src/utils/tdp-host.js');
     vi.resetModules();
   });
 

@@ -61,7 +61,7 @@ program
       setAutoConfirm(true);
     }
     if (isDevApiEnabled()) {
-      logger.warn(pc.yellow(`${DEV_API_ENV_VAR} is set: using ${TDP_HOST}`));
+      logger.warn(pc.yellow(`${DEV_API_ENV_VAR}=1: using ${TDP_HOST}`));
     }
     if (!opts.disableAutoUpdate && actionCommand.name() !== 'self-update') {
       await checkForUpdates();

@@ -12,7 +12,7 @@ const DEV_INT_TDP_HOST = 'https://dev-int.teams.microsoft.com';
 export const DEV_API_ENV_VAR = 'TEAMS_DEV_API';
 
 export function isDevApiEnabled(): boolean {
-  return !!process.env[DEV_API_ENV_VAR];
+  return process.env[DEV_API_ENV_VAR] === '1';
 }
 
 export const TDP_HOST = isDevApiEnabled() ? DEV_INT_TDP_HOST : PROD_TDP_HOST;

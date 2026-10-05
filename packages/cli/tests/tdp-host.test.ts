@@ -11,8 +11,11 @@ async function loadWithFlag(value: string | undefined) {
 }
 
 describe('TDP host selection', () => {
+  const original = process.env.TEAMS_DEV_API;
+
   afterEach(() => {
-    delete process.env.TEAMS_DEV_API;
+    if (original === undefined) delete process.env.TEAMS_DEV_API;
+    else process.env.TEAMS_DEV_API = original;
     vi.resetModules();
   });
 
@@ -28,7 +31,7 @@ describe('TDP host selection', () => {
     expect(links.portalLink('app-id')).toBe('https://dev.teams.microsoft.com/apps/app-id');
   });
 
-  it('switches every TDP value to dev-int when TEAMS_DEV_API is set', async () => {
+  it('switches every TDP value to dev-int when TEAMS_DEV_API=1', async () => {
     const { host, auth, links } = await loadWithFlag('1');
 
     expect(host.isDevApiEnabled()).toBe(true);
@@ -40,5 +43,13 @@ describe('TDP host selection', () => {
       'https://dev-int.teams.microsoft.com/AppDefinitions.ReadWrite',
     ]);
     expect(links.portalLink('app-id')).toBe('https://dev-int.teams.microsoft.com/apps/app-id');
+  });
+
+  it.each(['0', 'true', 'yes', ''])('stays on prod when TEAMS_DEV_API=%j', async (value) => {
+    const { host } = await loadWithFlag(value);
+
+    expect(host.isDevApiEnabled()).toBe(false);
+    expect(host.TDP_BASE_URL).toBe('https://dev.teams.microsoft.com/api');
+    expect(host.BOT_COMMUNICATION_BASE_URL).toBeUndefined();
   });
 });
