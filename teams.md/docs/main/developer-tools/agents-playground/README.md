@@ -39,42 +39,51 @@ The Playground sends requests without a Bot Framework JWT, so your agent needs t
 By default the SDK **rejects** unauthenticated requests, so a freshly scaffolded agent rejects every request the Playground sends and logs:
 
 :::warning
-No credentials configured and skipAuth is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set skipAuth for local development.
+No credentials configured and dangerouslyAllowUnauthenticatedRequests is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set dangerouslyAllowUnauthenticatedRequests for local development.
 :::
 
-To accept the Playground's requests during local development, enable `skipAuth` on your app:
+To accept the Playground's requests during local development, enable unauthenticated requests on your app:
 
 <Tabs groupId="language">
 <TabItem value="typescript" label="TypeScript">
 
 ```typescript title="src/index.ts"
-const app = new App({ skipAuth: true });
+const app = new App({ dangerouslyAllowUnauthenticatedRequests: true });
 ```
 
 </TabItem>
 <TabItem value="csharp" label="C#">
 
-```csharp title="Program.cs"
-builder.AddTeams(skipAuth: true);
+```json title="Properties/launchSettings.json"
+{
+  "profiles": {
+    "YourBot": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "AzureAd__DangerouslyAllowUnauthenticatedRequests": "true"
+      }
+    }
+  }
+}
 ```
 
 </TabItem>
 <TabItem value="python" label="Python">
 
 ```python title="src/main.py"
-app = App(skip_auth=True)
+app = App(dangerously_allow_unauthenticated_requests=True)
 ```
 
 </TabItem>
 </Tabs>
 
 :::warning
-Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+Only enable unauthenticated requests for local development — never in production, as it disables inbound request authentication.
 :::
 
 ### Why this is needed
 
-`DevtoolsPlugin` previously bypassed JWT validation implicitly because it ran in-process and never went through `/api/messages` over HTTP. The Playground sends real HTTP requests, so the bot's JWT validator runs unless `skipAuth` is enabled.
+`DevtoolsPlugin` previously bypassed JWT validation implicitly because it ran in-process and never went through `/api/messages` over HTTP. The Playground sends real HTTP requests, so the bot's JWT validator runs unless unauthenticated requests are explicitly enabled.
 
 ## Launch
 
