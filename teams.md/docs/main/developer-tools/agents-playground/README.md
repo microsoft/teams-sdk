@@ -39,7 +39,7 @@ The Playground sends requests without a Bot Framework JWT, so your agent needs t
 By default the SDK **rejects** unauthenticated requests, so a freshly scaffolded agent rejects every request the Playground sends and logs:
 
 :::warning
-No credentials configured and dangerouslyAllowUnauthenticatedRequests is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set dangerouslyAllowUnauthenticatedRequests for local development.
+No credentials configured and dangerouslyAllowUnauthenticatedRequests is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set dangerouslyAllowUnauthenticatedRequests: true for local development.
 :::
 
 To accept the Playground's requests during local development, enable unauthenticated requests on your app:
