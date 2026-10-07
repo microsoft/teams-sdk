@@ -212,6 +212,9 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       const enable = socketMode !== true;
       const current =
         socketMode === null ? 'Current mode is unknown' : `Currently using ${socketMode ? 'socket mode' : 'HTTP endpoint'}`;
+      if (!enable && bot && !bot.messagingEndpoint) {
+        logger.warn(pc.yellow('No messaging endpoint is set. Choose "Endpoint" to set one.'));
+      }
       const confirmed = await confirmAction(
         `${current}. Switch to ${enable ? 'socket mode' : 'HTTP endpoint'}?`
       );
@@ -231,10 +234,6 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
         modeSpinner.error({ text: 'Failed to update messaging mode' });
         logger.error(pc.red(error instanceof Error ? error.message : String(error)));
         continue;
-      }
-
-      if (!enable && bot && !bot.messagingEndpoint) {
-        logger.warn(pc.yellow('No messaging endpoint is set. Choose "Endpoint" to set one.'));
       }
       continue;
     }
@@ -591,6 +590,15 @@ export const appUpdateCommand = new Command('update')
             'Messaging mode changes are only supported for Teams-managed bots.'
           );
         }
+        if (options.http && options.endpoint === undefined && !options.json) {
+          const bot = await fetchBot(token, modeBotId).catch(() => null);
+          if (bot && !bot.messagingEndpoint) {
+            logger.warn(
+              pc.yellow('No messaging endpoint is set. Run ') +
+                pc.cyan(`teams app update ${appId} --endpoint <url>`)
+            );
+          }
+        }
       }
 
       // --- Endpoint ---
@@ -671,16 +679,6 @@ export const appUpdateCommand = new Command('update')
         }
         allUpdates.socketMode = enable;
         endpointBotId ??= modeBotId;
-
-        if (!enable && options.endpoint === undefined && !options.json) {
-          const bot = await fetchBot(token, modeBotId).catch(() => null);
-          if (bot && !bot.messagingEndpoint) {
-            logger.warn(
-              pc.yellow('No messaging endpoint is set. Run ') +
-                pc.cyan(`teams app update ${appId} --endpoint <url>`)
-            );
-          }
-        }
       }
 
       // --- Scopes ---
