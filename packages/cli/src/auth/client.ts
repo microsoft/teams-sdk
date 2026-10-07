@@ -62,6 +62,7 @@ export async function login(options?: LoginOptions): Promise<AccountInfo> {
 async function loginInteractive(client: PublicClientApplication): Promise<AuthenticationResult> {
   const request: InteractiveRequest = {
     scopes: loginScopes,
+    // Entra rejects query mode for this public client with AADSTS70007.
     responseMode: 'form_post',
     openBrowser: async (url) => {
       await openInBrowser(url);
