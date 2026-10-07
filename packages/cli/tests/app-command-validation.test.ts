@@ -363,9 +363,9 @@ describe('shared command validation', () => {
   });
 });
 
-describe('app create --socket', () => {
+describe('app create --messaging-mode', () => {
   // Commander keeps parsed option values on the command instance, so load a
-  // fresh command per test to keep --socket from leaking between parses.
+  // fresh command per test to keep --messaging-mode from leaking between parses.
   async function freshCreateCommand() {
     vi.resetModules();
     const { appCreateCommand } = await import('../src/commands/app/create.js');
@@ -395,7 +395,7 @@ describe('app create --socket', () => {
   it('creates a Teams-managed bot without an endpoint and enables socket mode', async () => {
     const command = await freshCreateCommand();
 
-    await command.parseAsync(['--name', 'Socket Bot', '--socket', '--json'], { from: 'user' });
+    await command.parseAsync(['--name', 'Socket Bot', '--messaging-mode', 'socket', '--json'], { from: 'user' });
 
     expect(mockCreateBot).toHaveBeenCalledWith({
       botId: 'fake-client-id',
@@ -412,7 +412,7 @@ describe('app create --socket', () => {
     mockSetSocketMode.mockRejectedValue(new Error('Forbidden'));
     const command = await freshCreateCommand();
 
-    await command.parseAsync(['--name', 'Socket Bot', '--socket', '--json'], { from: 'user' });
+    await command.parseAsync(['--name', 'Socket Bot', '--messaging-mode', 'socket', '--json'], { from: 'user' });
 
     expect(jsonOutput).toEqual(
       expect.objectContaining({
@@ -423,12 +423,12 @@ describe('app create --socket', () => {
     );
   });
 
-  it('rejects --socket with --endpoint before auth', async () => {
+  it('rejects --messaging-mode socket with --endpoint before auth', async () => {
     const command = await freshCreateCommand();
 
     await expect(
       command.parseAsync(
-        ['--name', 'Bot', '--socket', '--endpoint', 'https://example.com/api/messages', '--json'],
+        ['--name', 'Bot', '--messaging-mode', 'socket', '--endpoint', 'https://example.com/api/messages', '--json'],
         { from: 'user' }
       )
     ).rejects.toThrow('process.exit(1)');
@@ -437,23 +437,23 @@ describe('app create --socket', () => {
     expect(mockGetAccount).not.toHaveBeenCalled();
   });
 
-  it('rejects --socket with --azure before auth', async () => {
+  it('rejects --messaging-mode socket with --azure before auth', async () => {
     const command = await freshCreateCommand();
 
     await expect(
-      command.parseAsync(['--name', 'Bot', '--socket', '--azure', '--json'], { from: 'user' })
+      command.parseAsync(['--name', 'Bot', '--messaging-mode', 'socket', '--azure', '--json'], { from: 'user' })
     ).rejects.toThrow('process.exit(1)');
 
     expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
     expect(mockGetAccount).not.toHaveBeenCalled();
   });
 
-  it('rejects --socket when the API is unavailable (TEAMS_DEV_API unset)', async () => {
+  it('rejects --messaging-mode socket when the API is unavailable (TEAMS_DEV_API unset)', async () => {
     mockIsBotCommunicationApiAvailable.mockReturnValue(false);
     const command = await freshCreateCommand();
 
     await expect(
-      command.parseAsync(['--name', 'Bot', '--socket', '--json'], { from: 'user' })
+      command.parseAsync(['--name', 'Bot', '--messaging-mode', 'socket', '--json'], { from: 'user' })
     ).rejects.toThrow('process.exit(1)');
 
     expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_MISSING' } });
@@ -462,7 +462,7 @@ describe('app create --socket', () => {
   });
 });
 
-describe('app update --socket / --http', () => {
+describe('app update --messaging-mode', () => {
   async function freshUpdateCommand() {
     vi.resetModules();
     const { appUpdateCommand } = await import('../src/commands/app/update.js');
@@ -505,10 +505,10 @@ describe('app update --socket / --http', () => {
     mockIsBotCommunicationApiAvailable.mockReturnValue(false);
   });
 
-  it('enables socket mode with --socket', async () => {
+  it('enables socket mode with --messaging-mode socket', async () => {
     const command = await freshUpdateCommand();
 
-    await command.parseAsync(['some-app-id', '--socket', '--json'], { from: 'user' });
+    await command.parseAsync(['some-app-id', '--messaging-mode', 'socket', '--json'], { from: 'user' });
 
     expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', true);
     expect(mockUpdateBot).not.toHaveBeenCalled();
@@ -519,20 +519,39 @@ describe('app update --socket / --http', () => {
     });
   });
 
-  it('disables socket mode with --http', async () => {
+  it('disables socket mode with --messaging-mode http', async () => {
     const command = await freshUpdateCommand();
 
-    await command.parseAsync(['some-app-id', '--http', '--json'], { from: 'user' });
+    await command.parseAsync(['some-app-id', '--messaging-mode', 'http', '--json'], { from: 'user' });
 
     expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', false);
     expect(jsonOutput).toMatchObject({ updated: { socketMode: false } });
+    expect(jsonOutput).not.toHaveProperty('needsEndpoint');
   });
 
-  it('sets the endpoint before switching to HTTP with --http --endpoint', async () => {
+  it('reports needsEndpoint in JSON when switching to HTTP without an endpoint', async () => {
+    mockFetchBot.mockResolvedValue({
+      botId: 'bot-id',
+      name: 'Test Bot',
+      messagingEndpoint: '',
+      callingEndpoint: null,
+      description: '',
+      configuredChannels: ['msteams'],
+      isSingleTenant: true,
+    });
+    const command = await freshUpdateCommand();
+
+    await command.parseAsync(['some-app-id', '--messaging-mode', 'http', '--json'], { from: 'user' });
+
+    expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', false);
+    expect(jsonOutput).toMatchObject({ updated: { socketMode: false }, needsEndpoint: true });
+  });
+
+  it('sets the endpoint before switching to HTTP with --messaging-mode http --endpoint', async () => {
     const command = await freshUpdateCommand();
 
     await command.parseAsync(
-      ['some-app-id', '--http', '--endpoint', 'https://new.example.com/api/messages', '--json'],
+      ['some-app-id', '--messaging-mode', 'http', '--endpoint', 'https://new.example.com/api/messages', '--json'],
       { from: 'user' }
     );
 
@@ -560,23 +579,23 @@ describe('app update --socket / --http', () => {
     expect(mockSetSocketMode).not.toHaveBeenCalled();
   });
 
-  it('rejects --socket with --http before auth', async () => {
+  it('rejects an invalid --messaging-mode value before auth', async () => {
     const command = await freshUpdateCommand();
 
     await expect(
-      command.parseAsync(['some-app-id', '--socket', '--http', '--json'], { from: 'user' })
+      command.parseAsync(['some-app-id', '--messaging-mode', 'websocket', '--json'], { from: 'user' })
     ).rejects.toThrow('process.exit(1)');
 
-    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
+    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_FORMAT' } });
     expect(mockGetAccount).not.toHaveBeenCalled();
   });
 
-  it('rejects --socket with --endpoint before auth', async () => {
+  it('rejects --messaging-mode socket with --endpoint before auth', async () => {
     const command = await freshUpdateCommand();
 
     await expect(
       command.parseAsync(
-        ['some-app-id', '--socket', '--endpoint', 'https://new.example.com/api/messages', '--json'],
+        ['some-app-id', '--messaging-mode', 'socket', '--endpoint', 'https://new.example.com/api/messages', '--json'],
         { from: 'user' }
       )
     ).rejects.toThrow('process.exit(1)');
@@ -590,7 +609,7 @@ describe('app update --socket / --http', () => {
     const command = await freshUpdateCommand();
 
     await expect(
-      command.parseAsync(['some-app-id', '--http', '--json'], { from: 'user' })
+      command.parseAsync(['some-app-id', '--messaging-mode', 'http', '--json'], { from: 'user' })
     ).rejects.toThrow('process.exit(1)');
 
     expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_MISSING' } });
@@ -602,7 +621,7 @@ describe('app update --socket / --http', () => {
     const command = await freshUpdateCommand();
 
     await expect(
-      command.parseAsync(['some-app-id', '--socket', '--name', 'New Name', '--json'], {
+      command.parseAsync(['some-app-id', '--messaging-mode', 'socket', '--name', 'New Name', '--json'], {
         from: 'user',
       })
     ).rejects.toThrow('process.exit(1)');

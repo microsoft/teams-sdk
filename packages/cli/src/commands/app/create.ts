@@ -25,6 +25,7 @@ import { resolveSubscription, resolveResourceGroup, ensureTenantMatch } from '..
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { BOT_COMMUNICATION_BASE_URL, DEV_API_ENV_VAR } from '../../utils/tdp-host.js';
 import { openInBrowser, printLinkBanner } from '../../utils/browser.js';
+import { parseMessagingMode, promptMessagingMode } from './messaging-mode.js';
 import {
   collectCreateAdvancedOptions,
   isSignInAudienceOption,
@@ -60,7 +61,7 @@ export interface AppCreateOutput {
 export interface CreateOptions {
   name?: string;
   endpoint?: string;
-  socket?: boolean;
+  messagingMode?: string;
   serviceManagementReference?: string;
   signInAudience?: string;
   env?: string;
@@ -142,9 +143,14 @@ async function prepareAppCreate(
   else if (options.teamsManaged) location = 'tm';
   else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
 
-  if (options.socket) {
+  const messagingMode =
+    options.messagingMode !== undefined ? parseMessagingMode(options.messagingMode) : undefined;
+  if (messagingMode === 'socket') {
     if (options.endpoint !== undefined) {
-      throw new CliError('VALIDATION_CONFLICT', 'Cannot specify both --socket and --endpoint.');
+      throw new CliError(
+        'VALIDATION_CONFLICT',
+        'Cannot specify both --messaging-mode socket and --endpoint.'
+      );
     }
     if (!isBotCommunicationApiAvailable()) {
       throw new CliError(
@@ -189,23 +195,16 @@ async function prepareAppCreate(
     throw new CliError('VALIDATION_MISSING', 'App name cannot be empty.');
   }
 
-  let socketMode = !!options.socket;
+  let socketMode = messagingMode === 'socket';
   if (
-    !socketMode &&
+    messagingMode === undefined &&
     options.endpoint === undefined &&
     interactive &&
     !hasFlags &&
     location === 'tm' &&
     isBotCommunicationApiAvailable()
   ) {
-    const transport = await select<'http' | 'socket'>({
-      message: 'How should Teams deliver messages to your bot?',
-      choices: [
-        { name: 'Socket mode (Easy to get started, best for local development)', value: 'socket' },
-        { name: 'HTTP endpoint (Best used for production bots or with tunnels)', value: 'http' },
-      ],
-    });
-    socketMode = transport === 'socket';
+    socketMode = (await promptMessagingMode()) === 'socket';
   }
 
   const endpoint = socketMode
@@ -439,7 +438,7 @@ async function renderAppCreateResult(
   }
   if (result.socketModeError) {
     logger.warn(pc.yellow(`\nSocket mode was not enabled: ${result.socketModeError}`));
-    logger.warn(`  To retry, run: ${pc.cyan(`teams app update ${result.teamsAppId} --socket`)}`);
+    logger.warn(`  To retry, run: ${pc.cyan(`teams app update ${result.teamsAppId} --messaging-mode socket`)}`);
   }
   logger.info('');
   printLinkBanner('Install in Teams', result.installLink);
@@ -481,8 +480,8 @@ export const appCreateCommand = new Command('create')
   .option('-e, --endpoint <url>', '[OPTIONAL] Bot messaging endpoint URL')
   .addOption(
     new Option(
-      '--socket',
-      '[OPTIONAL] Use socket mode instead of an HTTP endpoint (Teams-managed bots only)'
+      '--messaging-mode <mode>',
+      '[OPTIONAL] How Teams delivers messages: socket or http (socket requires a Teams-managed bot)'
     ).hideHelp(BOT_COMMUNICATION_BASE_URL === undefined)
   )
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')

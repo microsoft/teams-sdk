@@ -24,7 +24,6 @@ import {
   setSocketMode,
 } from '../../apps/index.js';
 import { ensureAz } from '../../utils/az.js';
-import { confirmAction } from '../../utils/interactive.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
 import { BOT_COMMUNICATION_BASE_URL, DEV_API_ENV_VAR } from '../../utils/tdp-host.js';
 import { readAndValidateIcon } from '../../utils/icon.js';
@@ -33,6 +32,7 @@ import { logger } from '../../utils/logger.js';
 import { pickApp } from '../../utils/app-picker.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { bumpPatchVersion, stableStringify } from '../../utils/version.js';
+import { parseMessagingMode, promptMessagingMode } from './messaging-mode.js';
 import type { AppSummary, AppDetails } from '../../apps/types.js';
 import type { BotDetails } from '../../apps/tdp.js';
 import type { BotLocation } from '../../apps/bot-location.js';
@@ -76,8 +76,7 @@ export function buildScopeUpdates(appDetails: AppDetails, newScopes: BotScope[])
 
 interface UpdateOptions {
   endpoint?: string;
-  socket?: boolean;
-  http?: boolean;
+  messagingMode?: string;
   scopes?: string;
   name?: string;
   longName?: string;
@@ -100,6 +99,8 @@ interface AppUpdateOutput {
   botId?: string;
   validDomains?: string[];
   needsReinstall?: boolean;
+  /** HTTP delivery was selected but the bot has no messaging endpoint. */
+  needsEndpoint?: boolean;
   updated: {
     endpoint?: string;
     socketMode?: boolean;
@@ -118,6 +119,33 @@ interface AppUpdateOutput {
     webApplicationInfoId?: string;
     webApplicationInfoResource?: string;
   };
+}
+
+/**
+ * Set a Teams-managed bot's endpoint and add its domain to validDomains. Returns the updated bot.
+ */
+async function updateTeamsManagedEndpoint(
+  token: string,
+  teamsAppId: string,
+  appDetails: AppDetails,
+  bot: BotDetails,
+  newEndpoint: string
+): Promise<BotDetails> {
+  const updateSpinner = createSilentSpinner('Updating endpoint...').start();
+  await updateBot(token, { ...bot, messagingEndpoint: newEndpoint });
+  updateSpinner.success({ text: 'Endpoint updated successfully' });
+
+  const domain = extractDomain(newEndpoint);
+  if (domain) {
+    const domains = (appDetails.validDomains as string[]) ?? [];
+    if (!domains.includes(domain)) {
+      const domainSpinner = createSilentSpinner('Updating valid domains...').start();
+      const domainResult = await updateAppDetails(token, teamsAppId, { validDomains: [...domains, domain] });
+      domainSpinner.success({ text: `Added ${domain} to valid domains` });
+      logVersionBumpReinstallHint(domainResult);
+    }
+  }
+  return { ...bot, messagingEndpoint: newEndpoint };
 }
 
 /**
@@ -185,7 +213,8 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       logger.info(`${pc.dim('Messaging:')} ${label}`);
     }
 
-    const showEndpoint = bot || botLocation === 'azure';
+    // Messaging mode includes the endpoint prompt, so Endpoint is only listed on its own when mode changes aren't available.
+    const showEndpoint = !showMessagingMode && (bot || botLocation === 'azure');
     const hasBots = appDetails.bots && appDetails.bots.length > 0;
     const action = await select({
       message: 'What would you like to update?',
@@ -208,18 +237,42 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 
     if (action === 'edit-messaging-mode') {
       const botId = appDetails.bots![0].botId;
-      // Unknown current mode offers socket mode, since that's the new capability.
-      const enable = socketMode !== true;
-      const current =
-        socketMode === null ? 'Current mode is unknown' : `Currently using ${socketMode ? 'socket mode' : 'HTTP endpoint'}`;
-      if (!enable && bot && !bot.messagingEndpoint) {
-        logger.warn(pc.yellow('No messaging endpoint is set. Choose "Endpoint" to set one.'));
+      const mode = await promptMessagingMode(socketMode === false ? 'http' : 'socket');
+      const enable = mode === 'socket';
+
+      let endpointChanged = false;
+      if (!enable && bot) {
+        const current = bot.messagingEndpoint ?? '';
+        const newEndpoint = (
+          await input({
+            message: current ? 'Messaging endpoint URL:' : 'Messaging endpoint URL (leave empty to skip):',
+            default: current || undefined,
+            prefill: 'editable',
+            validate: (value) => {
+              if (!value.trim()) return true;
+              return validateEndpoint(value.trim()) ?? true;
+            },
+          })
+        ).trim();
+
+        if (newEndpoint && newEndpoint !== current) {
+          try {
+            bot = await updateTeamsManagedEndpoint(token, app.teamsAppId, appDetails, bot, newEndpoint);
+            endpointChanged = true;
+          } catch (error) {
+            logger.error(pc.red(error instanceof Error ? error.message : String(error)));
+            continue;
+          }
+        }
+        if (!bot.messagingEndpoint) {
+          logger.warn(pc.yellow('No messaging endpoint is set. Choose "Messaging mode" again to set one.'));
+        }
       }
-      const confirmed = await confirmAction(
-        `${current}. Switch to ${enable ? 'socket mode' : 'HTTP endpoint'}?`
-      );
-      if (!confirmed) {
-        logger.info(pc.dim('\nNo changes made.'));
+
+      if (socketMode === enable) {
+        if (!endpointChanged) {
+          logger.info(pc.dim(`\nAlready using ${enable ? 'socket mode' : 'HTTP'}. No changes made.`));
+        }
         continue;
       }
 
@@ -233,7 +286,6 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       } catch (error) {
         modeSpinner.error({ text: 'Failed to update messaging mode' });
         logger.error(pc.red(error instanceof Error ? error.message : String(error)));
-        continue;
       }
       continue;
     }
@@ -364,22 +416,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
           continue;
         }
 
-        const updateSpinner = createSilentSpinner('Updating endpoint...').start();
-        await updateBot(token, { ...bot, messagingEndpoint: newEndpoint.trim() });
-        updateSpinner.success({ text: 'Endpoint updated successfully' });
-        bot = { ...bot, messagingEndpoint: newEndpoint.trim() };
-
-        // Update validDomains with the new endpoint's domain
-        const domain = extractDomain(newEndpoint.trim());
-        if (domain) {
-          const domains = (appDetails.validDomains as string[]) ?? [];
-          if (!domains.includes(domain)) {
-            const domainSpinner = createSilentSpinner('Updating valid domains...').start();
-            const domainResult = await updateAppDetails(token, app.teamsAppId, { validDomains: [...domains, domain] });
-            domainSpinner.success({ text: `Added ${domain} to valid domains` });
-            logVersionBumpReinstallHint(domainResult);
-          }
-        }
+        bot = await updateTeamsManagedEndpoint(token, app.teamsAppId, appDetails, bot, newEndpoint.trim());
         continue;
       }
     }
@@ -391,14 +428,10 @@ export const appUpdateCommand = new Command('update')
   .argument('[appId]', 'App ID')
   .option('--endpoint <url>', '[OPTIONAL] Set the bot messaging endpoint URL')
   .addOption(
-    new Option('--socket', '[OPTIONAL] Switch the bot to socket mode (Teams-managed bots only)').hideHelp(
-      BOT_COMMUNICATION_BASE_URL === undefined
-    )
-  )
-  .addOption(
-    new Option('--http', '[OPTIONAL] Switch the bot to HTTP endpoint delivery (Teams-managed bots only)').hideHelp(
-      BOT_COMMUNICATION_BASE_URL === undefined
-    )
+    new Option(
+      '--messaging-mode <mode>',
+      '[OPTIONAL] Set how Teams delivers messages: socket or http (Teams-managed bots only)'
+    ).hideHelp(BOT_COMMUNICATION_BASE_URL === undefined)
   )
   .option('--scopes <scopes>', '[OPTIONAL] Set bot scopes (comma-separated: personal,team,groupChat,copilot)')
   .option('--name <name>', '[OPTIONAL] Set the app short name (max 30 chars)')
@@ -422,8 +455,7 @@ export const appUpdateCommand = new Command('update')
       // Check if any mutation flags were provided
       const hasMutationFlags =
         options.endpoint !== undefined ||
-        options.socket !== undefined ||
-        options.http !== undefined ||
+        options.messagingMode !== undefined ||
         options.scopes !== undefined ||
         options.name !== undefined ||
         options.longName !== undefined ||
@@ -448,17 +480,16 @@ export const appUpdateCommand = new Command('update')
       }
 
       // Validate inputs upfront (before auth/API calls)
-      if (options.socket && options.http) {
-        throw new CliError('VALIDATION_CONFLICT', 'Cannot specify both --socket and --http.');
-      }
-      if (options.socket && options.endpoint !== undefined) {
+      const messagingMode =
+        options.messagingMode !== undefined ? parseMessagingMode(options.messagingMode) : undefined;
+      if (messagingMode === 'socket' && options.endpoint !== undefined) {
         throw new CliError(
           'VALIDATION_CONFLICT',
-          'Cannot specify both --socket and --endpoint.',
-          'Use --http --endpoint <url> to switch to an HTTP endpoint.'
+          'Cannot specify both --messaging-mode socket and --endpoint.',
+          'Use --messaging-mode http --endpoint <url> to switch to an HTTP endpoint.'
         );
       }
-      if ((options.socket || options.http) && !isBotCommunicationApiAvailable()) {
+      if (messagingMode !== undefined && !isBotCommunicationApiAvailable()) {
         throw new CliError(
           'VALIDATION_MISSING',
           'Messaging mode changes are not available in this environment yet.',
@@ -577,8 +608,9 @@ export const appUpdateCommand = new Command('update')
       let endpointValidDomains: string[] | undefined;
 
       // Check messaging-mode preconditions before any mutation
-      const wantsModeChange = options.socket === true || options.http === true;
+      const wantsModeChange = messagingMode !== undefined;
       let modeBotId: string | undefined;
+      let needsEndpoint = false;
       if (wantsModeChange) {
         if (!app.bots || app.bots.length === 0) {
           throw new CliError('NOT_FOUND_BOT', 'This app has no bots.');
@@ -590,9 +622,10 @@ export const appUpdateCommand = new Command('update')
             'Messaging mode changes are only supported for Teams-managed bots.'
           );
         }
-        if (options.http && options.endpoint === undefined && !options.json) {
+        if (messagingMode === 'http' && options.endpoint === undefined) {
           const bot = await fetchBot(token, modeBotId).catch(() => null);
-          if (bot && !bot.messagingEndpoint) {
+          needsEndpoint = !!bot && !bot.messagingEndpoint;
+          if (needsEndpoint && !options.json) {
             logger.warn(
               pc.yellow('No messaging endpoint is set. Run ') +
                 pc.cyan(`teams app update ${appId} --endpoint <url>`)
@@ -662,9 +695,9 @@ export const appUpdateCommand = new Command('update')
         allUpdates.endpoint = options.endpoint;
       }
 
-      // --- Messaging mode (runs after --endpoint so --http --endpoint never leaves the bot without one) ---
+      // --- Messaging mode (runs after --endpoint so --messaging-mode http --endpoint never leaves the bot without one) ---
       if (wantsModeChange && modeBotId) {
-        const enable = options.socket === true;
+        const enable = messagingMode === 'socket';
         const modeSpinner = createSilentSpinner(
           enable ? 'Enabling socket mode...' : 'Switching to HTTP...',
           silent
@@ -777,6 +810,7 @@ export const appUpdateCommand = new Command('update')
           ...(endpointValidDomains ? { validDomains: endpointValidDomains } : {}),
           updated: allUpdates,
           ...(versionBumped ? { needsReinstall: true } : {}),
+          ...(needsEndpoint ? { needsEndpoint: true } : {}),
         };
         outputJson(result);
       }
