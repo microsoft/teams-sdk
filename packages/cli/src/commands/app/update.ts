@@ -209,8 +209,9 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
     }
     const showMessagingMode = botLocation === 'tm' && isBotCommunicationApiAvailable();
     if (showMessagingMode) {
-      const label = socketMode === null ? pc.yellow('(unknown)') : socketMode ? 'Socket mode' : 'HTTP';
-      logger.info(`${pc.dim('Messaging:')} ${label}`);
+      const label =
+        socketMode === null ? pc.yellow('(unknown)') : socketMode ? 'Sockets' : 'HTTP endpoint';
+      logger.info(`${pc.dim('Messaging mode:')} ${label}`);
     }
 
     // Messaging mode includes the endpoint prompt, so Endpoint is only listed on its own when mode changes aren't available.
@@ -237,7 +238,9 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 
     if (action === 'edit-messaging-mode') {
       const botId = appDetails.bots![0].botId;
-      const mode = await promptMessagingMode(socketMode === false ? 'http' : 'socket');
+      const mode = await promptMessagingMode(
+        socketMode === null ? undefined : socketMode ? 'socket' : 'http'
+      );
       const enable = mode === 'socket';
 
       let endpointChanged = false;
@@ -426,7 +429,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 export const appUpdateCommand = new Command('update')
   .description("Update a Teams app's properties")
   .argument('[appId]', 'App ID')
-  .option('--endpoint <url>', '[OPTIONAL] Set the bot messaging endpoint URL')
+  .option('--endpoint <url>', '[OPTIONAL] Set the messaging endpoint URL')
   .addOption(
     new Option(
       '--messaging-mode <mode>',

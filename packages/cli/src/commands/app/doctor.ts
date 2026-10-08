@@ -179,13 +179,15 @@ async function checkBotRegistration(
         try {
           const config = await getBotCommunicationConfiguration(tdpToken, botId);
           socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
-          if (socketMode) {
-            results.push({ category: cat, label: 'Socket mode enabled', status: 'pass' });
-          }
+          results.push({
+            category: cat,
+            label: `Messaging mode: ${socketMode ? 'Sockets' : 'HTTP endpoint'}`,
+            status: 'pass',
+          });
         } catch (e) {
           results.push({
             category: cat,
-            label: 'Could not check socket mode',
+            label: 'Could not check messaging mode',
             status: 'info',
             detail: e instanceof Error ? e.message : undefined,
           });

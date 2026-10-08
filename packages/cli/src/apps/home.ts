@@ -110,7 +110,7 @@ export async function showAppDetail(
     logger.info(`${pc.dim('Endpoint:')} ${endpoint || pc.yellow('(not set)')}`);
   }
   if (socketMode !== null) {
-    logger.info(`${pc.dim('Messaging:')} ${socketMode ? 'Socket mode' : 'HTTP'}`);
+    logger.info(`${pc.dim('Messaging mode:')} ${socketMode ? 'Sockets' : 'HTTP endpoint'}`);
   }
   logger.info('');
   printLinkBanner('Install in Teams', installLink);

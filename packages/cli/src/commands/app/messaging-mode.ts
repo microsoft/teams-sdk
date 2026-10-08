@@ -12,10 +12,16 @@ export function parseMessagingMode(value: string): MessagingMode {
   return value as MessagingMode;
 }
 
-export function promptMessagingMode(defaultMode?: MessagingMode): Promise<MessagingMode> {
+const MODE_LABELS: Record<MessagingMode, string> = {
+  socket: 'Sockets',
+  http: 'HTTP endpoint',
+};
+
+export function promptMessagingMode(currentMode?: MessagingMode): Promise<MessagingMode> {
+  const suffix = currentMode ? ` (Current mode: ${MODE_LABELS[currentMode]})` : '';
   return select<MessagingMode>({
-    message: 'How should Teams deliver messages to your app?',
-    default: defaultMode,
+    message: `How should Teams deliver messages to your app?${suffix}`,
+    default: currentMode,
     choices: [
       { name: 'Sockets (Easy to get started, best for local development)', value: 'socket' },
       { name: 'HTTP endpoint (Best used in production or with tunnels)', value: 'http' },
