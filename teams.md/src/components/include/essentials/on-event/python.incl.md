@@ -38,19 +38,26 @@ Event handler registration uses `@app.event("<event_name>")` with an async funct
 ```python
 @app.event("error")
 async def handle_error(event: ErrorEvent):
-    """Handle error events."""
     print(f"Error occurred: {event.error}")
-    if hasattr(event, "context") and event.context:
-        print(f"Context: {event.context}")
+    # Or alternatively, send it to an observability platform
 ```
 
 <!-- example-2 -->
 
-When an activity is received, log its payload.
+When a user signs in using `OAuth` or `SSO`, use the Graph API to fetch their profile and say hello.
 
 ```python
-@app.event("activity")
-async def handle_activity(event: ActivityEvent):
-    """Handle activity events."""
-    print(f"Activity received: {event.activity}")
+from microsoft_teams.graph import get_graph_client
+
+graph = app.add_oauth_flow("graph")
+
+@graph.on_signin
+async def handle_signin(event: SignInEvent):
+    client = get_graph_client(event.token_response.token)
+    me = await client.me.get()
+    await event.activity_ctx.send(f"👋 Hello {me.display_name}")
 ```
+
+:::tip
+The app-wide `sign_in` event fires for every connection. To react to just one, use its flow's `@flow.on_signin` handler as shown above. See the [auth guide](../in-depth-guides/user-authentication).
+:::

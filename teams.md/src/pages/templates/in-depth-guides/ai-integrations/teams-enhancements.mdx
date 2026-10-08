@@ -3,7 +3,7 @@ sidebar_position: 2
 sidebar_label: Teams Enhancements
 title: Teams Enhancements
 summary: Round out a Teams agent reply with streaming, the AI-generated label, custom feedback, clarification cards, dynamic follow-up prompts, and inline citations.
-languages: ['python', 'typescript']
+languages: ['python', 'typescript', 'csharp']
 ---
 
 import StreamingImgUrl from '@site/static/screenshots/streaming.gif';
@@ -18,6 +18,14 @@ import Language from '@site/src/components/Language';
 
 :::warning[Our AI libraries are deprecated]
 The Teams SDK has deprecated its own AI libraries — the `@microsoft/teams.ai` packages (`ChatPrompt`, `Model`, and the older `@microsoft/teams.mcp` / `@microsoft/teams.a2a` plugins) — in favor of dedicated AI frameworks. Use the pattern shown in these guides instead: bring the OpenAI SDK (or any framework you like), and wire MCP and A2A directly into your Teams app.
+:::
+
+</Language>
+
+<Language language="csharp">
+
+:::warning[SDK 2.0 AI libraries are deprecated]
+For .NET, implement AI enhancements with SDK 2.1 plus external model/agent frameworks. The Teams SDK provides the chat/activities surface; your AI stack provides reasoning/tool orchestration.
 :::
 
 </Language>

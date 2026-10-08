@@ -7,15 +7,18 @@ summary: Migration guide from BotBuilder to Teams SDK, including the BotBuilder 
 llms: ignore
 ---
 
+import Language from '@site/src/components/Language';
+
 # From BotBuilder
 
-This new iteration of Teams SDK has been rebuilt from the ground up. 
-To ease the migration process, we've introduced a plugin <LanguageInclude content={{"typescript": "`@microsoft/teams.botbuilder`", "csharp": "`Microsoft.Teams.Plugins.AspNetCore.BotBuilder`", "python": "microsoft-teams-botbuilder"}} /> that
+This new iteration of Teams SDK has been rebuilt from the ground up.
+To ease the migration process, <LanguageInclude content={{"typescript": "we've introduced a plugin `@microsoft/teams.botbuilder`", "csharp": "the `Microsoft.Teams.Apps.BotBuilder` package provides BotFramework adapter compatibility", "python": "we've introduced a plugin `microsoft-teams-botbuilder`"}} /> that
 allows you to continue using BotBuilder components like `ActivityHandler` and `CloudAdapter`
 to receive, process and send activities within the new Teams SDK abstractions.
 
-## Why a Plugin?
-
-The plugin exists to bridge BotBuilder and the new Teams SDK,
-letting developers keep their existing BotBuilder activity handlers while gradually moving to the new Teams SDK App handlers.
-It enables incremental migration and smooth adoption of new SDK features.
+<Language language="csharp">
+:::note[.NET SDK version]
+- **SDK 2.0** — use the plugin package `Microsoft.Teams.Plugins.AspNetCore.BotBuilder`.
+- **SDK 2.1** — use `Microsoft.Teams.Apps.BotBuilder` with `AddTeamsBotFrameworkHttpAdapter()`. This is the recommended path for new and migrating C# apps.
+:::
+</Language>

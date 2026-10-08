@@ -163,7 +163,8 @@ function processLanguageIncludeTags(
               }
             }
           }
-          return languageComponents.join('\n');
+          // Inline variants must be joined without a separator: a newline between them survives as whitespace once the non-matching languages render nothing, producing a stray space before any following punctuation.
+          return languageComponents.join(isBlock ? '\n' : '');
         } catch (error) {
           console.warn(`generate-language-docs warning: Error parsing inline content: ${error}`);
           return match; // Return original tag on error
@@ -824,6 +825,8 @@ function watch(): void {
   const templateWatcher = chokidar.watch(path.join(TEMPLATES_DIR, '**/*.mdx'), {
     persistent: true,
     ignoreInitial: true,
+    usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+    interval: Number(process.env.CHOKIDAR_INTERVAL ?? 500),
   });
 
   templateWatcher.on('add', (filePath: string) => {
@@ -842,6 +845,8 @@ function watch(): void {
   const inclWatcher = chokidar.watch(path.join(FRAGMENTS_DIR, '**/*.incl.md'), {
     persistent: true,
     ignoreInitial: true,
+    usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+    interval: Number(process.env.CHOKIDAR_INTERVAL ?? 500),
   });
 
   /**

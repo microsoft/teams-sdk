@@ -31,8 +31,8 @@
 -       default);
     // highlight-error-end
     // highlight-success-start
-+   var teams = app.UseTeams();
-+   await teams.Send("your-conversation-id", "proactive hello");
++   var teamsApp = app.UseTeamsBotApplication();
++   await teamsApp.SendAsync("your-conversation-id", "proactive hello");
     // highlight-success-end
     ```
   </TabItem>
@@ -68,8 +68,8 @@
     using Microsoft.Teams.Apps;
 
     // highlight-start
-    var teams = app.UseTeams();
-    await teams.Send("your-conversation-id", "proactive hello");
+    var teamsApp = app.UseTeamsBotApplication();
+    await teamsApp.SendAsync("your-conversation-id", "proactive hello");
     // highlight-end
     ```
   </TabItem>

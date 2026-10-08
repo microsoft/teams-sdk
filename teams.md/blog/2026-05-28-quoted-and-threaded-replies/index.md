@@ -350,11 +350,11 @@ Read the full documentation:
 - Sending messages: [TypeScript](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/) · [.NET](https://microsoft.github.io/teams-sdk/csharp/essentials/sending-messages/) · [Python](https://microsoft.github.io/teams-sdk/python/essentials/sending-messages/)
 - Proactive messaging: [Send proactive messages](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/send-proactive-messages)
 
-Runnable examples in each SDK:
+The consolidated message interaction sample is available in each SDK:
 
-- TypeScript: [`examples/quoting`](https://github.com/microsoft/teams.ts/tree/main/examples/quoting) and [`examples/threading`](https://github.com/microsoft/teams.ts/tree/main/examples/threading)
-- .NET: [`Samples/Samples.Quoting`](https://github.com/microsoft/teams.net/tree/main/Samples/Samples.Quoting) and [`Samples/Samples.Threading`](https://github.com/microsoft/teams.net/tree/main/Samples/Samples.Threading)
-- Python: [`examples/quoting`](https://github.com/microsoft/teams.py/tree/main/examples/quoting) and [`examples/threading`](https://github.com/microsoft/teams.py/tree/main/examples/threading)
+- TypeScript: [`examples/interacting-with-messages`](https://github.com/microsoft/teams.ts/tree/main/examples/interacting-with-messages)
+- .NET: [`samples/InteractingWithMessagesBot`](https://github.com/microsoft/teams.net/tree/main/samples/InteractingWithMessagesBot)
+- Python: [`examples/interacting-with-messages`](https://github.com/microsoft/teams.py/tree/main/examples/interacting-with-messages)
 
 Feature PRs:
 

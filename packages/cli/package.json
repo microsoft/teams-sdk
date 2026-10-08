@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "rm -rf dist && tsc",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -38,13 +38,13 @@
   },
   "homepage": "https://microsoft.github.io/teams-sdk/cli/",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "dependencies": {
-    "@azure/msal-node": "^5.2.2",
+    "@azure/msal-node": "^5.4.0",
     "@azure/msal-node-extensions": "^5.0.4",
     "@inquirer/prompts": "^7.2.1",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.6.1",
     "ajv": "^8.20.0",
     "ajv-draft-04": "^1.0.0",
     "ajv-formats": "^3.0.1",
@@ -63,7 +63,7 @@
     "@types/node": "^22.10.0",
     "tsx": "^4.22.4",
     "typescript": "^5.8.2",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.11"
   },
   "publishConfig": {
     "access": "public"

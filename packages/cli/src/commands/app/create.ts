@@ -1,27 +1,19 @@
 import { input, select } from '@inquirer/prompts';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import pc from 'picocolors';
 import {
-  createAadAppViaTdp,
-  createClientSecret,
-  createManifestZip,
-  getAadAppByClientId,
-  importAppPackage,
-  type ManifestOptions,
   type BotScope,
-  createTdpBotHandler,
-  createAzureBotHandler,
+  isBotCommunicationApiAvailable,
   normalizeAppMetadata,
   validateAppMetadata,
   validateAppMetadataField,
   validateEndpoint,
   type AzureContext,
   type BotLocation,
-  installLink,
-  portalLink,
 } from '../../apps/index.js';
-import { getAccount, getTokenSilent, graphScopes, teamsDevPortalScopes } from '../../auth/index.js';
-import { type EnvValues, isJsonFile, outputCredentials, writeEnvFile, writeJsonCredentials } from '../../utils/env.js';
+import { getAccount } from '../../auth/index.js';
+import { outputCredentials, writeCredentials } from '../../utils/env.js';
+import { resolveCredentialDestination } from '../../utils/credential-destination.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
 import { readAndValidateIcon } from '../../utils/icon.js';
 import { outputJson } from '../../utils/json-output.js';
@@ -31,15 +23,23 @@ import { getConfig } from '../../utils/config.js';
 import { ensureAz, runAz } from '../../utils/az.js';
 import { resolveSubscription, resolveResourceGroup, ensureTenantMatch } from '../../utils/az-prompts.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
+import { BOT_COMMUNICATION_BASE_URL, DEV_API_ENV_VAR } from '../../utils/tdp-host.js';
 import { openInBrowser, printLinkBanner } from '../../utils/browser.js';
+import { parseMessagingMode, promptMessagingMode } from './messaging-mode.js';
 import {
   collectCreateAdvancedOptions,
   isSignInAudienceOption,
   SIGN_IN_AUDIENCE_BY_OPTION,
   type SignInAudienceOption,
 } from './create-advanced.js';
+import {
+  createApp,
+  type AppCreateInput,
+  type AppCreateProgress,
+  type AppCreateResult,
+} from './create-action.js';
 
-interface AppCreateOutput {
+export interface AppCreateOutput {
   appName: string;
   teamsAppId: string;
   botId: string;
@@ -47,6 +47,8 @@ interface AppCreateOutput {
   installLink: string;
   portalLink: string;
   botLocation: 'teams-managed' | 'azure';
+  socketMode: boolean;
+  socketModeError?: string;
   secretSkipped?: boolean;
   credentials?: {
     CLIENT_ID: string;
@@ -56,9 +58,10 @@ interface AppCreateOutput {
   credentialsFile?: string;
 }
 
-interface CreateOptions {
+export interface CreateOptions {
   name?: string;
   endpoint?: string;
+  messagingMode?: string;
   serviceManagementReference?: string;
   signInAudience?: string;
   env?: string;
@@ -75,6 +78,19 @@ interface CreateOptions {
   json?: boolean;
 }
 
+export interface AppCreateRunOptions {
+  defaultName?: string;
+  suppressCredentialOutput?: boolean;
+  skipPostCreateActions?: boolean;
+}
+
+interface PreparedAppCreate {
+  input: AppCreateInput;
+  envPath: string | undefined;
+  summaryLines: [string, string][];
+  silent: boolean;
+}
+
 function parseSignInAudienceOption(value: string): SignInAudienceOption {
   if (!isSignInAudienceOption(value)) {
     throw new CliError(
@@ -85,10 +101,389 @@ function parseSignInAudienceOption(value: string): SignInAudienceOption {
   return value;
 }
 
+export async function runAppCreate(
+  options: CreateOptions,
+  runOptions: AppCreateRunOptions = {}
+): Promise<AppCreateOutput | undefined> {
+  const prepared = await prepareAppCreate(options, runOptions);
+
+  if (isInteractive() && !prepared.silent) {
+    logger.info('');
+    for (const [label, value] of prepared.summaryLines) {
+      logger.info(`  ${pc.dim(`${label}:`)}  ${value}`);
+    }
+    logger.info('');
+  }
+
+  if (!(await confirmAction('Confirm creation?', prepared.silent))) {
+    return undefined;
+  }
+
+  const result = await createApp(
+    prepared.input,
+    createSpinnerProgress(prepared.silent || prepared.input.botLocation === 'azure')
+  );
+  const output = toAppCreateOutput(result, prepared.envPath);
+  await renderAppCreateResult(output, result, prepared.envPath, options, runOptions);
+  return output;
+}
+
+async function prepareAppCreate(
+  options: CreateOptions,
+  runOptions: AppCreateRunOptions
+): Promise<PreparedAppCreate> {
+  const silent = !!options.json;
+
+  if (options.azure && options.teamsManaged) {
+    throw new CliError('VALIDATION_CONFLICT', 'Cannot specify both --azure and --teams-managed.');
+  }
+
+  let location: BotLocation;
+  if (options.azure) location = 'azure';
+  else if (options.teamsManaged) location = 'tm';
+  else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
+
+  const messagingMode =
+    options.messagingMode !== undefined ? parseMessagingMode(options.messagingMode) : undefined;
+  if (messagingMode === 'socket') {
+    if (options.endpoint !== undefined) {
+      throw new CliError(
+        'VALIDATION_CONFLICT',
+        'Cannot specify both --messaging-mode socket and --endpoint.'
+      );
+    }
+    if (!isBotCommunicationApiAvailable()) {
+      throw new CliError(
+        'VALIDATION_MISSING',
+        'Socket mode is not available in this environment yet.',
+        `Set ${DEV_API_ENV_VAR}=1 to use the dev-int Teams Developer Portal.`
+      );
+    }
+    if (location === 'azure') {
+      throw new CliError(
+        'VALIDATION_CONFLICT',
+        'Socket mode is only supported for Teams-managed bots.',
+        'Use --teams-managed.'
+      );
+    }
+  }
+
+  const serviceManagementReference = options.serviceManagementReference?.trim();
+  let signInAudienceOption = parseSignInAudienceOption(options.signInAudience ?? 'multipleOrgs');
+  const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
+  const earlyOutlineIcon = options.outlineIcon
+    ? readAndValidateIcon(options.outlineIcon, 32)
+    : undefined;
+  const interactive = isInteractive();
+
+  if (!interactive && !options.name && !runOptions.defaultName) {
+    throw new CliError('VALIDATION_MISSING', '--name is required in non-interactive mode.');
+  }
+
+  const hasFlags = !!options.name;
+  const name =
+    options.name ??
+    (interactive && !hasFlags
+      ? await input({
+          message: 'App name:',
+          default: runOptions.defaultName,
+          validate: (value) => validateAppMetadataField('shortName', value, 'create') ?? true,
+        })
+      : runOptions.defaultName);
+
+  if (!name?.trim()) {
+    throw new CliError('VALIDATION_MISSING', 'App name cannot be empty.');
+  }
+
+  let socketMode = messagingMode === 'socket';
+  if (
+    messagingMode === undefined &&
+    options.endpoint === undefined &&
+    interactive &&
+    !hasFlags &&
+    location === 'tm' &&
+    isBotCommunicationApiAvailable()
+  ) {
+    socketMode = (await promptMessagingMode()) === 'socket';
+  }
+
+  const endpoint = socketMode
+    ? undefined
+    : (options.endpoint ??
+      (interactive && !hasFlags
+        ? (await input({
+            message: 'Messaging endpoint URL (leave empty to skip):',
+            validate: (value) => {
+              if (!value.trim()) return true;
+              return validateEndpoint(value.trim()) ?? true;
+            },
+          })) || undefined
+        : undefined));
+
+  const envPath = runOptions.suppressCredentialOutput
+    ? (options.envFile ?? options.env)
+    : await resolveCredentialDestination({
+        explicit: options.envFile ?? options.env,
+        interactive: interactive && !hasFlags,
+        json: options.json,
+      });
+
+  const generateSecret = options.secret !== false;
+  let descriptionOpts: { short: string; full?: string } | undefined;
+  let scopeChoices: BotScope[] | undefined;
+  let developerOpts:
+    | {
+        name: string;
+        websiteUrl: string;
+        privacyUrl: string;
+        termsOfUseUrl: string;
+      }
+    | undefined;
+
+  if (interactive && !hasFlags && !options.json) {
+    const advancedOptions = await collectCreateAdvancedOptions();
+    descriptionOpts = advancedOptions.manifest.description;
+    scopeChoices = advancedOptions.manifest.scopes;
+    developerOpts = advancedOptions.manifest.developer;
+    signInAudienceOption = parseSignInAudienceOption(
+      options.signInAudience ?? advancedOptions.appRegistration?.signInAudience ?? signInAudienceOption
+    );
+    if (advancedOptions.manifest.icons) {
+      options.colorIcon ??= advancedOptions.manifest.icons.colorIconPath;
+      options.outlineIcon ??= advancedOptions.manifest.icons.outlineIconPath;
+    }
+  }
+
+  const colorIconPath = options.colorIcon;
+  const outlineIconPath = options.outlineIcon;
+  const colorIcon = colorIconPath
+    ? (earlyColorIcon ?? readAndValidateIcon(colorIconPath, 192))
+    : undefined;
+  const outlineIcon = outlineIconPath
+    ? (earlyOutlineIcon ?? readAndValidateIcon(outlineIconPath, 32))
+    : undefined;
+
+  const createMetadata = normalizeAppMetadata({
+    shortName: name,
+    longName: name,
+    shortDescription: descriptionOpts?.short ?? name,
+    longDescription: descriptionOpts?.full ?? descriptionOpts?.short ?? name,
+    developerName: developerOpts?.name ?? 'Developer',
+    websiteUrl: developerOpts?.websiteUrl ?? 'https://www.example.com',
+    privacyUrl: developerOpts?.privacyUrl ?? 'https://www.example.com/privacy',
+    termsOfUseUrl: developerOpts?.termsOfUseUrl ?? 'https://www.example.com/terms',
+    endpoint,
+  });
+  const validationIssues = validateAppMetadata(createMetadata, 'create');
+  if (validationIssues.length > 0) {
+    throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
+  }
+
+  const normalizedName = createMetadata.shortName!;
+  const normalizedEndpoint = createMetadata.endpoint;
+  const normalizedDescriptionOpts = descriptionOpts
+    ? {
+        short: createMetadata.shortDescription!,
+        full: createMetadata.longDescription!,
+      }
+    : undefined;
+  const normalizedDeveloperOpts = developerOpts
+    ? {
+        name: createMetadata.developerName!,
+        websiteUrl: createMetadata.websiteUrl!,
+        privacyUrl: createMetadata.privacyUrl!,
+        termsOfUseUrl: createMetadata.termsOfUseUrl!,
+      }
+    : undefined;
+
+  let azureContext: AzureContext | undefined;
+  if (location === 'azure') {
+    const account = await getAccount();
+    if (!account) {
+      throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
+    }
+    await ensureAz();
+    await ensureTenantMatch(account.tenantId);
+    const subscription = await resolveSubscription(options.subscription);
+    const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
+
+    if (options.createResourceGroup) {
+      const rgRegion = options.region ?? 'westus2';
+      const rgSpinner = createSilentSpinner(
+        `Creating resource group ${resourceGroup}...`,
+        true
+      ).start();
+      await runAz([
+        'group',
+        'create',
+        '--name',
+        resourceGroup,
+        '--location',
+        rgRegion,
+        '--subscription',
+        subscription,
+      ]);
+      rgSpinner.success({ text: `Resource group ${resourceGroup} ready` });
+    }
+
+    azureContext = {
+      subscription,
+      resourceGroup,
+      region: 'global',
+      tenantId: account.tenantId,
+    };
+  }
+
+  const summaryLines: [string, string][] = [['App name', normalizedName]];
+  if (serviceManagementReference) {
+    summaryLines.push(['Service management reference', serviceManagementReference]);
+  }
+  if (options.signInAudience || signInAudienceOption === 'myOrg') {
+    summaryLines.push(['Sign-in audience', signInAudienceOption]);
+  }
+  if (azureContext) {
+    summaryLines.push(['Subscription', azureContext.subscription]);
+    summaryLines.push(['Resource group', azureContext.resourceGroup]);
+  }
+  if (normalizedEndpoint) summaryLines.push(['Endpoint', normalizedEndpoint]);
+  if (socketMode) summaryLines.push(['Messaging mode', 'Sockets']);
+  if (normalizedDescriptionOpts?.short) summaryLines.push(['Description', normalizedDescriptionOpts.short]);
+  if (scopeChoices && scopeChoices.length > 0) summaryLines.push(['Scopes', scopeChoices.join(', ')]);
+  if (normalizedDeveloperOpts?.name) summaryLines.push(['Developer', normalizedDeveloperOpts.name]);
+  if (colorIconPath) summaryLines.push(['Color icon', colorIconPath]);
+  if (outlineIconPath) summaryLines.push(['Outline icon', outlineIconPath]);
+  if (!generateSecret) summaryLines.push(['Secret', 'Skipped']);
+  if (envPath) summaryLines.push(['Credentials file', envPath]);
+
+  const appInput: AppCreateInput = {
+    name: normalizedName,
+    endpoint: normalizedEndpoint,
+    socketMode,
+    serviceManagementReference,
+    signInAudience: SIGN_IN_AUDIENCE_BY_OPTION[signInAudienceOption],
+    generateSecret,
+    botLocation: location,
+    azureContext,
+    description: normalizedDescriptionOpts,
+    scopes: scopeChoices,
+    developer: normalizedDeveloperOpts,
+    colorIconBuffer: colorIcon?.buffer,
+    outlineIconBuffer: outlineIcon?.buffer,
+  };
+
+  return { input: appInput, envPath, summaryLines, silent };
+}
+
+function createSpinnerProgress(silent: boolean): AppCreateProgress {
+  let spinner:
+    | {
+        success(options: { text: string }): unknown;
+        error(options: { text: string }): unknown;
+      }
+    | undefined;
+
+  return {
+    start(message: string): void {
+      spinner = createSilentSpinner(message, silent).start();
+    },
+    success(message: string): void {
+      spinner?.success({ text: message });
+    },
+    error(message: string): void {
+      spinner?.error({ text: message });
+    },
+  };
+}
+
+function toAppCreateOutput(result: AppCreateResult, envPath: string | undefined): AppCreateOutput {
+  return {
+    appName: result.appName,
+    teamsAppId: result.teamsAppId,
+    botId: result.botId,
+    endpoint: result.endpoint,
+    installLink: result.installLink,
+    portalLink: result.portalLink,
+    botLocation: result.botLocation,
+    socketMode: result.socketMode,
+    ...(result.socketModeError && { socketModeError: result.socketModeError }),
+    ...(result.secretSkipped && { secretSkipped: true }),
+    ...(envPath ? { credentialsFile: envPath } : { credentials: result.credentials }),
+  };
+}
+
+async function renderAppCreateResult(
+  output: AppCreateOutput,
+  result: AppCreateResult,
+  envPath: string | undefined,
+  options: CreateOptions,
+  runOptions: AppCreateRunOptions
+): Promise<void> {
+  if (options.json) {
+    if (envPath) {
+      writeCredentials(envPath, result.credentials);
+    }
+    outputJson(output);
+    return;
+  }
+
+  logger.info(pc.bold(pc.green('\nApp created successfully!')));
+  logger.info(`${pc.dim('Name:')} ${result.appName}`);
+  logger.info(`${pc.dim('Teams App ID:')} ${result.teamsAppId}`);
+  logger.info(`${pc.dim('Bot ID:')} ${result.botId}`);
+  if (result.endpoint) {
+    logger.info(`${pc.dim('Endpoint:')} ${result.endpoint}`);
+  }
+  if (result.socketMode) {
+    logger.info(`${pc.dim('Messaging mode:')} Sockets`);
+  }
+  if (result.socketModeError) {
+    logger.warn(pc.yellow(`\nSocket mode was not enabled: ${result.socketModeError}`));
+    logger.warn(`  To retry, run: ${pc.cyan(`teams app update ${result.teamsAppId} --messaging-mode socket`)}`);
+  }
+  logger.info('');
+  printLinkBanner('Install in Teams', result.installLink);
+  printLinkBanner('Developer Portal', result.portalLink);
+
+  if (!runOptions.suppressCredentialOutput) {
+    outputCredentials(envPath, result.credentials, 'Credentials:');
+  }
+
+  if (result.secretSkipped) {
+    logger.info(`\nSecret generation skipped. To create one later, run:`);
+    logger.info(`  ${pc.cyan(`teams app auth secret create ${result.teamsAppId}`)}`);
+  }
+
+  if (!isInteractive() || runOptions.skipPostCreateActions) return;
+
+  try {
+    while (true) {
+      const action = await select({
+        message: '',
+        choices: [
+          { name: 'Install in Teams', value: 'install' },
+          { name: 'Open in Developer Portal', value: 'portal' },
+          { name: 'Done', value: 'done' },
+        ],
+      });
+      if (action === 'done') break;
+      if (action === 'install') await openInBrowser(result.installLink);
+      if (action === 'portal') await openInBrowser(result.portalLink);
+    }
+  } catch (error) {
+    if (!(error instanceof Error && error.name === 'ExitPromptError')) throw error;
+  }
+}
+
 export const appCreateCommand = new Command('create')
   .description('Create a new Teams app with bot')
   .option('-n, --name <name>', 'App/bot name')
-  .option('-e, --endpoint <url>', '[OPTIONAL] Bot messaging endpoint URL')
+  .option('-e, --endpoint <url>', '[OPTIONAL] Messaging endpoint URL')
+  .addOption(
+    new Option(
+      '--messaging-mode <mode>',
+      '[OPTIONAL] How Teams delivers messages: socket or http (socket requires a Teams-managed bot)'
+    ).hideHelp(BOT_COMMUNICATION_BASE_URL === undefined)
+  )
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')
   .option('--env-file <path>', '[OPTIONAL] Alias for --env')
   .option('--no-secret', '[OPTIONAL] Skip client secret generation (for managed identity or federated credentials)')
@@ -105,383 +500,6 @@ export const appCreateCommand = new Command('create')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (options: CreateOptions) => {
-      const silent = !!options.json;
-
-      // Validate CLI flags upfront (before auth or any resource creation)
-      if (options.azure && options.teamsManaged) {
-        throw new CliError(
-          'VALIDATION_CONFLICT',
-          'Cannot specify both --azure and --teams-managed.'
-        );
-      }
-      const serviceManagementReference = options.serviceManagementReference?.trim();
-      let signInAudienceOption = parseSignInAudienceOption(
-        options.signInAudience ?? 'multipleOrgs'
-      );
-      const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
-      const earlyOutlineIcon = options.outlineIcon ? readAndValidateIcon(options.outlineIcon, 32) : undefined;
-
-      // ===== Gather all inputs upfront =====
-      const interactive = isInteractive();
-
-      if (!interactive && !options.name) {
-        throw new CliError('VALIDATION_MISSING', '--name is required in non-interactive mode.');
-      }
-
-      // Determine if any flags were provided (scripting mode)
-      const hasFlags = !!options.name;
-
-      // Get name
-      const name =
-        options.name ??
-        (interactive && !hasFlags
-          ? await input({
-              message: 'App name:',
-              validate: (value) =>
-                validateAppMetadataField('shortName', value, 'create') ?? true,
-            })
-          : undefined);
-
-      if (!name?.trim()) {
-        throw new CliError('VALIDATION_MISSING', 'App name cannot be empty.');
-      }
-
-      // Get endpoint (prompt only in full interactive mode)
-      const endpoint =
-        options.endpoint ??
-        (interactive && !hasFlags
-          ? (await input({
-              message: 'Bot messaging endpoint URL (leave empty to skip):',
-              validate: (value) => {
-                if (!value.trim()) return true; // allow empty (skip)
-                return validateEndpoint(value.trim()) ?? true;
-              },
-            })) || undefined
-          : undefined);
-
-      // Get env path (prompt only in full interactive mode)
-      const envPath =
-        (options.envFile ?? options.env) ??
-        (interactive && !hasFlags && !options.json
-          ? (await input({
-              message: 'Path to credentials file, e.g. .env or appsettings.json (leave empty to show in terminal):',
-            })) || undefined
-          : undefined);
-
-      const generateSecret = options.secret !== false;
-
-      // Collect advanced options
-      let descriptionOpts: { short: string; full?: string } | undefined;
-      let scopeChoices: BotScope[] | undefined;
-      let developerOpts:
-        | {
-            name: string;
-            websiteUrl: string;
-            privacyUrl: string;
-            termsOfUseUrl: string;
-          }
-        | undefined;
-
-      if (interactive && !hasFlags && !options.json) {
-        const advancedOptions = await collectCreateAdvancedOptions();
-        descriptionOpts = advancedOptions.manifest.description;
-        scopeChoices = advancedOptions.manifest.scopes;
-        developerOpts = advancedOptions.manifest.developer;
-        signInAudienceOption = parseSignInAudienceOption(
-          options.signInAudience ?? advancedOptions.appRegistration?.signInAudience ?? signInAudienceOption
-        );
-        if (advancedOptions.manifest.icons) {
-          options.colorIcon ??= advancedOptions.manifest.icons.colorIconPath;
-          options.outlineIcon ??= advancedOptions.manifest.icons.outlineIconPath;
-        }
-      }
-
-      const signInAudience = SIGN_IN_AUDIENCE_BY_OPTION[signInAudienceOption];
-
-      // Resolve icon paths (CLI flags take priority, then interactive selection)
-      const colorIconPath = options.colorIcon;
-      const outlineIconPath = options.outlineIcon;
-
-      // Validate icons (reuse early result for flag-provided paths, otherwise validate now)
-      const colorIcon = colorIconPath
-        ? (earlyColorIcon ?? readAndValidateIcon(colorIconPath, 192))
-        : undefined;
-      const outlineIcon = outlineIconPath
-        ? (earlyOutlineIcon ?? readAndValidateIcon(outlineIconPath, 32))
-        : undefined;
-
-      const createMetadata = normalizeAppMetadata({
-        shortName: name,
-        longName: name,
-        shortDescription: descriptionOpts?.short ?? name,
-        longDescription: descriptionOpts?.full ?? descriptionOpts?.short ?? name,
-        developerName: developerOpts?.name ?? 'Developer',
-        websiteUrl: developerOpts?.websiteUrl ?? 'https://www.example.com',
-        privacyUrl: developerOpts?.privacyUrl ?? 'https://www.example.com/privacy',
-        termsOfUseUrl: developerOpts?.termsOfUseUrl ?? 'https://www.example.com/terms',
-        endpoint,
-      });
-      const validationIssues = validateAppMetadata(createMetadata, 'create');
-      if (validationIssues.length > 0) {
-        throw new CliError('VALIDATION_FORMAT', validationIssues[0]!.message);
-      }
-
-      const normalizedName = createMetadata.shortName!;
-      const normalizedEndpoint = createMetadata.endpoint;
-      const normalizedDescriptionOpts = descriptionOpts
-        ? {
-            short: createMetadata.shortDescription!,
-            full: createMetadata.longDescription!,
-          }
-        : undefined;
-      const normalizedDeveloperOpts = developerOpts
-        ? {
-            name: createMetadata.developerName!,
-            websiteUrl: createMetadata.websiteUrl!,
-            privacyUrl: createMetadata.privacyUrl!,
-            termsOfUseUrl: createMetadata.termsOfUseUrl!,
-          }
-        : undefined;
-
-      const account = await getAccount();
-      if (!account) {
-        throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
-      }
-
-      // Resolve bot location: explicit flag > config > default (teams-managed)
-      let location: BotLocation;
-      if (options.azure) location = 'azure';
-      else if (options.teamsManaged) location = 'tm';
-      else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
-
-      // Gather Azure context if needed
-      let azureContext: AzureContext | undefined;
-      if (location === 'azure') {
-        await ensureAz();
-        await ensureTenantMatch(account.tenantId);
-        const subscription = await resolveSubscription(options.subscription);
-        const resourceGroup = await resolveResourceGroup(subscription, options.resourceGroup);
-
-        if (options.createResourceGroup) {
-          const rgRegion = options.region ?? 'westus2';
-          const rgSpinner = createSilentSpinner(
-            `Creating resource group ${resourceGroup}...`,
-            silent
-          ).start();
-          await runAz([
-            'group',
-            'create',
-            '--name',
-            resourceGroup,
-            '--location',
-            rgRegion,
-            '--subscription',
-            subscription,
-          ]);
-          rgSpinner.success({ text: `Resource group ${resourceGroup} ready` });
-        }
-
-        // Bot Service location is always "global"
-        azureContext = {
-          subscription,
-          resourceGroup,
-          region: 'global',
-          tenantId: account.tenantId,
-        };
-      }
-
-      // ===== All inputs gathered — confirm before proceeding =====
-      const summaryLines: [string, string][] = [['App name', normalizedName]];
-      if (serviceManagementReference) {
-        summaryLines.push(['Service management reference', serviceManagementReference]);
-      }
-      if (options.signInAudience || signInAudienceOption === 'myOrg') {
-        summaryLines.push(['Sign-in audience', signInAudienceOption]);
-      }
-      if (azureContext) {
-        summaryLines.push(['Subscription', azureContext.subscription]);
-        summaryLines.push(['Resource group', azureContext.resourceGroup]);
-      }
-      if (normalizedEndpoint) summaryLines.push(['Endpoint', normalizedEndpoint]);
-      if (normalizedDescriptionOpts?.short)
-        summaryLines.push(['Description', normalizedDescriptionOpts.short]);
-      if (scopeChoices && scopeChoices.length > 0)
-        summaryLines.push(['Scopes', scopeChoices.join(', ')]);
-      if (normalizedDeveloperOpts?.name) summaryLines.push(['Developer', normalizedDeveloperOpts.name]);
-      if (colorIconPath) summaryLines.push(['Color icon', colorIconPath]);
-      if (outlineIconPath) summaryLines.push(['Outline icon', outlineIconPath]);
-      if (!generateSecret) summaryLines.push(['Secret', 'Skipped']);
-      if (envPath) summaryLines.push(['Credentials file', envPath]);
-
-      if (interactive && !silent) {
-        logger.info('');
-        for (const [label, value] of summaryLines) {
-          logger.info(`  ${pc.dim(`${label}:`)}  ${value}`);
-        }
-        logger.info('');
-      }
-
-      if (!(await confirmAction('Confirm creation?', silent))) {
-        return;
-      }
-
-      // Get tokens
-      let spinner = createSilentSpinner('Acquiring tokens...', silent).start();
-
-      // Graph token only needed for secret generation
-      let graphToken: string | null | undefined;
-      if (generateSecret) {
-        graphToken = await getTokenSilent(graphScopes);
-        if (!graphToken) {
-          spinner.error({ text: 'Failed to get Graph token' });
-          throw new CliError(
-            'AUTH_TOKEN_FAILED',
-            'Failed to get Graph token.',
-            'Try `teams login` again.'
-          );
-        }
-      }
-
-      const tdpToken = await getTokenSilent(teamsDevPortalScopes);
-      if (!tdpToken) {
-        spinner.error({ text: 'Failed to get TDP token' });
-        throw new CliError(
-          'AUTH_TOKEN_FAILED',
-          'Failed to get TDP token.',
-          'Try `teams login` again.'
-        );
-      }
-      spinner.success({ text: 'Tokens acquired' });
-
-      // Create AAD app via TDP (creates service principal server-side)
-      spinner = createSilentSpinner('Creating Azure AD app...', silent).start();
-      const aadApp = await createAadAppViaTdp(tdpToken, normalizedName, {
-        serviceManagementReference,
-        signInAudience,
-      });
-      const clientId = aadApp.appId;
-      spinner.success({ text: `Created Azure AD app (${clientId})` });
-
-      // Generate manifest
-      const manifestOpts: ManifestOptions = {
-        botId: clientId,
-        botName: normalizedName,
-        endpoint: normalizedEndpoint,
-        description: normalizedDescriptionOpts,
-        scopes: scopeChoices,
-        developer: normalizedDeveloperOpts,
-        colorIconBuffer: colorIcon?.buffer,
-        outlineIconBuffer: outlineIcon?.buffer,
-      };
-
-      const zipBuffer = createManifestZip(manifestOpts);
-
-      // Generate client secret (skipped with --no-secret)
-      let secretText: string | undefined;
-      if (generateSecret) {
-        spinner = createSilentSpinner('Generating client secret...', silent).start();
-        let graphApp: { id: string } | null = null;
-        for (let i = 0; i < 10; i++) {
-          try {
-            graphApp = await getAadAppByClientId(graphToken!, clientId);
-            break;
-          } catch {
-            await new Promise((r) => setTimeout(r, 3000));
-          }
-        }
-        if (!graphApp) {
-          throw new Error('AAD app not yet available in Graph API. Try again shortly.');
-        }
-        const secret = await createClientSecret(graphToken!, graphApp.id);
-        secretText = secret.secretText;
-        spinner.success({ text: 'Generated client secret' });
-      }
-
-      // Import to Teams
-      spinner = createSilentSpinner('Creating Teams app...', silent).start();
-      const importedApp = await importAppPackage(tdpToken, zipBuffer);
-      const teamsAppId = importedApp.teamsAppId;
-      spinner.success({ text: `Created Teams app (${teamsAppId})` });
-
-      // Register bot
-      spinner = createSilentSpinner('Registering bot...', silent).start();
-      const handler =
-        location === 'tm' ? createTdpBotHandler(tdpToken) : createAzureBotHandler(azureContext!);
-      await handler.createBot({ botId: clientId, name: normalizedName, endpoint: normalizedEndpoint });
-      spinner.success({ text: 'Bot registered' });
-
-      // Output results
-      const install = installLink(teamsAppId, account.tenantId);
-      const portal = portalLink(teamsAppId);
-
-      const secretSkipped = !generateSecret;
-      const credentialValues: EnvValues = {
-        CLIENT_ID: clientId,
-        ...(secretText !== undefined && { CLIENT_SECRET: secretText }),
-        TENANT_ID: account.tenantId,
-      };
-
-      if (options.json) {
-        if (envPath) {
-          if (isJsonFile(envPath)) {
-            writeJsonCredentials(envPath, credentialValues);
-          } else {
-            writeEnvFile(envPath, credentialValues);
-          }
-        }
-
-        const result: AppCreateOutput = {
-          appName: normalizedName,
-          teamsAppId,
-          botId: clientId,
-          endpoint: normalizedEndpoint ?? null,
-          installLink: install,
-          portalLink: portal,
-          botLocation: location === 'tm' ? 'teams-managed' : 'azure',
-          ...(secretSkipped && { secretSkipped: true }),
-          ...(envPath
-            ? { credentialsFile: envPath }
-            : { credentials: credentialValues }),
-        };
-        outputJson(result);
-      } else {
-        logger.info(pc.bold(pc.green('\nApp created successfully!')));
-        logger.info(`${pc.dim('Name:')} ${normalizedName}`);
-        logger.info(`${pc.dim('Teams App ID:')} ${teamsAppId}`);
-        logger.info(`${pc.dim('Bot ID:')} ${clientId}`);
-        if (normalizedEndpoint) {
-          logger.info(`${pc.dim('Endpoint:')} ${normalizedEndpoint}`);
-        }
-        logger.info('');
-        printLinkBanner('Install in Teams', install);
-        printLinkBanner('Developer Portal', portal);
-
-        outputCredentials(envPath, credentialValues, 'Credentials:');
-
-        if (secretSkipped) {
-          logger.info(`\nSecret generation skipped. To create one later, run:`);
-          logger.info(`  ${pc.cyan(`teams app auth secret create ${teamsAppId}`)}`);
-        }
-
-        if (isInteractive()) {
-          try {
-            while (true) {
-              const action = await select({
-                message: '',
-                choices: [
-                  { name: 'Install in Teams', value: 'install' },
-                  { name: 'Open in Developer Portal', value: 'portal' },
-                  { name: 'Done', value: 'done' },
-                ],
-              });
-              if (action === 'done') break;
-              if (action === 'install') await openInBrowser(install);
-              if (action === 'portal') await openInBrowser(portal);
-            }
-          } catch (error) {
-            if (!(error instanceof Error && error.name === 'ExitPromptError')) throw error;
-          }
-        }
-      }
+      await runAppCreate(options);
     })
   );

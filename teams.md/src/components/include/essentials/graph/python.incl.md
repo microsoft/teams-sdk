@@ -14,10 +14,6 @@ N/A
 
 `app.graph`
 
-<!-- app-access-method -->
-
-to call the endpoint of your choice
-
 <!-- app-graph-example -->
 
 ```python
@@ -29,12 +25,21 @@ print(f"User Display Name: {user.display_name}")
 print(f"User Email: {user.mail}")
 print(f"User Job Title: {user.job_title}")
 ```
+:::tip
+You also have access to the `app_graph` object in the activity handler. This is equivalent to `app.graph`.
+:::
 
 <!-- user-graph-intro -->
 
-You can also access the graph using the user's token from within a message handler via the `user_graph` property.
+You can also access the graph using the user's token from within a message handler.
 
 <!-- user-graph-example -->
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="python-sdk-version" defaultValue="core">
+<TabItem value="legacy" label="SDK 2.0 (Legacy)">
 
 ```python
 @app.on_message
@@ -45,18 +50,34 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     print(f"User Email: {user.mail}")
     print(f"User Job Title: {user.job_title}")
 ```
+Here, the "user_graph" object is a scoped graph client for the user that sent the message.
 
-<!-- user-graph-object -->
+</TabItem>
+<TabItem value="core" label="SDK 2.1 (current)" default>
 
-`user_graph`
+Build the client from an OAuth flow's token, so it's always scoped to the connection that owns it.
 
-<!-- app-graph-in-handler -->
+```python
+from microsoft_teams.graph import get_graph_client
 
-`app_graph`
+graph = app.add_oauth_flow("graph")
 
-<!-- app-graph-reference -->
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    token = await graph.sign_in(ctx)
+    if token is None:
+        return  # OAuth card sent — resumes on the callback turn
 
-`app.graph`
+    client = get_graph_client(token)
+    user = await client.me.get()
+    print(f"User ID: {user.id}")
+    print(f"User Display Name: {user.display_name}")
+    print(f"User Email: {user.mail}")
+    print(f"User Job Title: {user.job_title}")
+```
+
+</TabItem>
+</Tabs>
 
 <!-- advanced-sections -->
 

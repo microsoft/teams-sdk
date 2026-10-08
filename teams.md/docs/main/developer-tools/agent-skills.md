@@ -123,5 +123,5 @@ Agent: I'll create an echo bot for you.
 ## Requirements
 
 - Teams Developer CLI installed (`npm install -g @microsoft/teams.cli`)
-- Node.js 20 or later
+- Node.js 22.12 or later
 - Microsoft 365 account with sideloading enabled

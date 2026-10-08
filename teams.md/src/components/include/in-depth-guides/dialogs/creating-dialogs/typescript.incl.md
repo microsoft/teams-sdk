@@ -5,7 +5,7 @@ To open a dialog, add a button to your Adaptive Card using `OpenDialogData`. Thi
 <!-- entry-point-code -->
 
 ```typescript
-import { cardAttachment, MessageActivity } from '@microsoft/teams.api';
+import { cardAttachment, MessageActivityInput } from '@microsoft/teams.api';
 import { App } from '@microsoft/teams.apps';
 import {
   AdaptiveCard,
@@ -36,7 +36,7 @@ app.on('message', async ({ send }) => {
       .withData(new OpenDialogData('multi_step_form'))
   );
 
-  await send(new MessageActivity('Enter this form').addCard('adaptive', card));
+  await send(new MessageActivityInput('Enter this form').addCard('adaptive', card));
 });
 ```
 

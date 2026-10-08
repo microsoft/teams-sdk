@@ -52,6 +52,8 @@ The `--yes` global flag skips interactive confirmation prompts (for CI/agent use
 
 Every command MUST support `--json` (boolean flag, marked `[OPTIONAL]`). Each command defines a typed output interface in its own file (e.g., `AppCreateOutput`). Use `outputJson()` from `src/utils/json-output.ts`. Guard all human output (`logger.info`, `outputCredentials`) with `if (!options.json)`. Skip interactive prompts in JSON mode — use defaults or require flags.
 
+When follow-up work is needed (the equivalent of a human-mode warning or tip), surface it in JSON as an optional boolean on the output interface (e.g., `needsReinstall`, `needsEndpoint`, `secretSkipped`) instead of printing to stderr. Only include the field when `true` (`...(flag ? { flag: true } : {})`) so the default output shape stays unchanged.
+
 ### Commander Patterns
 
 - Use Commander's built-in features for global flags and hooks.

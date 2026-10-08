@@ -13,10 +13,7 @@ app.on('signin.verify-state', async ({ send }) => {
   await send('You have successfully signed in!');
 });
 ```
-
-<!-- signin-event-name -->
-
-`signin.verify-state`
+You are not restricted to only replying to `message` activities. In the above example, the handler is listening to `signin.verify-state` events, which are sent when a user successfully signs in.
 
 <!-- streaming-example -->
 
@@ -30,6 +27,61 @@ app.on('message', async ({ activity, stream }) => {
 });
 ```
 
+<!-- streaming-pacing-details -->
+
+`stream.emit()` is fire and forget. It appends to a queue and returns immediately instead of awaiting the network, and a flush then drains the whole queue into one accumulated buffer and sends it as a single typing activity. When further chunks arrive while a send is already in flight, the next flush is scheduled 500ms later, which is what collapses a fast loop into roughly two sends per second. Chunks that arrive slower than a round trip are sent as they come, so the SDK never adds latency to a slow producer.
+
+Failed sends are retried for you with exponential backoff: up to 5 attempts, waiting 500ms, 1s, 2s, and 4s between them. This is a blind retry on transient failures rather than rate limit aware backoff, since the SDK does not read `Retry-After` or treat `429` specially. Terminal `403`s are deliberately excluded, so a stream that has already timed out or been cancelled is never retried back to life.
+
+<!-- streaming-handoff-example -->
+
+```typescript
+import { MessageActivityInput } from '@microsoft/teams.api';
+
+app.on('message', async ({ activity, send, stream }) => {
+  let opened: number | undefined;
+  let text = '';
+  let editing = false;
+  let messageId: string | undefined;
+  let lastEdit = 0;
+
+  for await (const chunk of runAgent(activity.text)) {
+    text += chunk;
+
+    // Phase 1: real streaming. The window opens on the first streamed chunk,
+    // not when the handler starts, so the clock starts here.
+    if (!editing && (opened === undefined || Date.now() - opened < 110_000)) {
+      opened ??= Date.now();
+      stream.emit(chunk);
+      continue;
+    }
+
+    // Hand off once, keeping the finalized message's id.
+    if (!editing) {
+      messageId = (await stream.close())?.id;
+      editing = true;
+    }
+
+    // Phase 2: plain edits on the same message. No two minute ceiling.
+    if (messageId && Date.now() - lastEdit > 3_000) {
+      await send(new MessageActivityInput(text).withId(messageId));
+      lastEdit = Date.now();
+    }
+  }
+
+  if (!editing) {
+    await stream.close();
+  } else if (messageId) {
+    await send(new MessageActivityInput(text).withId(messageId));
+  } else {
+    // close() published nothing, so send the buffered text rather than drop it.
+    await send(new MessageActivityInput(text));
+  }
+});
+```
+
+Setting an id on an outgoing activity routes the send through the update path, so each edit replaces the finalized message instead of posting a new one.
+
 <!-- mention-method-name -->
 
 `addMention`
@@ -37,8 +89,10 @@ app.on('message', async ({ activity, stream }) => {
 <!-- mention-example -->
 
 ```typescript
+import { MessageActivityInput } from '@microsoft/teams.api';
+
 app.on('message', async ({ send, activity }) => {
-  await send(new MessageActivity('hi!').addMention(activity.from));
+  await send(new MessageActivityInput('hi!').addMention(activity.from));
 });
 ```
 
@@ -49,24 +103,21 @@ app.on('message', async ({ send, activity }) => {
 <!-- targeted-send-example -->
 
 ```typescript
-import { MessageActivity } from '@microsoft/teams.api';
+import { MessageActivityInput } from '@microsoft/teams.api';
 
 app.on('message', async ({ send, activity }) => {
   // Using withRecipient with isTargeted=true explicitly targets the specified recipient
   await send(
-    new MessageActivity('This message is only visible to you!')
+    new MessageActivityInput('This message is only visible to you!')
       .withRecipient(activity.from, true)
   );
 });
 ```
 
-<!-- targeted-preview-note -->
-N/A
-
 <!-- prompt-preview-proactive-example -->
 
 ```typescript
-import { Account, MessageActivity } from '@microsoft/teams.api';
+import { Account, MessageActivityInput } from '@microsoft/teams.api';
 
 const targetedMessageId = '1772050244572';
 const conversationId = '19:groupchat-id@thread.v2';
@@ -75,7 +126,7 @@ const userAccount: Account = {
   name: 'Adele Vance',
 };
 
-const targetedMessage = new MessageActivity('Here is the result!')
+const targetedMessage = new MessageActivityInput('Here is the result!')
   .addTargetedMessageInfo(targetedMessageId)
   .withRecipient(userAccount, true);
 
@@ -83,7 +134,7 @@ const targetedMessage = new MessageActivity('Here is the result!')
 await app.send(conversationId, targetedMessage);
 
 // OR public reply (everyone sees it)
-const publicMessage = new MessageActivity('Here is the result!')
+const publicMessage = new MessageActivityInput('Here is the result!')
   .addTargetedMessageInfo(targetedMessageId);
 await app.send(conversationId, publicMessage);
 ```
@@ -145,25 +196,25 @@ app.on('message', async ({ quote }) => {
 <!-- quoted-replies-builder-example -->
 
 ```typescript
-import { MessageActivity } from '@microsoft/teams.api';
+import { MessageActivityInput } from '@microsoft/teams.api';
 
 const parentMessageId = '1772050244572';
 const firstMessageId = '1772050244573';
 const secondMessageId = '1772050244574';
 
 // Single quote with response below it
-let msg = new MessageActivity()
+let msg = new MessageActivityInput()
   .addQuote(parentMessageId, 'Here is my response');
 await app.send(conversationId, msg);
 
 // Multiple quotes with interleaved responses
-msg = new MessageActivity()
+msg = new MessageActivityInput()
   .addQuote(firstMessageId, 'response to first')
   .addQuote(secondMessageId, 'response to second');
 await app.send(conversationId, msg);
 
 // Grouped quotes — omit response to group quotes together
-msg = new MessageActivity('see below for previous messages')
+msg = new MessageActivityInput('see below for previous messages')
   .addQuote(firstMessageId)
   .addQuote(secondMessageId, 'response to both');
 await app.send(conversationId, msg);

@@ -6,7 +6,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     await ctx.send("Hello! I'll react to your message.")
 
     # Add a reaction to the incoming message
-    await ctx.api.reactions.add(
+    await ctx.api.conversations.add_reaction(
         ctx.activity.conversation.id,
         ctx.activity.id,
         'like'
@@ -21,7 +21,7 @@ import asyncio
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     # First, add a reaction
-    await ctx.api.reactions.add(
+    await ctx.api.conversations.add_reaction(
         ctx.activity.conversation.id,
         ctx.activity.id,
         'heart'
@@ -29,7 +29,7 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
     # Wait a bit, then remove it
     await asyncio.sleep(2)
-    await ctx.api.reactions.delete(
+    await ctx.api.conversations.delete_reaction(
         ctx.activity.conversation.id,
         ctx.activity.id,
         'heart'

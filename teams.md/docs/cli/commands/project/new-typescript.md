@@ -11,14 +11,14 @@ Create a new TypeScript Teams app
 ## Usage
 
 ```
-teams project new typescript <name> [options]
+teams project new typescript [name] [options]
 ```
 
 ## Arguments
 
 | Argument | Description | Required |
 |----------|-------------|----------|
-| `name` | App name | Yes |
+| `name` | Project name | No |
 
 ## Options
 

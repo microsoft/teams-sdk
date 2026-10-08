@@ -250,3 +250,51 @@ app.on('card.action', async ({ activity, send }) => {
 :::note
 The `data` values are not typed and come as `any`, so you will need to cast them to the correct type in this case.
 :::
+
+<!-- dynamic-search-card -->
+
+```typescript
+import { IAdaptiveCard } from '@microsoft/teams.cards';
+
+const card: IAdaptiveCard = {
+  type: 'AdaptiveCard',
+  version: '1.5',
+  body: [
+    {
+      type: 'Input.ChoiceSet',
+      id: 'game',
+      label: 'Game',
+      placeholder: 'Search for a game',
+      style: 'filtered',
+      choices: [],
+      'choices.data': { type: 'Data.Query', dataset: 'nintendoGames' },
+    },
+  ],
+  actions: [
+    { type: 'Action.Execute', title: 'Submit', data: { action: 'submit_game' } },
+  ],
+};
+```
+
+<!-- dynamic-search-handler -->
+
+```typescript
+import { App } from '@microsoft/teams.apps';
+// ...
+
+const GAMES = ['Super Mario Odyssey', 'Metroid Dread', 'Splatoon 3'];
+
+app.on('card.search', async ({ activity }) => {
+  const query = activity.value.queryText?.toLowerCase() ?? '';
+  const results = GAMES.filter((g) => g.toLowerCase().includes(query)).map(
+    (g) => ({ title: g, value: g })
+  );
+
+  return {
+    statusCode: 200,
+    type: 'application/vnd.microsoft.search.searchResponse',
+    value: { results },
+  };
+});
+```
+
