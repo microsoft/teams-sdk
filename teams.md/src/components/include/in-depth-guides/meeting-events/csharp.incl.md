@@ -29,13 +29,16 @@ app.OnMeetingStart(async (context, cancellationToken) =>
                 Weight = TextWeight.Bolder
             }
         },
-        Actions = new List<Microsoft.Teams.Cards.Action>
-        {
-            new OpenUrlAction(activity.JoinUrl)
+        // Meetings held inside a channel have no join URL, so there is no action to offer.
+        Actions = activity.JoinUrl is null
+            ? new List<Microsoft.Teams.Cards.Action>()
+            : new List<Microsoft.Teams.Cards.Action>
             {
-                Title = "Join the meeting",
+                new OpenUrlAction(activity.JoinUrl)
+                {
+                    Title = "Join the meeting",
+                }
             }
-        }
     };
 
     await context.Send(card, cancellationToken);
@@ -69,13 +72,16 @@ teams.OnMeetingStart(async (context, cancellationToken) =>
                 Weight = TextWeight.Bolder
             }
         },
-        Actions = new List<Microsoft.Teams.Cards.Action>
-        {
-            new OpenUrlAction(activity.JoinUrl)
+        // Meetings held inside a channel have no join URL, so there is no action to offer.
+        Actions = activity.JoinUrl is null
+            ? new List<Microsoft.Teams.Cards.Action>()
+            : new List<Microsoft.Teams.Cards.Action>
             {
-                Title = "Join the meeting",
+                new OpenUrlAction(activity.JoinUrl)
+                {
+                    Title = "Join the meeting",
+                }
             }
-        }
     };
 
     TeamsAttachment attachment = TeamsAttachment.CreateBuilder()

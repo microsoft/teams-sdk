@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node.js** 20 or later
+- **Node.js** 22.12 or later
 - **npm** (comes with Node.js)
 - **Azure CLI** (`az`) — only needed for Azure bot operations (optional)
 

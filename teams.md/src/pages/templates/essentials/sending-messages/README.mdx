@@ -29,13 +29,47 @@ This shows an example of sending a text message. Additionally, you are able to s
 
 You may also stream messages to the user which can be useful for long messages, or AI generated messages. The SDK makes this simple for you by providing a `stream` function which you can use to send messages in chunks.
 
+Streaming changes how the response arrives, not how fast your agent produces it. Text appears incrementally as it is generated, so the user sees progress rather than a blank screen, and you can show a thinking or status indicator before any real output exists. A streamed response is also stoppable: when the user stops it, the SDK surfaces the cancellation to your handler so you can abandon the remaining work. The gain is in perceived time to first output, which is why streaming suits long or model generated replies and adds little to a short one you could simply send.
+
 <LanguageInclude section="streaming-example" />
 
 :::note
-Streaming is currently only supported in 1:1 conversations, not group chats or channels
+Streaming is currently only supported in 1:1 conversations, not group chats or channels. Teams also supports only one concurrent streaming response per chat at a time.
+
+Every inbound activity gets its own stream, and the SDK closes that stream at the end of the turn. It does not serialize turns, though, and handlers can run concurrently, so a second activity can arrive while the first is still streaming. Streaming therefore brings message handling concurrency concerns that do not exist when you just send a reply, and resolving them may be implemented in your custom code by serializing turns per conversation or by finalizing the in-flight stream before starting the next one.
 :::
 
 ![Animated image showing agent response text incrementally appearing in the chat window.](/screenshots/streaming-chat.gif)
+
+### Chunk pacing and retries
+
+You do not need to throttle your own chunks. Rapid <LanguageInclude content={{"typescript": "`stream.emit()`", "python": "`ctx.stream.emit()`", "csharp": "`writer.AppendResponseAsync()`"}} /> calls are coalesced and spaced roughly 500 milliseconds apart, so a token-by-token loop becomes a couple of network calls per second rather than one call per token. Every streamed chunk carries the full text accumulated so far rather than just the newest delta, so collapsing several chunks into one send never loses content. Wrapping your own throttle or sleep around each chunk mostly slows the response down, since it would be pacing a path that is already paced.
+
+<LanguageInclude section="streaming-pacing-details" />
+
+None of this extends the [two minute window](#the-two-minute-streaming-limit), which runs on wall clock from the first chunk. Pacing keeps a stream under the streaming API's rate limit, but does not buy more time. It also applies only to the streaming path: the plain activity updates go out exactly when they are sent, so that cadence stays yours to manage.
+
+### The two minute streaming limit
+
+Teams keeps a message stream open for two minutes, measured from its first chunk. After that the service rejects further chunks for that message with a `403` and the [error code](https://learn.microsoft.com/en-us/microsoftteams/platform/bots/streaming-ux#error-codes) `ContentStreamNotAllowed` (`Content stream finished due to exceeded streaming time.`).
+
+However, hitting the limit does not mean the response is lost. The SDK marks the stream as timed out and stops pushing chunks, but it keeps buffering everything your agent produces, and <LanguageInclude content={{"typescript": "`stream.close()`", "python": "`ctx.stream.close()`", "csharp": "`writer.FinalizeResponseAsync()`"}} /> finalizes by updating the original message in place with the full buffered text. 
+
+:::warning
+The two minute clock starts on the **first streamed chunk**, and an informative update (<LanguageInclude content={{"typescript": "`stream.update()`", "python": "`ctx.stream.update()`", "csharp": "`writer.SendInformativeUpdateAsync()`"}} />) is a chunk. An agent that posts a status update immediately and then thinks for three minutes has spent its entire window before emitting a single token. When the slow work happens before you have any output, do that work first and open the stream once real content starts.
+:::
+
+### Running longer than two minutes
+
+To outlast the window, hand off before it closes: stream normally, then finalize the stream and continue the response growing with plain activity updates. No streaming window applies to plain updates, so the answer can keep arriving for as long as your agent runs.
+
+<LanguageInclude section="streaming-handoff-example" />
+
+Plain updates are subject to ordinary activity throttling rather than the streaming path's allowance, so pace them at a cadence measured in seconds rather than sending one per token.
+
+### Starting another streamed message
+
+Calling <LanguageInclude content={{"typescript": "`stream.emit()`", "python": "`ctx.stream.emit()`", "csharp": "`writer.AppendResponseAsync()`"}} /> again after the stream has been closed posts a second, separate message in the conversation by reusing the SDK object in your custom handler; it clears its buffered state and starts the new message. The second message gets its own stream id, so it also gets its own fresh two minute window. The message already finalized stays finalized and is not reopened or extended. Use this when your agent has a genuinely separate second answer to stream, not as a way to give one response more time.
 
 ## @Mention
 

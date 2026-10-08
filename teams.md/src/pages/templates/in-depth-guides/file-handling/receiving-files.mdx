@@ -9,11 +9,11 @@ suppressLanguageIncludeWarning: true
 
 # Receiving Files
 
-Teams users can send files to agents by attaching them to chat messages. When users send files to an agent in 1:1 chat, they arrive as part of the context of the received message activity. <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> provides lazy access to the metadata and bytes of each attached file.
+Teams users can send files to agents by attaching them to chat messages. When users send files to an agent in 1:1 chat, or to an agentic user in a group chat or channel, they arrive as part of the context of the received message activity. <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> provides lazy access to the metadata and bytes of each attached file.
 
-An attached file is not delivered inline with the message. Teams stores the file in the sender's OneDrive or SharePoint site and hands your agent a small metadata attachment describing it, including a short-lived, pre-authorized URL in personal scopes for traditional bots, while agentic users must make a Graph call via the `contentUrl`. Reading the contents means fetching the bytes from either URL over the network, so the download itself is deferred until explicitly called.
+An attached file is not delivered inline with the message. Teams stores the file in OneDrive or SharePoint and hands your agent a small metadata attachment describing it, including a short-lived, pre-authorized URL in personal scopes for traditional bots, while agentic users must make a Graph call via the `contentUrl`. Reading the contents means fetching the bytes from either URL over the network, so the download itself is deferred until explicitly called.
 
-This API covers file downloads in **personal (1:1) chats**. Today, **channels** and **group chats** are not explicitly supported by this API. See [Conversation scope support](#conversation-scope-support).
+This API covers file downloads in **personal (1:1) chats** for every agent. Agentic users can also download files in **group chats** and **channels** starting in version 2.2.0; traditional bots don't receive files there. See [Conversation scope support](#conversation-scope-support).
 
 ## Enable file support in your manifest for traditional bots
 
@@ -29,9 +29,9 @@ Teams only offers users the option to attach a file in 1:1 with a bot when your 
 ]
 ```
 
-## Enable file support on the blueprint for Agentic Users
+## Enable file support on the blueprint for agentic users
 
-Agentic Users need a Graph file permission consented on the agent's blueprint by an administrator in order to access files. See [inheritable permissions](https://learn.microsoft.com/entra/agent-id/concept-inheritable-permissions) for how an agent acquires those scopes.
+Agentic users need a Graph file permission consented on the agent's blueprint by an administrator in order to access files. See [inheritable permissions](https://learn.microsoft.com/entra/agent-id/concept-inheritable-permissions) for how an agent acquires those scopes.
 
 ## Access attached files
 
@@ -94,9 +94,9 @@ Byte retrieval can fail for a few well-defined reasons. All of them share a comm
 | **File URL expired** | The short-lived, pre-authorized download link lapsed before the bytes were fetched. | `reason`: <br/> **first fetch**, the link had already lapsed so no bytes were retrieved; <br /> **re-read**, an earlier download succeeded, but a later read through the same handle came after expiry. Avoid this by downloading once and reusing the downloaded file. |
 | **No Graph credential** | The Graph read an agentic user's file needs was ruled out before the request, because no credential was available. | `actor`<sup><a href="#actor">2</a></sup>: the identity a credential was being resolved for. <br /> `cause`: why acquiring the token failed, when it failed rather than simply returning nothing. |
 | **File access denied** | The Graph read an agentic user's file needs was refused by the storage service. | `status`: `401` when the token itself was rejected, `403` when the identity lacks the grant<sup><a href="#access-denied">1</a></sup>. <br/> `actor`<sup><a href="#actor">2</a></sup>: the identity that was refused. <br /> `details`: what the service said, if anything. |
-| **File scope not supported** | Download was called on a file from a conversation scope this API does not yet support, meaning anything other than personal (1:1). | `scope`: the conversation scope. |
+| **File scope not supported** | Download was called on a file from a conversation scope this API does not yet support, meaning anything other than personal, group chat, or channel for an agentic user. A traditional bot receives files only in personal (1:1) chats. | `scope`: the conversation scope. |
 
-<sup id="access-denied">1</sup> A **`403`** deliberately collapses causes the SDK cannot differentiate: an unconsented permission, a file the identity was never granted, and an item that does not exist all arrive the same way. There is no separate "file not found" case to branch on; `details` carries the service's own text for diagnosis. A `401` is a different problem, which is why the status is reported rather than folded in: the token was rejected, so the fix is the token rather than the sharing.
+<sup id="access-denied">1</sup> A **`403`** deliberately collapses causes the SDK cannot differentiate: an unconsented permission, a file the identity was never granted, and an item that does not exist all arrive the same way. There is no separate "file not found" case to branch on; `details` carries the service's own text for diagnosis. In a standard channel, a file picked from OneDrive or SharePoint, rather than uploaded, can be refused this way, because Teams does not grant the agent access to the picked item (see [Group chats and channels](#group-chats-and-channels)). A `401` is a different problem, which is why the status is reported rather than folded in: the token was rejected, so the fix is the token rather than the sharing.
 
 <sup id="actor">2</sup> `actor` names which identity the read was attempted as. The SDK chooses it, and today there are two:
 
@@ -121,17 +121,37 @@ Attachments that are **not** files (inline images, Adaptive Cards, mentions, lin
 
 ## Conversation scope support
 
-Listing with <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> surfaces the files Teams delivers on the incoming activity. Today that is the **personal (1:1)** chat path.
+Listing with <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> surfaces the files Teams delivers on the incoming activity. What gets delivered and downloaded depends on the conversation scope and on whether your agent is a traditional bot or an agentic user.
 
-In **channels**, the attached file isn't delivered to a traditional bot on the activity (the attachment is dropped), so <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> doesn't surface it. Group-chat behavior varies by how the file is stored. Agentic Users will have attachments on the activity but are not explicitly supported by the API today. 
-
-When <LanguageInclude content={{"typescript": "`download()`, `stream()`, `text()`, or `saveAs()`", "python": "`download()`, `stream()`, `text()`, or `save_as()`", "csharp": "`DownloadAsync()`, `StreamAsync()`, `TextAsync()`, or `SaveAsAsync()`"}} /> is called on a surfaced file whose scope isn't personal (1:1), it raises the `file-scope-not-supported` error.
+### Personal chats
 
 Downloading in personal (1:1) chats depends on the URL the platform sends, not on who is reading. A traditional bot receives a short-lived, pre-authorized download link, which the SDK fetches directly with no token attached.
 
 An **agentic user** receives no pre-authorized link. Its attachment data carries only a `contentUrl` locating the item in OneDrive or SharePoint, so the SDK resolves the bytes through Microsoft Graph's `/shares` endpoint using the agent's own credential. The call behavior is unchanged from above; only the downloading route underneath differs.
 
-If an Agentic User does not have sufficient permissions, the read fails with the file-retrieval error, which names the identity that was refused rather than reporting the file as missing.
+If an agentic user has no usable Graph credential, the read fails with <LanguageInclude content={{"typescript": "`FileCredentialError`", "python": "`FileCredentialError`", "csharp": "`FileCredentialException`"}} />; if the storage service refuses the read, for example because the file isn't shared with the agent, it fails with <LanguageInclude content={{"typescript": "`FileAccessError`", "python": "`FileAccessError`", "csharp": "`FileAccessException`"}} /> (see [Handle errors](#handle-errors)). Both name the identity involved rather than reporting the file as missing.
+
+### Group chats and channels
+
+:::info[Coming Soon]
+Receiving files as an agentic user in group chats and channels is planned for the next SDK release, version 2.2.0.
+:::
+
+In **group chats** and **channels**, the attachment has the same shape, carrying only a `contentUrl`. The SDK reads it through Graph `/shares` using the agent's own credential. Your handler code is the same too: call <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> and then <LanguageInclude content={{"typescript": "`download()`", "python": "`download()`", "csharp": "`DownloadAsync()`"}} />, and the SDK chooses the agent's credential.
+
+Outside personal chats, only messages that @mention the agent reach it, so a file posted without an @mention is never delivered.
+
+A file can be attached by uploading it from the device or by picking it from OneDrive or SharePoint. Whether each kind downloads depends on the conversation:
+
+- In **group chats**, both kinds download.
+- In **private channels**, both kinds download. A picked file is delivered as a copy in the channel's site.
+- In **non-private channels**, files uploaded from the device download, but a picked file can be refused, because Teams does not grant the agent access to the picked item. The refusal surfaces as <LanguageInclude content={{"typescript": "`FileAccessError`", "python": "`FileAccessError`", "csharp": "`FileAccessException`"}} /> with a `403` status (see [Handle errors](#handle-errors)).
+
+The SDK reads each file as the agent, so a download succeeds only when the agent already has access to that file. A sharing link that doesn't name the agent, such as an "Anyone" link or an organization-wide link, doesn't give it that access.
+
+Files attached to a reply in a channel thread follow the same rules as files on a new post.
+
+A traditional bot cannot receive files in group chats or channels: the attached file isn't delivered to it on the activity, so <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> doesn't surface it.
 
 ## Next steps
 

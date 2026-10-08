@@ -38,13 +38,13 @@
   },
   "homepage": "https://microsoft.github.io/teams-sdk/cli/",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "dependencies": {
-    "@azure/msal-node": "^5.2.2",
+    "@azure/msal-node": "^5.4.0",
     "@azure/msal-node-extensions": "^5.0.4",
     "@inquirer/prompts": "^7.2.1",
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "ajv": "^8.20.0",
     "ajv-draft-04": "^1.0.0",
     "ajv-formats": "^3.0.1",

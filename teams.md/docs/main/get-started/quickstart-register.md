@@ -16,7 +16,7 @@ Install the [`teams-dev` skill](/developer-tools/agent-skills) in Claude Code, G
 
 ## Prerequisites
 
-- Node.js 20 or later
+- Node.js 22.12 or later
 - An M365 account with **custom app upload (sideloading) enabled** on the tenant. Step 2 will check this.
 - A public HTTPS tunnel pointing at your local server (e.g. [DevTunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview), [ngrok](https://ngrok.com/)). Start it before step 4 — see [Local Tunnels](/developer-tools/local-tunnels) if you need setup steps.
 
