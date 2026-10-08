@@ -1,8 +1,9 @@
 import { input, select } from '@inquirer/prompts';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import pc from 'picocolors';
 import {
   type BotScope,
+  isBotCommunicationApiAvailable,
   normalizeAppMetadata,
   validateAppMetadata,
   validateAppMetadataField,
@@ -21,7 +22,9 @@ import { getConfig } from '../../utils/config.js';
 import { ensureAz, runAz } from '../../utils/az.js';
 import { resolveSubscription, resolveResourceGroup, ensureTenantMatch } from '../../utils/az-prompts.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
+import { BOT_COMMUNICATION_BASE_URL, DEV_API_ENV_VAR } from '../../utils/tdp-host.js';
 import { openInBrowser, printLinkBanner } from '../../utils/browser.js';
+import { parseMessagingMode, promptMessagingMode } from './messaging-mode.js';
 import {
   collectCreateAdvancedOptions,
   isSignInAudienceOption,
@@ -43,6 +46,8 @@ export interface AppCreateOutput {
   installLink: string;
   portalLink: string;
   botLocation: 'teams-managed' | 'azure';
+  socketMode: boolean;
+  socketModeError?: string;
   secretSkipped?: boolean;
   credentials?: {
     CLIENT_ID: string;
@@ -55,6 +60,7 @@ export interface AppCreateOutput {
 export interface CreateOptions {
   name?: string;
   endpoint?: string;
+  messagingMode?: string;
   serviceManagementReference?: string;
   signInAudience?: string;
   env?: string;
@@ -131,6 +137,36 @@ async function prepareAppCreate(
     throw new CliError('VALIDATION_CONFLICT', 'Cannot specify both --azure and --teams-managed.');
   }
 
+  let location: BotLocation;
+  if (options.azure) location = 'azure';
+  else if (options.teamsManaged) location = 'tm';
+  else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
+
+  const messagingMode =
+    options.messagingMode !== undefined ? parseMessagingMode(options.messagingMode) : undefined;
+  if (messagingMode === 'socket') {
+    if (options.endpoint !== undefined) {
+      throw new CliError(
+        'VALIDATION_CONFLICT',
+        'Cannot specify both --messaging-mode socket and --endpoint.'
+      );
+    }
+    if (!isBotCommunicationApiAvailable()) {
+      throw new CliError(
+        'VALIDATION_MISSING',
+        'Socket mode is not available in this environment yet.',
+        `Set ${DEV_API_ENV_VAR}=1 to use the dev-int Teams Developer Portal.`
+      );
+    }
+    if (location === 'azure') {
+      throw new CliError(
+        'VALIDATION_CONFLICT',
+        'Socket mode is only supported for Teams-managed bots.',
+        'Use --teams-managed.'
+      );
+    }
+  }
+
   const serviceManagementReference = options.serviceManagementReference?.trim();
   let signInAudienceOption = parseSignInAudienceOption(options.signInAudience ?? 'multipleOrgs');
   const earlyColorIcon = options.colorIcon ? readAndValidateIcon(options.colorIcon, 192) : undefined;
@@ -158,17 +194,30 @@ async function prepareAppCreate(
     throw new CliError('VALIDATION_MISSING', 'App name cannot be empty.');
   }
 
-  const endpoint =
-    options.endpoint ??
-    (interactive && !hasFlags
-      ? (await input({
-          message: 'Bot messaging endpoint URL (leave empty to skip):',
-          validate: (value) => {
-            if (!value.trim()) return true;
-            return validateEndpoint(value.trim()) ?? true;
-          },
-        })) || undefined
-      : undefined);
+  let socketMode = messagingMode === 'socket';
+  if (
+    messagingMode === undefined &&
+    options.endpoint === undefined &&
+    interactive &&
+    !hasFlags &&
+    location === 'tm' &&
+    isBotCommunicationApiAvailable()
+  ) {
+    socketMode = (await promptMessagingMode()) === 'socket';
+  }
+
+  const endpoint = socketMode
+    ? undefined
+    : (options.endpoint ??
+      (interactive && !hasFlags
+        ? (await input({
+            message: 'Messaging endpoint URL (leave empty to skip):',
+            validate: (value) => {
+              if (!value.trim()) return true;
+              return validateEndpoint(value.trim()) ?? true;
+            },
+          })) || undefined
+        : undefined));
 
   const shouldPromptForEnvPath =
     !runOptions.suppressCredentialOutput && interactive && !hasFlags && !options.json;
@@ -249,11 +298,6 @@ async function prepareAppCreate(
       }
     : undefined;
 
-  let location: BotLocation;
-  if (options.azure) location = 'azure';
-  else if (options.teamsManaged) location = 'tm';
-  else location = ((await getConfig('default-bot-location')) as BotLocation) ?? 'tm';
-
   let azureContext: AzureContext | undefined;
   if (location === 'azure') {
     const account = await getAccount();
@@ -304,6 +348,7 @@ async function prepareAppCreate(
     summaryLines.push(['Resource group', azureContext.resourceGroup]);
   }
   if (normalizedEndpoint) summaryLines.push(['Endpoint', normalizedEndpoint]);
+  if (socketMode) summaryLines.push(['Messaging mode', 'Sockets']);
   if (normalizedDescriptionOpts?.short) summaryLines.push(['Description', normalizedDescriptionOpts.short]);
   if (scopeChoices && scopeChoices.length > 0) summaryLines.push(['Scopes', scopeChoices.join(', ')]);
   if (normalizedDeveloperOpts?.name) summaryLines.push(['Developer', normalizedDeveloperOpts.name]);
@@ -315,6 +360,7 @@ async function prepareAppCreate(
   const appInput: AppCreateInput = {
     name: normalizedName,
     endpoint: normalizedEndpoint,
+    socketMode,
     serviceManagementReference,
     signInAudience: SIGN_IN_AUDIENCE_BY_OPTION[signInAudienceOption],
     generateSecret,
@@ -360,6 +406,8 @@ function toAppCreateOutput(result: AppCreateResult, envPath: string | undefined)
     installLink: result.installLink,
     portalLink: result.portalLink,
     botLocation: result.botLocation,
+    socketMode: result.socketMode,
+    ...(result.socketModeError && { socketModeError: result.socketModeError }),
     ...(result.secretSkipped && { secretSkipped: true }),
     ...(envPath ? { credentialsFile: envPath } : { credentials: result.credentials }),
   };
@@ -390,6 +438,13 @@ async function renderAppCreateResult(
   logger.info(`${pc.dim('Bot ID:')} ${result.botId}`);
   if (result.endpoint) {
     logger.info(`${pc.dim('Endpoint:')} ${result.endpoint}`);
+  }
+  if (result.socketMode) {
+    logger.info(`${pc.dim('Messaging mode:')} Sockets`);
+  }
+  if (result.socketModeError) {
+    logger.warn(pc.yellow(`\nSocket mode was not enabled: ${result.socketModeError}`));
+    logger.warn(`  To retry, run: ${pc.cyan(`teams app update ${result.teamsAppId} --messaging-mode socket`)}`);
   }
   logger.info('');
   printLinkBanner('Install in Teams', result.installLink);
@@ -428,7 +483,13 @@ async function renderAppCreateResult(
 export const appCreateCommand = new Command('create')
   .description('Create a new Teams app with bot')
   .option('-n, --name <name>', 'App/bot name')
-  .option('-e, --endpoint <url>', '[OPTIONAL] Bot messaging endpoint URL')
+  .option('-e, --endpoint <url>', '[OPTIONAL] Messaging endpoint URL')
+  .addOption(
+    new Option(
+      '--messaging-mode <mode>',
+      '[OPTIONAL] How Teams delivers messages: socket or http (socket requires a Teams-managed bot)'
+    ).hideHelp(BOT_COMMUNICATION_BASE_URL === undefined)
+  )
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')
   .option('--env-file <path>', '[OPTIONAL] Alias for --env')
   .option('--no-secret', '[OPTIONAL] Skip client secret generation (for managed identity or federated credentials)')

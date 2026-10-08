@@ -1,6 +1,7 @@
 import { Configuration, LogLevel } from '@azure/msal-node';
 import envPaths from 'env-paths';
 import { logger } from '../utils/logger.js';
+import { TDP_HOST } from '../utils/tdp-host.js';
 
 // Shared public client ID for CLI auth
 const CLIENT_ID = '7ea7c24c-b1f6-4a20-9d11-9ae12e9e7ac0';
@@ -31,4 +32,4 @@ export const loginScopes: string[] = [];
 
 // On-demand scopes
 export const graphScopes = ['https://graph.microsoft.com/Application.ReadWrite.All'];
-export const teamsDevPortalScopes = ['https://dev.teams.microsoft.com/AppDefinitions.ReadWrite'];
+export const teamsDevPortalScopes = [`${TDP_HOST}/AppDefinitions.ReadWrite`];
