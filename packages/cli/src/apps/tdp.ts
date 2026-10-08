@@ -2,8 +2,7 @@ import type { AadApp } from './graph.js';
 import { apiFetch } from '../utils/http.js';
 import { invalidateAppDetails } from './app-details-cache.js';
 import { getCachedBot, setCachedBot, invalidateBot, type BotResource } from './bot-cache.js';
-
-const TDP_BASE_URL = 'https://dev.teams.microsoft.com/api';
+import { TDP_BASE_URL } from '../utils/tdp-host.js';
 
 export type SignInAudience = 'AzureADMyOrg' | 'AzureADMultipleOrgs';
 
