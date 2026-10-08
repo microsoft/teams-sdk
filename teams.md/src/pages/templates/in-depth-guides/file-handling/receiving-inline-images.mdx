@@ -1,0 +1,45 @@
+---
+sidebar_position: 3
+title: 'Receiving Inline Images'
+sidebar_label: 'Receiving Inline Images'
+summary: Receive images pasted into Teams messages, identify their attachments, and download their bytes with the authenticated HTTP client.
+languages: ['python', 'typescript', 'csharp']
+suppressLanguageIncludeWarning: true
+---
+
+# Receiving Inline Images
+
+When a user pastes an image into the Teams compose box, the image does not arrive inside <LanguageInclude content={{"typescript": "`activity.text`", "python": "`activity.text`", "csharp": "`Activity.Text`"}} />. Teams sends it as an attachment on the inbound message activity.
+
+Inline image attachments are distinct from files attached through the compose box. They do not use the `file.download.info` content type and are not surfaced by <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} />.
+
+## Understand the attachment shape
+
+An inbound message with an inline image typically contains two related attachments:
+
+```json
+{
+  "attachments": [
+    {
+      "contentType": "image/png",
+      "contentUrl": "https://.../v3/attachments/{id}/views/original"
+    },
+    {
+      "contentType": "text/html",
+      "content": "<p><img src=\"https://.../objects/{id}/views/imgo\" ...></p>"
+    }
+  ]
+}
+```
+
+Use the `image/*` attachment as the canonical source of the image. Its `contentUrl` points to the downloadable image bytes.
+
+The `text/html` attachment preserves layout context, including where the image appeared among the message's text and other content. Do not use the HTML attachment's `<img src>` URL to download the image.
+
+## Download the image
+
+The image attachment's `contentUrl` is authenticated rather than public. Fetch it with the app's authenticated HTTP client:
+
+<LanguageInclude section="download-image" />
+
+The example buffers the complete image in memory. Keep the byte representation when your downstream API accepts it, or convert it to base64 when required by an image-processing or model API.

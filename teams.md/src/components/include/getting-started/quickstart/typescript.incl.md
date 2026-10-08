@@ -1,6 +1,6 @@
 <!-- prerequisites -->
 
-- **Node.js** v.20 or higher. Install or upgrade from [nodejs.org](https://nodejs.org/).
+- **Node.js** v.22.12 or higher. Install or upgrade from [nodejs.org](https://nodejs.org/).
 
 <!-- create-command -->
 
@@ -41,7 +41,7 @@ npm run dev
 > quote-agent@0.0.0 dev
 > tsx watch -r dotenv/config src/index.ts
 
-[WARN] @teams/app No credentials configured and skipAuth is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set skipAuth: true for local development.
+[WARN] @teams/app No credentials configured and dangerouslyAllowUnauthenticatedRequests is not enabled. All incoming requests will be rejected. Configure client authentication to securely receive messages, or set dangerouslyAllowUnauthenticatedRequests: true for local development.
 [INFO] @teams/app listening on port 3978 🚀
 ```
 
@@ -49,14 +49,14 @@ npm run dev
 
 The HTTP server is now listening on port `3978`. To test your agent locally without sideloading it into Teams, use the **[Microsoft 365 Agents Playground](/developer-tools/agents-playground)**.
 
-The playground sends unauthenticated requests, so a default `new App()` will reject them (you'll see the `No credentials configured` warning above). For local testing, enable `skipAuth` so your agent accepts them:
+The playground sends unauthenticated requests, so a default `new App()` will reject them (you'll see the `No credentials configured` warning above). For local testing, enable `dangerouslyAllowUnauthenticatedRequests` so your agent accepts them:
 
 ```typescript title="src/index.ts"
-const app = new App({ skipAuth: true });
+const app = new App({ dangerouslyAllowUnauthenticatedRequests: true });
 ```
 
 :::warning
-Only use `skipAuth` for local development — never in production, as it disables inbound request authentication.
+Only use `dangerouslyAllowUnauthenticatedRequests` for local development — never in production, as it disables inbound request authentication.
 :::
 
 Install the playground globally:
@@ -80,6 +80,7 @@ The playground opens at [http://localhost:56150](http://localhost:56150). Send a
 ```sh
 npm i @microsoft/teams.apps
 ```
+Then initialize the Teams app with your existing server:
 
 <!-- manual-code -->
 
@@ -109,6 +110,7 @@ await app.initialize();
 // Start your server as usual
 server.listen(3978);
 ```
+`app.initialize()` registers the Teams endpoint on your server without starting a new one — you keep full control of your server lifecycle.
 
 <!-- manual-more -->
 

@@ -1,0 +1,55 @@
+---
+sidebar_position: 10
+title: State Management
+sidebar_label: 🗄️ State Management
+summary: Store and retrieve conversation and user state across activity turns with the Teams SDK.
+languages: ['typescript', 'python', 'csharp']
+---
+
+# State Management
+
+:::info[SDK 2.1]
+Built-in state management is a **Teams SDK 2.1** feature.
+:::
+
+The Teams SDK provides built-in, per-turn state for storing conversation and user data across activities. State is loaded before each activity handler runs, saved automatically after the turn, and exposed through <LanguageInclude content={{"typescript": "`ctx.state`", "python": "`ctx.state`", "csharp": "`context.State`"}} />.
+
+## Setup
+
+State is disabled by default. Enable it with <LanguageInclude content={{"typescript": "the `state: true` app option", "python": "the `state=True` app option", "csharp": "`UseState()`"}} />:
+
+<LanguageInclude section="setup-example" />
+
+Without a dedicated provider, state uses <LanguageInclude content={{"typescript": "the Teams SDK's process-local, in-memory `LocalStorage` implementation", "python": "the Teams SDK's process-local, in-memory `LocalStorage` implementation", "csharp": "the in-memory `IDistributedCache` implementation"}} />. This is useful for local development, but values are lost when the process restarts and aren't shared across instances.
+
+:::note
+<LanguageInclude section="oauth-note" />
+:::
+
+## Reading and writing state
+
+Use <LanguageInclude content={{"typescript": "`ctx.state.conversation` and `ctx.state.user`", "python": "`ctx.state.conversation` and `ctx.state.user`", "csharp": "`context.State.ConversationState` and `context.State.UserState`"}} /> in an activity handler. Values must be JSON-serializable.
+
+<LanguageInclude section="read-write-example" />
+
+<LanguageInclude section="state-operations" />
+
+Conversation state is shared by everyone in the current conversation. User state is scoped to the current sender **within that conversation** and is unavailable when an activity has no usable sender ID.
+
+The SDK writes a scope to storage only when it changes during the current activity. After all handlers for that activity finish, the SDK saves those changes and closes the turn state. Read or update state only while handling the activity. Don't capture it for timers or background tasks because accessing it after the turn ends throws <LanguageInclude content={{"typescript": "`TurnStateSealedError`", "python": "`TurnStateSealedError`", "csharp": "`InvalidOperationException`"}} />.
+
+## Clearing state
+
+Remove a value with <LanguageInclude content={{"typescript": "`delete()`", "python": "`del scope[key]`", "csharp": "`Remove()`"}} />, or clear a scope with <LanguageInclude content={{"typescript": "`clear()`", "python": "`clear()`", "csharp": "`Clear()`"}} />. To remove both scopes from the backing store:
+
+<LanguageInclude section="clear-example" />
+
+Values written after <LanguageInclude content={{"typescript": "`delete()`", "python": "`delete()`", "csharp": "`DeleteAsync()`"}} /> are saved normally at the end of the current turn.
+
+## Scaling to distributed state
+
+<LanguageInclude section="distributed-intro" />
+
+<LanguageInclude section="distributed-example" />
+
+<LanguageInclude section="distributed-details" />

@@ -19,19 +19,13 @@ The SDK gives your application easy access to the Microsoft Graph API via the <L
 
 Microsoft Graph can be accessed by your application using its own application token, or by using the user's token. If you need access to resources that your application may not have, but your user does, you will need to use the user's scoped graph client. To grant explicit consent for your application to access resources on behalf of a user, follow the [auth guide](../in-depth-guides/user-authentication).
 
-To access the graph using the Graph using the app, you may use the <LanguageInclude section="app-graph-object" /> object <LanguageInclude section="app-access-method" />.
+To access the graph using the Graph using the app, you may use the <LanguageInclude section="app-graph-object" /> object to call the endpoint of your choice.
 
 <LanguageInclude section="app-graph-example" />
 
 <LanguageInclude section="user-graph-intro" />
 
 <LanguageInclude section="user-graph-example" />
-
-Here, the <LanguageInclude section="user-graph-object" /> object is a scoped graph client for the user that sent the message.
-
-:::tip
-You also have access to the <LanguageInclude section="app-graph-in-handler" /> object in the activity handler. This is equivalent to <LanguageInclude section="app-graph-reference" />.
-:::
 
 <LanguageInclude section="advanced-sections" />
 

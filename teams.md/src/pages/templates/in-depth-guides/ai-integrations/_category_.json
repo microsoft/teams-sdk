@@ -1,8 +1,8 @@
 {
   "label": "🤖 AI Integrations",
   "key": "ai-integrations",
-  "position": 4,
+  "position": 8,
   "collapsible": true,
   "collapsed": true,
-  "languages": ["python", "typescript"]
+  "languages": ["python", "typescript", "csharp"]
 }

@@ -583,23 +583,24 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
     # highlight-error-end
     # highlight-success-start
 +    app = App()
++    graph = app.add_oauth_flow("graph")
 +
 +    @app.on_message
 +    async def handle_message(ctx: ActivityContext[MessageActivity]):
 +        ctx.logger.info("User requested sign-in.")
-+        if ctx.is_signed_in:
++        if await graph.is_signed_in(ctx):
 +            await ctx.send("You are already signed in.")
 +        else:
-+            await ctx.sign_in()
++            await graph.sign_in(ctx)
 +
 +    @app.on_message_pattern("/signout")
 +    async def handle_sign_out(ctx: ActivityContext[MessageActivity]):
-+        await ctx.sign_out()
++        await graph.sign_out(ctx)
 +        await ctx.send("You have been signed out.")
 +
-+    @app.event("sign_in")
++    @graph.on_signin
 +    async def handle_sign_in(event: SignInEvent):
-+        """Handle sign-in events."""
++        """Handle sign-in for the graph connection."""
 +        await event.activity_ctx.send("You are now signed in!")
 +
 +    @app.event("error")
@@ -615,23 +616,24 @@ Note that on Microsoft Teams, task modules have been renamed to dialogs.
   <TabItem value="v2" label="Teams SDK v2">
     ```python
     app = App()
+    graph = app.add_oauth_flow("graph")
 
     @app.on_message
     async def handle_message(ctx: ActivityContext[MessageActivity]):
         ctx.logger.info("User requested sign-in.")
-        if ctx.is_signed_in:
+        if await graph.is_signed_in(ctx):
             await ctx.send("You are already signed in.")
         else:
-            await ctx.sign_in()
+            await graph.sign_in(ctx)
 
     @app.on_message_pattern("/signout")
     async def handle_sign_out(ctx: ActivityContext[MessageActivity]):
-        await ctx.sign_out()
+        await graph.sign_out(ctx)
         await ctx.send("You have been signed out.")
 
-    @app.event("sign_in")
+    @graph.on_signin
     async def handle_sign_in(event: SignInEvent):
-        """Handle sign-in events."""
+        """Handle sign-in for the graph connection."""
         await event.activity_ctx.send("You are now signed in!")
 
     @app.event("error")

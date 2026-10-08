@@ -61,3 +61,15 @@ Input Controls provide ways for you to validate. More details can be found on th
 <LanguageInclude section="input-validation-example" />
 
 <LanguageInclude section="handlers-section" />
+
+## Dynamic Typeahead Search
+
+An `Input.ChoiceSet` can fetch its choices dynamically as the user types, instead of listing them statically. Leave `choices` as an empty array and add a `choices.data` `Data.Query` that names a `dataset`. As the user types, Teams sends your bot an `application/search` invoke, and you return the matching results.
+
+<LanguageInclude section="dynamic-search-card" />
+
+Register a handler for the `application/search` invoke to return results as `{ title, value }` pairs, where `title` is the display text and `value` is what gets submitted when the choice is selected:
+
+<LanguageInclude section="dynamic-search-handler" />
+
+The activity value also carries the query options (`skip`/`top` for paging) and the originating `dataset`, so a single handler can branch on the dataset when several `Input.ChoiceSet` inputs share it.

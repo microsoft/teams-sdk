@@ -1,9 +1,11 @@
 ---
-sidebar_position: 4
+sidebar_position: 7
 sidebar_label: 🔒 User Authentication
 title: 🔒 User Authentication
 summary: API guide to implement User Authentication with SSO in Teams Apps.
 ---
+
+import Language from '@site/src/components/Language';
 
 # 🔒 User Authentication
 
@@ -19,16 +21,6 @@ User authentication does not work with the developer tools setup. You have to ru
 
 :::info
 It is possible to authenticate the user into [other auth providers](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-identity-providers?view=azure-bot-service-4.0&tabs=adv2%2Cga2#other-identity-providers) like Facebook, Github, Google, Dropbox, and so on.
-:::
-
-Once you have configured your Azure Bot resource OAuth settings, as described in the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0), add the following code to your `App`:
-
-## Project Setup
-
-### Create an app with the `graph` template
-
-:::tip
-Skip this step if you want to add the auth configurations to an existing app.
 :::
 
 <LanguageInclude section="create-project" />
@@ -55,32 +47,30 @@ If you'd rather have an AI coding assistant run the setup, install the [`teams-d
 Make sure you use the same name you used when creating the OAuth connection in the Azure Bot Service resource.
 :::
 
+<Language language={['typescript', 'python']}>
+
 :::note
-In many templates, `graph` is the default name of the OAuth connection, but you can change that by supplying a different connection name in your app configuration.
+In many templates, `graph` is the default name of the OAuth connection, but you can register the connection under any name — it just has to match the OAuth connection configured on the Azure Bot.
 :::
+
+</Language>
 
 ## Signing In
 
-:::note
-This uses the Single Sign-On (SSO) authentication flow. To learn more about all the available flows and their differences see the [official documentation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
-:::
-
-You must call the `signin` method inside your route handler, for example: to signin when receiving the `/signin` message:
+Start sign-in from inside a route handler, for example when receiving the `/signin` message:
 
 <LanguageInclude section="signing-in" />
 
-## Subscribe to the SignIn event
+## Handling sign-in completion
 
-You can subscribe to the `signin` event, that will be triggered once the OAuth flow completes.
+The sign-in method returns a token when the user already has one, and otherwise sends an OAuth card and returns nothing. The flow finishes on a later turn, so completion is delivered through a callback.
 
 <LanguageInclude section="signin-event" />
 
-## Start using the graph client
-
-From this point, you can use the `IsSignedIn` flag and the `userGraph` client to query graph, for example to reply to the `/whoami` message, or in any other route.
+## Start using the client
 
 :::note
-The default OAuth configuration requests the `User.ReadBasic.All` permission. It is possible to request other permissions by modifying the App Registration for the bot on Azure.
+The default graph configuration requests the `User.ReadBasic.All` permission. It is possible to request other permissions by modifying the App Registration for the bot on Azure.
 :::
 
 <LanguageInclude section="using-graph" />
@@ -90,6 +80,22 @@ The default OAuth configuration requests the `User.ReadBasic.All` permission. It
 You can signout by calling the `signout` method, this will remove the token from the User Token service cache
 
 <LanguageInclude section="signing-out" />
+
+## Using multiple OAuth connections
+
+An agent may need more than one identity — for example Graph for the user's profile and GitHub for their repos. Each connection is registered separately, so tokens, callbacks and sign-out are scoped to the connection that owns them.
+
+<LanguageInclude section="multiple-connections" />
+
+:::info
+Each connection must exist on the Azure Bot resource under the name you register it with. Follow the [User Authentication Setup guide](/cli/guides/user-authentication-setup) once per connection.
+:::
+
+## Checking connection status
+
+One call returns the status of every registered connection, so you don't have to probe them individually.
+
+<LanguageInclude section="connection-status" />
 
 ## Resuming Pending Messages After Sign-In
 
@@ -111,6 +117,12 @@ When using SSO, if the token exchange fails Teams sends a `signin/failure` invok
 
 :::tip
 The most common failure codes are `installedappnotfound` (bot app not installed for the user) and `resourcematchfailed` (Token Exchange URL doesn't match the Application ID URI). See [SSO Setup - Troubleshooting](/teams/user-authentication/sso-setup#troubleshooting) for a full list of failure codes and troubleshooting steps.
+:::
+
+:::warning
+A `signin/failure` activity doesn't name its connection. The SDK attributes it from the pending sign-in recorded when the flow started; if that can't be resolved, *every* registered connection's failure handler is notified. Check the connection first if your handler does something destructive.
+
+Registering a flow also turns on per-turn state unless you configure `state` yourself, defaulting to local, in-process storage. Configure shared state storage before running more than one instance — otherwise pending sign-in attribution and token-exchange dedup don't cross processes, and sign-in fails intermittently.
 :::
 
 <LanguageInclude section="regional-bot" />

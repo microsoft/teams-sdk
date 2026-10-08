@@ -9,6 +9,7 @@ Teams SDK ships with tools that simplify and speed up building and testing agent
 
 1. [Teams Developer CLI](./cli)
 2. [Microsoft 365 Agents Playground](./agents-playground)
-3. [Agent Skills](./agent-skills) — give AI coding assistants context for Teams development
-4. [llms.txt](./llms-txt) — documentation files optimized for AI coding assistants
-5. [DevTools](./devtools) (deprecated)
+3. [Local Tunnels](./local-tunnels) — expose your local server publicly for Teams, message extensions, and other webhooks
+4. [Agent Skills](./agent-skills) — give AI coding assistants context for Teams development
+5. [llms.txt](./llms-txt) — documentation files optimized for AI coding assistants
+6. [DevTools](./devtools) (deprecated)

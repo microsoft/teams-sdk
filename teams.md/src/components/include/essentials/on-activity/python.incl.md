@@ -26,11 +26,9 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
     await ctx.next()
 ```
 
-<!-- middleware-intro -->
+<!-- activity-handlers-next -->
 
 The `event` activity handlers (and attributes) follow a [middleware](https://www.patterns.dev/vanilla/mediator-pattern/) pattern similar to how `python` middlewares work. This means that for each activity handler, a `next` function is passed in which can be called to pass control to the next handler. This allows you to build a chain of handlers that can process the same activity in different ways.
-
-<!-- middleware-examples -->
 
 ```python
 @app.on_message

@@ -11,14 +11,14 @@ Create a new C# Teams app
 ## Usage
 
 ```
-teams project new csharp <name> [options]
+teams project new csharp [name] [options]
 ```
 
 ## Arguments
 
 | Argument | Description | Required |
 |----------|-------------|----------|
-| `name` | App name (converted to PascalCase) | Yes |
+| `name` | Project name (converted to PascalCase) | No |
 
 ## Options
 

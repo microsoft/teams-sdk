@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../../../auth/index.js';
 import { CliError, wrapAction } from '../../../../utils/errors.js';
 import { pickApp } from '../../../../utils/app-picker.js';
+import { isInteractive } from '../../../../utils/interactive.js';
 import { generateSecret } from './generate.js';
 
 interface SecretCreateOptions {
@@ -48,7 +49,7 @@ export const secretCreateCommand = new Command('create')
         tdpToken,
         appId,
         envPath,
-        interactive: !envPath && !options.json,
+        interactive: isInteractive(),
         json: options.json,
       });
     })

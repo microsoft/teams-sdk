@@ -74,14 +74,33 @@ extends:
             version: '8.x'
           target:
             container: host
+        - task: NuGetAuthenticate@1
+          displayName: 'Authenticate to Azure Artifacts'
+          target:
+            container: host
 
         - powershell: |
-            # Install nbgv
-            dotnet tool install -g nbgv
-            Write-Host "##vso[task.prependpath]$env:USERPROFILE\.dotnet\tools"
-            nbgv --version
+            $nugetConfig = "$(Agent.TempDirectory)\NuGet.TeamsSDKPreviews.config"
 
-            # Set cloud build number and variables (resolves detached HEAD in ADO)
+            @'
+            <?xml version="1.0" encoding="utf-8"?>
+            <configuration>
+              <packageSources>
+                <clear />
+                <add key="TeamsSDKPreviews" value="https://pkgs.dev.azure.com/DomoreexpGithub/Github_Pipelines/_packaging/TeamsSDKPreviews/nuget/v3/index.json" />
+              </packageSources>
+            </configuration>
+            '@ | Set-Content -Path $nugetConfig -Encoding UTF8
+
+            dotnet nuget list source --configfile $nugetConfig
+
+            dotnet tool install -g nbgv --configfile $nugetConfig
+
+            $toolsPath = Join-Path $env:USERPROFILE ".dotnet\tools"
+            $env:PATH = "$toolsPath;$env:PATH"
+            Write-Host "##vso[task.prependpath]$env:USERPROFILE\.dotnet\tools"
+
+            nbgv --version
             nbgv cloud
           displayName: 'Install nbgv and set cloud build version'
           target:
