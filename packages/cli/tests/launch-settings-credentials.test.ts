@@ -176,6 +176,40 @@ describe('writeLaunchSettingsCredentials', () => {
     expect(env.Teams__TenantId).toBe('tenant-456');
     expect(env).not.toHaveProperty('Teams__ClientSecret');
   });
+
+  it('parses a file written with a UTF-8 BOM and preserves the BOM', () => {
+    // Visual Studio (and our own csharp template) write launchSettings.json
+    // with a UTF-8 BOM, which JSON.parse rejects without stripping.
+    const filePath = tmpFile('launchSettings.json');
+    files.push(filePath);
+    fs.writeFileSync(
+      filePath,
+      '\uFEFF' +
+        JSON.stringify({
+          profiles: { http: { commandName: 'Project', environmentVariables: { ASPNETCORE_ENVIRONMENT: 'Development' } } },
+        })
+    );
+
+    expect(() => writeLaunchSettingsCredentials(filePath, TEST_VALUES)).not.toThrow();
+
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    expect(raw.startsWith('\uFEFF')).toBe(true);
+    const json = JSON.parse(raw.slice(1));
+    const env = json.profiles.http.environmentVariables;
+    expect(env.ASPNETCORE_ENVIRONMENT).toBe('Development');
+    expect(env.Teams__ClientId).toBe('test-client-id');
+    expect(env.Teams__ClientSecret).toBe('test-client-secret');
+  });
+
+  it('does not add a BOM to files that had none', () => {
+    const filePath = tmpFile('launchSettings.json');
+    files.push(filePath);
+    fs.writeFileSync(filePath, JSON.stringify({ profiles: { http: { environmentVariables: {} } } }));
+
+    writeLaunchSettingsCredentials(filePath, TEST_VALUES);
+
+    expect(fs.readFileSync(filePath, 'utf-8').startsWith('\uFEFF')).toBe(false);
+  });
 });
 
 // ── writeCredentials (dispatch) ──────────────────────────────────────
