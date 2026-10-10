@@ -1,6 +1,6 @@
 <!-- intro -->
 
-This guide is based on [`core/samples/A2ABot`](https://github.com/microsoft/teams.net/tree/main/core/samples/A2ABot): two SDK 2.1 bots run the same code with different config and hand users off through A2A.
+This guide is based on [`samples/A2ABot`](https://github.com/microsoft/teams.net/tree/main/samples/A2ABot): two SDK 2.1 bots run the same code with different config and hand users off through A2A.
 
 <!-- agent-card -->
 
