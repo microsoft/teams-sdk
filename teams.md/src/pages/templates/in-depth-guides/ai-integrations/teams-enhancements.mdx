@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 sidebar_label: Teams Enhancements
 title: Teams Enhancements
 summary: Round out a Teams agent reply with streaming, the AI-generated label, custom feedback, clarification cards, dynamic follow-up prompts, and inline citations.
@@ -11,13 +11,15 @@ import SuggestedPromptsImgUrl from '@site/static/screenshots/suggested-prompts.g
 import CitationsImgUrl from '@site/static/screenshots/citations.gif';
 import ClarificationImgUrl from '@site/static/screenshots/clarification.gif';
 import Language from '@site/src/components/Language';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Enhance the Teams Experience
 
 <Language language="typescript">
 
 :::warning[Our AI libraries are deprecated]
-The Teams SDK has deprecated its own AI libraries — the `@microsoft/teams.ai` packages (`ChatPrompt`, `Model`, and the older `@microsoft/teams.mcp` / `@microsoft/teams.a2a` plugins) — in favor of dedicated AI frameworks. Use the pattern shown in these guides instead: bring the OpenAI SDK (or any framework you like), and wire MCP and A2A directly into your Teams app.
+The Teams SDK has deprecated its own AI libraries — the `@microsoft/teams.ai` packages (`ChatPrompt`, `Model`, and the older `@microsoft/teams.mcp` / `@microsoft/teams.a2a` plugins) — in favor of provider SDKs and dedicated AI frameworks. Bring the model or agent runtime that fits your application; Teams SDK remains the channel, streaming, and presentation layer.
 :::
 
 </Language>

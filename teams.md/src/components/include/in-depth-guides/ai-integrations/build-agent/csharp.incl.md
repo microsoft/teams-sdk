@@ -1,14 +1,14 @@
 <!-- intro -->
 
-This guide walks through building a Teams agent with the [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/ai-extensions) abstractions against Azure OpenAI. The Teams SDK handles activity routing, streaming, and Teams-native affordances like Adaptive Cards and feedback controls, while `IChatClient` and tools provide the model and agent loop.
+This guide uses the provider-neutral [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/ai-extensions) `IChatClient` abstraction. The checked-in sample can register Azure OpenAI or Anthropic Claude, while the Teams handlers, tools, history, and response presentation depend only on `IChatClient`.
 
-In a Teams app, `IChatClient` runs the agent loop, including model calls, tool invocations, and conversation history, while the Teams SDK handles activity routing, streaming, and Teams-native affordances like Adaptive Cards and feedback controls.
+In a Teams app, the selected `IChatClient` implementation runs model calls and function invocation, while the Teams SDK handles activity routing, streaming, and Teams-native affordances like Adaptive Cards and feedback controls.
 
-The pattern is based on [`core/samples/ExtAIBot`](https://github.com/microsoft/teams.net/tree/main/core/samples/ExtAIBot).
+The pattern is based on [`samples/ExtAIBot`](https://github.com/microsoft/teams.net/tree/main/samples/ExtAIBot).
 
 <!-- define-agent -->
 
-Register the Teams application, chat client, and agent services with ASP.NET Core dependency injection:
+Register the Teams application, selected chat client, and agent services with ASP.NET Core dependency injection:
 
 ```csharp
 WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
@@ -17,13 +17,28 @@ builder.Services.AddTeamsBotApplication<ExtAIBotApp>();
 builder.Services.AddSingleton<IChatClient>(sp =>
 {
     IConfiguration config = sp.GetRequiredService<IConfiguration>();
-    string endpoint = config["AzureOpenAI:Endpoint"] ?? throw new InvalidOperationException("AzureOpenAI:Endpoint is required.");
-    string apiKey = config["AzureOpenAI:ApiKey"] ?? throw new InvalidOperationException("AzureOpenAI:ApiKey is required.");
-    string deployment = config["AzureOpenAI:Deployment"] ?? throw new InvalidOperationException("AzureOpenAI:Deployment is required.");
+    string provider = config["AI_PROVIDER"] ?? "azure-openai";
+    IChatClient client = provider switch
+    {
+        "anthropic" => new AnthropicClient(new ClientOptions
+        {
+            ApiKey = config["ANTHROPIC_API_KEY"]
+                ?? throw new InvalidOperationException("ANTHROPIC_API_KEY is required.")
+        })
+            .AsIChatClient(config["ANTHROPIC_MODEL"]
+                ?? throw new InvalidOperationException("ANTHROPIC_MODEL is required.")),
+        "azure-openai" => new AzureOpenAIClient(
+                new Uri(config["AzureOpenAI:Endpoint"]
+                    ?? throw new InvalidOperationException("AzureOpenAI:Endpoint is required.")),
+                new ApiKeyCredential(config["AzureOpenAI:ApiKey"]
+                    ?? throw new InvalidOperationException("AzureOpenAI:ApiKey is required.")))
+            .GetChatClient(config["AzureOpenAI:Deployment"]
+                ?? throw new InvalidOperationException("AzureOpenAI:Deployment is required."))
+            .AsIChatClient(),
+        _ => throw new InvalidOperationException($"Unsupported AI_PROVIDER '{provider}'."),
+    };
 
-    return new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey))
-        .GetChatClient(deployment)
-        .AsIChatClient()
+    return client
         .AsBuilder()
         .UseFunctionInvocation()
         .Build();
