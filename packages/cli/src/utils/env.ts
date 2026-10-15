@@ -15,6 +15,51 @@ function ensureParentDir(resolvedPath: string): void {
   fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
 }
 
+const BOM = '\uFEFF';
+
+/**
+ * Read a JSON object from disk, tolerating a UTF-8 BOM. Visual Studio writes
+ * appsettings.json / launchSettings.json with a BOM, which JSON.parse rejects.
+ * Returns an empty object when the file does not exist, plus whether a BOM was
+ * present so it can be preserved on write.
+ */
+function readJsonObjectFile(
+  resolvedPath: string,
+  filePath: string
+): { json: Record<string, unknown>; hadBom: boolean } {
+  if (!fs.existsSync(resolvedPath)) {
+    return { json: {}, hadBom: false };
+  }
+
+  const raw = fs.readFileSync(resolvedPath, 'utf-8');
+  const hadBom = raw.startsWith(BOM);
+  const content = hadBom ? raw.slice(BOM.length) : raw;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new CliError('VALIDATION_FORMAT', `Invalid JSON in ${filePath}.`, 'Fix the JSON syntax and try again.');
+  }
+
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new CliError(
+      'VALIDATION_FORMAT',
+      `Expected a JSON object in ${filePath}, got ${Array.isArray(parsed) ? 'array' : typeof parsed}.`,
+      'The file must contain a top-level JSON object (e.g. {}).'
+    );
+  }
+
+  return { json: parsed as Record<string, unknown>, hadBom };
+}
+
+/** Write a JSON object to disk, re-adding the BOM when the original had one. */
+function writeJsonObjectFile(resolvedPath: string, json: Record<string, unknown>, hadBom: boolean): void {
+  ensureParentDir(resolvedPath);
+  const content = JSON.stringify(json, null, 2) + '\n';
+  fs.writeFileSync(resolvedPath, hadBom ? BOM + content : content);
+}
+
 export function writeEnvFile(filePath: string, values: EnvValues): void {
   const resolvedPath = path.resolve(filePath);
 
@@ -54,24 +99,7 @@ export function writeEnvFile(filePath: string, values: EnvValues): void {
 
 export function writeJsonCredentials(filePath: string, values: EnvValues): void {
   const resolvedPath = path.resolve(filePath);
-
-  let json: Record<string, unknown> = {};
-  if (fs.existsSync(resolvedPath)) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(fs.readFileSync(resolvedPath, 'utf-8'));
-    } catch {
-      throw new CliError('VALIDATION_FORMAT', `Invalid JSON in ${filePath}.`, 'Fix the JSON syntax and try again.');
-    }
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-      throw new CliError(
-        'VALIDATION_FORMAT',
-        `Expected a JSON object in ${filePath}, got ${Array.isArray(parsed) ? 'array' : typeof parsed}.`,
-        'The file must contain a top-level JSON object (e.g. {}).'
-      );
-    }
-    json = parsed as Record<string, unknown>;
-  }
+  const { json, hadBom } = readJsonObjectFile(resolvedPath, filePath);
 
   const existing = { ...((json.Teams as Record<string, unknown>) ?? {}) };
   // Drop a stale secret so --no-secret never leaves an old ClientSecret behind.
@@ -83,8 +111,7 @@ export function writeJsonCredentials(filePath: string, values: EnvValues): void 
     TenantId: values.TENANT_ID,
   };
 
-  ensureParentDir(resolvedPath);
-  fs.writeFileSync(resolvedPath, JSON.stringify(json, null, 2) + '\n');
+  writeJsonObjectFile(resolvedPath, json, hadBom);
 }
 
 export function isJsonFile(filePath: string): boolean {
@@ -103,24 +130,7 @@ export function isLaunchSettingsFile(filePath: string): boolean {
  */
 export function writeLaunchSettingsCredentials(filePath: string, values: EnvValues): void {
   const resolvedPath = path.resolve(filePath);
-
-  let json: Record<string, unknown> = {};
-  if (fs.existsSync(resolvedPath)) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(fs.readFileSync(resolvedPath, 'utf-8'));
-    } catch {
-      throw new CliError('VALIDATION_FORMAT', `Invalid JSON in ${filePath}.`, 'Fix the JSON syntax and try again.');
-    }
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-      throw new CliError(
-        'VALIDATION_FORMAT',
-        `Expected a JSON object in ${filePath}, got ${Array.isArray(parsed) ? 'array' : typeof parsed}.`,
-        'The file must contain a top-level JSON object (e.g. {}).'
-      );
-    }
-    json = parsed as Record<string, unknown>;
-  }
+  const { json, hadBom } = readJsonObjectFile(resolvedPath, filePath);
 
   let profiles = json.profiles as Record<string, unknown> | undefined;
   if (
@@ -157,8 +167,7 @@ export function writeLaunchSettingsCredentials(filePath: string, values: EnvValu
   }
   envVarsObj['Teams__TenantId'] = values.TENANT_ID;
 
-  ensureParentDir(resolvedPath);
-  fs.writeFileSync(resolvedPath, JSON.stringify(json, null, 2) + '\n');
+  writeJsonObjectFile(resolvedPath, json, hadBom);
 }
 
 /**
