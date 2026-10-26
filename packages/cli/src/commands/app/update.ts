@@ -346,6 +346,11 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
             logger.error(pc.red(error instanceof Error ? error.message : String(error)));
             continue;
           }
+        } else {
+          const currentEndpoint = await tryGetAzureEndpoint(botId, false);
+          if (currentEndpoint === null || currentEndpoint === '') {
+            logger.warn(pc.yellow('No messaging endpoint is set. Choose "Messaging mode" again to set one.'));
+          }
         }
       }
 
