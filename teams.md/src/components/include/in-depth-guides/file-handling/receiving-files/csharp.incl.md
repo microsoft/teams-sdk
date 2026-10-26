@@ -27,10 +27,26 @@ if (file is not null)
 }
 ```
 
+<!-- filter-by-style -->
+
+```csharp
+// Only files sent as file attachments
+IList<IncomingFile> attachedFiles = await context.Files.ListAsync(
+    new FileListOptions { AttachmentStyle = AttachmentStyle.File },
+    cancellationToken);
+
+// Only images pasted into the message
+IList<IncomingFile> pastedImages = await context.Files.ListAsync(
+    new FileListOptions { AttachmentStyle = AttachmentStyle.InlineImage },
+    cancellationToken);
+```
+
 <!-- reading-download -->
 
 ```csharp
-IncomingFile? file = await context.Files.FirstAsync(cancellationToken);
+IncomingFile? file = await context.Files.FirstAsync(
+    new FileListOptions { AttachmentStyle = AttachmentStyle.File },
+    cancellationToken);
 
 if (file is not null)
 {
@@ -43,7 +59,9 @@ if (file is not null)
 <!-- reading-text -->
 
 ```csharp
-IncomingFile? file = await context.Files.FirstAsync(cancellationToken);
+IncomingFile? file = await context.Files.FirstAsync(
+    new FileListOptions { AttachmentStyle = AttachmentStyle.File },
+    cancellationToken);
 
 if (file is not null)
 {
@@ -79,10 +97,11 @@ while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
 | `UniqueId` | The OneDrive/SharePoint drive-item id, when the platform provides it. Present only for files backed by ODSP storage. |
 | `Name` | File name including its extension (e.g. `report.pdf`). |
 | `Extension` | File extension without the dot (e.g. `pdf`), from the platform-supplied `fileType`. Absent when the platform omits it. |
-| `ContentType` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `Extension`. To learn the type of the bytes you actually received, read `ContentType` on the downloaded file, which is resolved from the download response. |
+| `AttachmentStyle` | How the file was attached: `AttachmentStyle.File` when sent as a file attachment, or `AttachmentStyle.InlineImage` when pasted into the message. |
+| `ContentType` | The file's MIME type, when the source provides one. Always unset for file attachments received from a bot activity: the `file.download.info` attachment carries no MIME type, only the extension surfaced as `Extension`. To learn the type of the bytes you actually received, read `ContentType` on the downloaded file, which is resolved from the download response. For an inline image, see [Receiving Inline Images](./receiving-inline-images#how-pasted-images-are-named-and-typed). |
 | `Scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `Source` | Where the SDK found the file. Currently always `botActivity`. |
-| `ContentUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
+| `ContentUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. For an inline image, it is the image's Bot API location. |
 | `Raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
 <!-- reusing-downloaded-file -->
@@ -131,6 +150,14 @@ catch (FileCredentialException err)
 catch (FileAccessException err)
 {
     await context.ReplyAsync($"Could not read that file as {err.Actor?.ToString() ?? "the identity used"}: the service returned {err.Status}.", cancellationToken);
+}
+catch (InlineImageTransformationException)
+{
+    await context.ReplyAsync("That pasted image cannot be downloaded. Try sending it as a file attachment instead.", cancellationToken);
+}
+catch (InlineImageAccessException err)
+{
+    await context.ReplyAsync($"Could not read that pasted image as {err.Actor?.ToString() ?? "the identity used"}: the service returned {err.Status}.", cancellationToken);
 }
 catch (FileScopeNotSupportedException err)
 {

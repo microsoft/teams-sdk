@@ -19,7 +19,7 @@ An inline image travels as an attachment on the outgoing message activity. Two f
 Sending an inline image does not upload anything to OneDrive or SharePoint. The image is part of the message rather than a stored document, so it does not appear in the conversation's **Files** tab.
 
 :::info[Preview]
-Unlike [receiving files](./receiving-files), which is limited to personal (1:1) chats, sending is not scope-restricted: the same call works in personal chats, group chats, and channels.
+Unlike [receiving files](./receiving-files), which a traditional bot can do only in personal (1:1) chats, sending is not scope-restricted: the same call works in personal chats, group chats, and channels.
 :::
 
 Sending an image needs no Microsoft Graph permission and no user sign-in. The message goes out under your app's own identity and is authorized by your app being in the conversation, exactly like sending text.

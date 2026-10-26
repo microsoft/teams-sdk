@@ -19,7 +19,7 @@ teams app create [options]
 | Flag | Description |
 |------|-------------|
 | `-n, --name <name>` | App/bot name |
-| `-e, --endpoint <url>` | [OPTIONAL] Bot messaging endpoint URL |
+| `-e, --endpoint <url>` | [OPTIONAL] Messaging endpoint URL |
 | `--env <path>` | [OPTIONAL] Path to credentials file (.env or appsettings.json) |
 | `--env-file <path>` | [OPTIONAL] Alias for --env |
 | `--no-secret` | [OPTIONAL] Skip client secret generation (for managed identity or federated credentials) |

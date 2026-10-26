@@ -14,10 +14,10 @@ node dist/index.js <command>
 **Act:** Run `node dist/index.js login`
 **Assert:** Either prompts for login (device code flow) OR shows that you're already logged in.
 
-## 2. `apps` lists apps
+## 2. `app list` lists apps
 
 **Setup:** `npm run build` and be logged in
-**Act:** Run `node dist/index.js apps`
+**Act:** Run `node dist/index.js app list`
 **Assert:** Outputs a list of apps (may be empty list, but should not error).
 
 ## 3. `--help --json` outputs structured command tree

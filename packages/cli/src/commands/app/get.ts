@@ -1,7 +1,16 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../auth/index.js';
-import { fetchApp, fetchAppDetail, showAppDetail, installLink, portalLink } from '../../apps/index.js';
+import {
+  fetchApp,
+  fetchAppDetail,
+  showAppDetail,
+  installLink,
+  isBotCommunicationApiAvailable,
+  isInstallLinkSupported,
+  printInstallInstructions,
+  portalLink,
+} from '../../apps/index.js';
 import { outputJson } from '../../utils/json-output.js';
 import { pickApp } from '../../utils/app-picker.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
@@ -21,6 +30,8 @@ interface AppGetOutput {
   privacyUrl: string;
   termsOfUseUrl: string;
   endpoint: string | null;
+  /** Only present when TEAMS_DEV_API=1. null = no Teams-managed bot or read failed. */
+  socketMode?: boolean | null;
   installLink: string;
   portalLink: string;
 }
@@ -40,11 +51,12 @@ export const appGetCommand = new Command('get')
             const picked = await pickApp();
             const pickedAccount = await getAccount();
             const app = await fetchApp(picked.token, picked.app.teamsAppId);
-            const { appDetails, endpoint } = await fetchAppDetail(app, picked.token);
+            const { appDetails, endpoint, socketMode } = await fetchAppDetail(app, picked.token);
             const tenantId = pickedAccount?.tenantId ?? '';
             await showAppDetail({
               appDetails,
               endpoint,
+              socketMode,
               installLink: installLink(appDetails.teamsAppId, tenantId),
               portalLink: portalLink(appDetails.teamsAppId),
             }, { interactive: true });
@@ -72,7 +84,7 @@ export const appGetCommand = new Command('get')
       const tenantId = account.tenantId;
 
       if (options.json) {
-        const { appDetails, endpoint } = await fetchAppDetail(app, token, true);
+        const { appDetails, endpoint, socketMode } = await fetchAppDetail(app, token, true);
 
         const enriched: AppGetOutput = {
           appId: appDetails.appId,
@@ -87,6 +99,7 @@ export const appGetCommand = new Command('get')
           privacyUrl: appDetails.privacyUrl,
           termsOfUseUrl: appDetails.termsOfUseUrl,
           endpoint,
+          ...(isBotCommunicationApiAvailable() ? { socketMode } : {}),
           installLink: installLink(appDetails.teamsAppId, tenantId),
           portalLink: portalLink(appDetails.teamsAppId),
         };
@@ -96,6 +109,13 @@ export const appGetCommand = new Command('get')
       }
 
       if (options.installLink) {
+        if (!isInstallLinkSupported()) {
+          throw new CliError(
+            'VALIDATION_CONFLICT',
+            'Install links only work with production Teams, not dev-int apps.',
+            `Run \`teams app package download ${app.teamsAppId}\` and upload the package in Teams.`
+          );
+        }
         logger.info(installLink(app.teamsAppId, tenantId));
         return;
       }
@@ -105,15 +125,16 @@ export const appGetCommand = new Command('get')
         const portal = portalLink(app.teamsAppId);
         logger.info(`${pc.dim('App:')} ${app.appName || app.appId}`);
         logger.info('');
-        printLinkBanner('Install in Teams', install);
+        printInstallInstructions(app.teamsAppId, install);
         printLinkBanner('Developer Portal', portal);
         return;
       }
 
-      const { appDetails, endpoint } = await fetchAppDetail(app, token);
+      const { appDetails, endpoint, socketMode } = await fetchAppDetail(app, token);
       await showAppDetail({
         appDetails,
         endpoint,
+        socketMode,
         installLink: installLink(appDetails.teamsAppId, tenantId),
         portalLink: portalLink(appDetails.teamsAppId),
       });

@@ -3,27 +3,31 @@ import pc from 'picocolors';
 import type { AppSummary, AppDetails } from './types.js';
 import { fetchApp, fetchAppDetailsV2 } from './api.js';
 import { fetchBot } from './tdp.js';
+import { getBotCommunicationConfiguration, isBotCommunicationApiAvailable } from './bot-communication.js';
 import { getCachedAppDetails } from './app-details-cache.js';
 import { getCachedBot } from './bot-cache.js';
 import { logger } from '../utils/logger.js';
 import { openInBrowser, printLinkBanner } from '../utils/browser.js';
+import { isInstallLinkSupported, printInstallInstructions } from './links.js';
 import { createSilentSpinner } from '../utils/spinner.js';
 
 export interface AppDetailData {
   appDetails: AppDetails;
   endpoint: string | null;
+  /** null when not applicable or unknown (no bot, Azure bot, API unavailable, or read failed). */
+  socketMode: boolean | null;
   installLink: string;
   portalLink: string;
 }
 
 /**
- * Fetch full app details including bot endpoint.
+ * Fetch full app details including bot endpoint and messaging mode.
  */
 export async function fetchAppDetail(
   appSummary: AppSummary,
   token: string,
   silent = false
-): Promise<{ appDetails: AppDetails; endpoint: string | null }> {
+): Promise<{ appDetails: AppDetails; endpoint: string | null; socketMode: boolean | null }> {
   // Skip the spinner entirely when everything we need is already cached — no
   // network round-trip means there's nothing to wait on.
   const cachedDetails = getCachedAppDetails(appSummary.teamsAppId);
@@ -57,18 +61,30 @@ export async function fetchAppDetail(
   }
 
   let endpoint: string | null = null;
+  let socketMode: boolean | null = null;
   if (appDetails.bots && appDetails.bots.length > 0) {
+    const botId = appDetails.bots[0].botId;
+    let isTeamsManaged = false;
     try {
-      const bot = await fetchBot(token, appDetails.bots[0].botId);
+      const bot = await fetchBot(token, botId);
       endpoint = bot.messagingEndpoint || null;
+      isTeamsManaged = true;
     } catch {
-      // Bot fetch failed, skip
+      // Bot fetch failed (e.g. Azure bot), skip
+    }
+    if (isTeamsManaged && isBotCommunicationApiAvailable()) {
+      try {
+        const config = await getBotCommunicationConfiguration(token, botId);
+        socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
+      } catch {
+        // Leave as unknown
+      }
     }
   }
 
   spinner.stop();
 
-  return { appDetails, endpoint };
+  return { appDetails, endpoint, socketMode };
 }
 
 /**
@@ -79,7 +95,7 @@ export async function showAppDetail(
   data: AppDetailData,
   options?: { interactive?: boolean }
 ): Promise<void> {
-  const { appDetails, endpoint, installLink, portalLink } = data;
+  const { appDetails, endpoint, socketMode, installLink, portalLink } = data;
 
   logger.info(`\n${pc.bold(appDetails.shortName || 'Unnamed')}`);
   logger.info(`${pc.dim('ID:')} ${appDetails.teamsAppId}`);
@@ -94,8 +110,11 @@ export async function showAppDetail(
   if (endpoint !== null) {
     logger.info(`${pc.dim('Endpoint:')} ${endpoint || pc.yellow('(not set)')}`);
   }
+  if (socketMode !== null) {
+    logger.info(`${pc.dim('Messaging mode:')} ${socketMode ? 'Sockets' : 'HTTP endpoint'}`);
+  }
   logger.info('');
-  printLinkBanner('Install in Teams', installLink);
+  printInstallInstructions(appDetails.teamsAppId, installLink);
   printLinkBanner('Developer Portal', portalLink);
 
   logger.info(
@@ -108,7 +127,7 @@ export async function showAppDetail(
         const action = await select({
           message: '',
           choices: [
-            { name: 'Install in Teams', value: 'install' },
+            ...(isInstallLinkSupported() ? [{ name: 'Install in Teams', value: 'install' }] : []),
             { name: 'Open in Developer Portal', value: 'portal' },
             { name: 'Back', value: 'back' },
           ],

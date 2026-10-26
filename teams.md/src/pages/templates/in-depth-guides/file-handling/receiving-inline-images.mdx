@@ -2,20 +2,65 @@
 sidebar_position: 3
 title: 'Receiving Inline Images'
 sidebar_label: 'Receiving Inline Images'
-summary: Receive images pasted into Teams messages, identify their attachments, and download their bytes with the authenticated HTTP client.
+summary: Receive images pasted into Teams messages. List them alongside attached files, download their bytes, and handle image formats that cannot be downloaded.
 languages: ['python', 'typescript', 'csharp']
 suppressLanguageIncludeWarning: true
 ---
 
 # Receiving Inline Images
 
-When a user pastes an image into the Teams compose box, the image does not arrive inside <LanguageInclude content={{"typescript": "`activity.text`", "python": "`activity.text`", "csharp": "`Activity.Text`"}} />. Teams sends it as an attachment on the inbound message activity.
+When a user pastes an image into the Teams compose box, the image does not arrive inside <LanguageInclude content={{"typescript": "`activity.text`", "python": "`activity.text`", "csharp": "`Activity.Text`"}} />. Teams sends it as an attachment on the inbound message activity, and <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> lists it alongside the files the user attached, as a lazy handle you can download from in the same way as an attached file.
 
-Inline image attachments are distinct from files attached through the compose box. They do not use the `file.download.info` content type and are not surfaced by <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} />.
+:::info[Coming Soon]
+Receiving inline images through <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> is planned for the next SDK release, version 2.2.0.
+:::
 
-## Understand the attachment shape
+## List pasted images
 
-An inbound message with an inline image typically contains two related attachments:
+Each listed file has an <LanguageInclude content={{"typescript": "`attachmentStyle`", "python": "`attachment_style`", "csharp": "`AttachmentStyle`"}} /> that says how it was attached: <LanguageInclude content={{"typescript": "`'inlineImage'`", "python": "`\"inlineImage\"`", "csharp": "`AttachmentStyle.InlineImage`"}} /> for an image pasted into the message, or <LanguageInclude content={{"typescript": "`'file'`", "python": "`\"file\"`", "csharp": "`AttachmentStyle.File`"}} /> for a file attachment. Pass the style as a filter to <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> or <LanguageInclude content={{"typescript": "`first()`", "python": "`first()`", "csharp": "`FirstAsync()`"}} /> to get only pasted images:
+
+<LanguageInclude section="list-inline-images" />
+
+Without a filter, both styles are returned in the order they arrived. Like any listing, this makes no network requests.
+
+## Download a pasted image
+
+A pasted image downloads through the same methods as an attached file, described in [Receiving Files](./receiving-files#read-a-file):
+
+<LanguageInclude section="download-inline-image" />
+
+## How pasted images are named and typed
+
+A pasted image has no file name, so the SDK names it `image-<attachmentId>`. Its listed metadata comes from a format hint Teams sends with the message:
+
+- <LanguageInclude content={{"typescript": "`name`", "python": "`name`", "csharp": "`Name`"}} /> gets an extension only for PNG, JPEG, GIF, or WebP, and <LanguageInclude content={{"typescript": "`extension`", "python": "`extension`", "csharp": "`Extension`"}} /> is taken from it, so it is absent when the name has none.
+- <LanguageInclude content={{"typescript": "`contentType`", "python": "`content_type`", "csharp": "`ContentType`"}} /> is the matching MIME type for those four formats, otherwise `application/octet-stream`.
+- <LanguageInclude content={{"typescript": "`uniqueId`", "python": "`unique_id`", "csharp": "`UniqueId`"}} /> is always unset, because a pasted image is not stored in OneDrive or SharePoint.
+- <LanguageInclude content={{"typescript": "`contentUrl`", "python": "`content_url`", "csharp": "`ContentUrl`"}} /> is the image's Bot API location.
+
+On the downloaded file, <LanguageInclude content={{"typescript": "`contentType`", "python": "`content_type`", "csharp": "`ContentType`"}} /> is detected from the bytes, and the extension of <LanguageInclude content={{"typescript": "`filename`", "python": "`filename`", "csharp": "`Filename`"}} /> follows it, so the downloaded file name can differ from the listed name. If the bytes are not PNG, JPEG, GIF, or WebP, the listed type is used.
+
+:::note
+Teams saves a pasted GIF as a static PNG. It is listed as `.gif` and `image/gif` but downloads as a PNG.
+:::
+
+## Formats that cannot be downloaded
+
+Some image formats, such as BMP and AVIF, cannot be converted by the Teams service, so Teams shows a placeholder, and they cannot be downloaded. Downloading one of these fails with <LanguageInclude content={{"typescript": "`InlineImageTransformationError`", "python": "`InlineImageTransformationError`", "csharp": "`InlineImageTransformationException`"}} />. The same image sent as a file attachment downloads normally, so asking the user to resend it that way is the recovery:
+
+<LanguageInclude section="errors-handling" />
+
+If the Bot API refuses the token presented for the image, the download fails with <LanguageInclude content={{"typescript": "`InlineImageAccessError`", "python": "`InlineImageAccessError`", "csharp": "`InlineImageAccessException`"}} /> with a `401` or `403` status. Both errors share the common base error described in [Handle errors](./receiving-files#handle-errors).
+
+## How the image is read
+
+A pasted image is read from the Bot API with the same token the app uses to reply in that conversation, not through Microsoft Graph. This works for traditional bots and for agentic users, which read as their own identity. Inline images list and download in personal chats, group chats, and channels. Outside personal chats, only messages that @mention the agent reach it.
+
+The token is sent only to a URL under the activity's `serviceUrl`. An inline image hosted anywhere else is skipped by <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> with a warning in the log.
+
+## Access the raw attachments
+
+An inbound message with a pasted image typically contains two related attachments:
 
 ```json
 {
@@ -32,14 +77,4 @@ An inbound message with an inline image typically contains two related attachmen
 }
 ```
 
-Use the `image/*` attachment as the canonical source of the image. Its `contentUrl` points to the downloadable image bytes.
-
-The `text/html` attachment preserves layout context, including where the image appeared among the message's text and other content. Do not use the HTML attachment's `<img src>` URL to download the image.
-
-## Download the image
-
-The image attachment's `contentUrl` is authenticated rather than public. Fetch it with the app's authenticated HTTP client:
-
-<LanguageInclude section="download-image" />
-
-The example buffers the complete image in memory. Keep the byte representation when your downstream API accepts it, or convert it to base64 when required by an image-processing or model API.
+The listed file's <LanguageInclude content={{"typescript": "`raw`", "python": "`raw`", "csharp": "`Raw`"}} /> holds only the `image/*` attachment. The `text/html` attachment, which preserves where the image appeared among the message's text and other content, stays in <LanguageInclude content={{"typescript": "`ctx.activity.attachments`", "python": "`ctx.activity.attachments`", "csharp": "`context.Activity.Attachments`"}} />.

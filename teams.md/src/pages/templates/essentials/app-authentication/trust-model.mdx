@@ -22,6 +22,7 @@ For every inbound request on `/api/messages`, the SDK validates the bearer token
 - **Signature verification** against the authoritative JSON Web Key Set (JWKS). The signing keys are discovered from the OpenID Configuration endpoint for the configured cloud environment, so key rotation requires no action from you.
 - **Issuer check** against the set of expected issuers for your cloud (commercial, US Government, DoD, or China).
 - **Audience check** against your bot's application identifier.
+- **Caller application check** for Entra Agent ID tokens: the caller claim (`azp`, or `appid` when `azp` is absent) must identify the Agent 365 platform application.
 - **Lifetime check** with default clock skew tolerance.
 - **Signing algorithm check** — only `RS256` is accepted.
 

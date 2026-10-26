@@ -2,8 +2,8 @@ import type { AadApp } from './graph.js';
 import { apiFetch } from '../utils/http.js';
 import { invalidateAppDetails } from './app-details-cache.js';
 import { getCachedBot, setCachedBot, invalidateBot, type BotResource } from './bot-cache.js';
-
-const TDP_BASE_URL = 'https://dev.teams.microsoft.com/api';
+import { logger } from '../utils/logger.js';
+import { TDP_BASE_URL, TDP_V2_BASE_URL, isTdpV2Enabled } from '../utils/tdp-host.js';
 
 export type SignInAudience = 'AzureADMyOrg' | 'AzureADMultipleOrgs';
 
@@ -14,12 +14,21 @@ export interface CreateAadAppViaTdpOptions {
 
 /**
  * Create an AAD app via TDP, which also creates the service principal server-side.
+ *
+ * When the TDP v2 API is available (TEAMS_DEV_API=1), uses its
+ * `v1.0/aadapplications` endpoint, which also makes the caller an owner of the
+ * app (required by the bot communication API). That endpoint doesn't accept a
+ * serviceManagementReference, so the legacy endpoint is used when one is set.
  */
 export async function createAadAppViaTdp(
   token: string,
   displayName: string,
   options: CreateAadAppViaTdpOptions
 ): Promise<AadApp> {
+  if (isTdpV2Enabled() && !options.serviceManagementReference) {
+    return createAadAppViaTdpV2(token, displayName, options.signInAudience);
+  }
+
   const response = await apiFetch(`${TDP_BASE_URL}/aadapp/v2`, {
     method: 'POST',
     headers: {
@@ -41,6 +50,37 @@ export async function createAadAppViaTdp(
   }
 
   return response.json();
+}
+
+/** Response from TDP v2 API `POST v1.0/aadapplications` (201). */
+interface TdpV2AadApplicationResponse extends AadApp {
+  signInAudience: SignInAudience;
+}
+
+// TODO: once TDP ships `v1.0/aadapplications/microsoftTenantBots`, use it for
+// serviceManagementReference so Microsoft-tenant apps also get the caller as owner.
+async function createAadAppViaTdpV2(
+  token: string,
+  displayName: string,
+  signInAudience: SignInAudience
+): Promise<AadApp> {
+  logger.debug('Creating AAD app via TDP v2 API v1.0/aadapplications');
+  const response = await apiFetch(`${TDP_V2_BASE_URL}/v1.0/aadapplications`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ displayName, signInAudience }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to create AAD app: ${response.status} ${error}`);
+  }
+
+  const app = (await response.json()) as TdpV2AadApplicationResponse;
+  return { id: app.id, appId: app.appId, displayName: app.displayName };
 }
 
 export interface ImportedApp {

@@ -37,7 +37,9 @@
     ]
   },
   "overrides": {
+    "postcss-selector-parser": "^7.1.6",
     "serialize-javascript": "^7.0.5",
+    "tinypool": "^2.1.2",
     "webpack": "$webpack"
   }
 }

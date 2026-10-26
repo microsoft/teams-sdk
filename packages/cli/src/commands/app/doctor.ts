@@ -9,6 +9,8 @@ import {
   getBotLocation,
   discoverAzureBot,
   extractDomain,
+  getBotCommunicationConfiguration,
+  isBotCommunicationApiAvailable,
 } from '../../apps/index.js';
 import type { AppDetails } from '../../apps/types.js';
 import type { BotDetails } from '../../apps/tdp.js';
@@ -171,6 +173,27 @@ async function checkBotRegistration(
         });
       }
 
+      // Socket mode
+      let socketMode = false;
+      if (isBotCommunicationApiAvailable()) {
+        try {
+          const config = await getBotCommunicationConfiguration(tdpToken, botId);
+          socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
+          results.push({
+            category: cat,
+            label: `Messaging mode: ${socketMode ? 'Sockets' : 'HTTP endpoint'}`,
+            status: 'pass',
+          });
+        } catch (e) {
+          results.push({
+            category: cat,
+            label: 'Could not check messaging mode',
+            status: 'info',
+            detail: e instanceof Error ? e.message : undefined,
+          });
+        }
+      }
+
       // Endpoint
       if (tmBot.messagingEndpoint) {
         results.push({
@@ -189,7 +212,7 @@ async function checkBotRegistration(
             detail: 'timeout or network error',
           });
         }
-      } else {
+      } else if (!socketMode) {
         results.push({ category: cat, label: 'Messaging endpoint not set', status: 'warn' });
       }
     } catch (e) {
