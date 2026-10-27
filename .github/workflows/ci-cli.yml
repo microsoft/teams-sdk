@@ -5,10 +5,17 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   templates:
     name: Templates
     uses: ./.github/workflows/ci-templates.yml
+    permissions:
+      contents: read
+      pull-requests: read
 
   build-cli:
     name: Build & Test CLI
