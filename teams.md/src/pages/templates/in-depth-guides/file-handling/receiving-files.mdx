@@ -35,13 +35,21 @@ Agentic users need a Graph file permission consented on the agent's blueprint by
 
 ## Access attached files
 
-The accessor <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> is available on every activity context, but only inbound message activities carry attachments, so it is empty everywhere else. Use <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> to get all files attached to the current message, or <LanguageInclude content={{"typescript": "`first()`", "python": "`first()`", "csharp": "`FirstAsync()`"}} /> for the common single-file case. Both hand back the file's metadata rather than its contents, so listing is cheap even when the attached files are large:
+The accessor <LanguageInclude content={{"typescript": "`ctx.files`", "python": "`ctx.files`", "csharp": "`context.Files`"}} /> is available on every activity context, but only inbound message activities carry attachments, so it is empty everywhere else. Use <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> to get all files on the current message, including pasted images, or <LanguageInclude content={{"typescript": "`first()`", "python": "`first()`", "csharp": "`FirstAsync()`"}} /> for the common single-file case. Both hand back the file's metadata rather than its contents, so listing is cheap even when the attached files are large:
 
 <LanguageInclude section="accessing-files" />
 
-Listing with <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> returns the attached files in the same order they arrived. It never throws: activities with no attachments (or non-message activities) return an empty list, and malformed file entries are skipped rather than failing the whole batch.
+Listing with <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> returns the files in the same order they arrived. It never throws: activities with no attachments (or non-message activities) return an empty list, and malformed file entries are skipped rather than failing the whole batch.
 
 <LanguageInclude section="first-file" />
+
+Images the user pasted into the message are listed too, with <LanguageInclude content={{"typescript": "`attachmentStyle`", "python": "`attachment_style`", "csharp": "`AttachmentStyle`"}} /> set to <LanguageInclude content={{"typescript": "`'inlineImage'`", "python": "`\"inlineImage\"`", "csharp": "`AttachmentStyle.InlineImage`"}} /> (see [Receiving Inline Images](./receiving-inline-images)). Files sent as file attachments have the <LanguageInclude content={{"typescript": "`'file'`", "python": "`\"file\"`", "csharp": "`AttachmentStyle.File`"}} /> style. To list only one style, pass it as a filter to <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> or <LanguageInclude content={{"typescript": "`first()`", "python": "`first()`", "csharp": "`FirstAsync()`"}} />:
+
+<LanguageInclude section="filter-by-style" />
+
+:::note
+Starting in 2.2.0, <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> and <LanguageInclude content={{"typescript": "`first()`", "python": "`first()`", "csharp": "`FirstAsync()`"}} /> return pasted images when no filter is given. To keep the previous behavior of returning only file attachments, pass <LanguageInclude content={{"typescript": "`'file'`", "python": "`\"file\"`", "csharp": "`AttachmentStyle.File`"}} /> as the filter.
+:::
 
 ### File metadata
 
@@ -94,6 +102,8 @@ Byte retrieval can fail for a few well-defined reasons. All of them share a comm
 | **File URL expired** | The short-lived, pre-authorized download link lapsed before the bytes were fetched. | `reason`: <br/> **first fetch**, the link had already lapsed so no bytes were retrieved; <br /> **re-read**, an earlier download succeeded, but a later read through the same handle came after expiry. Avoid this by downloading once and reusing the downloaded file. |
 | **No Graph credential** | The Graph read an agentic user's file needs was ruled out before the request, because no credential was available. | `actor`<sup><a href="#actor">2</a></sup>: the identity a credential was being resolved for. <br /> `cause`: why acquiring the token failed, when it failed rather than simply returning nothing. |
 | **File access denied** | The Graph read an agentic user's file needs was refused by the storage service. | `status`: `401` when the token itself was rejected, `403` when the identity lacks the grant<sup><a href="#access-denied">1</a></sup>. <br/> `actor`<sup><a href="#actor">2</a></sup>: the identity that was refused. <br /> `details`: what the service said, if anything. |
+| **Inline image could not be converted** | The Teams service could not convert a pasted image for download. See [Formats that cannot be downloaded](./receiving-inline-images#formats-that-cannot-be-downloaded). | `status`: `415`. <br /> `code`: the service's error code, such as `TransformationFailed`, when present. <br /> `details`: what the service said, if anything. <br /> `actor`<sup><a href="#actor">2</a></sup>: the identity the read was attempted as. |
+| **Inline image access denied** | The Bot API refused the token presented for a pasted image. | `status`: `401` when the token itself was rejected, `403` when the identity is not allowed to read the image. <br /> `actor`<sup><a href="#actor">2</a></sup>: the identity that was refused. <br /> `details`: what the service said, if anything. |
 | **File scope not supported** | Download was called on a file from a conversation scope this API does not yet support, meaning anything other than personal, group chat, or channel for an agentic user. A traditional bot receives files only in personal (1:1) chats. | `scope`: the conversation scope. |
 
 <sup id="access-denied">1</sup> A **`403`** deliberately collapses causes the SDK cannot differentiate: an unconsented permission, a file the identity was never granted, and an item that does not exist all arrive the same way. There is no separate "file not found" case to branch on; `details` carries the service's own text for diagnosis. In a standard channel, a file picked from OneDrive or SharePoint, rather than uploaded, can be refused this way, because Teams does not grant the agent access to the picked item (see [Group chats and channels](#group-chats-and-channels)). A `401` is a different problem, which is why the status is reported rather than folded in: the token was rejected, so the fix is the token rather than the sharing.
@@ -117,7 +127,7 @@ Every file the accessor returns retains its original wire attachment on <Languag
 
 <LanguageInclude section="raw-attachment" />
 
-Attachments that are **not** files (inline images, Adaptive Cards, mentions, link previews), and malformed file entries the accessor skips, are not returned by <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> and therefore have no <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} />. Reach those directly through <LanguageInclude content={{"typescript": "`ctx.activity.attachments`", "python": "`ctx.activity.attachments`", "csharp": "`context.Activity.Attachments`"}} />. For image attachments, see [Receiving Inline Images](./receiving-inline-images).
+Attachments that are **not** files or inline images (Adaptive Cards, mentions, link previews), and malformed file entries the accessor skips, are not returned by <LanguageInclude content={{"typescript": "`list()`", "python": "`list()`", "csharp": "`ListAsync()`"}} /> and therefore have no <LanguageInclude content={{"typescript": "`IIncomingFile`", "python": "`IncomingFile`", "csharp": "`IncomingFile`"}} />. Reach those directly through <LanguageInclude content={{"typescript": "`ctx.activity.attachments`", "python": "`ctx.activity.attachments`", "csharp": "`context.Activity.Attachments`"}} />. The HTML attachment that accompanies a pasted image is also only in that array; see [Receiving Inline Images](./receiving-inline-images).
 
 ## Conversation scope support
 

@@ -123,7 +123,7 @@ export async function runAppCreate(
 
   const result = await createApp(
     prepared.input,
-    createSpinnerProgress(prepared.silent || prepared.input.botLocation === 'azure')
+    createSpinnerProgress(prepared.silent)
   );
   const output = toAppCreateOutput(result, prepared.envPath);
   await renderAppCreateResult(output, result, prepared.envPath, options, runOptions);
@@ -161,13 +161,6 @@ async function prepareAppCreate(
         `Set ${DEV_API_ENV_VAR}=1 to use the dev-int Teams Developer Portal.`
       );
     }
-    if (location === 'azure') {
-      throw new CliError(
-        'VALIDATION_CONFLICT',
-        'Socket mode is only supported for Teams-managed bots.',
-        'Use --teams-managed.'
-      );
-    }
   }
 
   const serviceManagementReference = options.serviceManagementReference?.trim();
@@ -203,7 +196,6 @@ async function prepareAppCreate(
     options.endpoint === undefined &&
     interactive &&
     !hasFlags &&
-    location === 'tm' &&
     isBotCommunicationApiAvailable()
   ) {
     socketMode = (await promptMessagingMode()) === 'socket';
@@ -313,7 +305,7 @@ async function prepareAppCreate(
       const rgRegion = options.region ?? 'westus2';
       const rgSpinner = createSilentSpinner(
         `Creating resource group ${resourceGroup}...`,
-        true
+        silent
       ).start();
       await runAz([
         'group',
@@ -483,7 +475,7 @@ export const appCreateCommand = new Command('create')
   .addOption(
     new Option(
       '--messaging-mode <mode>',
-      '[OPTIONAL] How Teams delivers messages: socket or http (socket requires a Teams-managed bot)'
+      '[OPTIONAL] How Teams delivers messages: socket or http'
     ).hideHelp(!isTdpV2Enabled())
   )
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')

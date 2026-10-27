@@ -76,13 +76,6 @@ export async function createApp(
       'Provide an Azure subscription and resource group, or use Teams-managed bot hosting.'
     );
   }
-  if (input.socketMode && input.botLocation === 'azure') {
-    throw new CliError(
-      'VALIDATION_CONFLICT',
-      'Socket mode is only supported for Teams-managed bots.',
-      'Use Teams-managed bot hosting.'
-    );
-  }
 
   progress?.start('Acquiring tokens...');
   const account = await getAccount();

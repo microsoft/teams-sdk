@@ -12,6 +12,7 @@ import {
   getBotLocation,
   createAzureBotHandler,
   discoverAzureBot,
+  getAzureBotEndpoint,
   extractDomain,
   normalizeAppMetadata,
   validateAppMetadata,
@@ -23,7 +24,7 @@ import {
   isBotCommunicationApiAvailable,
   setSocketMode,
 } from '../../apps/index.js';
-import { ensureAz } from '../../utils/az.js';
+import { ensureAz, isAzInstalled, isAzLoggedIn } from '../../utils/az.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
 import { DEV_API_ENV_VAR, isTdpV2Enabled } from '../../utils/tdp-host.js';
 import { readAndValidateIcon } from '../../utils/icon.js';
@@ -32,7 +33,7 @@ import { logger } from '../../utils/logger.js';
 import { pickApp } from '../../utils/app-picker.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
 import { bumpPatchVersion, stableStringify } from '../../utils/version.js';
-import { parseMessagingMode, promptMessagingMode } from './messaging-mode.js';
+import { MESSAGING_MODE_RESTART_HINT, parseMessagingMode, promptMessagingMode } from './messaging-mode.js';
 import type { AppSummary, AppDetails } from '../../apps/types.js';
 import type { BotDetails } from '../../apps/tdp.js';
 import type { BotLocation } from '../../apps/bot-location.js';
@@ -101,6 +102,8 @@ interface AppUpdateOutput {
   needsReinstall?: boolean;
   /** HTTP delivery was selected but the bot has no messaging endpoint. */
   needsEndpoint?: boolean;
+  /** Messaging mode changed; the running Teams SDK app must be restarted. */
+  needsRestart?: boolean;
   updated: {
     endpoint?: string;
     socketMode?: boolean;
@@ -149,6 +152,54 @@ async function updateTeamsManagedEndpoint(
 }
 
 /**
+ * Set an Azure bot's endpoint via `az bot update` and add its domain to validDomains.
+ * Returns false when the bot could not be found in Azure.
+ */
+async function updateAzureEndpoint(
+  token: string,
+  teamsAppId: string,
+  appDetails: AppDetails,
+  botId: string,
+  newEndpoint: string
+): Promise<boolean> {
+  await ensureAz();
+  const azContext = await discoverAzureBot(botId);
+  if (!azContext) return false;
+
+  const handler = createAzureBotHandler(azContext);
+  const updateSpinner = createSilentSpinner('Updating endpoint (Azure)...').start();
+  await handler.updateEndpoint(botId, newEndpoint);
+  updateSpinner.success({ text: 'Endpoint updated successfully' });
+
+  const domain = extractDomain(newEndpoint);
+  if (domain) {
+    const domains = (appDetails.validDomains as string[]) ?? [];
+    if (!domains.includes(domain)) {
+      const domainSpinner = createSilentSpinner('Updating valid domains...').start();
+      const domainResult = await updateAppDetails(token, teamsAppId, { validDomains: [...domains, domain] });
+      domainSpinner.success({ text: `Added ${domain} to valid domains` });
+      logVersionBumpReinstallHint(domainResult);
+    }
+  }
+  return true;
+}
+
+/**
+ * Best-effort read of an Azure bot's endpoint. Returns undefined when it can't be determined
+ * (az missing/not logged in, bot not found, or az error) so callers never require az for this.
+ */
+async function tryGetAzureEndpoint(botId: string, silent: boolean): Promise<string | null | undefined> {
+  try {
+    if (!(await isAzInstalled()) || !(await isAzLoggedIn())) return undefined;
+    const azContext = await discoverAzureBot(botId, silent);
+    if (!azContext) return undefined;
+    return await getAzureBotEndpoint(azContext, botId);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Interactive update menu for a single app. Returns when user selects "Back".
  */
 export async function showUpdateMenu(app: AppSummary, token: string): Promise<void> {
@@ -177,7 +228,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 
   let bot: BotDetails | null = null;
   let botLocation: BotLocation | null = null;
-  // null = unknown or not applicable (no bot, Azure bot, API unavailable, or read failed)
+  // null = unknown or not applicable (no bot, API unavailable, or read failed)
   let socketMode: boolean | null = null;
   if (appDetails.bots && appDetails.bots.length > 0) {
     const botId = appDetails.bots[0].botId;
@@ -188,13 +239,14 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       } catch {
         // Bot fetch failed, skip
       }
-      if (isBotCommunicationApiAvailable()) {
-        try {
-          const config = await getBotCommunicationConfiguration(token, botId);
-          socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
-        } catch {
-          // Leave as unknown; the menu entry still lets the user set it.
-        }
+    }
+    // Socket mode is keyed by the Entra app ID, so it works the same for Teams-managed and Azure bots.
+    if (isBotCommunicationApiAvailable()) {
+      try {
+        const config = await getBotCommunicationConfiguration(token, botId);
+        socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
+      } catch {
+        // Leave as unknown; the menu entry still lets the user set it.
       }
     }
   }
@@ -207,7 +259,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
     if (bot) {
       logger.info(`${pc.dim('Endpoint:')} ${bot.messagingEndpoint || pc.yellow('(not set)')}`);
     }
-    const showMessagingMode = botLocation === 'tm' && isBotCommunicationApiAvailable();
+    const showMessagingMode = botLocation !== null && isBotCommunicationApiAvailable();
     if (showMessagingMode) {
       const label =
         socketMode === null ? pc.yellow('(unknown)') : socketMode ? 'Sockets' : 'HTTP endpoint';
@@ -270,6 +322,36 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
         if (!bot.messagingEndpoint) {
           logger.warn(pc.yellow('No messaging endpoint is set. Choose "Messaging mode" again to set one.'));
         }
+      } else if (!enable && botLocation === 'azure') {
+        // Azure endpoints live in Azure, so az is only needed when the user enters a new one.
+        const newEndpoint = (
+          await input({
+            message: 'Messaging endpoint URL (leave empty to keep the current Azure endpoint):',
+            validate: (value) => {
+              if (!value.trim()) return true;
+              return validateEndpoint(value.trim()) ?? true;
+            },
+          })
+        ).trim();
+
+        if (newEndpoint) {
+          try {
+            if (!(await updateAzureEndpoint(token, app.teamsAppId, appDetails, botId, newEndpoint))) {
+              logger.error(pc.red('Could not find this bot in Azure.'));
+              continue;
+            }
+            endpointChanged = true;
+          } catch (error) {
+            // Endpoint must be saved before switching to HTTP; skip the mode change on failure.
+            logger.error(pc.red(error instanceof Error ? error.message : String(error)));
+            continue;
+          }
+        } else {
+          const currentEndpoint = await tryGetAzureEndpoint(botId, false);
+          if (currentEndpoint === null || currentEndpoint === '') {
+            logger.warn(pc.yellow('No messaging endpoint is set. Choose "Messaging mode" again to set one.'));
+          }
+        }
       }
 
       if (socketMode === enable) {
@@ -285,6 +367,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       try {
         await setSocketMode(token, botId, enable);
         modeSpinner.success({ text: enable ? 'Socket mode enabled' : 'Switched to HTTP' });
+        logger.info(pc.yellow(MESSAGING_MODE_RESTART_HINT));
         socketMode = enable;
       } catch (error) {
         modeSpinner.error({ text: 'Failed to update messaging mode' });
@@ -379,27 +462,8 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
           continue;
         }
 
-        await ensureAz();
-        const azContext = await discoverAzureBot(botId);
-        if (!azContext) {
+        if (!(await updateAzureEndpoint(token, app.teamsAppId, appDetails, botId, newEndpoint.trim()))) {
           logger.error(pc.red('Could not find this bot in Azure.'));
-          continue;
-        }
-        const handler = createAzureBotHandler(azContext);
-        const updateSpinner = createSilentSpinner('Updating endpoint (Azure)...').start();
-        await handler.updateEndpoint(botId, newEndpoint.trim());
-        updateSpinner.success({ text: 'Endpoint updated successfully' });
-
-        // Update validDomains
-        const domain = extractDomain(newEndpoint.trim());
-        if (domain) {
-          const domains = (appDetails.validDomains as string[]) ?? [];
-          if (!domains.includes(domain)) {
-            const domainSpinner = createSilentSpinner('Updating valid domains...').start();
-            const domainResult = await updateAppDetails(token, app.teamsAppId, { validDomains: [...domains, domain] });
-            domainSpinner.success({ text: `Added ${domain} to valid domains` });
-            logVersionBumpReinstallHint(domainResult);
-          }
         }
         continue;
       }
@@ -433,7 +497,7 @@ export const appUpdateCommand = new Command('update')
   .addOption(
     new Option(
       '--messaging-mode <mode>',
-      '[OPTIONAL] Set how Teams delivers messages: socket or http (Teams-managed bots only)'
+      '[OPTIONAL] Set how Teams delivers messages: socket or http'
     ).hideHelp(!isTdpV2Enabled())
   )
   .option('--scopes <scopes>', '[OPTIONAL] Set bot scopes (comma-separated: personal,team,groupChat,copilot)')
@@ -520,7 +584,8 @@ export const appUpdateCommand = new Command('update')
         }
       }
       if (options.scopes !== undefined) {
-        const parsed = options.scopes.split(',').map((s) => s.trim()).filter(Boolean);
+        // Also split on whitespace: PowerShell passes unquoted `a,b` as "a b"
+        const parsed = options.scopes.split(/[\s,]+/).filter(Boolean);
         const invalid = parsed.filter((s) => !VALID_SCOPES.includes(s as BotScope));
         if (invalid.length > 0) {
           throw new CliError(
@@ -614,20 +679,21 @@ export const appUpdateCommand = new Command('update')
       const wantsModeChange = messagingMode !== undefined;
       let modeBotId: string | undefined;
       let needsEndpoint = false;
+      let needsRestart = false;
       if (wantsModeChange) {
         if (!app.bots || app.bots.length === 0) {
           throw new CliError('NOT_FOUND_BOT', 'This app has no bots.');
         }
         modeBotId = app.bots[0].botId;
-        if ((await getBotLocation(token, modeBotId)) === 'azure') {
-          throw new CliError(
-            'VALIDATION_CONFLICT',
-            'Messaging mode changes are only supported for Teams-managed bots.'
-          );
-        }
         if (messagingMode === 'http' && options.endpoint === undefined) {
-          const bot = await fetchBot(token, modeBotId).catch(() => null);
-          needsEndpoint = !!bot && !bot.messagingEndpoint;
+          // Azure endpoints can only be read through az; skip the hint if it's unavailable.
+          const currentEndpoint =
+            (await getBotLocation(token, modeBotId)) === 'azure'
+              ? await tryGetAzureEndpoint(modeBotId, silent)
+              : await fetchBot(token, modeBotId)
+                  .then((bot) => bot.messagingEndpoint ?? null)
+                  .catch(() => undefined);
+          needsEndpoint = currentEndpoint === null || currentEndpoint === '';
           if (needsEndpoint && !options.json) {
             logger.warn(
               pc.yellow('No messaging endpoint is set. Run ') +
@@ -708,6 +774,8 @@ export const appUpdateCommand = new Command('update')
         const { changed } = await setSocketMode(token, modeBotId, enable);
         if (changed) {
           modeSpinner.success({ text: enable ? 'Socket mode enabled' : 'Switched to HTTP' });
+          needsRestart = true;
+          if (!silent) logger.info(pc.yellow(MESSAGING_MODE_RESTART_HINT));
         } else {
           modeSpinner.success({
             text: enable ? 'Socket mode already enabled' : 'Already using HTTP',
@@ -723,7 +791,7 @@ export const appUpdateCommand = new Command('update')
           throw new CliError('NOT_FOUND_BOT', 'This app has no bots.');
         }
 
-        const parsed = options.scopes.split(',').map((s) => s.trim()).filter(Boolean) as BotScope[];
+        const parsed = options.scopes.split(/[\s,]+/).filter(Boolean) as BotScope[];
         const currentDetails = detailsBefore ?? await fetchAppDetailsV2(token, appId);
         const scopeUpdates = buildScopeUpdates(currentDetails, parsed);
         const spinner = createSilentSpinner('Updating scopes...', silent).start();
@@ -814,6 +882,7 @@ export const appUpdateCommand = new Command('update')
           updated: allUpdates,
           ...(versionBumped ? { needsReinstall: true } : {}),
           ...(needsEndpoint ? { needsEndpoint: true } : {}),
+          ...(needsRestart ? { needsRestart: true } : {}),
         };
         outputJson(result);
       }

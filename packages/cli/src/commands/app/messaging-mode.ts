@@ -12,6 +12,9 @@ export function parseMessagingMode(value: string): MessagingMode {
   return value as MessagingMode;
 }
 
+export const MESSAGING_MODE_RESTART_HINT =
+  'Restart your Teams SDK application to apply the updated messaging mode.';
+
 const MODE_LABELS: Record<MessagingMode, string> = {
   socket: 'Sockets',
   http: 'HTTP endpoint',
