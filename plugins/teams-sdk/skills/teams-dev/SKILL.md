@@ -1,6 +1,6 @@
 ---
 name: teams-dev
-description: Use this skill whenever the user mentions Microsoft Teams in a development context — whether they're building, integrating, configuring, debugging, or just asking questions. Covers bots, message extensions, embedded web apps, Adaptive Cards, dialogs, SSO, infrastructure, the Teams Developer CLI/SDK, and general Teams platform queries. If the word "Teams" appears, err on the side of invoking this skill.
+description: Use this skill whenever the user mentions Microsoft Teams in a development context — whether they're building, integrating, configuring, debugging, porting a Slack bot to Teams, or just asking questions. Covers bots, message extensions, embedded web apps, Adaptive Cards, dialogs, SSO, infrastructure, the Teams Developer CLI/SDK, Slack Bolt migration, and general Teams platform queries. If the word "Teams" appears, err on the side of invoking this skill.
 teams_cli_version: 3.0.*
 ---
 
@@ -41,6 +41,12 @@ Based on the user's request, route to the appropriate guide or handle directly:
 
 - Read the **[Troubleshooting guide](references/troubleshooting.md)**
 - Covers: Sideloading issues, auth errors, SSO problems, migration issues
+
+**Porting a Slack Bolt bot to the Teams SDK:**
+
+- Read and follow the **[Slack Bolt Migration guide](references/guide-migrate-slack-bolt.md)**
+- This covers: App construction, message/command handlers, Block Kit → Adaptive Cards, user authentication (Graph/external services), and what needs manual judgment vs. mechanical porting
+- This is a direct code-editing task you perform yourself (read source, apply mappings, present a diff) — not a CLI command
 
 ### Simple Operations (Handle Directly)
 
