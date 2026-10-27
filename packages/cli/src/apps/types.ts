@@ -19,6 +19,17 @@ export interface AppBot {
   messagingEndpoint?: string;
 }
 
+export interface AppStaticTab {
+  entityId: string;
+  scopes?: string[];
+  name?: string;
+  contentUrl?: string;
+  websiteUrl?: string;
+  context?: string[];
+  objectId?: string;
+  [key: string]: unknown;
+}
+
 export interface AppSummary {
   appId: string;
   appName: string | null;
@@ -58,6 +69,7 @@ export interface AppDetails {
   outlineIcon?: string;
   bots?: AppBot[];
   authorization?: AppAuthorization;
+  staticTabs?: AppStaticTab[];
 
   // Allow pass-through of unknown fields from the API
   [key: string]: unknown;
