@@ -57,7 +57,7 @@ jobs:
         run: echo "No CLI changes in this PR. Skipping build & test."
 
   status:
-    name: Build & Test CLI
+    name: Build & Test CLI + Templates
     needs: [build-cli, templates]
     if: always()
     runs-on: ubuntu-latest
