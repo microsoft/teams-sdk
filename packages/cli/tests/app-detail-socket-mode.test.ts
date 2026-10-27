@@ -58,10 +58,14 @@ describe('fetchAppDetail socketMode', () => {
     expect(mockGetConfig).not.toHaveBeenCalled();
   });
 
-  it('skips the lookup for non-Teams-managed bots', async () => {
+  it('reports socket mode for Azure bots too', async () => {
     mockFetchBot.mockRejectedValue(new Error('Not found'));
+    mockGetConfig.mockResolvedValue({ endpointConfiguration: { supportsSocketMode: true } });
 
-    expect((await fetchAppDetail(summary, 'token', true)).socketMode).toBeNull();
-    expect(mockGetConfig).not.toHaveBeenCalled();
+    const result = await fetchAppDetail(summary, 'token', true);
+
+    expect(mockGetConfig).toHaveBeenCalledWith('token', 'bot-1');
+    expect(result.socketMode).toBe(true);
+    expect(result.endpoint).toBeNull();
   });
 });
