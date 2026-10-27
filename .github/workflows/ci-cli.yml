@@ -18,9 +18,7 @@ jobs:
       pull-requests: read
 
   build-cli:
-    name: Build & Test CLI
-    needs: [templates]
-    if: always()
+    name: CLI build & test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -58,8 +56,14 @@ jobs:
         if: steps.changes.outputs.cli != 'true'
         run: echo "No CLI changes in this PR. Skipping build & test."
 
-      - name: Check templates job result
+  status:
+    name: Build & Test CLI
+    needs: [build-cli, templates]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check job results
         if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: |
-          echo "::error::One or more template jobs failed."
+          echo "::error::One or more CLI/template jobs failed."
           exit 1
