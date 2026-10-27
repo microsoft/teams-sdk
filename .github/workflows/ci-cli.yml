@@ -4,30 +4,57 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'packages/cli/**'
-      - 'package-lock.json'
 
 jobs:
+  templates:
+    name: Templates
+    uses: ./.github/workflows/ci-templates.yml
+
   build-cli:
     name: Build & Test CLI
+    needs: [templates]
+    if: always()
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Detect CLI changes
+        id: changes
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            cli:
+              - 'packages/cli/**'
+              - 'package-lock.json'
 
       - name: Setup Node.js
+        if: steps.changes.outputs.cli == 'true'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
+        if: steps.changes.outputs.cli == 'true'
         run: npm ci
 
       - name: Build CLI
+        if: steps.changes.outputs.cli == 'true'
         run: npx turbo build --filter=@microsoft/teams.cli
 
       - name: Test CLI
+        if: steps.changes.outputs.cli == 'true'
         run: npx turbo test --filter=@microsoft/teams.cli
+
+      - name: No CLI changes
+        if: steps.changes.outputs.cli != 'true'
+        run: echo "No CLI changes in this PR. Skipping build & test."
+
+      - name: Check templates job result
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "::error::One or more template jobs failed."
+          exit 1

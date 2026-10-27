@@ -4,11 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'teams.md/**'
-      - 'packages/cli/src/commands/**'
-      - 'packages/cli/scripts/generate-command-docs.ts'
-      - 'package-lock.json'
 
 jobs:
   build-teams-md:
@@ -18,29 +13,52 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Detect docs changes
+        id: changes
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            docs:
+              - 'teams.md/**'
+              - 'packages/cli/src/commands/**'
+              - 'packages/cli/scripts/generate-command-docs.ts'
+              - 'package-lock.json'
 
       - name: Setup Node.js
+        if: steps.changes.outputs.docs == 'true'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
+        if: steps.changes.outputs.docs == 'true'
         run: npm ci
 
       - name: Build CLI (for docs generation)
+        if: steps.changes.outputs.docs == 'true'
         run: npx turbo build --filter=@microsoft/teams.cli
 
       - name: Generate CLI command docs
+        if: steps.changes.outputs.docs == 'true'
         working-directory: packages/cli
         run: npm run docs:generate
 
       - name: Clear build artifacts
+        if: steps.changes.outputs.docs == 'true'
         working-directory: teams.md
         run: npm run clear
 
       - name: Build (teams.md)
+        if: steps.changes.outputs.docs == 'true'
         env:
           NODE_ENV: production
         run: npm run build
         working-directory: teams.md
+
+      - name: No docs changes
+        if: steps.changes.outputs.docs != 'true'
+        run: echo "No teams.md/CLI-command changes in this PR. Skipping build."
