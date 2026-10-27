@@ -1,13 +1,13 @@
 # Teams Developer CLI
 
-[![npm version](https://img.shields.io/npm/v/@microsoft/teams.cli.svg)](https://www.npmjs.com/package/@microsoft/teams.cli)
+[![npm preview version](https://img.shields.io/npm/v/@microsoft/teams.cli/preview.svg?label=npm%20preview)](https://www.npmjs.com/package/@microsoft/teams.cli)
 
 Teams Developer CLI helps you create, configure, and manage Microsoft Teams apps from the command line. Use it to scaffold projects, register Teams apps and bots, manage manifests and packages, configure authentication, and automate common app lifecycle tasks.
 
 ## Install
 
 ```bash
-npm install -g @microsoft/teams.cli
+npm install -g @microsoft/teams.cli@preview
 ```
 
 ## Usage
