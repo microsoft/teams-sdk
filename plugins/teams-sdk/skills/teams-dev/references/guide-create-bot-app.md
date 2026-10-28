@@ -80,6 +80,8 @@ All languages support the same template options via `-t, --template <template>`:
 
 **Note:** Template availability varies by language. Check `teams project new <language> --help` for the actual list of available templates for each language.
 
+**Version requirements:** The TypeScript `tab` template builds with Vite 8, which requires Node.js 20.19+ or 22.12+. On older Node.js its build fails with errors such as `does not provide an export named 'styleText'`.
+
 **Recommendations:**
 
 - **First bot?** Start with `echo` to learn the basics

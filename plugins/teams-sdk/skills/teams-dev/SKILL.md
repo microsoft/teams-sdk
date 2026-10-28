@@ -70,6 +70,8 @@ teams app get <teamsAppId> --json
 teams status
 ```
 
+If the output reports that the CLI is not the latest version (`updateAvailable: true` with `--json`), suggest running `teams self-update`.
+
 **Update CLI to latest version:**
 
 ```bash
