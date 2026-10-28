@@ -8,7 +8,17 @@ This guide walks through setting up the infrastructure for a Microsoft Teams bot
 
 Before creating a Teams bot, verify these prerequisites:
 
-### Step 1: Check Teams Developer CLI Installation
+### Step 1: Check Node.js Version
+
+The current Teams Developer CLI requires **Node.js 22.12 or later**:
+
+```bash
+node --version
+```
+
+**If the version is below 22.12** (e.g., Node 20 or Node 22.11): stop and ask the user to upgrade Node.js (from [nodejs.org](https://nodejs.org/) or their version manager) before installing the CLI. Do NOT install the CLI on an older Node.js — npm silently falls back to an outdated CLI release (3.0.3) that is compatible with the older runtime.
+
+### Step 2: Check Teams Developer CLI Installation
 
 Verify the Teams Developer CLI is installed:
 
@@ -16,24 +26,24 @@ Verify the Teams Developer CLI is installed:
 teams --version
 ```
 
-**Expected output:** Shows version number (e.g., `3.0.0` or later)
+**Expected output:** Shows version number `3.0.4` or later
 
-**If not installed:**
+**If not installed, or the version is older than `3.0.4`:**
 
-Install the Teams Developer CLI using npm:
+Install the latest Teams Developer CLI using npm (always include `@latest`):
 
 ```bash
-npm install -g @microsoft/teams.cli
+npm install -g @microsoft/teams.cli@latest
 ```
 
 **After installation:**
 
 - Verify: Run `teams --version` to confirm installation
-- You should see the version number
+- You should see version `3.0.4` or later. If you still see an older version, re-check Step 1 (Node.js version).
 
-**Checkpoint:** Teams Developer CLI is installed.
+**Checkpoint:** Node.js 22.12+ and the latest Teams Developer CLI are installed.
 
-### Step 2: Check Authentication
+### Step 3: Check Authentication
 
 Run the following command to check authentication status:
 
@@ -51,7 +61,7 @@ teams status
 
 **Checkpoint:** Authentication verified before proceeding.
 
-### Step 3: Set Up Bot Endpoint
+### Step 4: Set Up Bot Endpoint
 
 Your bot needs a publicly accessible HTTPS endpoint for Teams to send messages to it.
 

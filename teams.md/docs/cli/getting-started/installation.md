@@ -8,17 +8,24 @@
 
 ## Install
 
-Install `teams` globally from npm:
+Check your Node.js version, then install `teams` globally from npm:
 
 ```bash
-npm install -g @microsoft/teams.cli
+node --version   # must be 22.12 or later
+npm install -g @microsoft/teams.cli@latest
 ```
+
+:::warning
+On Node.js older than 22.12, npm doesn't fail — it silently installs an outdated CLI release (3.0.3) that still supports the older runtime. Upgrade Node.js first, then reinstall.
+:::
 
 ## Verify
 
 ```bash
 teams --version
 ```
+
+You should see `3.0.4` or later. If you see an older version, check `node --version` and reinstall after upgrading Node.js.
 
 ## Update
 
