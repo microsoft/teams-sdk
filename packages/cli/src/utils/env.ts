@@ -15,6 +15,25 @@ function ensureParentDir(resolvedPath: string): void {
   fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
 }
 
+/**
+ * Read a single `KEY=value` line out of a plain `.env` file. Returns
+ * `undefined` if the file or key is missing. Used to recover the blueprint
+ * client secret written by `teams agent blueprint create` when a later,
+ * separate invocation (e.g. `teams agent identity create`) needs to
+ * authenticate as the blueprint again.
+ */
+export function readEnvValue(filePath: string, key: string): string | undefined {
+  const resolvedPath = path.resolve(filePath);
+  if (!fs.existsSync(resolvedPath)) return undefined;
+
+  const content = fs.readFileSync(resolvedPath, 'utf-8');
+  for (const line of content.split('\n')) {
+    const match = line.match(/^([A-Z_]+)=(.*)$/);
+    if (match && match[1] === key) return match[2];
+  }
+  return undefined;
+}
+
 export function writeEnvFile(filePath: string, values: EnvValues): void {
   const resolvedPath = path.resolve(filePath);
 

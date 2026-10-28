@@ -12,7 +12,7 @@ import {
   type ScaffoldOptions,
 } from '../../project/scaffold.js';
 import { runAppCreate, type AppCreateOutput } from '../app/create.js';
-import { runAgentCreate, type AgentCreateOutput } from '../agent/create.js';
+import { type AgentUserCreateOutput, runAgentUserCreate } from '../agent/user/create.js';
 
 export interface ProjectNewOutput {
   name: string;
@@ -24,6 +24,8 @@ export interface ProjectNewOutput {
   teamsAppId?: string;
   botId?: string;
   agentBlueprintId?: string;
+  agenticUserId?: string;
+  userPrincipalName?: string;
   generatedConfigPath?: string;
 }
 
@@ -104,8 +106,9 @@ export function appCreateCommandFor(agentName: string, credentialsPath: string):
   return `teams app create --name ${quoteCommandArg(agentName)} --env ${quoteCommandArg(credentialsPath)}`;
 }
 
-export function agentCreateCommandFor(agentName: string): string {
-  return `teams agent create ${quoteCommandArg(agentName)}`;
+/** `teams agent user create` takes an optional existing blueprint ID, not a name -- when creating a brand new blueprint it always prompts for the name interactively. */
+export function agentUserCreateCommandHint(): string {
+  return 'teams agent user create';
 }
 
 export function hasCredentialValues(envVars: Record<string, string>): boolean {
@@ -203,6 +206,8 @@ export async function createProjectFromTemplate(
       hasProjectCredentials = true;
     } else if (provisionResult?.kind === 'agent') {
       output.agentBlueprintId = provisionResult.result.agentBlueprintId;
+      output.agenticUserId = provisionResult.result.agenticUserId;
+      output.userPrincipalName = provisionResult.result.userPrincipalName;
       output.generatedConfigPath = provisionResult.result.generatedConfigPath;
       delete output.appCreateCommand;
       hasProjectCredentials = true;
@@ -213,9 +218,9 @@ export async function createProjectFromTemplate(
     logger.info('');
     logger.info(pc.bold('To provision an app or agentic user and write credentials, run from the project folder:'));
     logger.info(pc.cyan(`  ${appCreateCommandFor(rawName.trim(), credentialDisplay)}`));
-    logger.info(pc.dim('  (bot/app)'));
-    logger.info(pc.cyan(`  ${agentCreateCommandFor(rawName.trim())}`));
-    logger.info(pc.dim('  (Agent 365 agentic user)'));
+    logger.info(pc.dim('  (Teams app)'));
+    logger.info(pc.cyan(`  ${agentUserCreateCommandHint()}`));
+    logger.info(pc.dim('  (Agent 365 agentic user -- creates the blueprint + identity too)'));
   }
 
   if (options.start && strategy.startProject) {
@@ -229,7 +234,7 @@ export async function createProjectFromTemplate(
 
 type ProvisionResult =
   | { kind: 'bot'; result: AppCreateOutput }
-  | { kind: 'agent'; result: AgentCreateOutput };
+  | { kind: 'agent'; result: AgentUserCreateOutput };
 
 async function maybeProvisionAppForCreatedProject(
   rawName: string,
@@ -242,7 +247,7 @@ async function maybeProvisionAppForCreatedProject(
   }
 
   const provisionApp = await confirm({
-    message: 'Provision an app or agentic user now?',
+    message: 'Provision a Teams app or an Agent 365 agentic user now?',
     default: true,
   });
   if (!provisionApp) return undefined;
@@ -256,15 +261,15 @@ async function maybeProvisionAppForCreatedProject(
   });
 
   if (choice === 'agent') {
-    // Agent 365 identities don't produce a TDP Teams app/bot credentials file;
+    // Agentic users don't produce a TDP Teams app/bot credentials file;
     // the generated config lands directly in the new project's directory.
-    // The blueprint name is a separate identity from the project name, so
+    // The agent name is a separate identity from the project name, so
     // ask for it explicitly (defaulting to the project name for convenience).
     const agentName = await input({
-      message: 'Agentic blueprint name:',
+      message: 'Blueprint name:',
       default: rawName.trim(),
     });
-    const result = await runAgentCreate(agentName.trim() || rawName.trim(), { cwd: targetDir });
+    const result = await runAgentUserCreate(undefined, { cwd: targetDir }, agentName.trim() || rawName.trim());
     return { kind: 'agent', result };
   }
 

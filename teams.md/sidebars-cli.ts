@@ -59,7 +59,16 @@ export default {
           type: 'category',
           label: 'agent',
           collapsed: true,
-          items: ['commands/agent/index', 'commands/agent/create'],
+          items: [
+            'commands/agent/index',
+            'commands/agent/blueprint',
+            'commands/agent/blueprint-create',
+            'commands/agent/blueprint-update',
+            'commands/agent/blueprint-delete',
+            'commands/agent/user',
+            'commands/agent/user-create',
+            'commands/agent/user-delete',
+          ],
         },
         {
           type: 'category',

@@ -118,4 +118,4 @@ In the [Teams Developer Portal](https://dev.teams.microsoft.com), this is equiva
 
 ### Agentic Identities (Agent 365)
 
-This command only creates classic Teams bots. To register an Agent 365 agentic identity instead, use [`teams agent create`](../agent/create) — or, when scaffolding a new project with [`teams project new`](../project/new), choose **Agentic user (Agent 365 identity)** at the provisioning prompt.
+This command only creates classic Teams bots. To register an Agent 365 agentic user instead, use [`teams agent user create`](../agent/user-create) — or, when scaffolding a new project with [`teams project new`](../project/new), choose **Agentic user (Agent 365 blueprint + identity + user)** at the provisioning prompt.

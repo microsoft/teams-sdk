@@ -10,7 +10,7 @@ const mockConfirmAction = vi.fn();
 const mockIsAutoConfirm = vi.fn();
 const mockIsInteractive = vi.fn();
 const mockRunAppCreate = vi.fn();
-const mockRunAgentCreate = vi.fn();
+const mockRunAgentUserCreate = vi.fn();
 const mockListTemplates = vi.fn();
 const mockScaffoldProject = vi.fn();
 
@@ -30,8 +30,8 @@ vi.mock('../src/commands/app/create.js', () => ({
   runAppCreate: mockRunAppCreate,
 }));
 
-vi.mock('../src/commands/agent/create.js', () => ({
-  runAgentCreate: mockRunAgentCreate,
+vi.mock('../src/commands/agent/user/create.js', () => ({
+  runAgentUserCreate: mockRunAgentUserCreate,
 }));
 
 vi.mock('../src/project/scaffold.js', () => ({
@@ -64,11 +64,11 @@ const appCreateResult = {
 };
 
 const agentCreateResult = {
-  status: 'completed' as const,
   agentBlueprintId: 'agent-blueprint-id',
-  agentBlueprintObjectId: 'agent-blueprint-object-id',
-  managedIdentityPrincipalId: 'managed-identity-principal-id',
-  generatedConfigPath: 'a365.generated.config.json',
+  agentIdentityId: 'agent-identity-id',
+  agenticUserId: 'agentic-user-id',
+  userPrincipalName: 'pm-agent@contoso.onmicrosoft.com',
+  generatedConfigPath: 'agent.generated.config.json',
 };
 
 describe('project new app provisioning', () => {
@@ -113,7 +113,7 @@ describe('project new app provisioning', () => {
       })
     );
     expect(mockConfirm).toHaveBeenCalledWith({
-      message: 'Provision an app or agentic user now?',
+      message: 'Provision a Teams app or an Agent 365 agentic user now?',
       default: true,
     });
     expect(mockScaffoldProject.mock.invocationCallOrder[0]).toBeLessThan(
@@ -157,13 +157,13 @@ describe('project new app provisioning', () => {
     );
   });
 
-  it('routes to agent create when the agentic user choice is selected', async () => {
+  it('routes to agent user create when the agentic user choice is selected', async () => {
     mockInput.mockResolvedValueOnce('PM Agent');
     mockSelect.mockResolvedValueOnce('typescript');
     mockConfirm.mockResolvedValueOnce(true);
     mockSelect.mockResolvedValueOnce('agent');
     mockInput.mockResolvedValueOnce('PM Agent Blueprint');
-    mockRunAgentCreate.mockResolvedValueOnce(agentCreateResult);
+    mockRunAgentUserCreate.mockResolvedValueOnce(agentCreateResult);
 
     const { projectNewCommand } = await import('../src/commands/project/new/index.js');
 
@@ -171,11 +171,13 @@ describe('project new app provisioning', () => {
 
     expect(mockRunAppCreate).not.toHaveBeenCalled();
     expect(mockInput).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Agentic blueprint name:', default: 'PM Agent' })
+      expect.objectContaining({ message: 'Blueprint name:', default: 'PM Agent' })
     );
-    expect(mockRunAgentCreate).toHaveBeenCalledWith('PM Agent Blueprint', {
-      cwd: path.join(tempDir, 'pm-agent'),
-    });
+    expect(mockRunAgentUserCreate).toHaveBeenCalledWith(
+      undefined,
+      { cwd: path.join(tempDir, 'pm-agent') },
+      'PM Agent Blueprint'
+    );
   });
 
   it('shows app-create guidance when app provisioning is skipped', async () => {

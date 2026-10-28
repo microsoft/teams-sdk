@@ -1,0 +1,149 @@
+import { input } from '@inquirer/prompts';
+import { Command } from 'commander';
+import { join } from 'node:path';
+import pc from 'picocolors';
+import {
+  AGENT_GITIGNORE_ENTRIES,
+  ensureGitignoreEntries,
+  getGeneratedConfigPath,
+  updateGeneratedConfig,
+  writeGeneratedConfig,
+  type AgentGeneratedConfig,
+} from '../../../apps/agent-config.js';
+import { writeCredentials } from '../../../utils/env.js';
+import { wrapAction } from '../../../utils/errors.js';
+import { isInteractive } from '../../../utils/interactive.js';
+import { outputJson } from '../../../utils/json-output.js';
+import { logger } from '../../../utils/logger.js';
+import { requireAgentAccount, resolveAgentName } from '../shared.js';
+import { assertHttpsEndpoint, registerAgentBlueprintEndpoint, runCreateAgentBlueprint } from './actions.js';
+
+export interface AgentBlueprintCreateOptions {
+  json?: boolean;
+  /** [OPTIONAL] Working directory for the generated config file. Defaults to process.cwd(). */
+  cwd?: string;
+}
+
+export interface AgentBlueprintCreateOutput {
+  agentBlueprintId: string;
+  agentBlueprintObjectId: string;
+  managedIdentityPrincipalId: string;
+  messagingEndpoint?: string;
+  teamsAppId?: string;
+  generatedConfigPath: string;
+  /** .env path where CLIENT_ID/CLIENT_SECRET/TENANT_ID were written for the Teams SDK app. */
+  envPath: string;
+}
+
+/**
+ * Asks for the messaging endpoint right after blueprint creation. Both
+ * follow-up paths (Teams app and agentic user) need it registered on the
+ * blueprint's own bot identity for the deployed agent to actually receive
+ * messages, so this runs before the "how will this agent run?" fork.
+ * Optional -- you may not have anything deployed yet -- so pressing enter
+ * skips it. Only runs in an interactive, non-JSON session.
+ */
+async function resolveOptionalEndpoint(silent: boolean): Promise<string | undefined> {
+  if (silent || !isInteractive()) return undefined;
+
+  const endpoint = await input({
+    message: 'Messaging endpoint (HTTPS URL, press enter to skip and set it later):',
+  });
+  return endpoint.trim() || undefined;
+}
+
+export function toAgentBlueprintCreateOutput(
+  config: AgentGeneratedConfig,
+  generatedConfigPath: string,
+  envPath: string
+): AgentBlueprintCreateOutput {
+  return {
+    agentBlueprintId: config.agentBlueprintId,
+    agentBlueprintObjectId: config.agentBlueprintObjectId,
+    managedIdentityPrincipalId: config.agentBlueprintServicePrincipalObjectId,
+    ...(config.messagingEndpoint ? { messagingEndpoint: config.messagingEndpoint } : {}),
+    ...(config.teamsAppId ? { teamsAppId: config.teamsAppId } : {}),
+    generatedConfigPath,
+    envPath,
+  };
+}
+
+function renderAgentBlueprintCreateResult(output: AgentBlueprintCreateOutput): void {
+  logger.info('');
+  logger.info(`${pc.dim('Agent blueprint ID:')} ${output.agentBlueprintId}`);
+  logger.info(`${pc.dim('Managed identity principal ID:')} ${output.managedIdentityPrincipalId}`);
+  if (output.messagingEndpoint) {
+    logger.info(`${pc.dim('Messaging endpoint:')} ${output.messagingEndpoint}`);
+  } else {
+    logger.info(
+      `${pc.dim('Messaging endpoint:')} not set yet — run ${pc.cyan('teams agent blueprint update --endpoint <url>')} once your agent is deployed.`
+    );
+  }
+  logger.info(`${pc.dim('Generated config:')} ${output.generatedConfigPath}`);
+  logger.info(`${pc.dim('Teams SDK credentials:')} ${output.envPath} ${pc.dim('(CLIENT_ID/CLIENT_SECRET/TENANT_ID)')}`);
+  logger.info('');
+  logger.info(
+    `${pc.dim('Tip:')} to also create an Agent 365 identity and agentic user for this blueprint, run ${pc.cyan(
+      `teams agent user create ${output.agentBlueprintId}`
+    )}.`
+  );
+}
+
+export async function runAgentBlueprintCreate(
+  nameArg: string | undefined,
+  options: AgentBlueprintCreateOptions
+): Promise<AgentBlueprintCreateOutput> {
+  const silent = !!options.json;
+
+  const name = await resolveAgentName(nameArg, silent);
+  const account = await requireAgentAccount();
+
+  const cwd = options.cwd ?? process.cwd();
+  const blueprint = await runCreateAgentBlueprint(name, account, silent);
+
+  const config: AgentGeneratedConfig = {
+    agentName: name,
+    agentBlueprintId: blueprint.agentBlueprintId,
+    agentBlueprintObjectId: blueprint.agentBlueprintObjectId,
+    agentBlueprintServicePrincipalObjectId: blueprint.agentBlueprintServicePrincipalObjectId,
+    completedAt: new Date().toISOString(),
+  };
+  writeGeneratedConfig(cwd, config);
+
+  const envPath = join(cwd, '.env');
+  writeCredentials(envPath, {
+    CLIENT_ID: blueprint.agentBlueprintId,
+    CLIENT_SECRET: blueprint.agentBlueprintClientSecret,
+    TENANT_ID: account.tenantId,
+  });
+  ensureGitignoreEntries(cwd, ['.env', ...AGENT_GITIGNORE_ENTRIES]);
+
+  const endpoint = await resolveOptionalEndpoint(silent);
+  if (endpoint) {
+    assertHttpsEndpoint(endpoint);
+    await registerAgentBlueprintEndpoint(config.agentBlueprintId, account.tenantId, endpoint, silent);
+    updateGeneratedConfig(cwd, { messagingEndpoint: endpoint });
+    config.messagingEndpoint = endpoint;
+  }
+
+  const output = toAgentBlueprintCreateOutput(config, getGeneratedConfigPath(cwd), envPath);
+
+  if (options.json) {
+    outputJson(output);
+    return output;
+  }
+
+  renderAgentBlueprintCreateResult(output);
+
+  return output;
+}
+
+export const agentBlueprintCreateCommand = new Command('create')
+  .description('Create an Agent 365 agent blueprint')
+  .argument('[name]', 'Agent name')
+  .option('--json', '[OPTIONAL] Output as JSON')
+  .action(
+    wrapAction(async (nameArg: string | undefined, options: AgentBlueprintCreateOptions) => {
+      await runAgentBlueprintCreate(nameArg, options);
+    })
+  );
