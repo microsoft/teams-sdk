@@ -6,10 +6,8 @@ Teams Developer CLI helps you create, configure, and manage Microsoft Teams apps
 
 ## Install
 
-Requires Node.js 22.12 or later.
-
 ```bash
-npm install -g @microsoft/teams.cli@latest
+npm install -g @microsoft/teams.cli
 ```
 
 ## Usage

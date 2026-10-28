@@ -26,9 +26,9 @@ The Teams SDK handles the webhook plumbing, authentication, and message parsing 
 teams --version
 ```
 
-**Expected:** Version `3.0.4` or later
+**Expected:** Version number displayed (e.g., `3.0.0` or later)
 
-**If not installed, or older than `3.0.4`:** See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) for Node.js and installation requirements.
+**If not installed:** See [Bot Infrastructure Setup guide](guide-create-bot-infra.md) for installation instructions.
 
 ### Step 2: Set Up Bot Infrastructure
 
@@ -109,7 +109,7 @@ Follow the instructions printed by `teams project new` to install dependencies a
 
 Your bot needs to be accessible from the internet for Teams to send messages to it.
 
-**For tunnel setup instructions**, see the [Bot Infrastructure Setup guide - Step 4: Set Up Bot Endpoint](guide-create-bot-infra.md#step-4-set-up-bot-endpoint). This covers:
+**For tunnel setup instructions**, see the [Bot Infrastructure Setup guide - Step 3: Set Up Bot Endpoint](guide-create-bot-infra.md#step-3-set-up-bot-endpoint). This covers:
 
 - Creating a persistent devtunnel (recommended)
 - Alternative options (ngrok, existing endpoints)

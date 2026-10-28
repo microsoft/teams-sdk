@@ -76,8 +76,6 @@ teams status
 teams self-update
 ```
 
-**Installing the CLI:** Requires Node.js 22.12+. Check `node --version` first, then install with `npm install -g @microsoft/teams.cli@latest`. On older Node.js, npm silently installs an outdated release (3.0.3) — ask the user to upgrade Node.js instead. See the [Bot Infrastructure Setup guide](references/guide-create-bot-infra.md#1-prerequisites-verification).
-
 ---
 
 ## Common Operations

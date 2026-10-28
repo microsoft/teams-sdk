@@ -23,7 +23,7 @@ body:
       label: Steps to reproduce
       description: Share the exact commands or actions that reproduce the issue.
       placeholder: |
-        1. Run `npm install -g @microsoft/teams.cli@latest`
+        1. Run `npm install -g @microsoft/teams.cli`
         2. Run `teams ...`
         3. See error ...
     validations:
