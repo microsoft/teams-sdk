@@ -12,12 +12,14 @@ import {
   deleteServicePrincipal,
   deleteUser,
   getAgenticUserByIdOrUpn,
+  getAssignedLicenseSkuIds,
   listSubscribedSkus,
   getAadAppByClientId,
   getBlueprintToken,
   getOrganizationInfo,
   getServicePrincipalByAppId,
-  grantSmbaAgentDataPermission,
+  removeLicenses,
+  updateUser,
   type SubscribedSku,
 } from '../../../apps/graph.js';
 import { getAzAccessToken } from '../../../utils/az.js';
@@ -203,34 +205,11 @@ export async function runCreateAgentIdentity(
         })
     );
 
-    // Each agent identity is its own service principal, distinct from the
-    // blueprint's -- granting the Messaging Bot API permission on the
-    // blueprint alone isn't enough. Without this grant on the identity
-    // itself, the agentic user's on-behalf-of token exchange (used to
-    // post/reply as it) fails with `AADSTS65001: ... has not consented to
-    // use the application ...` / `consent_required`. This write needs
-    // `DelegatedPermissionGrant.ReadWrite.All`, which the blueprint's own
-    // client-credentials token doesn't carry, so this uses a fresh
-    // admin-delegated token instead.
-    const adminToken = await withAgentSpinner(
-      {
-        start: 'Acquiring an admin token via Azure CLI...',
-        success: 'Admin token acquired.',
-        error: 'Could not get an admin token from the Azure CLI.',
-      },
-      silent,
-      () => getAzAccessToken('https://graph.microsoft.com', account.tenantId)
-    );
-
-    await withAgentSpinner(
-      {
-        start: 'Granting Messaging Bot API AgentData.ReadWrite permission...',
-        success: 'Messaging Bot API permission granted.',
-        error: 'Failed to grant the Messaging Bot API permission.',
-      },
-      silent,
-      () => grantSmbaAgentDataPermission(adminToken, identity.id)
-    );
+    // The blueprint's `configureInheritableResourcePermissions` call
+    // (made during `agent blueprint create`) means this identity's service
+    // principal automatically inherits the Messaging Bot API
+    // `AgentData.ReadWrite` scope granted on the blueprint -- no separate
+    // per-identity grant needed here anymore.
 
     return { agentIdentityId: identity.id };
   } catch (error) {
@@ -559,6 +538,112 @@ async function resolveLicenseAssignment(
   if (licenseOption === false) return { needsLicense: true };
   if (licenseOption) return assignSpecificLicense(adminToken, userId, licenseOption, silent);
   return tryAssignLicenseInteractively(adminToken, userId, silent);
+}
+
+export interface AgentUserUpdateResult {
+  agenticUserId: string;
+  name?: string;
+  usageLocation?: string;
+  licenseAssigned?: boolean;
+  licenseSkuPartNumber?: string;
+  licenseRemoved?: boolean;
+}
+
+/**
+ * Updates an existing agentic user's display name, usage location,
+ * and/or license. Unlike `runCreateAgenticUser`'s best-effort license
+ * handling, `--license`/`--no-license` here always throw on failure --
+ * the caller is explicitly asking for a specific change to an existing
+ * user, so silently no-op'ing would hide a real problem.
+ */
+export async function runUpdateAgenticUser(
+  userIdOrUpn: string,
+  account: AccountInfo,
+  silent: boolean,
+  name?: string,
+  usageLocation?: string,
+  licenseOption?: string | false
+): Promise<AgentUserUpdateResult> {
+  try {
+    const adminToken = await withAgentSpinner(
+      {
+        start: 'Acquiring an admin token via Azure CLI...',
+        success: 'Admin token acquired.',
+        error: 'Could not get an admin token from the Azure CLI.',
+      },
+      silent,
+      () => getAzAccessToken('https://graph.microsoft.com', account.tenantId)
+    );
+
+    const agenticUser = await withAgentSpinner(
+      {
+        start: 'Looking up agentic user...',
+        success: 'Agentic user found.',
+        error: 'Could not find an agentic user with that ID/UPN.',
+      },
+      silent,
+      () => getAgenticUserByIdOrUpn(adminToken, userIdOrUpn)
+    );
+    if (!agenticUser) {
+      throw new CliError(
+        'AGENT_IDENTITY_USER_NOT_FOUND',
+        `No agentic user found matching "${userIdOrUpn}".`,
+        'Verify the object ID or UPN is correct.'
+      );
+    }
+
+    const result: AgentUserUpdateResult = { agenticUserId: agenticUser.id };
+
+    const updates: Record<string, unknown> = {};
+    if (name?.trim()) {
+      updates.displayName = name.trim();
+      result.name = name.trim();
+    }
+    if (usageLocation?.trim()) {
+      const validated = validateUsageLocationFormat(usageLocation);
+      updates.usageLocation = validated;
+      result.usageLocation = validated;
+    }
+    if (Object.keys(updates).length > 0) {
+      await withAgentSpinner(
+        {
+          start: 'Updating agentic user...',
+          success: 'Agentic user updated.',
+          error: 'Failed to update agentic user.',
+        },
+        silent,
+        () => updateUser(adminToken, agenticUser.id, updates)
+      );
+    }
+
+    if (licenseOption === false) {
+      const assigned = await getAssignedLicenseSkuIds(adminToken, agenticUser.id);
+      if (assigned.length > 0) {
+        await withAgentSpinner(
+          {
+            start: 'Removing assigned license(s)...',
+            success: 'License(s) removed.',
+            error: 'Failed to remove the assigned license(s).',
+          },
+          silent,
+          () => removeLicenses(adminToken, agenticUser.id, assigned)
+        );
+        result.licenseRemoved = true;
+      }
+    } else if (licenseOption) {
+      const license = await assignSpecificLicense(adminToken, agenticUser.id, licenseOption, silent);
+      Object.assign(result, license);
+    }
+
+    return result;
+  } catch (error) {
+    if (error instanceof CliError) throw error;
+    throw new CliError(
+      'AGENT_IDENTITY_USER_FAILED',
+      error instanceof Error ? error.message : String(error),
+      'This call requires Global Administrator (or equivalent) permissions in Azure CLI -- run `az login` as an admin and retry.'
+    );
+  }
 }
 
 export interface AgentIdentityUserDeleteResult {

@@ -18,7 +18,6 @@ export interface AgentBlueprintDeleteOptions {
 
 export interface AgentBlueprintDeleteOutput {
   agentBlueprintId: string;
-  teamsAppId?: string;
   dryRun: boolean;
 }
 
@@ -33,7 +32,7 @@ async function resolveDeleteTarget(
   cwd: string,
   account: AccountInfo,
   silent: boolean
-): Promise<AgentBlueprintCleanupTarget & { teamsAppId?: string }> {
+): Promise<AgentBlueprintCleanupTarget> {
   if (blueprintIdArg) {
     return resolveBlueprintCleanupTarget(blueprintIdArg, account, silent);
   }
@@ -47,11 +46,13 @@ async function resolveDeleteTarget(
   }
 
   const config = readGeneratedConfig(cwd);
+  if (!silent) {
+    logger.info(pc.dim(`Using agent blueprint ${config.agentBlueprintId} from agent.generated.config.json.`));
+  }
   return {
     agentBlueprintId: config.agentBlueprintId,
     agentBlueprintObjectId: config.agentBlueprintObjectId,
     agentBlueprintServicePrincipalObjectId: config.agentBlueprintServicePrincipalObjectId,
-    ...(config.teamsAppId ? { teamsAppId: config.teamsAppId } : {}),
   };
 }
 
@@ -60,9 +61,7 @@ async function resolveDeleteTarget(
  * service principal, which cascades to its agent identities and agentic
  * users). Resolves the blueprint from a `blueprintId` argument if given,
  * otherwise from the folder `teams agent blueprint create` wrote
- * `agent.generated.config.json` into. Does not delete an associated Teams
- * app package (if one was created via the "As a Teams app" path) -- remove
- * that separately from the Developer Portal.
+ * `agent.generated.config.json` into.
  */
 export async function runAgentBlueprintDelete(
   blueprintIdArg: string | undefined,
@@ -89,7 +88,6 @@ export async function runAgentBlueprintDelete(
 
   return {
     agentBlueprintId: target.agentBlueprintId,
-    ...(target.teamsAppId ? { teamsAppId: target.teamsAppId } : {}),
     dryRun: !!options.dryRun,
   };
 }
@@ -102,11 +100,6 @@ export function renderAgentBlueprintDeleteResult(output: AgentBlueprintDeleteOut
 
   logger.info('');
   logger.info(pc.green(`Agent blueprint ${output.agentBlueprintId} and its resources were removed.`));
-  if (output.teamsAppId) {
-    logger.info(
-      pc.dim(`Its Teams app (${output.teamsAppId}) was not deleted -- remove it from the Developer Portal if needed.`)
-    );
-  }
 }
 
 export const agentBlueprintDeleteCommand = new Command('delete')

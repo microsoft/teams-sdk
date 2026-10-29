@@ -5,10 +5,10 @@ import { join } from 'node:path';
 import pc from 'picocolors';
 import {
   AGENT_GITIGNORE_ENTRIES,
+  appendAgentUser,
   ensureGitignoreEntries,
   getGeneratedConfigPath,
   readGeneratedConfig,
-  updateGeneratedConfig,
   writeGeneratedConfig,
   type AgentGeneratedConfig,
 } from '../../../apps/agent-config.js';
@@ -18,7 +18,7 @@ import { confirmAction, isInteractive } from '../../../utils/interactive.js';
 import { outputJson } from '../../../utils/json-output.js';
 import { logger } from '../../../utils/logger.js';
 import { assertHttpsEndpoint, registerAgentBlueprintEndpoint, runCreateAgentBlueprint } from '../blueprint/actions.js';
-import { requireAgentAccount, resolveAgentName } from '../shared.js';
+import { requireAgentAccount, resolveAgentName, resolveLicenseDefault, resolveUsageLocationDefault } from '../shared.js';
 import { resolveExistingBlueprint, runCreateAgentIdentity, runCreateAgenticUser } from './actions.js';
 
 export interface AgentUserCreateOptions {
@@ -271,19 +271,21 @@ export async function runAgentUserCreate(
 
   const identity = await runCreateAgentIdentity(agentName, agentBlueprintId, clientSecret, account, silent);
   const agenticUserName = await resolveAgenticUserName(agentName, options.userName, silent);
+  const licenseOption = await resolveLicenseDefault(options.license, silent);
+  const usageLocationOption = await resolveUsageLocationDefault(options.usageLocation, silent);
   const user = await runCreateAgenticUser(
     agenticUserName,
     identity.agentIdentityId,
     account,
     silent,
-    options.license,
-    options.usageLocation
+    licenseOption,
+    usageLocationOption
   );
 
-  updateGeneratedConfig(cwd, {
+  appendAgentUser(cwd, {
     agentIdentityId: identity.agentIdentityId,
     agenticUserId: user.agenticUserId,
-    ...(agenticUserName !== agentName ? { agenticUserName } : {}),
+    agenticUserName,
     userPrincipalName: user.userPrincipalName,
   });
 
@@ -318,11 +320,11 @@ export const agentUserCreateCommand = new Command('create')
     '--endpoint <url>',
     '[OPTIONAL] HTTPS messaging endpoint to register on a newly created blueprint. Not valid together with [blueprintId].'
   )
-  .option('--license <skuId>', '[OPTIONAL] License SKU ID or part number to assign to the agentic user')
+  .option('--license <skuId>', '[OPTIONAL] License SKU ID or part number to assign to the agentic user. Falls back to `teams config` default-license when omitted.')
   .option('--no-license', '[OPTIONAL] Skip license assignment (do it manually later)')
   .option(
     '--usage-location <code>',
-    '[OPTIONAL] Two-letter country code for the agentic user\u2019s usage location (e.g. US)'
+    '[OPTIONAL] Two-letter country code for the agentic user\u2019s usage location (e.g. US). Falls back to `teams config` default-usage-location when omitted.'
   )
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(

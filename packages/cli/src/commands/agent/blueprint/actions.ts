@@ -4,9 +4,9 @@ import {
   clearAgentBlueprintMessagingEndpoint,
   setAgentBlueprintMessagingEndpoint,
 } from '../../../apps/agent365-service.js';
-import { fetchAppDetailsV2, updateAppDetails } from '../../../apps/api.js';
 import {
   addBlueprintSecret,
+  configureInheritableResourcePermissions,
   createAgentBlueprint,
   createAgentBlueprintPrincipal,
   deleteApplication,
@@ -17,10 +17,12 @@ import {
   getAadAppByClientId,
   getServicePrincipalByAppId,
   grantAgentIdentityCreateAsManagerRole,
+  grantDelegatedPermissions,
   grantSmbaAgentDataPermission,
+  MICROSOFT_GRAPH_APP_ID,
+  SMBA_APP_ID,
+  updateAadApp,
 } from '../../../apps/graph.js';
-import { extractDomain } from '../../../apps/manifest.js';
-import { getTokenSilent, teamsDevPortalScopes } from '../../../auth/index.js';
 import { getAzAccessToken } from '../../../utils/az.js';
 import { CliError } from '../../../utils/errors.js';
 import { withAgentSpinner } from '../shared.js';
@@ -30,6 +32,8 @@ export interface AgentBlueprintResult {
   agentBlueprintObjectId: string;
   agentBlueprintServicePrincipalObjectId: string;
   agentBlueprintClientSecret: string;
+  /** Microsoft Graph delegated scopes granted and made inheritable, if any were requested. */
+  graphPermissions?: string[];
 }
 
 /**
@@ -45,11 +49,19 @@ export interface AgentBlueprintResult {
  * shared public MSAL client is consented for, so this shells out to
  * `az account get-access-token` for an admin-delegated token, the same
  * pattern already used for agentic user creation.
+ *
+ * `graphScopes` is the equivalent of a Teams app manifest's RSC
+ * permissions list: additional Microsoft Graph delegated scopes (e.g.
+ * `Mail.ReadWrite`, `Chat.ReadWrite`) to grant on the blueprint and
+ * configure as inheritable, so every agent identity created from it gets
+ * them automatically. Omit it for a blueprint with no Graph data access
+ * beyond core messaging.
  */
 export async function runCreateAgentBlueprint(
   agentName: string,
   account: AccountInfo,
-  silent: boolean
+  silent: boolean,
+  graphScopes?: string[]
 ): Promise<AgentBlueprintResult> {
   try {
     const adminToken = await withAgentSpinner(
@@ -125,11 +137,53 @@ export async function runCreateAgentBlueprint(
       () => grantSmbaAgentDataPermission(adminToken, principal.id)
     );
 
+    // Makes every future agent identity created under this blueprint
+    // automatically inherit the Messaging Bot API scope above, instead of
+    // needing a separate `grantSmbaAgentDataPermission` call per identity.
+    await withAgentSpinner(
+      {
+        start: 'Configuring inheritable Messaging Bot API permissions...',
+        success: 'Inheritable permissions configured.',
+        error: 'Failed to configure inheritable permissions.',
+      },
+      silent,
+      () => configureInheritableResourcePermissions(adminToken, blueprint.id, SMBA_APP_ID, ['AgentData.ReadWrite'])
+    );
+
+    // Equivalent of declaring RSC permissions in a Teams app manifest:
+    // explicitly-requested Microsoft Graph scopes (e.g. `Mail.ReadWrite`)
+    // are granted on the blueprint and marked inheritable so every agent
+    // identity created from it gets them automatically, without a
+    // per-identity grant step.
+    const dedupedGraphScopes = graphScopes?.length ? [...new Set(graphScopes)] : undefined;
+    if (dedupedGraphScopes?.length) {
+      await withAgentSpinner(
+        {
+          start: `Granting Microsoft Graph permission(s): ${dedupedGraphScopes.join(', ')}...`,
+          success: 'Microsoft Graph permission(s) granted.',
+          error: 'Failed to grant the requested Microsoft Graph permission(s).',
+        },
+        silent,
+        () => grantDelegatedPermissions(adminToken, principal.id, MICROSOFT_GRAPH_APP_ID, dedupedGraphScopes)
+      );
+
+      await withAgentSpinner(
+        {
+          start: 'Configuring inheritable Microsoft Graph permissions...',
+          success: 'Inheritable Microsoft Graph permissions configured.',
+          error: 'Failed to configure inheritable Microsoft Graph permissions.',
+        },
+        silent,
+        () => configureInheritableResourcePermissions(adminToken, blueprint.id, MICROSOFT_GRAPH_APP_ID, dedupedGraphScopes)
+      );
+    }
+
     return {
       agentBlueprintId: blueprint.appId,
       agentBlueprintObjectId: blueprint.id,
       agentBlueprintServicePrincipalObjectId: principal.id,
       agentBlueprintClientSecret: secret.secretText,
+      ...(dedupedGraphScopes?.length ? { graphPermissions: dedupedGraphScopes } : {}),
     };
   } catch (error) {
     if (error instanceof CliError) throw error;
@@ -202,6 +256,46 @@ export async function resolveBlueprintCleanupTarget(
       error instanceof Error ? error.message : String(error),
       'Verify the blueprint ID is correct and your account can read/manage it.'
     );
+  }
+}
+
+/**
+ * Rename an existing agent blueprint (its AAD application's
+ * `displayName`). This is purely a Graph-level change -- it doesn't
+ * affect the blueprint's ID, secret, service principal, or any Teams app
+ * package already created for it.
+ */
+export async function runRenameAgentBlueprint(
+  blueprintId: string,
+  account: AccountInfo,
+  name: string,
+  silent: boolean
+): Promise<void> {
+  const target = await resolveBlueprintCleanupTarget(blueprintId, account, silent);
+
+  try {
+    const adminToken = await withAgentSpinner(
+      {
+        start: 'Acquiring an admin token via Azure CLI...',
+        success: 'Admin token acquired.',
+        error: 'Could not get an admin token from the Azure CLI.',
+      },
+      silent,
+      () => getAzAccessToken('https://graph.microsoft.com', account.tenantId)
+    );
+
+    await withAgentSpinner(
+      {
+        start: `Renaming agent blueprint to "${name}"...`,
+        success: 'Agent blueprint renamed.',
+        error: 'Failed to rename the agent blueprint.',
+      },
+      silent,
+      () => updateAadApp(adminToken, target.agentBlueprintObjectId, { displayName: name })
+    );
+  } catch (error) {
+    if (error instanceof CliError) throw error;
+    throw new CliError('AGENT_BLUEPRINT_FAILED', error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -346,34 +440,3 @@ export async function registerAgentBlueprintEndpoint(
   );
 }
 
-/**
- * Keep an already-created Teams app package's `validDomains` in sync after
- * the messaging endpoint changes (same domain-tracking `teams app update`
- * does), without re-importing the whole package. No-op if the endpoint's
- * domain is already present.
- */
-export async function syncTeamsAppEndpointDomain(teamsAppId: string, endpoint: string, silent: boolean): Promise<void> {
-  await withAgentSpinner(
-    {
-      start: 'Syncing Teams app valid domains...',
-      success: 'Teams app valid domains updated.',
-      error: 'Failed to update the Teams app valid domains.',
-    },
-    silent,
-    async () => {
-      const tdpToken = await getTokenSilent(teamsDevPortalScopes);
-      if (!tdpToken) {
-        throw new CliError('AUTH_TOKEN_FAILED', 'Failed to get a Teams Developer Portal token.', 'Try `teams login` again.');
-      }
-
-      const domain = extractDomain(endpoint);
-      if (!domain) return;
-
-      const details = await fetchAppDetailsV2(tdpToken, teamsAppId, { force: true });
-      const domains = (details.validDomains as string[] | undefined) ?? [];
-      if (domains.includes(domain)) return;
-
-      await updateAppDetails(tdpToken, teamsAppId, { validDomains: [...domains, domain] });
-    }
-  );
-}

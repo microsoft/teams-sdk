@@ -46,18 +46,6 @@ describe('toAgentBlueprintCreateOutput', () => {
     expect('messagingEndpoint' in output).toBe(false);
   });
 
-  it('includes teamsAppId when present', () => {
-    const output = toAgentBlueprintCreateOutput(baseConfig({ teamsAppId: 'app-1' }), CONFIG_PATH, ENV_PATH);
-
-    expect(output.teamsAppId).toBe('app-1');
-  });
-
-  it('omits teamsAppId when absent', () => {
-    const output = toAgentBlueprintCreateOutput(baseConfig(), CONFIG_PATH, ENV_PATH);
-
-    expect('teamsAppId' in output).toBe(false);
-  });
-
   it('always includes envPath and generatedConfigPath', () => {
     const output = toAgentBlueprintCreateOutput(baseConfig(), CONFIG_PATH, ENV_PATH);
     expect(output.envPath).toBe(ENV_PATH);

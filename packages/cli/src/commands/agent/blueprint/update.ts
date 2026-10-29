@@ -1,3 +1,4 @@
+import type { AccountInfo } from '@azure/msal-node';
 import { input } from '@inquirer/prompts';
 import { Command } from 'commander';
 import { existsSync } from 'node:fs';
@@ -8,11 +9,12 @@ import { isInteractive } from '../../../utils/interactive.js';
 import { outputJson } from '../../../utils/json-output.js';
 import { logger } from '../../../utils/logger.js';
 import { requireAgentAccount } from '../shared.js';
-import { assertHttpsEndpoint, registerAgentBlueprintEndpoint, syncTeamsAppEndpointDomain } from './actions.js';
+import { assertHttpsEndpoint, registerAgentBlueprintEndpoint, runRenameAgentBlueprint } from './actions.js';
 
 export interface AgentBlueprintUpdateOptions {
   json?: boolean;
   endpoint?: string;
+  name?: string;
   /** [OPTIONAL] Working directory holding `agent.generated.config.json`. Defaults to process.cwd(). */
   cwd?: string;
   /** Tenant ID of the signed-in account, used to call the Agent 365 service. */
@@ -21,39 +23,39 @@ export interface AgentBlueprintUpdateOptions {
 
 export interface AgentBlueprintUpdateOutput {
   agentBlueprintId: string;
-  messagingEndpoint: string;
-  teamsAppId?: string;
+  messagingEndpoint?: string;
+  name?: string;
   generatedConfigPath?: string;
 }
 
 export function renderAgentBlueprintUpdateResult(output: AgentBlueprintUpdateOutput): void {
   logger.info('');
   logger.info(`${pc.dim('Agent blueprint ID:')} ${output.agentBlueprintId}`);
-  logger.info(`${pc.dim('Messaging endpoint:')} ${output.messagingEndpoint}`);
-  if (output.teamsAppId) {
-    logger.info(`${pc.dim('Teams app ID:')} ${output.teamsAppId}`);
+  if (output.name) {
+    logger.info(`${pc.dim('Name:')} ${output.name}`);
+  }
+  if (output.messagingEndpoint) {
+    logger.info(`${pc.dim('Messaging endpoint:')} ${output.messagingEndpoint}`);
   }
 }
 
 /**
  * Resolves which blueprint to update: a `blueprintId` passed directly on
- * the command line always wins over the local config. When it's also the
- * blueprint the local `agent.generated.config.json` (if any) was written
- * for, that config's `teamsAppId` is reused and the config stays in sync;
- * otherwise this runs without any local config involvement (no Teams app
- * domain sync, nothing written back).
+ * the command line always wins over the local config; otherwise this
+ * runs without any local config involvement (nothing written back).
  */
 function resolveUpdateTarget(
   blueprintIdArg: string | undefined,
-  cwd: string
-): { agentBlueprintId: string; teamsAppId?: string; syncsLocalConfig: boolean } {
+  cwd: string,
+  silent: boolean
+): { agentBlueprintId: string; syncsLocalConfig: boolean } {
   const hasLocalConfig = existsSync(getGeneratedConfigPath(cwd));
 
   if (blueprintIdArg) {
     if (hasLocalConfig) {
       const config = readGeneratedConfig(cwd);
       if (config.agentBlueprintId === blueprintIdArg) {
-        return { agentBlueprintId: blueprintIdArg, teamsAppId: config.teamsAppId, syncsLocalConfig: true };
+        return { agentBlueprintId: blueprintIdArg, syncsLocalConfig: true };
       }
     }
     return { agentBlueprintId: blueprintIdArg, syncsLocalConfig: false };
@@ -68,47 +70,55 @@ function resolveUpdateTarget(
   }
 
   const config = readGeneratedConfig(cwd);
-  return { agentBlueprintId: config.agentBlueprintId, teamsAppId: config.teamsAppId, syncsLocalConfig: true };
+  if (!silent) {
+    logger.info(pc.dim(`Using agent blueprint ${config.agentBlueprintId} from agent.generated.config.json.`));
+  }
+  return { agentBlueprintId: config.agentBlueprintId, syncsLocalConfig: true };
 }
 
 /**
- * Registers/updates the messaging endpoint for an existing agent blueprint.
- * If a Teams app package already exists for it (created via `teams agent
- * blueprint create`'s "As a Teams app" path), its `validDomains` are kept
- * in sync with the new endpoint.
+ * Updates an existing agent blueprint: its display name, its messaging
+ * endpoint, or both.
  */
 export async function runAgentBlueprintUpdate(
   blueprintIdArg: string | undefined,
-  options: AgentBlueprintUpdateOptions
+  options: AgentBlueprintUpdateOptions,
+  account: AccountInfo
 ): Promise<AgentBlueprintUpdateOutput> {
   const silent = !!options.json;
   const cwd = options.cwd ?? process.cwd();
 
+  const name = options.name?.trim();
   const endpoint = options.endpoint?.trim();
-  if (!endpoint) {
+  if (!name && !endpoint) {
     throw new CliError(
       'AGENT_ENDPOINT_REQUIRED',
-      'A messaging endpoint is required.',
-      'Pass it with `--endpoint <url>`.'
+      'Nothing to update.',
+      'Pass `--name <name>` and/or `--endpoint <url>`.'
     );
   }
-  assertHttpsEndpoint(endpoint);
-
-  const target = resolveUpdateTarget(blueprintIdArg, cwd);
-  await registerAgentBlueprintEndpoint(target.agentBlueprintId, options.tenantId, endpoint, silent);
-  if (target.syncsLocalConfig) {
-    updateGeneratedConfig(cwd, { messagingEndpoint: endpoint });
+  if (endpoint) {
+    assertHttpsEndpoint(endpoint);
   }
 
-  if (target.teamsAppId) {
-    await syncTeamsAppEndpointDomain(target.teamsAppId, endpoint, silent);
+  const target = resolveUpdateTarget(blueprintIdArg, cwd, silent);
+
+  if (name) {
+    await runRenameAgentBlueprint(target.agentBlueprintId, account, name, silent);
+  }
+
+  if (endpoint) {
+    await registerAgentBlueprintEndpoint(target.agentBlueprintId, account.tenantId, endpoint, silent);
+    if (target.syncsLocalConfig) {
+      updateGeneratedConfig(cwd, { messagingEndpoint: endpoint });
+    }
   }
 
   const output: AgentBlueprintUpdateOutput = {
     agentBlueprintId: target.agentBlueprintId,
-    messagingEndpoint: endpoint,
-    ...(target.teamsAppId ? { teamsAppId: target.teamsAppId } : {}),
-    ...(target.syncsLocalConfig ? { generatedConfigPath: getGeneratedConfigPath(cwd) } : {}),
+    ...(name ? { name } : {}),
+    ...(endpoint ? { messagingEndpoint: endpoint } : {}),
+    ...(target.syncsLocalConfig && endpoint ? { generatedConfigPath: getGeneratedConfigPath(cwd) } : {}),
   };
 
   if (options.json) {
@@ -121,22 +131,23 @@ export async function runAgentBlueprintUpdate(
 }
 
 export const agentBlueprintUpdateCommand = new Command('update')
-  .description('Update an Agent 365 agent blueprint (messaging endpoint)')
+  .description('Update an Agent 365 agent blueprint (name and/or messaging endpoint)')
   .argument(
     '[blueprintId]',
     '[OPTIONAL] Agent blueprint ID to update. Overrides agent.generated.config.json when given; required if no local config exists.'
   )
-  .option('--endpoint <url>', 'HTTPS URL for the messaging endpoint')
+  .option('--name <name>', '[OPTIONAL] New display name for the agent blueprint')
+  .option('--endpoint <url>', '[OPTIONAL] HTTPS URL for the messaging endpoint')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintIdArg: string | undefined, options: AgentBlueprintUpdateOptions) => {
       const account = await requireAgentAccount();
       options.tenantId = account.tenantId;
 
-      if (!options.endpoint && isInteractive() && !options.json) {
+      if (!options.name && !options.endpoint && isInteractive() && !options.json) {
         options.endpoint = await input({ message: 'Messaging endpoint (HTTPS URL):' });
       }
 
-      await runAgentBlueprintUpdate(blueprintIdArg, options);
+      await runAgentBlueprintUpdate(blueprintIdArg, options, account);
     })
   );

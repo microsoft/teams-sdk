@@ -1,9 +1,12 @@
 import type { AccountInfo } from '@azure/msal-node';
 import { input } from '@inquirer/prompts';
+import pc from 'picocolors';
 import { getAccount } from '../../auth/index.js';
+import { getConfig } from '../../utils/config.js';
 import { ensureTenantMatch } from '../../utils/az-prompts.js';
 import { CliError } from '../../utils/errors.js';
 import { isInteractive } from '../../utils/interactive.js';
+import { logger } from '../../utils/logger.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
 
 /**
@@ -69,4 +72,42 @@ export async function withAgentSpinner<T>(
     spinner.error({ text: text.error });
     throw error;
   }
+}
+
+/**
+ * Resolves the `--usage-location` value to use, falling back to the
+ * `agent-default-usage-location` set via `teams config` when the
+ * flag is omitted. Returns undefined (no default available) otherwise,
+ * leaving further fallback (tenant-detected country/prompt) to the caller.
+ */
+export async function resolveUsageLocationDefault(
+  usageLocationFlag: string | undefined,
+  silent: boolean
+): Promise<string | undefined> {
+  if (usageLocationFlag?.trim()) return usageLocationFlag;
+
+  const configDefault = await getConfig('agent-default-usage-location');
+  if (configDefault && !silent) {
+    logger.info(pc.dim(`Using default usage location ${configDefault} from teams config.`));
+  }
+  return configDefault;
+}
+
+/**
+ * Resolves the `--license` value to use, falling back to the
+ * `agent-default-license` set via `teams config` when the flag is
+ * omitted. `--no-license` (`licenseFlag === false`) always wins as an
+ * explicit opt-out and is never overridden by the default.
+ */
+export async function resolveLicenseDefault(
+  licenseFlag: string | false | undefined,
+  silent: boolean
+): Promise<string | false | undefined> {
+  if (licenseFlag !== undefined) return licenseFlag;
+
+  const configDefault = await getConfig('agent-default-license');
+  if (configDefault && !silent) {
+    logger.info(pc.dim(`Using default license ${configDefault} from teams config.`));
+  }
+  return configDefault;
 }

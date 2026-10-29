@@ -1,6 +1,8 @@
 import { Command } from 'commander';
 import { agentUserCreateCommand } from './create.js';
 import { agentUserDeleteCommand } from './delete.js';
+import { agentUserUpdateCommand } from './update.js';
+import { agentUserPermissionsCommand } from './permissions/index.js';
 import { isInteractive } from '../../../utils/interactive.js';
 
 export const agentUserCommand = new Command('user')
@@ -16,4 +18,6 @@ export const agentUserCommand = new Command('user')
   });
 
 agentUserCommand.addCommand(agentUserCreateCommand);
+agentUserCommand.addCommand(agentUserUpdateCommand);
 agentUserCommand.addCommand(agentUserDeleteCommand);
+agentUserCommand.addCommand(agentUserPermissionsCommand);

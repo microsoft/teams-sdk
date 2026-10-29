@@ -10,6 +10,7 @@ import {
   writeGeneratedConfig,
   type AgentGeneratedConfig,
 } from '../../../apps/agent-config.js';
+import { getConfig } from '../../../utils/config.js';
 import { writeCredentials } from '../../../utils/env.js';
 import { wrapAction } from '../../../utils/errors.js';
 import { isInteractive } from '../../../utils/interactive.js';
@@ -22,6 +23,8 @@ export interface AgentBlueprintCreateOptions {
   json?: boolean;
   /** [OPTIONAL] HTTPS messaging endpoint to register on the blueprint right away. Prompted for interactively when omitted. */
   endpoint?: string;
+  /** [OPTIONAL] Comma-separated Microsoft Graph delegated scopes (e.g. Mail.ReadWrite,Chat.ReadWrite) to grant and make inheritable by every agent identity created from this blueprint. */
+  permissions?: string;
   /** [OPTIONAL] Working directory for the generated config file. Defaults to process.cwd(). */
   cwd?: string;
 }
@@ -31,10 +34,11 @@ export interface AgentBlueprintCreateOutput {
   agentBlueprintObjectId: string;
   managedIdentityPrincipalId: string;
   messagingEndpoint?: string;
-  teamsAppId?: string;
   generatedConfigPath: string;
   /** .env path where CLIENT_ID/CLIENT_SECRET/TENANT_ID were written for the Teams SDK app. */
   envPath: string;
+  /** Microsoft Graph delegated scopes granted and made inheritable, if any were requested via --permissions. */
+  graphPermissions?: string[];
 }
 
 /**
@@ -66,9 +70,9 @@ export function toAgentBlueprintCreateOutput(
     agentBlueprintObjectId: config.agentBlueprintObjectId,
     managedIdentityPrincipalId: config.agentBlueprintServicePrincipalObjectId,
     ...(config.messagingEndpoint ? { messagingEndpoint: config.messagingEndpoint } : {}),
-    ...(config.teamsAppId ? { teamsAppId: config.teamsAppId } : {}),
     generatedConfigPath,
     envPath,
+    ...(config.graphPermissions?.length ? { graphPermissions: config.graphPermissions } : {}),
   };
 }
 
@@ -85,6 +89,9 @@ function renderAgentBlueprintCreateResult(output: AgentBlueprintCreateOutput): v
   }
   logger.info(`${pc.dim('Generated config:')} ${output.generatedConfigPath}`);
   logger.info(`${pc.dim('Teams SDK credentials:')} ${output.envPath} ${pc.dim('(CLIENT_ID/CLIENT_SECRET/TENANT_ID)')}`);
+  if (output.graphPermissions?.length) {
+    logger.info(`${pc.dim('Inheritable Microsoft Graph permissions:')} ${output.graphPermissions.join(', ')}`);
+  }
   logger.info('');
   logger.info(
     `${pc.dim('Tip:')} to also create an Agent 365 identity and agentic user for this blueprint, run ${pc.cyan(
@@ -107,13 +114,22 @@ export async function runAgentBlueprintCreate(
   const account = await requireAgentAccount();
 
   const cwd = options.cwd ?? process.cwd();
-  const blueprint = await runCreateAgentBlueprint(name, account, silent);
+  const permissionsFlag = options.permissions?.trim();
+  const permissionsDefault = !permissionsFlag ? await getConfig('agent-default-permissions') : undefined;
+  if (!permissionsFlag && permissionsDefault && !silent) {
+    logger.info(pc.dim(`Using default Graph permissions "${permissionsDefault}" from teams config.`));
+  }
+  const graphScopes = (permissionsFlag ?? permissionsDefault)?.trim()
+    ? [...new Set((permissionsFlag ?? permissionsDefault)!.split(',').map((s) => s.trim()).filter(Boolean))]
+    : undefined;
+  const blueprint = await runCreateAgentBlueprint(name, account, silent, graphScopes);
 
   const config: AgentGeneratedConfig = {
     agentName: name,
     agentBlueprintId: blueprint.agentBlueprintId,
     agentBlueprintObjectId: blueprint.agentBlueprintObjectId,
     agentBlueprintServicePrincipalObjectId: blueprint.agentBlueprintServicePrincipalObjectId,
+    ...(blueprint.graphPermissions?.length ? { graphPermissions: blueprint.graphPermissions } : {}),
     completedAt: new Date().toISOString(),
   };
   writeGeneratedConfig(cwd, config);
@@ -150,6 +166,10 @@ export const agentBlueprintCreateCommand = new Command('create')
   .description('Create an Agent 365 agent blueprint')
   .argument('[name]', 'Agent name')
   .option('--endpoint <url>', '[OPTIONAL] HTTPS messaging endpoint to register right away')
+  .option(
+    '--permissions <scopes>',
+    '[OPTIONAL] Comma-separated Microsoft Graph delegated scopes (e.g. Mail.ReadWrite,Chat.ReadWrite) to grant and make inheritable by every agent identity created from this blueprint. Falls back to `teams config` default-permissions when omitted.'
+  )
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (nameArg: string | undefined, options: AgentBlueprintCreateOptions) => {

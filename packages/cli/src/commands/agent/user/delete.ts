@@ -2,7 +2,7 @@ import type { AccountInfo } from '@azure/msal-node';
 import { Command } from 'commander';
 import { existsSync } from 'node:fs';
 import pc from 'picocolors';
-import { getGeneratedConfigPath, readGeneratedConfig, updateGeneratedConfig } from '../../../apps/agent-config.js';
+import { getGeneratedConfigPath, readGeneratedConfig, removeAgentUser } from '../../../apps/agent-config.js';
 import { CliError, wrapAction } from '../../../utils/errors.js';
 import { confirmAction } from '../../../utils/interactive.js';
 import { outputJson } from '../../../utils/json-output.js';
@@ -26,9 +26,11 @@ export interface AgentUserDeleteOutput {
  * Resolves the agentic user to delete (by object ID or UPN): an argument
  * passed directly on the command line always wins (looked up live via
  * Graph, so it works from any folder); otherwise falls back to the local
- * `agent.generated.config.json` written by `teams agent user create`.
+ * `agent.generated.config.json` written by `teams agent user create`, but
+ * only when it recorded exactly one agentic user -- with more than one,
+ * the caller must say which.
  */
-function resolveDeleteTarget(userIdOrUpnArg: string | undefined, cwd: string): string {
+function resolveDeleteTarget(userIdOrUpnArg: string | undefined, cwd: string, silent: boolean): string {
   if (userIdOrUpnArg) return userIdOrUpnArg;
 
   if (!existsSync(getGeneratedConfigPath(cwd))) {
@@ -40,13 +42,26 @@ function resolveDeleteTarget(userIdOrUpnArg: string | undefined, cwd: string): s
   }
 
   const config = readGeneratedConfig(cwd);
-  const target = config.userPrincipalName ?? config.agenticUserId;
-  if (!target) {
+  const users = config.agentUsers ?? [];
+  if (users.length === 0) {
     throw new CliError(
       'AGENT_IDENTITY_USER_NOT_FOUND',
       'agent.generated.config.json has no agentic user recorded.',
       'Pass the agentic user\u2019s object ID or UPN directly, e.g. `teams agent user delete <userIdOrUpn>`.'
     );
+  }
+  if (users.length > 1) {
+    const options = users.map((user) => user.userPrincipalName ?? user.agenticUserId).join(', ');
+    throw new CliError(
+      'AGENT_IDENTITY_USER_AMBIGUOUS',
+      `agent.generated.config.json has ${users.length} agentic users recorded: ${options}.`,
+      'Pass the agentic user\u2019s object ID or UPN directly, e.g. `teams agent user delete <userIdOrUpn>`.'
+    );
+  }
+
+  const target = users[0].userPrincipalName ?? users[0].agenticUserId;
+  if (!silent) {
+    logger.info(pc.dim(`Using agentic user ${target} from agent.generated.config.json.`));
   }
   return target;
 }
@@ -64,7 +79,7 @@ export async function runAgentUserDelete(
   cwd: string = process.cwd()
 ): Promise<AgentUserDeleteOutput> {
   const silent = !!options.json;
-  const userIdOrUpn = resolveDeleteTarget(userIdOrUpnArg, cwd);
+  const userIdOrUpn = resolveDeleteTarget(userIdOrUpnArg, cwd, silent);
 
   if (options.dryRun) {
     if (!silent) {
@@ -78,13 +93,11 @@ export async function runAgentUserDelete(
   const configPath = getGeneratedConfigPath(cwd);
   if (existsSync(configPath)) {
     const config = readGeneratedConfig(cwd);
-    if (config.agenticUserId === result.agenticUserId || config.userPrincipalName === userIdOrUpn) {
-      updateGeneratedConfig(cwd, {
-        agentIdentityId: undefined,
-        agenticUserId: undefined,
-        agenticUserName: undefined,
-        userPrincipalName: undefined,
-      });
+    const match = (config.agentUsers ?? []).find(
+      (user) => user.agenticUserId === result.agenticUserId || user.userPrincipalName === userIdOrUpn
+    );
+    if (match) {
+      removeAgentUser(cwd, match.agenticUserId);
     }
   }
 

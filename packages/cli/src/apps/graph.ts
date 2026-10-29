@@ -5,12 +5,9 @@ function authHeader(token: string): string {
 }
 
 const GRAPH_BASE_URL = 'https://graph.microsoft.com/v1.0';
-// Agent identity / agentic user resources (agentIdentity servicePrincipals,
-// the agentUser @odata.type on /users) are beta-only Graph APIs.
-const GRAPH_BETA_BASE_URL = 'https://graph.microsoft.com/beta';
 
 /** appId of the Microsoft Graph service principal -- fixed across every tenant. */
-const MICROSOFT_GRAPH_APP_ID = '00000003-0000-0000-c000-000000000000';
+export const MICROSOFT_GRAPH_APP_ID = '00000003-0000-0000-c000-000000000000';
 
 /**
  * `id` of Microsoft Graph's `AgentIdentity.CreateAsManager` app role --
@@ -23,7 +20,10 @@ const MICROSOFT_GRAPH_APP_ID = '00000003-0000-0000-c000-000000000000';
 const AGENT_IDENTITY_CREATE_AS_MANAGER_APP_ROLE_ID = '4c390976-b2b7-42e0-9187-c6be3bead001';
 
 /** appId of the Messaging Bot API (SMBA) service principal -- fixed across every tenant. */
-const SMBA_APP_ID = '5a807f24-c9de-44ee-a3a7-329e88a00ffc';
+export const SMBA_APP_ID = '5a807f24-c9de-44ee-a3a7-329e88a00ffc';
+
+/** appId of the Power Platform API service principal -- fixed across every tenant. */
+export const POWER_PLATFORM_APP_ID = '8578e004-a5c6-46e7-913e-12f58912df43';
 
 export interface AadApp {
   id: string;
@@ -253,7 +253,7 @@ export async function createAgentIdentity(
   blueprintToken: string,
   params: CreateAgentIdentityParams
 ): Promise<AgentIdentity> {
-  const response = await apiFetch(`${GRAPH_BETA_BASE_URL}/servicePrincipals/microsoft.graph.agentIdentity`, {
+  const response = await apiFetch(`${GRAPH_BASE_URL}/servicePrincipals/microsoft.graph.agentIdentity`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${blueprintToken}`,
@@ -298,10 +298,10 @@ export async function createAgenticUser(
   params: CreateAgenticUserParams
 ): Promise<AgenticUser> {
   // The real `a365` CLI creates this via the derived-type URL segment
-  // (`/beta/users/microsoft.graph.agentUser`) rather than a plain
-  // `/beta/users` POST with an `@odata.type` body field -- matching that
+  // (`/users/microsoft.graph.agentUser`) rather than a plain
+  // `/users` POST with an `@odata.type` body field -- matching that
   // exact route here for parity, even though both are valid Graph forms.
-  const response = await apiFetch(`${GRAPH_BETA_BASE_URL}/users/microsoft.graph.agentUser`, {
+  const response = await apiFetch(`${GRAPH_BASE_URL}/users/microsoft.graph.agentUser`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${adminToken}`,
@@ -473,6 +473,43 @@ export async function grantAgentIdentityCreateAsManagerRole(
 }
 
 /**
+ * Grant a blueprint's service principal a set of delegated OAuth2 scopes
+ * on a resource app, consented tenant-wide (`AllPrincipals`). This is the
+ * low-level primitive behind {@link grantSmbaAgentDataPermission} and
+ * Microsoft Graph delegated-permission grants (e.g. `Mail.ReadWrite`,
+ * `Chat.ReadWrite`); the blueprint must hold a scope directly before it
+ * can be marked inheritable via {@link configureInheritableResourcePermissions}.
+ * Requires the delegated `DelegatedPermissionGrant.ReadWrite.All` permission.
+ */
+export async function grantDelegatedPermissions(
+  token: string,
+  blueprintServicePrincipalId: string,
+  resourceAppId: string,
+  scopes: string[]
+): Promise<void> {
+  const resourceSp = await getServicePrincipalByAppId(token, resourceAppId);
+
+  const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants`, {
+    method: 'POST',
+    headers: {
+      Authorization: authHeader(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      clientId: blueprintServicePrincipalId,
+      consentType: 'AllPrincipals',
+      resourceId: resourceSp.id,
+      scope: scopes.join(' '),
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to grant delegated scope(s) "${scopes.join(', ')}" on resource app ${resourceAppId}: ${response.status} ${error}`);
+  }
+}
+
+/**
  * Grant the blueprint's service principal the Messaging Bot API's
  * (SMBA) `AgentData.ReadWrite` delegated scope, consented tenant-wide
  * (`AllPrincipals`). Without this, the agentic user's on-behalf-of token
@@ -484,25 +521,241 @@ export async function grantAgentIdentityCreateAsManagerRole(
  * permission.
  */
 export async function grantSmbaAgentDataPermission(token: string, blueprintServicePrincipalId: string): Promise<void> {
-  const smbaSp = await getServicePrincipalByAppId(token, SMBA_APP_ID);
+  await grantDelegatedPermissions(token, blueprintServicePrincipalId, SMBA_APP_ID, ['AgentData.ReadWrite']);
+}
 
-  const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants`, {
+/**
+ * List every `oauth2PermissionGrant` directly held by a service
+ * principal (a blueprint's or an agent identity's), across all resource
+ * apps -- unlike {@link findDelegatedPermissionGrant}, which is scoped to
+ * one resource app at a time. Used by `teams agent user permissions
+ * list`/`teams agent blueprint permissions list` to show everything a
+ * principal currently holds without the caller needing to already know
+ * which resource apps to ask about.
+ */
+export async function listDelegatedPermissionGrants(
+  token: string,
+  servicePrincipalId: string
+): Promise<{ id: string; resourceId: string; scope: string }[]> {
+  const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants?$filter=clientId eq '${servicePrincipalId}'`, {
+    headers: { Authorization: authHeader(token) },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to list delegated permission grants: ${response.status} ${error}`);
+  }
+
+  const data = (await response.json()) as { value: { id: string; resourceId: string; scope: string }[] };
+  return data.value;
+}
+
+/**
+ * Look up a service principal directly by its Graph object ID, returning
+ * just the `appId` needed to resolve a resource app's display name (e.g.
+ * turning an `oauth2PermissionGrant`'s `resourceId` back into "Microsoft
+ * Graph"/"SMBA"/"Power Platform").
+ */
+export async function getServicePrincipalById(token: string, id: string): Promise<{ id: string; appId: string }> {
+  const response = await apiFetch(`${GRAPH_BASE_URL}/servicePrincipals/${id}?$select=id,appId`, {
+    headers: { Authorization: authHeader(token) },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to look up service principal ${id}: ${response.status} ${error}`);
+  }
+
+  return (await response.json()) as { id: string; appId: string };
+}
+
+/**
+ * Find the existing `oauth2PermissionGrant` (if any) that grants a
+ * blueprint's service principal delegated scopes on a given resource app,
+ * so an already-granted scope set can be read/updated/revoked instead of
+ * blindly re-granted (which 409s on a duplicate clientId/resourceId pair).
+ */
+export async function findDelegatedPermissionGrant(
+  token: string,
+  blueprintServicePrincipalId: string,
+  resourceAppId: string
+): Promise<{ id: string; scope: string } | undefined> {
+  const resourceSp = await getServicePrincipalByAppId(token, resourceAppId);
+
+  const response = await apiFetch(
+    `${GRAPH_BASE_URL}/oauth2PermissionGrants?$filter=clientId eq '${blueprintServicePrincipalId}' and resourceId eq '${resourceSp.id}'`,
+    {
+      headers: { Authorization: authHeader(token) },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to look up delegated permission grant for resource app ${resourceAppId}: ${response.status} ${error}`);
+  }
+
+  const data = (await response.json()) as { value: { id: string; scope: string }[] };
+  return data.value[0];
+}
+
+/**
+ * Revoke a set of delegated scopes previously granted to a blueprint's
+ * service principal for a resource app. Scopes not in `scopes` that the
+ * blueprint still holds for that resource app are left untouched -- the
+ * underlying grant's `scope` string is updated in place, or the grant
+ * itself is deleted if removing `scopes` would leave it empty.
+ */
+export async function revokeDelegatedPermissions(
+  token: string,
+  blueprintServicePrincipalId: string,
+  resourceAppId: string,
+  scopes: string[]
+): Promise<void> {
+  const grant = await findDelegatedPermissionGrant(token, blueprintServicePrincipalId, resourceAppId);
+  if (!grant) {
+    return;
+  }
+
+  const remaining = grant.scope.split(' ').filter((s) => s.length > 0 && !scopes.includes(s));
+
+  if (remaining.length === 0) {
+    const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants/${grant.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: authHeader(token) },
+    });
+    if (!response.ok && response.status !== 404) {
+      const error = await response.text();
+      throw new Error(`Failed to revoke delegated permission grant for resource app ${resourceAppId}: ${response.status} ${error}`);
+    }
+    return;
+  }
+
+  const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants/${grant.id}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: authHeader(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ scope: remaining.join(' ') }),
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to update delegated permission grant for resource app ${resourceAppId}: ${response.status} ${error}`);
+  }
+}
+
+/**
+ * Configure the blueprint so every agent identity created under it
+ * automatically inherits a specific, named set of the blueprint's
+ * already-granted delegated scopes for a resource app -- the
+ * `inheritablePermissions` mechanism the real Agent 365 tooling uses,
+ * instead of re-granting the same scope on each agent identity's own
+ * service principal individually. Scopes must already be granted on the
+ * blueprint (see {@link grantDelegatedPermissions}) before they can be
+ * marked inheritable here. Uses the `enumeratedScopes` pattern (an
+ * explicit `scopes` list) rather than `allAllowedScopes` so only the
+ * exact scopes requested cascade down -- not every scope the blueprint
+ * happens to hold for that resource app, now or in the future. Requires
+ * the `agentIdentityBlueprint` Graph type and the same
+ * `DelegatedPermissionGrant.ReadWrite.All`-class admin permissions as
+ * {@link grantDelegatedPermissions}.
+ */
+export async function configureInheritableResourcePermissions(
+  token: string,
+  blueprintObjectId: string,
+  resourceAppId: string,
+  scopes: string[]
+): Promise<void> {
+  const body = JSON.stringify({
+    resourceAppId,
+    inheritableScopes: {
+      '@odata.type': 'microsoft.graph.enumeratedScopes',
+      scopes,
+    },
+  });
+  const baseUrl = `${GRAPH_BASE_URL}/applications/${blueprintObjectId}/microsoft.graph.agentIdentityBlueprint/inheritablePermissions`;
+
+  const response = await apiFetch(baseUrl, {
     method: 'POST',
     headers: {
       Authorization: authHeader(token),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      clientId: blueprintServicePrincipalId,
-      consentType: 'AllPrincipals',
-      resourceId: smbaSp.id,
-      scope: 'AgentData.ReadWrite',
-    }),
+    body,
   });
+
+  if (response.ok) {
+    return;
+  }
+
+  // An entry for this resourceAppId already exists (resourceAppId is the
+  // entry's primary key) -- update it in place instead of creating a
+  // duplicate. This lets callers "add" more scopes to a resource app
+  // that's already configured as inheritable.
+  if (response.status === 409) {
+    const patchResponse = await apiFetch(`${baseUrl}/${resourceAppId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: authHeader(token),
+        'Content-Type': 'application/json',
+      },
+      body,
+    });
+    if (!patchResponse.ok) {
+      const error = await patchResponse.text();
+      throw new Error(`Failed to update inheritable permissions for resource app ${resourceAppId}: ${patchResponse.status} ${error}`);
+    }
+    return;
+  }
+
+  const error = await response.text();
+  throw new Error(`Failed to configure inheritable permissions for resource app ${resourceAppId}: ${response.status} ${error}`);
+}
+
+export interface InheritablePermissionEntry {
+  resourceAppId: string;
+  inheritableScopes?: {
+    kind?: string;
+    scopes?: string[];
+  };
+}
+
+/** List every resource app currently configured as inheritable on a blueprint. */
+export async function listInheritablePermissions(token: string, blueprintObjectId: string): Promise<InheritablePermissionEntry[]> {
+  const response = await apiFetch(
+    `${GRAPH_BASE_URL}/applications/${blueprintObjectId}/microsoft.graph.agentIdentityBlueprint/inheritablePermissions`,
+    {
+      headers: { Authorization: authHeader(token) },
+    }
+  );
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to grant the Messaging Bot API AgentData.ReadWrite permission: ${response.status} ${error}`);
+    throw new Error(`Failed to list inheritable permissions: ${response.status} ${error}`);
+  }
+
+  const data = (await response.json()) as { value: InheritablePermissionEntry[] };
+  return data.value;
+}
+
+/**
+ * Stop a resource app's scopes from being inherited by agent identities
+ * created under this blueprint. This only removes the inheritable-permissions
+ * declaration -- it doesn't revoke the scopes directly granted on the
+ * blueprint's own service principal (see {@link revokeDelegatedPermissions}).
+ */
+export async function removeInheritablePermission(token: string, blueprintObjectId: string, resourceAppId: string): Promise<void> {
+  const response = await apiFetch(
+    `${GRAPH_BASE_URL}/applications/${blueprintObjectId}/microsoft.graph.agentIdentityBlueprint/inheritablePermissions/${resourceAppId}`,
+    {
+      method: 'DELETE',
+      headers: { Authorization: authHeader(token) },
+    }
+  );
+
+  if (!response.ok && response.status !== 404) {
+    const error = await response.text();
+    throw new Error(`Failed to remove inheritable permissions for resource app ${resourceAppId}: ${response.status} ${error}`);
   }
 }
 
@@ -526,7 +779,7 @@ export async function findAgentIdentityForBlueprint(
   blueprintId: string
 ): Promise<{ id: string } | undefined> {
   const response = await apiFetch(
-    `${GRAPH_BETA_BASE_URL}/servicePrincipals/microsoft.graph.agentIdentity?$filter=agentIdentityBlueprintId eq '${blueprintId}'&$count=true`,
+    `${GRAPH_BASE_URL}/servicePrincipals/microsoft.graph.agentIdentity?$filter=agentIdentityBlueprintId eq '${blueprintId}'&$count=true`,
     {
       headers: { Authorization: authHeader(token), ConsistencyLevel: 'eventual' },
     }
@@ -547,7 +800,7 @@ export async function findAgenticUserForIdentity(
   agentIdentityId: string
 ): Promise<{ id: string } | undefined> {
   const response = await apiFetch(
-    `${GRAPH_BETA_BASE_URL}/users/microsoft.graph.agentUser?$filter=identityParentId eq '${agentIdentityId}'&$count=true`,
+    `${GRAPH_BASE_URL}/users/microsoft.graph.agentUser?$filter=identityParentId eq '${agentIdentityId}'&$count=true`,
     {
       headers: { Authorization: authHeader(token), ConsistencyLevel: 'eventual' },
     }
@@ -575,7 +828,7 @@ export async function getAgenticUserByIdOrUpn(
   userIdOrUpn: string
 ): Promise<{ id: string; identityParentId: string } | undefined> {
   const response = await apiFetch(
-    `${GRAPH_BETA_BASE_URL}/users/${encodeURIComponent(userIdOrUpn)}/microsoft.graph.agentUser?$select=id,identityParentId`,
+    `${GRAPH_BASE_URL}/users/${encodeURIComponent(userIdOrUpn)}/microsoft.graph.agentUser?$select=id,identityParentId`,
     {
       headers: { Authorization: authHeader(token) },
     }
@@ -730,5 +983,59 @@ export async function assignLicense(token: string, userId: string, skuId: string
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Failed to assign license: ${response.status} ${error}`);
+  }
+}
+
+/** Currently assigned license SKU IDs for a user, used to clear them all on `--no-license`. */
+export async function getAssignedLicenseSkuIds(token: string, userId: string): Promise<string[]> {
+  const response = await apiFetch(`${GRAPH_BASE_URL}/users/${userId}?$select=assignedLicenses`, {
+    headers: { Authorization: authHeader(token) },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to look up assigned licenses: ${response.status} ${error}`);
+  }
+
+  const data = (await response.json()) as { assignedLicenses?: Array<{ skuId: string }> };
+  return (data.assignedLicenses ?? []).map((l) => l.skuId);
+}
+
+/** Removes one or more previously-assigned license SKUs from a user via the same `assignLicense` action. */
+export async function removeLicenses(token: string, userId: string, skuIds: string[]): Promise<void> {
+  if (skuIds.length === 0) return;
+
+  const response = await apiFetch(`${GRAPH_BASE_URL}/users/${userId}/assignLicense`, {
+    method: 'POST',
+    headers: {
+      Authorization: authHeader(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      addLicenses: [],
+      removeLicenses: skuIds,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to remove license: ${response.status} ${error}`);
+  }
+}
+
+/** PATCH a user with partial updates (e.g. `displayName`, `usageLocation`). */
+export async function updateUser(token: string, userId: string, updates: Record<string, unknown>): Promise<void> {
+  const response = await apiFetch(`${GRAPH_BASE_URL}/users/${userId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: authHeader(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to update user: ${response.status} ${error}`);
   }
 }
