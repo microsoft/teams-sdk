@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { program, Command } from 'commander';
 import { loginCommand, logoutCommand } from './commands/auth/index.js';
 import { statusCommand } from './commands/status.js';
+import { feedbackCommand } from './commands/feedback.js';
 import { appCommand } from './commands/app/index.js';
 import { selfUpdateCommand } from './commands/self-update.js';
 import { configCommand } from './commands/config/index.js';
@@ -59,7 +60,13 @@ program
     if (isDevApiEnabled()) {
       logger.warn(pc.yellow(`${DEV_API_ENV_VAR}=1: using ${TDP_HOST}`));
     }
-    if (!opts.disableAutoUpdate && actionCommand.name() !== 'self-update') {
+    if (
+      !opts.disableAutoUpdate &&
+      !actionCommand.optsWithGlobals().json &&
+      actionCommand.name() !== 'self-update' &&
+      // status reports the version itself
+      actionCommand.name() !== 'status'
+    ) {
       await checkForUpdates();
     }
   });
@@ -67,6 +74,7 @@ program
 program.addCommand(loginCommand);
 program.addCommand(logoutCommand);
 program.addCommand(statusCommand);
+program.addCommand(feedbackCommand);
 program.addCommand(appCommand);
 program.addCommand(selfUpdateCommand);
 program.addCommand(configCommand);
