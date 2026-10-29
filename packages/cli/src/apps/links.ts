@@ -12,6 +12,15 @@ export function portalLink(teamsAppId: string): string {
 }
 
 /**
+ * Deep link that opens a 1:1 chat with an agentic user in Teams, keyed by
+ * their UPN. Requires the agentic user to have a Teams-capable license
+ * assigned -- without one, Teams won't be able to resolve the chat.
+ */
+export function agentChatLink(userPrincipalName: string): string {
+  return `https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(userPrincipalName)}`;
+}
+
+/**
  * The install deep link always opens production Teams, which looks the app up
  * in production TDP, so it can't find apps created on dev-int.
  */

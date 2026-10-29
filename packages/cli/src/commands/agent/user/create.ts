@@ -12,7 +12,9 @@ import {
   writeGeneratedConfig,
   type AgentGeneratedConfig,
 } from '../../../apps/agent-config.js';
+import { agentChatLink } from '../../../apps/links.js';
 import { writeCredentials } from '../../../utils/env.js';
+import { openInBrowser, printLinkBanner } from '../../../utils/browser.js';
 import { CliError, wrapAction } from '../../../utils/errors.js';
 import { confirmAction, isInteractive } from '../../../utils/interactive.js';
 import { outputJson } from '../../../utils/json-output.js';
@@ -45,6 +47,8 @@ export interface AgentUserCreateOutput {
   agenticUserId: string;
   userPrincipalName: string;
   generatedConfigPath: string;
+  /** Deep link that opens a 1:1 chat with the agentic user in Teams. */
+  chatLink: string;
   /** Messaging endpoint registered on a newly created blueprint, if provided. */
   messagingEndpoint?: string;
   /** True when no local blueprint secret was found and Graph minted a fresh one for this run. */
@@ -84,6 +88,8 @@ export function renderAgentUserCreateResult(output: AgentUserCreateOutput): void
       )
     );
   }
+  logger.info('');
+  printLinkBanner('Chat with agent in Teams', output.chatLink);
 }
 
 
@@ -295,6 +301,7 @@ export async function runAgentUserCreate(
     agenticUserId: user.agenticUserId,
     userPrincipalName: user.userPrincipalName,
     generatedConfigPath: getGeneratedConfigPath(cwd),
+    chatLink: agentChatLink(user.userPrincipalName),
     ...(messagingEndpoint ? { messagingEndpoint } : {}),
     ...(secretMinted ? { secretMinted: true } : {}),
     ...(user.licenseAssigned ? { licenseAssigned: true } : {}),
@@ -308,7 +315,20 @@ export async function runAgentUserCreate(
   }
 
   renderAgentUserCreateResult(output);
+  await offerToOpenChat(output.chatLink, silent);
   return output;
+}
+
+/** After a non-JSON create, offers to open the agent chat link in the browser (interactive sessions only). */
+async function offerToOpenChat(chatLink: string, silent: boolean): Promise<void> {
+  if (silent || !isInteractive()) return;
+
+  try {
+    const open = await confirmAction('Open chat with the agent in Teams now?', silent);
+    if (open) await openInBrowser(chatLink);
+  } catch (error) {
+    if (!(error instanceof Error && error.name === 'ExitPromptError')) throw error;
+  }
 }
 
 export const agentUserCreateCommand = new Command('create')
