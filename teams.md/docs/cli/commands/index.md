@@ -19,6 +19,7 @@ teams
 ├── login                          Log in to Microsoft 365
 ├── logout                         Log out of Microsoft 365
 ├── status                         Show current CLI status
+├── feedback                       Open the CLI feedback issue form on GitHub
 ├── app                            Manage Teams apps (interactive menu)
 │   ├── list                       List your Teams apps
 │   ├── create                     Create a new Teams app with bot

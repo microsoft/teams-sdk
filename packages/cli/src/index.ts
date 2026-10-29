@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { program, Command } from 'commander';
 import { loginCommand, logoutCommand } from './commands/auth/index.js';
 import { statusCommand } from './commands/status.js';
+import { feedbackCommand } from './commands/feedback.js';
 import { appCommand } from './commands/app/index.js';
 import { selfUpdateCommand } from './commands/self-update.js';
 import { configCommand } from './commands/config/index.js';
@@ -73,6 +74,7 @@ program
 program.addCommand(loginCommand);
 program.addCommand(logoutCommand);
 program.addCommand(statusCommand);
+program.addCommand(feedbackCommand);
 program.addCommand(appCommand);
 program.addCommand(selfUpdateCommand);
 program.addCommand(configCommand);
