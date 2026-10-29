@@ -27,6 +27,12 @@ export interface AgentUserCreateOptions {
   name?: string;
   /** [OPTIONAL] Display name for the agentic user. Defaults to the blueprint's name when omitted. */
   userName?: string;
+  /** [OPTIONAL] HTTPS messaging endpoint to register on a newly created blueprint. Only valid when no `blueprintId` argument is given. */
+  endpoint?: string;
+  /** [OPTIONAL] License SKU ID or part number to assign to the agentic user, skipping the interactive picker.
+   * `false` when `--no-license` was passed, to explicitly skip assignment (Commander maps `--license <skuId>`
+   * and `--no-license` onto this same property). */
+  license?: string | false;
   /** [OPTIONAL] Working directory for the generated config file. Defaults to process.cwd(). */
   cwd?: string;
 }
@@ -144,9 +150,11 @@ async function resolveAgenticUserName(
  * Asks for the messaging endpoint right after creating a brand new
  * blueprint, mirroring `teams agent blueprint create`'s own prompt.
  * Skipped when reusing an existing blueprint (it already has whatever
- * endpoint it was set up with). Optional -- pressing enter skips it.
+ * endpoint it was set up with). `--endpoint` wins when given; otherwise
+ * optional -- pressing enter (or running non-interactively) skips it.
  */
-async function resolveOptionalEndpoint(silent: boolean): Promise<string | undefined> {
+async function resolveOptionalEndpoint(endpointFlag: string | undefined, silent: boolean): Promise<string | undefined> {
+  if (endpointFlag?.trim()) return endpointFlag.trim();
   if (silent || !isInteractive()) return undefined;
 
   const endpoint = await input({
@@ -195,6 +203,16 @@ export async function runAgentUserCreate(
       'Drop `--name`, or omit `[blueprintId]` to create a new blueprint with that name.'
     );
   }
+  if (blueprintIdArg && options.endpoint) {
+    throw new CliError(
+      'VALIDATION_CONFLICT',
+      '`--endpoint` is ignored when reusing an existing blueprint.',
+      'Drop `--endpoint`, or use `teams agent blueprint update --endpoint <url>` to change an existing blueprint\u2019s endpoint.'
+    );
+  }
+  if (options.endpoint?.trim()) {
+    assertHttpsEndpoint(options.endpoint.trim());
+  }
 
   const account = await requireAgentAccount();
 
@@ -224,7 +242,7 @@ export async function runAgentUserCreate(
     agentBlueprintServicePrincipalObjectId = blueprint.agentBlueprintServicePrincipalObjectId;
     clientSecret = blueprint.agentBlueprintClientSecret;
 
-    messagingEndpoint = await resolveOptionalEndpoint(silent);
+    messagingEndpoint = await resolveOptionalEndpoint(options.endpoint, silent);
     if (messagingEndpoint) {
       assertHttpsEndpoint(messagingEndpoint);
       await registerAgentBlueprintEndpoint(agentBlueprintId, account.tenantId, messagingEndpoint, silent);
@@ -251,7 +269,13 @@ export async function runAgentUserCreate(
 
   const identity = await runCreateAgentIdentity(agentName, agentBlueprintId, clientSecret, account, silent);
   const agenticUserName = await resolveAgenticUserName(agentName, options.userName, silent);
-  const user = await runCreateAgenticUser(agenticUserName, identity.agentIdentityId, account, silent);
+  const user = await runCreateAgenticUser(
+    agenticUserName,
+    identity.agentIdentityId,
+    account,
+    silent,
+    options.license
+  );
 
   updateGeneratedConfig(cwd, {
     agentIdentityId: identity.agentIdentityId,
@@ -287,6 +311,12 @@ export const agentUserCreateCommand = new Command('create')
   .argument('[blueprintId]', '[OPTIONAL] Existing agent blueprint ID to reuse. Creates a new blueprint if omitted.')
   .option('--name <name>', '[OPTIONAL] Name for a newly created blueprint. Not valid together with [blueprintId].')
   .option('--user-name <name>', "[OPTIONAL] Display name for the agentic user. Defaults to the blueprint's name.")
+  .option(
+    '--endpoint <url>',
+    '[OPTIONAL] HTTPS messaging endpoint to register on a newly created blueprint. Not valid together with [blueprintId].'
+  )
+  .option('--license <skuId>', '[OPTIONAL] License SKU ID or part number to assign to the agentic user')
+  .option('--no-license', '[OPTIONAL] Skip license assignment (do it manually later)')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintIdArg: string | undefined, options: AgentUserCreateOptions) => {

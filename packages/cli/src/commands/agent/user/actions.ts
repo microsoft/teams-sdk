@@ -260,7 +260,7 @@ export function slugifyAgentName(name: string): string {
 export interface AgenticUserResult {
   agenticUserId: string;
   userPrincipalName: string;
-  /** True when a license was assigned automatically (the user picked one interactively). */
+  /** True when a license was assigned (via `--license` or the interactive picker). */
   licenseAssigned?: boolean;
   /** `skuPartNumber` of the license assigned, when `licenseAssigned` is true. */
   licenseSkuPartNumber?: string;
@@ -295,7 +295,13 @@ export async function runCreateAgenticUser(
   agentName: string,
   agentIdentityId: string,
   account: AccountInfo,
-  silent: boolean
+  silent: boolean,
+  /**
+   * [OPTIONAL] A specific license SKU ID/part number to assign, skipping
+   * the interactive picker; `false` to explicitly skip assignment
+   * (Commander maps `--license <skuId>`/`--no-license` onto this one value).
+   */
+  licenseOption?: string | false
 ): Promise<AgenticUserResult> {
   try {
     const adminToken = await withAgentSpinner(
@@ -356,7 +362,7 @@ export async function runCreateAgenticUser(
         })
     );
 
-    const license = await tryAssignLicense(adminToken, user.id, silent);
+    const license = await resolveLicenseAssignment(adminToken, user.id, licenseOption, silent);
 
     return { agenticUserId: user.id, userPrincipalName, ...license };
   } catch (error) {
@@ -367,6 +373,68 @@ export async function runCreateAgenticUser(
       'This call requires Global Administrator (or equivalent) permissions in Azure CLI -- run `az login` as an admin and retry.'
     );
   }
+}
+
+/**
+ * Assigns a specific license SKU (by `skuId` or `skuPartNumber`, matched
+ * case-insensitively) to a freshly created agentic user, for `--license
+ * <skuId>` non-interactive callers. Unlike the interactive picker, this
+ * throws on failure -- the caller explicitly asked for this SKU, so
+ * silently falling back to `needsLicense` would hide a real problem (typo,
+ * no seats left, etc.) from a script relying on the exit code/JSON output.
+ */
+async function assignSpecificLicense(
+  adminToken: string,
+  userId: string,
+  skuIdOrPartNumber: string,
+  silent: boolean
+): Promise<Pick<AgenticUserResult, 'licenseAssigned' | 'licenseSkuPartNumber'>> {
+  const spinner = createSilentSpinner('Looking up available licenses...', silent).start();
+  let skus: SubscribedSku[];
+  try {
+    skus = await listSubscribedSkus(adminToken);
+  } catch (error) {
+    spinner.error({ text: "Failed to look up the tenant's licenses." });
+    throw new CliError(
+      'AGENT_LICENSE_NOT_FOUND',
+      error instanceof Error ? error.message : String(error),
+      'Verify your account can read the tenant\u2019s subscribed SKUs, then retry.'
+    );
+  }
+
+  const needle = skuIdOrPartNumber.trim().toLowerCase();
+  const sku = skus.find((s) => s.skuId.toLowerCase() === needle || s.skuPartNumber.toLowerCase() === needle);
+  if (!sku) {
+    spinner.error({ text: `No license SKU matching "${skuIdOrPartNumber}" was found.` });
+    throw new CliError(
+      'AGENT_LICENSE_NOT_FOUND',
+      `No license SKU matching "${skuIdOrPartNumber}" was found in this tenant.`,
+      'Run without `--license` to see the available SKU IDs/part numbers interactively.'
+    );
+  }
+  if (sku.consumedUnits >= sku.enabledUnits) {
+    spinner.error({ text: `${sku.skuPartNumber} has no available seats.` });
+    throw new CliError(
+      'AGENT_LICENSE_NOT_FOUND',
+      `License ${sku.skuPartNumber} has no available seats (${sku.consumedUnits} of ${sku.enabledUnits} used).`,
+      'Free up a seat or pick a different SKU.'
+    );
+  }
+  spinner.success({ text: `${sku.skuPartNumber} found with an available seat.` });
+
+  const assignSpinner = createSilentSpinner(`Assigning ${sku.skuPartNumber}...`, silent).start();
+  try {
+    await assignLicense(adminToken, userId, sku.skuId);
+  } catch (error) {
+    assignSpinner.error({ text: 'Failed to assign the license.' });
+    throw new CliError(
+      'AGENT_LICENSE_ASSIGN_FAILED',
+      error instanceof Error ? error.message : String(error),
+      'Verify your account has license assignment permissions, then retry.'
+    );
+  }
+  assignSpinner.success({ text: `${sku.skuPartNumber} assigned.` });
+  return { licenseAssigned: true, licenseSkuPartNumber: sku.skuPartNumber };
 }
 
 /**
@@ -381,7 +449,7 @@ export async function runCreateAgenticUser(
  * surfaced as `needsLicense` so the caller can tell the user to do it
  * manually instead.
  */
-async function tryAssignLicense(
+async function tryAssignLicenseInteractively(
   adminToken: string,
   userId: string,
   silent: boolean
@@ -431,6 +499,24 @@ async function tryAssignLicense(
     logger.debug(error instanceof Error ? error.message : String(error));
     return { needsLicense: true };
   }
+}
+
+/**
+ * Dispatches to the right license-assignment strategy for `teams agent
+ * user create`: `--no-license` (`licenseOption === false`) skips entirely
+ * (no Graph lookup at all), `--license <skuId>` assigns that exact SKU
+ * and throws on any failure, and otherwise falls back to the best-effort
+ * interactive picker.
+ */
+async function resolveLicenseAssignment(
+  adminToken: string,
+  userId: string,
+  licenseOption: string | false | undefined,
+  silent: boolean
+): Promise<Pick<AgenticUserResult, 'licenseAssigned' | 'licenseSkuPartNumber' | 'needsLicense'>> {
+  if (licenseOption === false) return { needsLicense: true };
+  if (licenseOption) return assignSpecificLicense(adminToken, userId, licenseOption, silent);
+  return tryAssignLicenseInteractively(adminToken, userId, silent);
 }
 
 export interface AgentIdentityUserDeleteResult {
