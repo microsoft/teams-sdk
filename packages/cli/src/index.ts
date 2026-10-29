@@ -60,7 +60,13 @@ program
     if (isDevApiEnabled()) {
       logger.warn(pc.yellow(`${DEV_API_ENV_VAR}=1: using ${TDP_HOST}`));
     }
-    if (!opts.disableAutoUpdate && actionCommand.name() !== 'self-update') {
+    if (
+      !opts.disableAutoUpdate &&
+      !actionCommand.optsWithGlobals().json &&
+      actionCommand.name() !== 'self-update' &&
+      // status reports the version itself
+      actionCommand.name() !== 'status'
+    ) {
       await checkForUpdates();
     }
   });

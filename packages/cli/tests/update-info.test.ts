@@ -1,5 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { compareCliVersions, isNewerVersion } from '../src/utils/update-info.js';
+import { compareCliVersions, getCliVersionStatus, isNewerVersion } from '../src/utils/update-info.js';
+
+describe('getCliVersionStatus', () => {
+  it('flags an update when latest is newer', async () => {
+    expect(await getCliVersionStatus(async () => '3.0.4', '3.0.3')).toEqual({
+      current: '3.0.3',
+      latest: '3.0.4',
+      updateAvailable: true,
+    });
+  });
+
+  it('does not flag an update when current is latest or a newer prerelease', async () => {
+    expect((await getCliVersionStatus(async () => '3.0.4', '3.0.4')).updateAvailable).toBe(false);
+    expect((await getCliVersionStatus(async () => '3.0.4', '3.1.0-preview.7')).updateAvailable).toBe(false);
+  });
+
+  it('does not flag an update when the registry is unreachable', async () => {
+    expect(await getCliVersionStatus(async () => null, '3.0.3')).toEqual({
+      current: '3.0.3',
+      latest: null,
+      updateAvailable: false,
+    });
+  });
+});
 
 describe('version comparison', () => {
   it('compares normal semver versions', () => {

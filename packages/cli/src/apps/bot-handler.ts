@@ -250,6 +250,26 @@ export async function discoverAzureBot(
   }
 }
 
+/**
+ * Read an Azure bot's messaging endpoint via `az bot show`. Returns null when unset.
+ */
+export async function getAzureBotEndpoint(
+  azure: AzureContext,
+  botId: string
+): Promise<string | null> {
+  const bot = await runAz<{ properties?: { endpoint?: string | null } | null }>([
+    'bot',
+    'show',
+    '--name',
+    azure.name ?? botId,
+    '--resource-group',
+    azure.resourceGroup,
+    '--subscription',
+    azure.subscription,
+  ]);
+  return bot?.properties?.endpoint || null;
+}
+
 interface BotResource {
   id: string;
   name: string;

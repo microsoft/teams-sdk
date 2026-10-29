@@ -14,7 +14,7 @@ import { createSilentSpinner } from '../utils/spinner.js';
 export interface AppDetailData {
   appDetails: AppDetails;
   endpoint: string | null;
-  /** null when not applicable or unknown (no bot, Azure bot, API unavailable, or read failed). */
+  /** null when not applicable or unknown (no bot, API unavailable, or read failed). */
   socketMode: boolean | null;
   installLink: string;
   portalLink: string;
@@ -64,15 +64,14 @@ export async function fetchAppDetail(
   let socketMode: boolean | null = null;
   if (appDetails.bots && appDetails.bots.length > 0) {
     const botId = appDetails.bots[0].botId;
-    let isTeamsManaged = false;
     try {
       const bot = await fetchBot(token, botId);
       endpoint = bot.messagingEndpoint || null;
-      isTeamsManaged = true;
     } catch {
       // Bot fetch failed (e.g. Azure bot), skip
     }
-    if (isTeamsManaged && isBotCommunicationApiAvailable()) {
+    // Socket mode is keyed by the Entra app ID, so it applies to Teams-managed and Azure bots alike.
+    if (isBotCommunicationApiAvailable()) {
       try {
         const config = await getBotCommunicationConfiguration(token, botId);
         socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
