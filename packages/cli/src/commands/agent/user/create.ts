@@ -321,17 +321,21 @@ export async function runAgentUserCreate(
   }
 
   renderAgentUserCreateResult(output);
-  await offerToOpenChat(output.chatLink, silent);
+  await offerToOpenChat(output.chatLink, silent, !!output.needsLicense);
   return output;
 }
 
-/** After a non-JSON create, offers to open the agent chat link in the browser (interactive sessions only). */
-async function offerToOpenChat(chatLink: string, silent: boolean): Promise<void> {
-  if (silent || !isInteractive()) return;
+/** After a non-JSON create, offers to open the agent chat link in the browser (interactive sessions only).
+ * Skipped when no license was assigned -- Teams can't resolve a chat with an unlicensed agentic user yet. */
+async function offerToOpenChat(chatLink: string, silent: boolean, needsLicense: boolean): Promise<void> {
+  if (silent || !isInteractive() || needsLicense) return;
 
   try {
     const open = await confirmAction('Open chat with the agent in Teams now?', silent);
-    if (open) await openInBrowser(chatLink);
+    if (open) {
+      await openInBrowser(chatLink);
+      logger.info(pc.dim(`If nothing opened, copy this link into your browser:\n${chatLink}`));
+    }
   } catch (error) {
     if (!(error instanceof Error && error.name === 'ExitPromptError')) throw error;
   }
