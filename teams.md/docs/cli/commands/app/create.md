@@ -20,7 +20,6 @@ teams app create [options]
 |------|-------------|
 | `-n, --name <name>` | App/bot name |
 | `-e, --endpoint <url>` | [OPTIONAL] Messaging endpoint URL |
-| `--messaging-mode <mode>` | [OPTIONAL] How Teams delivers messages: socket or http (socket requires a Teams-managed bot) |
 | `--env <path>` | [OPTIONAL] Path to credentials file (.env or appsettings.json) |
 | `--env-file <path>` | [OPTIONAL] Alias for --env |
 | `--no-secret` | [OPTIONAL] Skip client secret generation (for managed identity or federated credentials) |

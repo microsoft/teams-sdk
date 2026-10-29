@@ -26,7 +26,6 @@ teams app bot migrate [appId] [options]
 |------|-------------|
 | `--subscription <id>` | [OPTIONAL] Azure subscription ID |
 | `--resource-group <name>` | Azure resource group (required) |
-| `--azure-name <name>` | [OPTIONAL] Azure Bot resource name (default: bot id) |
 | `--create-resource-group` | [OPTIONAL] Create the resource group if it doesn't exist |
 | `--region <name>` | [OPTIONAL] Azure region for resource group (default: westus2) |
 | `--json` | [OPTIONAL] Output as JSON |

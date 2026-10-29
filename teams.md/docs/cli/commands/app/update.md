@@ -25,7 +25,6 @@ teams app update [appId] [options]
 | Flag | Description |
 |------|-------------|
 | `--endpoint <url>` | [OPTIONAL] Set the messaging endpoint URL |
-| `--messaging-mode <mode>` | [OPTIONAL] Set how Teams delivers messages: socket or http (Teams-managed bots only) |
 | `--scopes <scopes>` | [OPTIONAL] Set bot scopes (comma-separated: personal,team,groupChat,copilot) |
 | `--name <name>` | [OPTIONAL] Set the app short name (max 30 chars) |
 | `--long-name <name>` | [OPTIONAL] Set the app long name (max 100 chars) |
