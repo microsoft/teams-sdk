@@ -23,6 +23,10 @@ import { resolveExistingBlueprint, runCreateAgentIdentity, runCreateAgenticUser 
 
 export interface AgentUserCreateOptions {
   json?: boolean;
+  /** [OPTIONAL] Name for a newly created blueprint. Only valid when no `blueprintId` argument is given. */
+  name?: string;
+  /** [OPTIONAL] Display name for the agentic user. Defaults to the blueprint's name when omitted. */
+  userName?: string;
   /** [OPTIONAL] Working directory for the generated config file. Defaults to process.cwd(). */
   cwd?: string;
 }
@@ -121,9 +125,15 @@ async function resolveBlueprintIdForUserCreate(cwd: string, silent: boolean): Pr
  * the blueprint's name -- a blueprint can be reused across many agentic
  * users, so defaulting (and prompting) separately avoids silently naming
  * every agentic user after whichever blueprint happened to be used.
- * Defaults to the blueprint name when non-interactive/silent.
+ * `--user-name` always wins; defaults to the blueprint name when
+ * non-interactive/silent and no override was given.
  */
-async function resolveAgenticUserName(agentBlueprintName: string, silent: boolean): Promise<string> {
+async function resolveAgenticUserName(
+  agentBlueprintName: string,
+  userNameOverride: string | undefined,
+  silent: boolean
+): Promise<string> {
+  if (userNameOverride?.trim()) return userNameOverride.trim();
   if (silent || !isInteractive()) return agentBlueprintName;
 
   const name = await input({ message: 'Agentic user name:', default: agentBlueprintName });
@@ -177,6 +187,15 @@ export async function runAgentUserCreate(
 ): Promise<AgentUserCreateOutput> {
   const silent = !!options.json;
   const cwd = options.cwd ?? process.cwd();
+
+  if (blueprintIdArg && nameArg) {
+    throw new CliError(
+      'VALIDATION_CONFLICT',
+      '`--name` is ignored when reusing an existing blueprint.',
+      'Drop `--name`, or omit `[blueprintId]` to create a new blueprint with that name.'
+    );
+  }
+
   const account = await requireAgentAccount();
 
   let agentName: string;
@@ -231,7 +250,7 @@ export async function runAgentUserCreate(
   ensureGitignoreEntries(cwd, ['.env', ...AGENT_GITIGNORE_ENTRIES]);
 
   const identity = await runCreateAgentIdentity(agentName, agentBlueprintId, clientSecret, account, silent);
-  const agenticUserName = await resolveAgenticUserName(agentName, silent);
+  const agenticUserName = await resolveAgenticUserName(agentName, options.userName, silent);
   const user = await runCreateAgenticUser(agenticUserName, identity.agentIdentityId, account, silent);
 
   updateGeneratedConfig(cwd, {
@@ -266,9 +285,11 @@ export async function runAgentUserCreate(
 export const agentUserCreateCommand = new Command('create')
   .description('Create an Agent 365 agentic user (and its identity + blueprint if needed)')
   .argument('[blueprintId]', '[OPTIONAL] Existing agent blueprint ID to reuse. Creates a new blueprint if omitted.')
+  .option('--name <name>', '[OPTIONAL] Name for a newly created blueprint. Not valid together with [blueprintId].')
+  .option('--user-name <name>', "[OPTIONAL] Display name for the agentic user. Defaults to the blueprint's name.")
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintIdArg: string | undefined, options: AgentUserCreateOptions) => {
-      await runAgentUserCreate(blueprintIdArg, options);
+      await runAgentUserCreate(blueprintIdArg, options, options.name);
     })
   );
