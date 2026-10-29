@@ -162,7 +162,6 @@ describe('project new app provisioning', () => {
     mockSelect.mockResolvedValueOnce('typescript');
     mockConfirm.mockResolvedValueOnce(true);
     mockSelect.mockResolvedValueOnce('agent');
-    mockInput.mockResolvedValueOnce('PM Agent Blueprint');
     mockRunAgentUserCreate.mockResolvedValueOnce(agentCreateResult);
 
     const { projectNewCommand } = await import('../src/commands/project/new/index.js');
@@ -170,13 +169,11 @@ describe('project new app provisioning', () => {
     await projectNewCommand.parseAsync([], { from: 'user' });
 
     expect(mockRunAppCreate).not.toHaveBeenCalled();
-    expect(mockInput).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Blueprint name:', default: 'PM Agent' })
-    );
     expect(mockRunAgentUserCreate).toHaveBeenCalledWith(
       undefined,
-      { cwd: path.join(tempDir, 'pm-agent') },
-      'PM Agent Blueprint'
+      { cwd: path.join(tempDir, 'pm-agent'), forceNewBlueprint: true },
+      undefined,
+      'PM Agent'
     );
   });
 

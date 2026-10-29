@@ -39,6 +39,9 @@ export interface AgentUserCreateOptions {
   usageLocation?: string;
   /** [OPTIONAL] Working directory for the generated config file. Defaults to process.cwd(). */
   cwd?: string;
+  /** [OPTIONAL] Internal: skips the "reuse an existing blueprint vs create a new one" prompt and always creates a
+   * brand new blueprint. Used by `teams project new`, where a freshly scaffolded project never has one to reuse. */
+  forceNewBlueprint?: boolean;
 }
 
 export interface AgentUserCreateOutput {
@@ -199,7 +202,9 @@ export async function runAgentUserCreate(
   blueprintIdArg: string | undefined,
   options: AgentUserCreateOptions,
   /** Pre-resolved agent name, for callers (e.g. `teams project new`) that already prompted for it. */
-  nameArg?: string
+  nameArg?: string,
+  /** [OPTIONAL] Pre-fill for the "Blueprint name:" prompt when a new blueprint is created (e.g. the enclosing project's name), still editable by the user. Only used when `nameArg` is omitted and no existing blueprint is reused. */
+  nameDefault?: string
 ): Promise<AgentUserCreateOutput> {
   const silent = !!options.json;
   const cwd = options.cwd ?? process.cwd();
@@ -232,7 +237,8 @@ export async function runAgentUserCreate(
   let secretMinted = false;
   let messagingEndpoint: string | undefined;
 
-  const resolvedBlueprintId = blueprintIdArg ?? (await resolveBlueprintIdForUserCreate(cwd, silent));
+  const resolvedBlueprintId =
+    blueprintIdArg ?? (options.forceNewBlueprint ? undefined : await resolveBlueprintIdForUserCreate(cwd, silent));
 
   if (resolvedBlueprintId) {
     const resolved = await resolveExistingBlueprint(resolvedBlueprintId, cwd, account, silent);
@@ -243,7 +249,7 @@ export async function runAgentUserCreate(
     clientSecret = resolved.clientSecret;
     secretMinted = resolved.secretMinted;
   } else {
-    agentName = await resolveAgentName(nameArg, silent);
+    agentName = await resolveAgentName(nameArg, silent, nameDefault);
     const blueprint = await runCreateAgentBlueprint(agentName, account, silent);
     agentBlueprintId = blueprint.agentBlueprintId;
     agentBlueprintObjectId = blueprint.agentBlueprintObjectId;

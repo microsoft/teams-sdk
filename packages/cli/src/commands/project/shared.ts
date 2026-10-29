@@ -263,13 +263,16 @@ async function maybeProvisionAppForCreatedProject(
   if (choice === 'agent') {
     // Agentic users don't produce a TDP Teams app/bot credentials file;
     // the generated config lands directly in the new project's directory.
-    // The agent name is a separate identity from the project name, so
-    // ask for it explicitly (defaulting to the project name for convenience).
-    const agentName = await input({
-      message: 'Blueprint name:',
-      default: rawName.trim(),
-    });
-    const result = await runAgentUserCreate(undefined, { cwd: targetDir }, agentName.trim() || rawName.trim());
+    // A freshly scaffolded project never has an existing blueprint to
+    // reuse, so skip that prompt entirely (`forceNewBlueprint`) and go
+    // straight to creating a brand new blueprint + identity + user,
+    // defaulting its name to the project name (still editable).
+    const result = await runAgentUserCreate(
+      undefined,
+      { cwd: targetDir, forceNewBlueprint: true },
+      undefined,
+      rawName.trim()
+    );
     return { kind: 'agent', result };
   }
 

@@ -29,10 +29,16 @@ export async function requireAgentAccount(): Promise<AccountInfo> {
  * agent blueprint create` and `teams agent user create` (which creates a
  * blueprint on the fly when no blueprint ID is given).
  */
-export async function resolveAgentName(nameArg: string | undefined, silent: boolean): Promise<string> {
+export async function resolveAgentName(
+  nameArg: string | undefined,
+  silent: boolean,
+  /** [OPTIONAL] Pre-fill for the interactive prompt (e.g. the enclosing project's name), still editable by the user. */
+  defaultName?: string
+): Promise<string> {
   if (nameArg?.trim()) return nameArg.trim();
 
   if (!isInteractive() || silent) {
+    if (defaultName?.trim()) return defaultName.trim();
     throw new CliError(
       'AGENT_NAME_REQUIRED',
       'An agent name is required in non-interactive mode.',
@@ -40,7 +46,7 @@ export async function resolveAgentName(nameArg: string | undefined, silent: bool
     );
   }
 
-  const name = await input({ message: 'Blueprint name:' });
+  const name = await input({ message: 'Blueprint name:', default: defaultName?.trim() });
   if (!name.trim()) {
     throw new CliError('AGENT_NAME_REQUIRED', 'Agent name cannot be empty.');
   }
