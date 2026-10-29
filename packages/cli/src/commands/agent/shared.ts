@@ -3,6 +3,7 @@ import { input } from '@inquirer/prompts';
 import pc from 'picocolors';
 import { getAccount } from '../../auth/index.js';
 import { getConfig } from '../../utils/config.js';
+import { ensureAz } from '../../utils/az.js';
 import { ensureTenantMatch } from '../../utils/az-prompts.js';
 import { CliError } from '../../utils/errors.js';
 import { isInteractive } from '../../utils/interactive.js';
@@ -11,14 +12,18 @@ import { createSilentSpinner } from '../../utils/spinner.js';
 
 /**
  * Preflight shared by every `teams agent` subcommand: requires a logged-in
- * account and verifies the Azure CLI's active tenant matches it. Returns
- * the account for commands that need it (e.g. tenantId).
+ * account, Azure CLI installed and logged in (every agent operation shells
+ * out to `az account get-access-token` for an admin-delegated Graph token --
+ * see `getAzAccessToken`), and verifies the Azure CLI's active tenant
+ * matches the signed-in account's. Returns the account for commands that
+ * need it (e.g. tenantId).
  */
 export async function requireAgentAccount(): Promise<AccountInfo> {
   const account = await getAccount();
   if (!account) {
     throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
   }
+  await ensureAz();
   await ensureTenantMatch(account.tenantId);
   return account;
 }
