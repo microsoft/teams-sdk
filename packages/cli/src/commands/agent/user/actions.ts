@@ -268,21 +268,61 @@ export interface AgenticUserResult {
   needsLicense?: boolean;
 }
 
-async function resolveUsageLocation(countryLetterCode: string | undefined, silent: boolean): Promise<string> {
-  if (countryLetterCode) return countryLetterCode;
-  if (silent || !isInteractive() || isAutoConfirm()) {
+const USAGE_LOCATION_PATTERN = /^[A-Za-z]{2}$/;
+
+function validateUsageLocationFormat(code: string): string {
+  const trimmed = code.trim();
+  if (!USAGE_LOCATION_PATTERN.test(trimmed)) {
+    throw new CliError(
+      'AGENT_IDENTITY_USER_FAILED',
+      `Invalid usage location "${code}" -- expected a two-letter country code (e.g. \`US\`).`
+    );
+  }
+  return trimmed.toUpperCase();
+}
+
+/**
+ * Resolves the usage location (two-letter country code) required to
+ * create the agentic user.
+ *
+ * - `--usage-location` always wins (validated, format-checked).
+ * - Otherwise, if the tenant has a default (`countryLetterCode` from
+ *   `getOrganizationInfo`), it's used as-is in silent/non-interactive/
+ *   `--yes` runs; in an interactive session it's confirmed first, since
+ *   a tenant's billing country isn't necessarily where this particular
+ *   agentic user should be licensed -- declining lets the caller type a
+ *   different code instead.
+ * - With no default and no flag, prompts (or throws when non-interactive).
+ */
+async function resolveUsageLocation(
+  countryLetterCode: string | undefined,
+  usageLocationFlag: string | undefined,
+  silent: boolean
+): Promise<string> {
+  if (usageLocationFlag?.trim()) return validateUsageLocationFormat(usageLocationFlag);
+
+  if (countryLetterCode) {
+    if (silent || !isInteractive() || isAutoConfirm()) return countryLetterCode;
+    const useDetected = await confirm({
+      message: `Use detected usage location ${pc.cyan(countryLetterCode)} for the agentic user?`,
+      default: true,
+    });
+    if (useDetected) return countryLetterCode;
+  } else if (silent || !isInteractive() || isAutoConfirm()) {
     throw new CliError(
       'AGENT_IDENTITY_USER_FAILED',
       "Could not determine the tenant's default usage location automatically.",
       'Pass a two-letter country code (e.g. `US`) to continue, or set it manually once the user is created.'
     );
   }
+
   const code = await input({ message: 'Usage location for the agentic user (two-letter country code, e.g. US):' });
   if (!code.trim()) {
     throw new CliError('AGENT_IDENTITY_USER_FAILED', 'Usage location cannot be empty.');
   }
-  return code.trim().toUpperCase();
+  return validateUsageLocationFormat(code);
 }
+
 
 /**
  * Create the Entra agentic user tied to an already-created agent identity.
@@ -301,7 +341,9 @@ export async function runCreateAgenticUser(
    * the interactive picker; `false` to explicitly skip assignment
    * (Commander maps `--license <skuId>`/`--no-license` onto this one value).
    */
-  licenseOption?: string | false
+  licenseOption?: string | false,
+  /** [OPTIONAL] Two-letter country code to use as the usage location, skipping detection/confirmation. */
+  usageLocationOption?: string
 ): Promise<AgenticUserResult> {
   try {
     const adminToken = await withAgentSpinner(
@@ -331,7 +373,7 @@ export async function runCreateAgenticUser(
       );
     }
 
-    const usageLocation = await resolveUsageLocation(org.countryLetterCode, silent);
+    const usageLocation = await resolveUsageLocation(org.countryLetterCode, usageLocationOption, silent);
     const slug = slugifyAgentName(agentName);
     const userPrincipalName = `${slug}@${org.defaultDomain}`;
 

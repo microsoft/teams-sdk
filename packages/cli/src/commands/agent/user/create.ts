@@ -33,6 +33,8 @@ export interface AgentUserCreateOptions {
    * `false` when `--no-license` was passed, to explicitly skip assignment (Commander maps `--license <skuId>`
    * and `--no-license` onto this same property). */
   license?: string | false;
+  /** [OPTIONAL] Two-letter country code to use as the agentic user's usage location, skipping detection/confirmation. */
+  usageLocation?: string;
   /** [OPTIONAL] Working directory for the generated config file. Defaults to process.cwd(). */
   cwd?: string;
 }
@@ -274,7 +276,8 @@ export async function runAgentUserCreate(
     identity.agentIdentityId,
     account,
     silent,
-    options.license
+    options.license,
+    options.usageLocation
   );
 
   updateGeneratedConfig(cwd, {
@@ -317,6 +320,10 @@ export const agentUserCreateCommand = new Command('create')
   )
   .option('--license <skuId>', '[OPTIONAL] License SKU ID or part number to assign to the agentic user')
   .option('--no-license', '[OPTIONAL] Skip license assignment (do it manually later)')
+  .option(
+    '--usage-location <code>',
+    '[OPTIONAL] Two-letter country code for the agentic user\u2019s usage location (e.g. US)'
+  )
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintIdArg: string | undefined, options: AgentUserCreateOptions) => {
