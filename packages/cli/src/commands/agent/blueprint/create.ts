@@ -20,6 +20,8 @@ import { assertHttpsEndpoint, registerAgentBlueprintEndpoint, runCreateAgentBlue
 
 export interface AgentBlueprintCreateOptions {
   json?: boolean;
+  /** [OPTIONAL] HTTPS messaging endpoint to register on the blueprint right away. Prompted for interactively when omitted. */
+  endpoint?: string;
   /** [OPTIONAL] Working directory for the generated config file. Defaults to process.cwd(). */
   cwd?: string;
 }
@@ -36,14 +38,16 @@ export interface AgentBlueprintCreateOutput {
 }
 
 /**
- * Asks for the messaging endpoint right after blueprint creation. Both
- * follow-up paths (Teams app and agentic user) need it registered on the
- * blueprint's own bot identity for the deployed agent to actually receive
- * messages, so this runs before the "how will this agent run?" fork.
- * Optional -- you may not have anything deployed yet -- so pressing enter
- * skips it. Only runs in an interactive, non-JSON session.
+ * Resolves the messaging endpoint to register right after blueprint
+ * creation. Both follow-up paths (Teams app and agentic user) need it
+ * registered on the blueprint's own bot identity for the deployed agent to
+ * actually receive messages, so this runs before the "how will this agent
+ * run?" fork. `--endpoint` lets non-interactive/CI callers set it directly;
+ * otherwise it's optional -- you may not have anything deployed yet -- so
+ * pressing enter (or running non-interactively/`--json`) skips it.
  */
-async function resolveOptionalEndpoint(silent: boolean): Promise<string | undefined> {
+async function resolveOptionalEndpoint(endpointFlag: string | undefined, silent: boolean): Promise<string | undefined> {
+  if (endpointFlag?.trim()) return endpointFlag.trim();
   if (silent || !isInteractive()) return undefined;
 
   const endpoint = await input({
@@ -95,6 +99,10 @@ export async function runAgentBlueprintCreate(
 ): Promise<AgentBlueprintCreateOutput> {
   const silent = !!options.json;
 
+  if (options.endpoint?.trim()) {
+    assertHttpsEndpoint(options.endpoint.trim());
+  }
+
   const name = await resolveAgentName(nameArg, silent);
   const account = await requireAgentAccount();
 
@@ -118,7 +126,7 @@ export async function runAgentBlueprintCreate(
   });
   ensureGitignoreEntries(cwd, ['.env', ...AGENT_GITIGNORE_ENTRIES]);
 
-  const endpoint = await resolveOptionalEndpoint(silent);
+  const endpoint = await resolveOptionalEndpoint(options.endpoint, silent);
   if (endpoint) {
     assertHttpsEndpoint(endpoint);
     await registerAgentBlueprintEndpoint(config.agentBlueprintId, account.tenantId, endpoint, silent);
@@ -141,6 +149,7 @@ export async function runAgentBlueprintCreate(
 export const agentBlueprintCreateCommand = new Command('create')
   .description('Create an Agent 365 agent blueprint')
   .argument('[name]', 'Agent name')
+  .option('--endpoint <url>', '[OPTIONAL] HTTPS messaging endpoint to register right away')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (nameArg: string | undefined, options: AgentBlueprintCreateOptions) => {
