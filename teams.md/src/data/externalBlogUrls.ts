@@ -9,4 +9,6 @@ export const externalBlogUrls: Record<string, string> = {
     'join-the-microsoft-365-copilot-developer-camp': 'https://devblogs.microsoft.com/microsoft365dev/join-the-microsoft-365-copilot-developer-camp/',
     'announcing-the-updated-teams-ai-library-and-mcp-support': 'https://devblogs.microsoft.com/microsoft365dev/announcing-the-updated-teams-ai-library-and-mcp-support/',
     'python-support-for-the-microsoft-teams-sdk-is-now-generally-available': 'https://devblogs.microsoft.com/microsoft365dev/python-support-for-the-microsoft-teams-sdk-is-now-generally-available/',
+    'build-collaborative-agents-where-work-happens': 'https://devblogs.microsoft.com/microsoft365dev/build-collaborative-agents-where-work-happens/',
+    'whats-new-in-microsoft-teams--may-2026---build-edition': 'https://techcommunity.microsoft.com/blog/microsoftteamsblog/whats-new-in-microsoft-teams--may-2026---build-edition/4524613',
 };
