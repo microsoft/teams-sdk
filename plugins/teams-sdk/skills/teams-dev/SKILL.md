@@ -1,7 +1,7 @@
 ---
 name: teams-dev
 description: Use this skill whenever the user mentions Microsoft Teams in a development context — whether they're building, integrating, configuring, debugging, porting a Slack bot to Teams, or just asking questions. Covers bots, message extensions, embedded web apps, Adaptive Cards, dialogs, SSO, infrastructure, the Teams Developer CLI/SDK, Slack Bolt migration, and general Teams platform queries. If the word "Teams" appears, err on the side of invoking this skill.
-teams_cli_version: 3.0.*
+teams_cli_version: 3.*
 ---
 
 # Teams Bot Development & Infrastructure
@@ -69,6 +69,8 @@ teams app get <teamsAppId> --json
 ```bash
 teams status
 ```
+
+If the output reports that the CLI is not the latest version (`updateAvailable: true` with `--json`), suggest running `teams self-update`.
 
 **Update CLI to latest version:**
 

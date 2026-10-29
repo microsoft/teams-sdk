@@ -62,7 +62,9 @@ program
     if (
       !opts.disableAutoUpdate &&
       !actionCommand.optsWithGlobals().json &&
-      actionCommand.name() !== 'self-update'
+      actionCommand.name() !== 'self-update' &&
+      // status reports the version itself
+      actionCommand.name() !== 'status'
     ) {
       await checkForUpdates();
     }
