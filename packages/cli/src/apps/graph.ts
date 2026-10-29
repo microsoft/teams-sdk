@@ -919,6 +919,12 @@ export async function getOrganizationInfo(token: string): Promise<OrganizationIn
   };
 }
 
+export interface SubscribedSkuServicePlan {
+  servicePlanName: string;
+  /** `'Success'` means the plan is actually provisioned/active for this SKU, not pending/disabled. */
+  provisioningStatus: string;
+}
+
 export interface SubscribedSku {
   skuId: string;
   skuPartNumber: string;
@@ -929,6 +935,8 @@ export interface SubscribedSku {
   appliesTo: string;
   /** `'Enabled'` means the SKU currently has at least one usable prepaid unit; `Suspended`/`Deleted`/`LockedOut` SKUs can't be assigned. */
   capabilityStatus: string;
+  /** The service plans (capabilities) this SKU grants -- used to detect Teams-enabling (M365/O365) SKUs vs. standalone products like Power BI or Visio. */
+  servicePlans: SubscribedSkuServicePlan[];
 }
 
 /**
@@ -956,6 +964,7 @@ export async function listSubscribedSkus(token: string): Promise<SubscribedSku[]
       prepaidUnits?: { enabled?: number };
       appliesTo?: string;
       capabilityStatus?: string;
+      servicePlans?: Array<{ servicePlanName?: string; provisioningStatus?: string }>;
     }>;
   };
 
@@ -966,6 +975,11 @@ export async function listSubscribedSkus(token: string): Promise<SubscribedSku[]
     consumedUnits: sku.consumedUnits,
     appliesTo: sku.appliesTo ?? 'User',
     capabilityStatus: sku.capabilityStatus ?? 'Enabled',
+    servicePlans: (sku.servicePlans ?? [])
+      .filter((sp): sp is { servicePlanName: string; provisioningStatus: string } =>
+        Boolean(sp.servicePlanName && sp.provisioningStatus)
+      )
+      .map((sp) => ({ servicePlanName: sp.servicePlanName, provisioningStatus: sp.provisioningStatus })),
   }));
 }
 

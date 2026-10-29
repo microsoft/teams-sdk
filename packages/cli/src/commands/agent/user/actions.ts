@@ -492,12 +492,19 @@ async function tryAssignLicenseInteractively(
   // Only show SKUs that are actually eligible for user assignment: `appliesTo`
   // must be `'User'` (`'Company'` SKUs are tenant-wide and can't be assigned
   // to an individual user), `capabilityStatus` must be `'Enabled'` (not
-  // `Suspended`/`Deleted`/`LockedOut`), and it must still have a free seat.
+  // `Suspended`/`Deleted`/`LockedOut`), it must still have a free seat, and it
+  // must actually grant Teams (the agentic user needs Teams/Exchange to be
+  // usable -- this excludes non-M365 standalone SKUs like Power BI Pro,
+  // Visio, or EMS that would otherwise show up as assignable but useless).
   const available = skus.filter(
-    (sku) => sku.appliesTo === 'User' && sku.capabilityStatus === 'Enabled' && sku.consumedUnits < sku.enabledUnits
+    (sku) =>
+      sku.appliesTo === 'User' &&
+      sku.capabilityStatus === 'Enabled' &&
+      sku.consumedUnits < sku.enabledUnits &&
+      sku.servicePlans.some((sp) => sp.servicePlanName.startsWith('TEAMS') && sp.provisioningStatus === 'Success')
   );
   if (available.length === 0) {
-    spinner.error({ text: 'No eligible licenses with available seats found in this tenant.' });
+    spinner.error({ text: 'No eligible Microsoft 365 licenses (with Teams) and available seats found in this tenant.' });
     return { needsLicense: true };
   }
   spinner.success({ text: `Found ${available.length} eligible license(s) with available seats.` });

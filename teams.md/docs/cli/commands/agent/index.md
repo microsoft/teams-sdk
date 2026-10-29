@@ -21,6 +21,12 @@ Commands for creating [Microsoft Agent 365](https://learn.microsoft.com/microsof
 
 These commands call Microsoft Graph and the Teams Developer Portal API directly (no `a365` CLI or .NET runtime required).
 
+## Prerequisites
+
+- **Azure CLI** installed and logged in (`az login`) — these commands acquire an admin-delegated Graph token via `az account get-access-token`, separate from your `teams login` session.
+- **Global Administrator** role in the target tenant. Unlike the official `a365` CLI, which can complete most setup as an "Agent ID Developer" and defer only the OAuth2 admin-consent grants to a Global Administrator, these commands grant OAuth2 delegated permissions (`DelegatedPermissionGrant.ReadWrite.All`), assign app roles, create the agentic user, and assign a license — all in one pass, with no partial-completion fallback. A non-admin account will fail partway through.
+- An **Azure subscription** with Contributor-level access, if you also provision Azure infrastructure alongside the blueprint.
+
 - [`teams agent blueprint`](./blueprint) — create, update, or delete the agent's blueprint (its Entra app + credentials)
 - [`teams agent user`](./user) — create the agentic user (and its identity + blueprint if needed)
 
