@@ -925,6 +925,10 @@ export interface SubscribedSku {
   /** Total purchased seats for this SKU. */
   enabledUnits: number;
   consumedUnits: number;
+  /** Only `'User'` SKUs are assignable to an individual user; `'Company'` SKUs are tenant-wide and can't be. */
+  appliesTo: string;
+  /** `'Enabled'` means the SKU currently has at least one usable prepaid unit; `Suspended`/`Deleted`/`LockedOut` SKUs can't be assigned. */
+  capabilityStatus: string;
 }
 
 /**
@@ -950,6 +954,8 @@ export async function listSubscribedSkus(token: string): Promise<SubscribedSku[]
       skuPartNumber: string;
       consumedUnits: number;
       prepaidUnits?: { enabled?: number };
+      appliesTo?: string;
+      capabilityStatus?: string;
     }>;
   };
 
@@ -958,6 +964,8 @@ export async function listSubscribedSkus(token: string): Promise<SubscribedSku[]
     skuPartNumber: sku.skuPartNumber,
     enabledUnits: sku.prepaidUnits?.enabled ?? 0,
     consumedUnits: sku.consumedUnits,
+    appliesTo: sku.appliesTo ?? 'User',
+    capabilityStatus: sku.capabilityStatus ?? 'Enabled',
   }));
 }
 

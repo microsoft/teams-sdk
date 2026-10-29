@@ -489,12 +489,18 @@ async function tryAssignLicenseInteractively(
     return { needsLicense: true };
   }
 
-  const available = skus.filter((sku) => sku.consumedUnits < sku.enabledUnits);
+  // Only show SKUs that are actually eligible for user assignment: `appliesTo`
+  // must be `'User'` (`'Company'` SKUs are tenant-wide and can't be assigned
+  // to an individual user), `capabilityStatus` must be `'Enabled'` (not
+  // `Suspended`/`Deleted`/`LockedOut`), and it must still have a free seat.
+  const available = skus.filter(
+    (sku) => sku.appliesTo === 'User' && sku.capabilityStatus === 'Enabled' && sku.consumedUnits < sku.enabledUnits
+  );
   if (available.length === 0) {
-    spinner.error({ text: 'No licenses with available seats found in this tenant.' });
+    spinner.error({ text: 'No eligible licenses with available seats found in this tenant.' });
     return { needsLicense: true };
   }
-  spinner.success({ text: `Found ${available.length} license(s) with available seats.` });
+  spinner.success({ text: `Found ${available.length} eligible license(s) with available seats.` });
 
   const SKIP = '__skip__' as const;
   const choice = await select({
