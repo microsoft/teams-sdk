@@ -125,7 +125,7 @@ export const agentUserDeleteCommand = new Command('delete')
   .option('--dry-run', '[OPTIONAL] Show what would be deleted without making any changes')
   .action(
     wrapAction(async (userIdOrUpnArg: string | undefined, options: AgentUserDeleteOptions) => {
-      const account = await requireAgentAccount();
+      const account = await requireAgentAccount(!!options.json);
 
       if (!options.dryRun) {
         const proceed = await confirmAction(

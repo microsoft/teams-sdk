@@ -138,7 +138,7 @@ export const agentUserUpdateCommand = new Command('update')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (userIdOrUpnArg: string | undefined, options: AgentUserUpdateOptions) => {
-      const account = await requireAgentAccount();
+      const account = await requireAgentAccount(!!options.json);
       await runAgentUserUpdate(userIdOrUpnArg, options, account, process.cwd());
     })
   );

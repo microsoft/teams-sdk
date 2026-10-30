@@ -111,7 +111,7 @@ export async function runAgentBlueprintCreate(
   }
 
   const name = await resolveAgentName(nameArg, silent);
-  const account = await requireAgentAccount();
+  const account = await requireAgentAccount(silent);
 
   const cwd = options.cwd ?? process.cwd();
   const permissionsFlag = options.permissions?.trim();

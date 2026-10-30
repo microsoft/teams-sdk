@@ -227,7 +227,7 @@ export async function runAgentUserCreate(
     assertHttpsEndpoint(options.endpoint.trim());
   }
 
-  const account = await requireAgentAccount();
+  const account = await requireAgentAccount(silent);
 
   let agentName: string;
   let agentBlueprintId: string;

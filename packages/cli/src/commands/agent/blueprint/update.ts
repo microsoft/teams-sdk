@@ -141,7 +141,7 @@ export const agentBlueprintUpdateCommand = new Command('update')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintIdArg: string | undefined, options: AgentBlueprintUpdateOptions) => {
-      const account = await requireAgentAccount();
+      const account = await requireAgentAccount(!!options.json);
       options.tenantId = account.tenantId;
 
       if (!options.name && !options.endpoint && isInteractive() && !options.json) {

@@ -36,7 +36,7 @@ const permissionsListCommand = new Command('list')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintId: string, options: BlueprintPermissionsListOptions) => {
-      const account = await requireAgentAccount();
+      const account = await requireAgentAccount(!!options.json);
       const entries = await listBlueprintPermissions(blueprintId, account, !!options.json);
 
       if (options.json) {
@@ -72,7 +72,7 @@ const permissionsAddCommand = new Command('add')
       }
 
       const resourceAppId = resolveResourceAppId(options.resource);
-      const account = await requireAgentAccount();
+      const account = await requireAgentAccount(!!options.json);
       const result = await addBlueprintPermissions(blueprintId, account, resourceAppId, scopes, !!options.json);
 
       if (options.json) {
@@ -103,7 +103,7 @@ const permissionsRemoveCommand = new Command('remove')
       }
 
       const resourceAppId = resolveResourceAppId(options.resource);
-      const account = await requireAgentAccount();
+      const account = await requireAgentAccount(!!options.json);
       const result = await removeBlueprintPermissions(blueprintId, account, resourceAppId, scopes, !!options.json);
 
       if (options.json) {
@@ -130,7 +130,7 @@ const permissionsSetCommand = new Command('set')
     wrapAction(async (blueprintId: string, scopesArg: string, options: BlueprintPermissionsSetOptions) => {
       const scopes = parseScopes(scopesArg);
       const resourceAppId = resolveResourceAppId(options.resource);
-      const account = await requireAgentAccount();
+      const account = await requireAgentAccount(!!options.json);
       const result = await setBlueprintPermissions(blueprintId, account, resourceAppId, scopes, !!options.json);
 
       if (options.json) {

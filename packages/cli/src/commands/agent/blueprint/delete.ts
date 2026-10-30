@@ -122,7 +122,7 @@ export const agentBlueprintDeleteCommand = new Command('delete')
   .option('--dry-run', '[OPTIONAL] Show resources that would be deleted without making any changes')
   .action(
     wrapAction(async (blueprintIdArg: string | undefined, options: AgentBlueprintDeleteOptions) => {
-      const account = await requireAgentAccount();
+      const account = await requireAgentAccount(!!options.json);
 
       if (!options.dryRun) {
         const proceed = await confirmAction(

@@ -15,16 +15,26 @@ import { createSilentSpinner } from '../../utils/spinner.js';
  * account, Azure CLI installed and logged in (every agent operation shells
  * out to `az account get-access-token` for an admin-delegated Graph token --
  * see `getAzAccessToken`), and verifies the Azure CLI's active tenant
- * matches the signed-in account's. Returns the account for commands that
- * need it (e.g. tenantId).
+ * matches the signed-in account's. Also warns that a Global Administrator
+ * role is needed -- unlike the official `a365` CLI, these commands have no
+ * Agent-ID-Developer deferred-consent fallback (see the `agent` docs'
+ * Prerequisites section), so a non-admin account will fail partway through
+ * rather than completing with a manual follow-up step. Returns the account
+ * for commands that need it (e.g. tenantId).
  */
-export async function requireAgentAccount(): Promise<AccountInfo> {
+export async function requireAgentAccount(silent = false): Promise<AccountInfo> {
   const account = await getAccount();
   if (!account) {
     throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
   }
   await ensureAz();
   await ensureTenantMatch(account.tenantId);
+  if (!silent) {
+    logger.warn(
+      pc.yellow('⚠'),
+      'These commands require a Global Administrator role in the tenant -- a non-admin account will fail partway through.'
+    );
+  }
   return account;
 }
 
