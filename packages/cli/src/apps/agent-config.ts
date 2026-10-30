@@ -8,7 +8,7 @@ const GENERATED_CONFIG_FILENAME = 'agent.generated.config.json';
 export interface AgentUserRecord {
   agentIdentityId: string;
   agenticUserId: string;
-  /** Display name of the agentic user, when different from the blueprint's `agentName`. */
+  /** Display name of the agentic user. */
   agenticUserName: string;
   userPrincipalName: string;
 }
@@ -16,7 +16,7 @@ export interface AgentUserRecord {
 /** Shape of `agent.generated.config.json`, written by `teams agent blueprint create`. */
 export interface AgentGeneratedConfig {
   /** Display name of the agent blueprint. */
-  agentName: string;
+  agentBlueprintName: string;
   agentBlueprintId: string;
   agentBlueprintObjectId: string;
   /** Object ID of the blueprint's service principal -- the managed identity used for the agent. */

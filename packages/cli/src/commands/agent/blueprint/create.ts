@@ -125,7 +125,7 @@ export async function runAgentBlueprintCreate(
   const blueprint = await runCreateAgentBlueprint(name, account, silent, graphScopes);
 
   const config: AgentGeneratedConfig = {
-    agentName: name,
+    agentBlueprintName: name,
     agentBlueprintId: blueprint.agentBlueprintId,
     agentBlueprintObjectId: blueprint.agentBlueprintObjectId,
     agentBlueprintServicePrincipalObjectId: blueprint.agentBlueprintServicePrincipalObjectId,

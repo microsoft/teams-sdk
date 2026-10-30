@@ -1045,7 +1045,7 @@ export async function removeLicenses(token: string, userId: string, skuIds: stri
   }
 }
 
-/** PATCH a user with partial updates (e.g. `displayName`, `usageLocation`). */
+/** PATCH a user with partial updates (e.g. `displayName`, `usageLocation`, `userPrincipalName`). */
 export async function updateUser(token: string, userId: string, updates: Record<string, unknown>): Promise<void> {
   const response = await apiFetch(`${GRAPH_BASE_URL}/users/${userId}`, {
     method: 'PATCH',
@@ -1059,5 +1059,31 @@ export async function updateUser(token: string, userId: string, updates: Record<
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Failed to update user: ${response.status} ${error}`);
+  }
+}
+
+/**
+ * PATCH a service principal with partial updates. Used to keep an agent
+ * identity's `displayName` in sync with its agentic user's name -- the
+ * identity is itself a `servicePrincipals/microsoft.graph.agentIdentity`
+ * object, so a plain service principal PATCH renames it.
+ */
+export async function updateServicePrincipal(
+  token: string,
+  servicePrincipalId: string,
+  updates: Record<string, unknown>
+): Promise<void> {
+  const response = await apiFetch(`${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: authHeader(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to update service principal: ${response.status} ${error}`);
   }
 }

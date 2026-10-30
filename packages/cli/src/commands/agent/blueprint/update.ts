@@ -1,5 +1,5 @@
 import type { AccountInfo } from '@azure/msal-node';
-import { input } from '@inquirer/prompts';
+import { input, select } from '@inquirer/prompts';
 import { Command } from 'commander';
 import { existsSync } from 'node:fs';
 import pc from 'picocolors';
@@ -105,6 +105,9 @@ export async function runAgentBlueprintUpdate(
 
   if (name) {
     await runRenameAgentBlueprint(target.agentBlueprintId, account, name, silent);
+    if (target.syncsLocalConfig) {
+      updateGeneratedConfig(cwd, { agentBlueprintName: name });
+    }
   }
 
   if (endpoint) {
@@ -118,7 +121,7 @@ export async function runAgentBlueprintUpdate(
     agentBlueprintId: target.agentBlueprintId,
     ...(name ? { name } : {}),
     ...(endpoint ? { messagingEndpoint: endpoint } : {}),
-    ...(target.syncsLocalConfig && endpoint ? { generatedConfigPath: getGeneratedConfigPath(cwd) } : {}),
+    ...(target.syncsLocalConfig && (name || endpoint) ? { generatedConfigPath: getGeneratedConfigPath(cwd) } : {}),
   };
 
   if (options.json) {
@@ -128,6 +131,54 @@ export async function runAgentBlueprintUpdate(
 
   renderAgentBlueprintUpdateResult(output);
   return output;
+}
+
+/**
+ * Interactive menu shown when `teams agent blueprint update` is run with
+ * no mutation flags in a TTY: lets the user pick Name/Endpoint/Back and
+ * loops after each change, mirroring `teams app update`'s menu instead of
+ * a single blind prompt + "Nothing to update" error.
+ */
+async function showAgentBlueprintUpdateMenu(
+  blueprintIdArg: string | undefined,
+  options: AgentBlueprintUpdateOptions,
+  account: AccountInfo
+): Promise<void> {
+  const cwd = options.cwd ?? process.cwd();
+  const target = resolveUpdateTarget(blueprintIdArg, cwd, true);
+  let currentName = target.syncsLocalConfig ? readGeneratedConfig(cwd).agentBlueprintName : undefined;
+
+  while (true) {
+    logger.info(`\n${pc.bold(currentName ?? 'Agent blueprint')}`);
+    logger.info(`${pc.dim('ID:')} ${target.agentBlueprintId}`);
+
+    const action = await select({
+      message: 'What would you like to update?',
+      choices: [
+        { name: 'Name', value: 'name' as const },
+        { name: 'Endpoint', value: 'endpoint' as const },
+        { name: 'Back', value: 'back' as const },
+      ],
+    });
+    if (action === 'back') return;
+
+    if (action === 'name') {
+      const name = (await input({ message: 'New blueprint name:', default: currentName })).trim();
+      if (!name) continue;
+      const result = await runAgentBlueprintUpdate(
+        target.agentBlueprintId,
+        { ...options, name, endpoint: undefined },
+        account
+      );
+      currentName = result.name ?? currentName;
+      continue;
+    }
+
+    const endpoint = (await input({ message: 'Messaging endpoint (HTTPS URL):' })).trim();
+    if (!endpoint) continue;
+    assertHttpsEndpoint(endpoint);
+    await runAgentBlueprintUpdate(target.agentBlueprintId, { ...options, name: undefined, endpoint }, account);
+  }
 }
 
 export const agentBlueprintUpdateCommand = new Command('update')
@@ -144,8 +195,9 @@ export const agentBlueprintUpdateCommand = new Command('update')
       const account = await requireAgentAccount(!!options.json);
       options.tenantId = account.tenantId;
 
-      if (!options.name && !options.endpoint && isInteractive() && !options.json) {
-        options.endpoint = await input({ message: 'Messaging endpoint (HTTPS URL):' });
+      if (!options.name && !options.endpoint && !options.json && isInteractive()) {
+        await showAgentBlueprintUpdateMenu(blueprintIdArg, options, account);
+        return;
       }
 
       await runAgentBlueprintUpdate(blueprintIdArg, options, account);

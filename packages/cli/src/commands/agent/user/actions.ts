@@ -19,6 +19,7 @@ import {
   getOrganizationInfo,
   getServicePrincipalByAppId,
   removeLicenses,
+  updateServicePrincipal,
   updateUser,
   type SubscribedSku,
 } from '../../../apps/graph.js';
@@ -34,7 +35,7 @@ export interface ResolvedBlueprint {
   agentBlueprintId: string;
   agentBlueprintObjectId: string;
   agentBlueprintServicePrincipalObjectId: string;
-  agentName: string;
+  agentBlueprintName: string;
   clientSecret: string;
   /** True when a brand new client secret was minted via Graph because no local one was available. */
   secretMinted: boolean;
@@ -51,7 +52,7 @@ function tryReadLocalBlueprintSecret(
   blueprintId: string
 ): Pick<
   ResolvedBlueprint,
-  'agentBlueprintObjectId' | 'agentBlueprintServicePrincipalObjectId' | 'agentName' | 'clientSecret'
+  'agentBlueprintObjectId' | 'agentBlueprintServicePrincipalObjectId' | 'agentBlueprintName' | 'clientSecret'
 > | undefined {
   if (!existsSync(getGeneratedConfigPath(cwd))) return undefined;
 
@@ -69,7 +70,7 @@ function tryReadLocalBlueprintSecret(
   return {
     agentBlueprintObjectId: config.agentBlueprintObjectId,
     agentBlueprintServicePrincipalObjectId: config.agentBlueprintServicePrincipalObjectId,
-    agentName: config.agentName,
+    agentBlueprintName: config.agentBlueprintName,
     clientSecret,
   };
 }
@@ -140,7 +141,7 @@ export async function resolveExistingBlueprint(
       agentBlueprintId: blueprintId,
       agentBlueprintObjectId: app.id,
       agentBlueprintServicePrincipalObjectId: principal.id,
-      agentName: app.displayName,
+      agentBlueprintName: app.displayName,
       clientSecret: secret.secretText,
       secretMinted: true,
     };
@@ -557,6 +558,7 @@ export interface AgentUserUpdateResult {
   agenticUserId: string;
   name?: string;
   usageLocation?: string;
+  userPrincipalName?: string;
   licenseAssigned?: boolean;
   licenseSkuPartNumber?: string;
   licenseRemoved?: boolean;
@@ -575,7 +577,8 @@ export async function runUpdateAgenticUser(
   silent: boolean,
   name?: string,
   usageLocation?: string,
-  licenseOption?: string | false
+  licenseOption?: string | false,
+  upn?: string
 ): Promise<AgentUserUpdateResult> {
   try {
     const adminToken = await withAgentSpinner(
@@ -595,15 +598,18 @@ export async function runUpdateAgenticUser(
         error: 'Could not find an agentic user with that ID/UPN.',
       },
       silent,
-      () => getAgenticUserByIdOrUpn(adminToken, userIdOrUpn)
+      async () => {
+        const user = await getAgenticUserByIdOrUpn(adminToken, userIdOrUpn);
+        if (!user) {
+          throw new CliError(
+            'AGENT_IDENTITY_USER_NOT_FOUND',
+            `No agentic user found matching "${userIdOrUpn}".`,
+            'Verify the object ID or UPN is correct.'
+          );
+        }
+        return user;
+      }
     );
-    if (!agenticUser) {
-      throw new CliError(
-        'AGENT_IDENTITY_USER_NOT_FOUND',
-        `No agentic user found matching "${userIdOrUpn}".`,
-        'Verify the object ID or UPN is correct.'
-      );
-    }
 
     const result: AgentUserUpdateResult = { agenticUserId: agenticUser.id };
 
@@ -617,6 +623,10 @@ export async function runUpdateAgenticUser(
       updates.usageLocation = validated;
       result.usageLocation = validated;
     }
+    if (upn?.trim()) {
+      updates.userPrincipalName = upn.trim();
+      result.userPrincipalName = upn.trim();
+    }
     if (Object.keys(updates).length > 0) {
       await withAgentSpinner(
         {
@@ -626,6 +636,22 @@ export async function runUpdateAgenticUser(
         },
         silent,
         () => updateUser(adminToken, agenticUser.id, updates)
+      );
+    }
+
+    // Keep the agent identity's own displayName in sync -- it's a
+    // separate `servicePrincipals/microsoft.graph.agentIdentity` object
+    // that the agentic user sits under, so renaming the user alone
+    // leaves the identity showing its original (create-time) name.
+    if (name?.trim()) {
+      await withAgentSpinner(
+        {
+          start: 'Updating agent identity...',
+          success: 'Agent identity updated.',
+          error: 'Failed to update the agent identity.',
+        },
+        silent,
+        () => updateServicePrincipal(adminToken, agenticUser.identityParentId, { displayName: name.trim() })
       );
     }
 

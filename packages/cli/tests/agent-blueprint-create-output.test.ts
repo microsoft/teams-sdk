@@ -7,7 +7,7 @@ const CONFIG_PATH = '/work/agent.generated.config.json';
 
 function baseConfig(overrides: Partial<AgentGeneratedConfig> = {}): AgentGeneratedConfig {
   return {
-    agentName: 'My Agent',
+    agentBlueprintName: 'My Agent',
     agentBlueprintId: 'bp-1',
     agentBlueprintObjectId: 'bp-obj-1',
     agentBlueprintServicePrincipalObjectId: 'bp-sp-1',

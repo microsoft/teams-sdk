@@ -1,7 +1,5 @@
 import { Command } from 'commander';
-import { existsSync } from 'node:fs';
 import pc from 'picocolors';
-import { getGeneratedConfigPath, readGeneratedConfig } from '../../../../apps/agent-config.js';
 import { outputJson } from '../../../../utils/json-output.js';
 import { CliError, wrapAction } from '../../../../utils/errors.js';
 import { logger } from '../../../../utils/logger.js';
@@ -19,32 +17,6 @@ function parseScopes(raw: string): string[] {
   return [...new Set(raw.split(',').map((s) => s.trim()).filter(Boolean))];
 }
 
-/**
- * Resolves which blueprint to operate on: a `blueprintId` passed directly
- * on the command line always wins; otherwise falls back to the local
- * `agent.generated.config.json`, same pattern as `agent blueprint update`/`delete`.
- */
-function resolveBlueprintId(blueprintIdArg: string | undefined, silent: boolean): string {
-  if (blueprintIdArg) {
-    return blueprintIdArg;
-  }
-
-  const cwd = process.cwd();
-  if (!existsSync(getGeneratedConfigPath(cwd))) {
-    throw new CliError(
-      'AGENT_BLUEPRINT_ID_REQUIRED',
-      'No agent.generated.config.json found in this folder.',
-      'Pass the agent blueprint ID directly, e.g. `teams agent blueprint permissions add <blueprintId> <scopes>`.'
-    );
-  }
-
-  const config = readGeneratedConfig(cwd);
-  if (!silent) {
-    logger.info(pc.dim(`Using agent blueprint ${config.agentBlueprintId} from agent.generated.config.json.`));
-  }
-  return config.agentBlueprintId;
-}
-
 function printPermissionsTable(entries: BlueprintPermissionEntry[]): void {
   for (const entry of entries) {
     logger.info(`${pc.bold(entry.resourceAppName)} ${pc.dim(`(${entry.resourceAppId})`)} — ${entry.kind}`);
@@ -60,14 +32,12 @@ interface BlueprintPermissionsListOptions {
 
 const permissionsListCommand = new Command('list')
   .description('List a blueprint\'s inheritable permissions (scopes every agent identity created from it auto-receives)')
-  .argument('[blueprintId]', '[OPTIONAL] Agent blueprint (application) ID. Falls back to agent.generated.config.json when omitted.')
+  .argument('<blueprintId>', 'Agent blueprint (application) ID')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
-    wrapAction(async (blueprintIdArg: string | undefined, options: BlueprintPermissionsListOptions) => {
-      const silent = !!options.json;
-      const blueprintId = resolveBlueprintId(blueprintIdArg, silent);
-      const account = await requireAgentAccount(silent);
-      const entries = await listBlueprintPermissions(blueprintId, account, silent);
+    wrapAction(async (blueprintId: string, options: BlueprintPermissionsListOptions) => {
+      const account = await requireAgentAccount(!!options.json);
+      const entries = await listBlueprintPermissions(blueprintId, account, !!options.json);
 
       if (options.json) {
         outputJson(entries);
@@ -90,22 +60,20 @@ interface BlueprintPermissionsAddOptions {
 
 const permissionsAddCommand = new Command('add')
   .description('Grant delegated scope(s) on a resource app to a blueprint and make them inheritable by every agent identity created from it')
-  .argument('[blueprintId]', '[OPTIONAL] Agent blueprint (application) ID. Falls back to agent.generated.config.json when omitted.')
+  .argument('<blueprintId>', 'Agent blueprint (application) ID')
   .argument('<scopes>', 'Comma-separated delegated scope names (e.g. Mail.ReadWrite,Chat.ReadWrite)')
   .option('--resource <name>', '[OPTIONAL] Resource app the scopes belong to: "graph", "smba", "powerplatform", or a resource app ID (GUID).', 'graph')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
-    wrapAction(async (blueprintIdArg: string | undefined, scopesArg: string, options: BlueprintPermissionsAddOptions) => {
+    wrapAction(async (blueprintId: string, scopesArg: string, options: BlueprintPermissionsAddOptions) => {
       const scopes = parseScopes(scopesArg);
       if (scopes.length === 0) {
         throw new CliError('VALIDATION_MISSING', 'At least one scope is required.');
       }
 
       const resourceAppId = resolveResourceAppId(options.resource);
-      const silent = !!options.json;
-      const blueprintId = resolveBlueprintId(blueprintIdArg, silent);
-      const account = await requireAgentAccount(silent);
-      const result = await addBlueprintPermissions(blueprintId, account, resourceAppId, scopes, silent);
+      const account = await requireAgentAccount(!!options.json);
+      const result = await addBlueprintPermissions(blueprintId, account, resourceAppId, scopes, !!options.json);
 
       if (options.json) {
         outputJson(result);
@@ -123,22 +91,20 @@ interface BlueprintPermissionsRemoveOptions {
 
 const permissionsRemoveCommand = new Command('remove')
   .description('Revoke delegated scope(s) on a resource app from a blueprint and stop them from being inherited')
-  .argument('[blueprintId]', '[OPTIONAL] Agent blueprint (application) ID. Falls back to agent.generated.config.json when omitted.')
+  .argument('<blueprintId>', 'Agent blueprint (application) ID')
   .argument('<scopes>', 'Comma-separated delegated scope names (e.g. Mail.ReadWrite,Chat.ReadWrite)')
   .option('--resource <name>', '[OPTIONAL] Resource app the scopes belong to: "graph", "smba", "powerplatform", or a resource app ID (GUID).', 'graph')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
-    wrapAction(async (blueprintIdArg: string | undefined, scopesArg: string, options: BlueprintPermissionsRemoveOptions) => {
+    wrapAction(async (blueprintId: string, scopesArg: string, options: BlueprintPermissionsRemoveOptions) => {
       const scopes = parseScopes(scopesArg);
       if (scopes.length === 0) {
         throw new CliError('VALIDATION_MISSING', 'At least one scope is required.');
       }
 
       const resourceAppId = resolveResourceAppId(options.resource);
-      const silent = !!options.json;
-      const blueprintId = resolveBlueprintId(blueprintIdArg, silent);
-      const account = await requireAgentAccount(silent);
-      const result = await removeBlueprintPermissions(blueprintId, account, resourceAppId, scopes, silent);
+      const account = await requireAgentAccount(!!options.json);
+      const result = await removeBlueprintPermissions(blueprintId, account, resourceAppId, scopes, !!options.json);
 
       if (options.json) {
         outputJson(result);
@@ -156,18 +122,16 @@ interface BlueprintPermissionsSetOptions {
 
 const permissionsSetCommand = new Command('set')
   .description('Declaratively set a resource app\'s inheritable scopes on a blueprint to an exact list')
-  .argument('[blueprintId]', '[OPTIONAL] Agent blueprint (application) ID. Falls back to agent.generated.config.json when omitted.')
+  .argument('<blueprintId>', 'Agent blueprint (application) ID')
   .argument('<scopes>', 'Comma-separated delegated scope names (e.g. Mail.ReadWrite,Chat.ReadWrite). Pass "" to clear all.')
   .option('--resource <name>', '[OPTIONAL] Resource app the scopes belong to: "graph", "smba", "powerplatform", or a resource app ID (GUID).', 'graph')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
-    wrapAction(async (blueprintIdArg: string | undefined, scopesArg: string, options: BlueprintPermissionsSetOptions) => {
+    wrapAction(async (blueprintId: string, scopesArg: string, options: BlueprintPermissionsSetOptions) => {
       const scopes = parseScopes(scopesArg);
       const resourceAppId = resolveResourceAppId(options.resource);
-      const silent = !!options.json;
-      const blueprintId = resolveBlueprintId(blueprintIdArg, silent);
-      const account = await requireAgentAccount(silent);
-      const result = await setBlueprintPermissions(blueprintId, account, resourceAppId, scopes, silent);
+      const account = await requireAgentAccount(!!options.json);
+      const result = await setBlueprintPermissions(blueprintId, account, resourceAppId, scopes, !!options.json);
 
       if (options.json) {
         outputJson(result);

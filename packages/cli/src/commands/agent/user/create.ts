@@ -113,7 +113,7 @@ async function resolveBlueprintIdForUserCreate(cwd: string, silent: boolean): Pr
 
   if (localConfig?.agentBlueprintId) {
     const useLocal = await confirmAction(
-      `Use blueprint ${pc.cyan(localConfig.agentBlueprintId)} (${localConfig.agentName}) from agent.generated.config.json?`,
+      `Use blueprint ${pc.cyan(localConfig.agentBlueprintId)} (${localConfig.agentBlueprintName}) from agent.generated.config.json?`,
       silent
     );
     if (useLocal) return localConfig.agentBlueprintId;
@@ -242,7 +242,7 @@ export async function runAgentUserCreate(
 
   if (resolvedBlueprintId) {
     const resolved = await resolveExistingBlueprint(resolvedBlueprintId, cwd, account, silent);
-    agentName = resolved.agentName;
+    agentName = resolved.agentBlueprintName;
     agentBlueprintId = resolved.agentBlueprintId;
     agentBlueprintObjectId = resolved.agentBlueprintObjectId;
     agentBlueprintServicePrincipalObjectId = resolved.agentBlueprintServicePrincipalObjectId;
@@ -264,7 +264,7 @@ export async function runAgentUserCreate(
   }
 
   const config: AgentGeneratedConfig = {
-    agentName,
+    agentBlueprintName: agentName,
     agentBlueprintId,
     agentBlueprintObjectId,
     agentBlueprintServicePrincipalObjectId,

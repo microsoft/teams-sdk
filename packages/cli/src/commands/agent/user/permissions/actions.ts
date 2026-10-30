@@ -48,16 +48,18 @@ async function resolveIdentityServicePrincipalId(userIdOrUpn: string, adminToken
       error: 'Could not find an agentic user with that ID/UPN.',
     },
     silent,
-    () => getAgenticUserByIdOrUpn(adminToken, userIdOrUpn)
+    async () => {
+      const result = await getAgenticUserByIdOrUpn(adminToken, userIdOrUpn);
+      if (!result) {
+        throw new CliError(
+          'AGENT_IDENTITY_USER_NOT_FOUND',
+          'No agentic user was found with that ID/UPN.',
+          'Verify the agentic user ID or UPN is correct.'
+        );
+      }
+      return result;
+    }
   );
-
-  if (!user) {
-    throw new CliError(
-      'AGENT_IDENTITY_USER_NOT_FOUND',
-      'No agentic user was found with that ID/UPN.',
-      'Verify the agentic user ID or UPN is correct.'
-    );
-  }
 
   return user.identityParentId;
 }
