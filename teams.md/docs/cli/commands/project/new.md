@@ -31,7 +31,7 @@ teams app create --name "<app name>" --env <project credentials file>
 or, for an Agent 365 agentic user:
 
 ```bash
-teams agent user create
+teams agent user create --blueprint-name "<blueprint name>"
 ```
 
 To create just the blueprint (its Entra app + credentials) without an identity/user, run [`teams agent blueprint create`](../agent/blueprint-create) instead.
