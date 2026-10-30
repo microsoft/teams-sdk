@@ -147,10 +147,6 @@ export async function removeAgentUserPermissions(
     const adminToken = await acquireAdminToken(account, silent);
     const identitySpId = await resolveIdentityServicePrincipalId(userIdOrUpn, adminToken, silent);
 
-    const existing = await findDelegatedPermissionGrant(adminToken, identitySpId, resourceAppId);
-    const current = existing ? existing.scope.split(' ').filter((s) => s.length > 0) : [];
-    const remaining = current.filter((s) => !scopes.includes(s));
-
     await withAgentSpinner(
       {
         start: `Revoking ${resourceAppDisplayName(resourceAppId)} permission(s): ${scopes.join(', ')}...`,
@@ -160,6 +156,9 @@ export async function removeAgentUserPermissions(
       silent,
       () => revokeDelegatedPermissions(adminToken, identitySpId, resourceAppId, scopes)
     );
+
+    const remainingGrant = await findDelegatedPermissionGrant(adminToken, identitySpId, resourceAppId);
+    const remaining = remainingGrant ? remainingGrant.scope.split(' ').filter((s) => s.length > 0) : [];
 
     return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), scopes: remaining };
   } catch (error) {
@@ -200,7 +199,9 @@ export async function setAgentUserPermissions(
       );
     }
 
-    if (toRevoke.length > 0) {
+    // Only needed when scopes is empty -- the full-replace grant above already drops any
+    // scope not in `scopes` otherwise, so revoking toRevoke again would be a no-op.
+    if (scopes.length === 0 && toRevoke.length > 0) {
       await withAgentSpinner(
         {
           start: `Revoking ${resourceAppDisplayName(resourceAppId)} permission(s): ${toRevoke.join(', ')}...`,
