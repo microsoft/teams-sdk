@@ -161,8 +161,8 @@ export async function addBlueprintPermissions(
     const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
     assertMutableInheritableEntry(existing, resourceAppId);
     const currentGrant = await findDelegatedPermissionGrant(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId);
-    const currentDirectScopes = currentGrant ? currentGrant.scope.split(' ').filter((s) => s.length > 0) : [];
-    const grantScopes = [...new Set([...currentDirectScopes, ...scopes])];
+    const allCurrentScopes = currentGrant ? currentGrant.scope.split(' ').filter((s) => s.length > 0) : [];
+    const grantScopes = [...new Set([...allCurrentScopes, ...scopes])];
     const inheritableScopes = [...new Set([...currentEnumeratedScopes(existing, resourceAppId), ...scopes])];
 
     await withAgentSpinner(
@@ -270,9 +270,9 @@ export async function setBlueprintPermissions(
     const target = await resolveBlueprintTarget(blueprintId, account, silent);
     const adminToken = await acquireAdminToken(account, silent);
 
-    const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
-    const currentScopes = currentEnumeratedScopes(existing, resourceAppId);
-    const toRevoke = currentScopes.filter((s) => !scopes.includes(s));
+    const currentGrant = await findDelegatedPermissionGrant(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId);
+    const allCurrentScopes = currentGrant ? currentGrant.scope.split(' ').filter((s) => s.length > 0) : [];
+    const toRevoke = allCurrentScopes.filter((s) => !scopes.includes(s));
 
     if (scopes.length > 0) {
       await withAgentSpinner(
@@ -286,7 +286,9 @@ export async function setBlueprintPermissions(
       );
     }
 
-    if (toRevoke.length > 0) {
+    // Only needed when scopes is empty -- the full-replace grant above already drops any
+    // scope not in `scopes` otherwise, so revoking toRevoke again would be a no-op.
+    if (scopes.length === 0 && toRevoke.length > 0) {
       await withAgentSpinner(
         {
           start: `Revoking ${resourceAppDisplayName(resourceAppId)} permission(s): ${toRevoke.join(', ')}...`,
