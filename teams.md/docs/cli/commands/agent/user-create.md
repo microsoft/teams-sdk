@@ -24,7 +24,7 @@ teams agent user create [blueprintId] [options]
 
 | Flag | Description |
 |------|-------------|
-| `--name <name>` | [OPTIONAL] Name for a newly created blueprint. Not valid together with [blueprintId]. |
+| `--blueprint-name <name>` | [OPTIONAL] Name for a newly created blueprint. Not valid together with [blueprintId]. |
 | `--user-name <name>` | [OPTIONAL] Display name for the agentic user. Defaults to the blueprint's name. |
 | `--endpoint <url>` | [OPTIONAL] HTTPS messaging endpoint to register on a newly created blueprint. Not valid together with [blueprintId]. |
 | `--license <skuId>` | [OPTIONAL] License SKU ID or part number to assign to the agentic user. Falls back to `teams config` default-license when omitted. |
