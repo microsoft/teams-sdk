@@ -96,15 +96,9 @@ function currentEnumeratedScopes(existing: InheritablePermissionEntry[], resourc
 }
 
 /**
- * `add`/`remove` only know how to merge/subtract an explicit scope list
- * (`enumerated`). A resource app already configured with `allAllowedScopes`
- * (inherit everything the blueprint is granted) has no such list --
- * `currentEnumeratedScopes` would treat it as having zero scopes, so `add`
- * would silently narrow "inherit everything" down to just the new
- * scope(s), and `remove` would delete the inheritance declaration entirely
- * even though other scopes are still meant to be inherited. Reject
- * mutating a non-enumerated entry outright and point the caller at `set`,
- * which replaces the whole declaration explicitly instead of merging.
+ * `add`/`remove` only merge/subtract an explicit `enumerated` scope list.
+ * A resource app configured with `allAllowedScopes` has no such list, so
+ * reject mutating it and point the caller at `set` instead.
  */
 function assertMutableInheritableEntry(existing: InheritablePermissionEntry[], resourceAppId: string): void {
   const kind = existing.find((e) => e.resourceAppId === resourceAppId)?.inheritableScopes?.kind;

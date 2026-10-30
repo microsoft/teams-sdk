@@ -12,15 +12,10 @@ import { createSilentSpinner } from '../../utils/spinner.js';
 
 /**
  * Preflight shared by every `teams agent` subcommand: requires a logged-in
- * account, Azure CLI installed and logged in (every agent operation shells
- * out to `az account get-access-token` for an admin-delegated Graph token --
- * see `getAzAccessToken`), and verifies the Azure CLI's active tenant
- * matches the signed-in account's. Also warns that a Global Administrator
- * role is needed -- unlike the official `a365` CLI, these commands have no
- * Agent-ID-Developer deferred-consent fallback (see the `agent` docs'
- * Prerequisites section), so a non-admin account will fail partway through
- * rather than completing with a manual follow-up step. Returns the account
- * for commands that need it (e.g. tenantId).
+ * account, Azure CLI installed and logged in (for admin-delegated Graph
+ * tokens), and that the Azure CLI's active tenant matches the signed-in
+ * account's. Warns that a Global Administrator role is needed. Returns the
+ * account for commands that need it (e.g. tenantId).
  */
 export async function requireAgentAccount(silent = false): Promise<AccountInfo> {
   const account = await getAccount();
@@ -61,10 +56,11 @@ export async function resolveAgentName(
     );
   }
 
-  const name = await input({ message: 'Blueprint name:', default: defaultName?.trim() });
-  if (!name.trim()) {
-    throw new CliError('AGENT_NAME_REQUIRED', 'Agent name cannot be empty.');
-  }
+  const name = await input({
+    message: 'Blueprint name:',
+    default: defaultName?.trim(),
+    validate: (value) => (value.trim() ? true : 'Blueprint name cannot be empty.'),
+  });
   return name.trim();
 }
 

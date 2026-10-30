@@ -38,21 +38,15 @@ export interface AgentUserCreateOptions {
   userName?: string;
   /** [OPTIONAL] HTTPS messaging endpoint to register on a newly created blueprint. Only valid when no `blueprintId` argument is given. */
   endpoint?: string;
-  /** [OPTIONAL] License SKU ID or part number to assign to the agentic user, skipping the interactive picker.
-   * `false` when `--no-license` was passed, to explicitly skip assignment (Commander maps `--license <skuId>`
-   * and `--no-license` onto this same property). */
+  /** [OPTIONAL] License SKU ID or part number to assign; `false` when `--no-license` was passed. */
   license?: string | false;
   /** [OPTIONAL] Two-letter country code to use as the agentic user's usage location, skipping detection/confirmation. */
   usageLocation?: string;
   /** [OPTIONAL] Working directory for the generated config file. Defaults to process.cwd(). */
   cwd?: string;
-  /** [OPTIONAL] Internal: skips the "reuse an existing blueprint vs create a new one" prompt and always creates a
-   * brand new blueprint. Used by `teams project new`, where a freshly scaffolded project never has one to reuse. */
+  /** [OPTIONAL] Internal: skips the "reuse an existing blueprint" prompt and always creates a new one. Used by `teams project new`. */
   forceNewBlueprint?: boolean;
-  /** [OPTIONAL] Internal: additional, language-specific file to also write CLIENT_ID/CLIENT_SECRET/TENANT_ID to
-   * (e.g. a C# project's `appsettings.Development.json`). Used by `teams project new`. `.env` in `cwd` is always
-   * written too, regardless of this option, since it's what a later run in the same folder reads back from to
-   * reuse the blueprint's client secret. */
+  /** [OPTIONAL] Internal: additional file to also write credentials to (e.g. a C# project's `appsettings.Development.json`). Used by `teams project new`. */
   credentialPath?: string;
 }
 
@@ -147,20 +141,18 @@ async function resolveBlueprintIdForUserCreate(cwd: string, silent: boolean): Pr
   });
   if (choice === 'new') return undefined;
 
-  const entered = await input({ message: 'Agent blueprint ID:' });
-  if (!entered.trim()) {
-    throw new CliError('AGENT_BLUEPRINT_ID_REQUIRED', 'Agent blueprint ID cannot be empty.');
-  }
+  const entered = await input({
+    message: 'Agent blueprint ID:',
+    validate: (value) => (value.trim() ? true : 'Agent blueprint ID cannot be empty.'),
+  });
   return entered.trim();
 }
 
 /**
  * Resolves the display name for the agentic user itself, distinct from
- * the blueprint's name -- a blueprint can be reused across many agentic
- * users, so defaulting (and prompting) separately avoids silently naming
- * every agentic user after whichever blueprint happened to be used.
- * `--user-name` always wins; defaults to the blueprint name when
- * non-interactive/silent and no override was given.
+ * the blueprint's name since a blueprint can be reused across many
+ * agentic users. `--user-name` always wins; defaults to the blueprint
+ * name when non-interactive/silent and no override was given.
  */
 async function resolveAgenticUserName(
   agentBlueprintName: string,
@@ -176,10 +168,8 @@ async function resolveAgenticUserName(
 
 /**
  * Asks for the messaging endpoint right after creating a brand new
- * blueprint, mirroring `teams agent blueprint create`'s own prompt.
- * Skipped when reusing an existing blueprint (it already has whatever
- * endpoint it was set up with). `--endpoint` wins when given; otherwise
- * optional -- pressing enter (or running non-interactively) skips it.
+ * blueprint. Skipped when reusing an existing blueprint. `--endpoint`
+ * wins when given; otherwise optional.
  */
 async function resolveOptionalEndpoint(endpointFlag: string | undefined, silent: boolean): Promise<string | undefined> {
   if (endpointFlag?.trim()) return endpointFlag.trim();
@@ -220,7 +210,7 @@ export async function runAgentUserCreate(
   options: AgentUserCreateOptions,
   /** Pre-resolved agent name, for callers (e.g. `teams project new`) that already prompted for it. */
   nameArg?: string,
-  /** [OPTIONAL] Pre-fill for the "Blueprint name:" prompt when a new blueprint is created (e.g. the enclosing project's name), still editable by the user. Only used when `nameArg` is omitted and no existing blueprint is reused. */
+  /** [OPTIONAL] Pre-fill for the "Blueprint name:" prompt when a new blueprint is created. Only used when `nameArg` is omitted. */
   nameDefault?: string
 ): Promise<AgentUserCreateOutput> {
   const silent = !!options.json;
@@ -245,9 +235,7 @@ export async function runAgentUserCreate(
   const resolvedBlueprintId =
     blueprintIdArg ?? (options.forceNewBlueprint ? undefined : await resolveBlueprintIdForUserCreate(cwd, silent));
 
-  // Creation-only flags only make sense for a brand new blueprint -- reject them against
-  // whichever blueprint actually got resolved (an explicit `[blueprintId]` argument, or one
-  // reused from this folder's local config), not just the explicit argument.
+  // Creation-only flags only make sense for a brand new blueprint, regardless of how it was resolved.
   if (resolvedBlueprintId && nameArg) {
     throw new CliError(
       'VALIDATION_CONFLICT',
@@ -284,13 +272,8 @@ export async function runAgentUserCreate(
     newBlueprintGraphPermissions = blueprint.graphPermissions;
   }
 
-  // Persist the blueprint's config/credentials as soon as they exist -- before the optional
-  // endpoint work below, which can fail or prompt for invalid input -- so a retry after that
-  // reuses this blueprint via the fast path above instead of minting another one.
-  //
-  // When this folder already has a config for the same blueprint (e.g. reusing an existing
-  // blueprint, or a second `teams agent user create` in the same folder), preserve its
-  // `agentUsers`/`graphPermissions`/`messagingEndpoint` instead of clobbering them.
+  // Persist now so a retry after endpoint-registration failure reuses this blueprint instead of minting another.
+  // Preserve an existing config's agentUsers/graphPermissions/messagingEndpoint if it's for the same blueprint.
   const existingConfig = existsSync(getGeneratedConfigPath(cwd)) ? readGeneratedConfig(cwd) : undefined;
   const preservedConfig = existingConfig?.agentBlueprintId === agentBlueprintId ? existingConfig : undefined;
 
@@ -312,10 +295,6 @@ export async function runAgentUserCreate(
     TENANT_ID: account.tenantId,
   };
   writeCredentials(envPath, credentials);
-  // `.env` is always kept up to date above regardless of `credentialPath`, since it's what a later
-  // run in this folder reads back from (via `resolveExistingBlueprint`) to reuse the blueprint's
-  // client secret. When the caller (e.g. `teams project new` for a C# project) wants the credentials
-  // in a different, language-specific file too, also write there.
   const extraCredentialPath =
     options.credentialPath && resolve(options.credentialPath) !== resolve(envPath)
       ? options.credentialPath
@@ -326,15 +305,9 @@ export async function runAgentUserCreate(
   ensureGitignoreEntries(cwd, [
     '.env',
     ...AGENT_GITIGNORE_ENTRIES,
-    // The C# scaffold has no ignore rule for `appsettings.Development.json`, and it now holds
-    // `CLIENT_SECRET` alongside `.env` -- ignore it too (relative to `cwd`) so committing the
-    // scaffolded project can't leak the secret.
     ...(extraCredentialPath ? [relative(cwd, extraCredentialPath).split(sep).join('/')] : []),
   ]);
 
-  // Endpoint registration only applies to a brand new blueprint -- validated against reuse earlier.
-  // Done after the config/credentials above are already persisted, and patched in afterward on
-  // success, so a failure here doesn't lose the blueprint IDs/secret just saved.
   if (!resolvedBlueprintId) {
     messagingEndpoint = await resolveOptionalEndpoint(options.endpoint, silent);
     if (messagingEndpoint) {
@@ -345,8 +318,8 @@ export async function runAgentUserCreate(
   }
 
 
-  const identity = await runCreateAgentIdentity(agentName, agentBlueprintId, clientSecret, account, silent);
   const agenticUserName = await resolveAgenticUserName(agentName, options.userName, silent);
+  const identity = await runCreateAgentIdentity(agenticUserName, agentBlueprintId, clientSecret, account, silent);
   const licenseOption = await resolveLicenseDefault(options.license, silent);
   const usageLocationOption = await resolveUsageLocationDefault(options.usageLocation, silent);
   const user = await runCreateAgenticUser(
@@ -356,9 +329,6 @@ export async function runAgentUserCreate(
     silent,
     licenseOption,
     usageLocationOption,
-    // Persisted as soon as the Graph user exists, before license assignment is attempted --
-    // an invalid/seat-less `--license` throws afterward, and a retry must see this user already
-    // recorded locally instead of hitting a duplicate-UPN error against it.
     (created) =>
       appendAgentUser(cwd, {
         agentIdentityId: identity.agentIdentityId,

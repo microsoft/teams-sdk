@@ -40,15 +40,6 @@ export interface AgentBlueprintCreateOutput {
   graphPermissions?: string[];
 }
 
-/**
- * Resolves the messaging endpoint to register right after blueprint
- * creation. Both follow-up paths (Teams app and agentic user) need it
- * registered on the blueprint's own bot identity for the deployed agent to
- * actually receive messages, so this runs before the "how will this agent
- * run?" fork. `--endpoint` lets non-interactive/CI callers set it directly;
- * otherwise it's optional -- you may not have anything deployed yet -- so
- * pressing enter (or running non-interactively/`--json`) skips it.
- */
 async function resolveOptionalEndpoint(endpointFlag: string | undefined, silent: boolean): Promise<string | undefined> {
   if (endpointFlag?.trim()) return endpointFlag.trim();
   if (silent || !isInteractive()) return undefined;

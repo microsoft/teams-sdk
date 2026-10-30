@@ -62,7 +62,9 @@ describe('slugifyAgentName', () => {
 
 describe('runCreateAgenticUser', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // resetAllMocks clears configured mockResolvedValue too, so a stale value
+    // from one test can't leak into the next test's confirm/input mocks.
+    vi.resetAllMocks();
     mockIsInteractive.mockReturnValue(true);
     mockIsAutoConfirm.mockReturnValue(true); // skip the confirm prompt by default
   });
@@ -129,16 +131,33 @@ describe('runCreateAgenticUser', () => {
     expect(mockInput).not.toHaveBeenCalled();
   });
 
-  it('cancels when the user declines the confirm prompt', async () => {
+  it('retries with a custom UPN local part after declining, then creates the user once re-confirmed', async () => {
     mockIsAutoConfirm.mockReturnValue(false);
     mockGetAzAccessToken.mockResolvedValue('admin-token');
     mockGetOrganizationInfo.mockResolvedValue({ defaultDomain: 'contoso.onmicrosoft.com', countryLetterCode: 'US' });
-    mockConfirm.mockResolvedValue(false);
+    mockConfirm.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    mockInput.mockResolvedValueOnce('Custom Name');
+    mockCreateAgenticUser.mockResolvedValue({ id: 'user-1' });
 
-    await expect(runCreateAgenticUser('My Agent', 'identity-1', account, false)).rejects.toMatchObject({
-      code: 'AGENT_IDENTITY_USER_FAILED',
+    const result = await runCreateAgenticUser('My Agent', 'identity-1', account, false, undefined, 'US');
+
+    expect(mockConfirm).toHaveBeenCalledTimes(2);
+    expect(mockConfirm).toHaveBeenLastCalledWith({
+      message: expect.stringContaining('custom-name@contoso.onmicrosoft.com'),
+      default: true,
     });
-    expect(mockCreateAgenticUser).not.toHaveBeenCalled();
+    expect(mockCreateAgenticUser).toHaveBeenCalledWith(
+      'admin-token',
+      expect.objectContaining({
+        mailNickname: 'custom-name',
+        userPrincipalName: 'custom-name@contoso.onmicrosoft.com',
+      })
+    );
+    expect(result.userPrincipalName).toBe('custom-name@contoso.onmicrosoft.com');
+
+    const validate = mockInput.mock.calls[0]![0].validate as (value: string) => string | boolean;
+    expect(validate('')).not.toBe(true);
+    expect(validate('custom-name')).toBe(true);
   });
 
   it('wraps a Graph/az failure in a CliError with AGENT_IDENTITY_USER_FAILED', async () => {

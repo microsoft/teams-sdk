@@ -33,12 +33,9 @@ async function acquireAdminToken(account: AccountInfo, silent: boolean): Promise
 }
 
 /**
- * Resolve an agentic user's object ID/UPN to its parent agent identity's
+ * Resolves an agentic user's object ID/UPN to its parent agent identity's
  * service principal object ID -- the `clientId` every direct
- * `oauth2PermissionGrant` for this identity is keyed on. Unlike blueprint
- * permissions (granted on the blueprint's own SP and inherited by every
- * identity created from it), these are one-off grants made directly on a
- * single, already-created agentic user's identity.
+ * `oauth2PermissionGrant` for this identity is keyed on.
  */
 async function resolveIdentityServicePrincipalId(userIdOrUpn: string, adminToken: string, silent: boolean): Promise<string> {
   const user = await withAgentSpinner(
@@ -102,12 +99,9 @@ export async function listAgentUserPermissions(
 }
 
 /**
- * Grant a set of delegated scopes on a resource app directly to an
+ * Grants a set of delegated scopes on a resource app directly to an
  * agentic user's agent identity, merging with any scopes already granted
- * for that resource app (so repeated `add` calls accumulate instead of
- * clobbering each other). Equivalent of `teams agent blueprint
- * permissions add`, but one-off on an already-created identity instead
- * of inherited by every identity a blueprint creates.
+ * for that resource app.
  */
 export async function addAgentUserPermissions(
   userIdOrUpn: string,

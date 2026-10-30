@@ -75,11 +75,7 @@ export async function runAgentBlueprintDelete(
   if (!options.dryRun) {
     await runDeleteAgentBlueprint(target, account, silent);
 
-    // Clean up agent.generated.config.json whenever it still points at the
-    // blueprint we just deleted -- whether that's because it was the
-    // fallback source (no blueprintIdArg) or because an explicitly-passed
-    // blueprintId just happens to match what's recorded locally. Leave it
-    // alone if it records a *different* blueprint than the one deleted.
+    // Remove the local config if it still points at the deleted blueprint.
     const configPath = getGeneratedConfigPath(cwd);
     if (existsSync(configPath)) {
       const config = readGeneratedConfig(cwd);

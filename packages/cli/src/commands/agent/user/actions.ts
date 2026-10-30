@@ -62,9 +62,14 @@ function tryReadLocalBlueprintSecret(
   } catch {
     return undefined;
   }
+  // config.json and .env can drift independently, so check both against blueprintId.
   if (config.agentBlueprintId !== blueprintId) return undefined;
 
-  const clientSecret = readEnvValue(join(cwd, '.env'), 'CLIENT_SECRET');
+  const envPath = join(cwd, '.env');
+  const envClientId = readEnvValue(envPath, 'CLIENT_ID');
+  if (envClientId !== blueprintId) return undefined;
+
+  const clientSecret = readEnvValue(envPath, 'CLIENT_SECRET');
   if (!clientSecret) return undefined;
 
   return {
@@ -76,14 +81,10 @@ function tryReadLocalBlueprintSecret(
 }
 
 /**
- * Resolve the client secret needed to authenticate as an already-existing
- * blueprint (identified by its `appId`/client ID), for `teams agent user
- * create <blueprintId>`. Tries the local fast path first; Graph only
- * returns a client secret's value once at creation time, so if there's no
- * local secret for this blueprint, this mints a brand new one via Graph
- * instead of asking the user to supply one. The caller persists this
- * secret to the local `.env` so the next run in the same folder uses the
- * fast path.
+ * Resolves the client secret for an already-existing blueprint. Graph only
+ * returns a secret's value at creation time, so if there's no local secret
+ * for this blueprint, mints a brand new one instead of asking the user to
+ * supply one. The caller persists it to `.env` for the next run's fast path.
  */
 export async function resolveExistingBlueprint(
   blueprintId: string,
@@ -160,17 +161,17 @@ export interface AgentIdentityResult {
 }
 
 /**
- * Create the agent identity service principal for an already-provisioned
- * blueprint. Mirrors the manual flow: get a client-credentials token for
- * the blueprint itself (carries `AgentIdentity.CreateAsManager`), then use
+ * Creates the agent identity service principal for an already-provisioned
+ * blueprint: gets a client-credentials token for the blueprint, then uses
  * it to POST the agent identity, sponsored by the signed-in `teams login`
- * account. An agent identity has no bot ID/credentials of its own -- it's
- * purely an Entra/directory governance layer on top of the blueprint's
- * existing identity -- so there's no standalone `teams agent identity`
- * command; this is always a step inside `teams agent user create`.
+ * account. No standalone `teams agent identity` command -- this is always
+ * a step inside `teams agent user create`.
+ *
+ * `identityName` is the agentic user's own name, not the blueprint's --
+ * a blueprint can be reused across many agentic users.
  */
 export async function runCreateAgentIdentity(
-  agentName: string,
+  identityName: string,
   agentBlueprintId: string,
   clientSecret: string,
   account: AccountInfo,
@@ -196,21 +197,14 @@ export async function runCreateAgentIdentity(
       silent,
       () =>
         createAgentIdentity(blueprintToken, {
-          displayName: agentName,
+          displayName: identityName,
           agentIdentityBlueprintId: agentBlueprintId,
-          // The signed-in account sponsors the identity. MSAL's
-          // `localAccountId` is the Entra object ID (the token's `oid`
-          // claim) -- exactly what `sponsors@odata.bind` expects -- so no
-          // separate Graph lookup is needed to resolve it.
+          // MSAL's localAccountId is the Entra object ID the sponsors@odata.bind expects.
           sponsorObjectId: account.localAccountId,
         })
     );
 
-    // The blueprint's `configureInheritableResourcePermissions` call
-    // (made during `agent blueprint create`) means this identity's service
-    // principal automatically inherits the Messaging Bot API
-    // `AgentData.ReadWrite` scope granted on the blueprint -- no separate
-    // per-identity grant needed here anymore.
+    // Inherits the Messaging Bot API scope already granted on the blueprint; no per-identity grant needed.
 
     return { agentIdentityId: identity.id };
   } catch (error) {
@@ -266,12 +260,9 @@ function validateUsageLocationFormat(code: string): string {
  * create the agentic user.
  *
  * - `--usage-location` always wins (validated, format-checked).
- * - Otherwise, if the tenant has a default (`countryLetterCode` from
- *   `getOrganizationInfo`), it's used as-is in silent/non-interactive/
- *   `--yes` runs; in an interactive session it's confirmed first, since
- *   a tenant's billing country isn't necessarily where this particular
- *   agentic user should be licensed -- declining lets the caller type a
- *   different code instead.
+ * - Otherwise, a tenant default (`countryLetterCode`) is used as-is when
+ *   silent/non-interactive/`--yes`, confirmed first otherwise (declining
+ *   lets the caller type a different code).
  * - With no default and no flag, prompts (or throws when non-interactive).
  */
 async function resolveUsageLocation(
@@ -296,42 +287,38 @@ async function resolveUsageLocation(
     );
   }
 
-  const code = await input({ message: 'Usage location for the agentic user (two-letter country code, e.g. US):' });
-  if (!code.trim()) {
-    throw new CliError('AGENT_IDENTITY_USER_FAILED', 'Usage location cannot be empty.');
-  }
+  const code = await input({
+    message: 'Usage location for the agentic user (two-letter country code, e.g. US):',
+    validate: (value) =>
+      USAGE_LOCATION_PATTERN.test(value.trim())
+        ? true
+        : value.trim()
+          ? `Invalid usage location "${value}" -- expected a two-letter country code (e.g. \`US\`).`
+          : 'Usage location cannot be empty.',
+  });
   return validateUsageLocationFormat(code);
 }
 
 
 /**
- * Create the Entra agentic user tied to an already-created agent identity.
- * Requires a human/admin-delegated token -- the blueprint's own
- * client-credentials token 403s on this call -- so this shells out to
- * `az account get-access-token` the same way `ensureTenantMatch` already
- * does, instead of adding a second MSAL auth flow.
+ * Creates the Entra agentic user tied to an already-created agent identity.
+ * Requires a human/admin-delegated token (the blueprint's own
+ * client-credentials token 403s on this call), acquired via `az account
+ * get-access-token`.
  */
 export async function runCreateAgenticUser(
   agentName: string,
   agentIdentityId: string,
   account: AccountInfo,
   silent: boolean,
-  /**
-   * [OPTIONAL] A specific license SKU ID/part number to assign, skipping
-   * the interactive picker; `false` to explicitly skip assignment
-   * (Commander maps `--license <skuId>`/`--no-license` onto this one value).
-   */
+  /** [OPTIONAL] A specific license SKU ID/part number to assign; `false` to explicitly skip assignment. */
   licenseOption?: string | false,
   /** [OPTIONAL] Two-letter country code to use as the usage location, skipping detection/confirmation. */
   usageLocationOption?: string,
   /**
-   * [OPTIONAL] Invoked right after the Graph user is created, before
-   * license assignment is attempted. An invalid `--license` SKU or a SKU
-   * with no seats throws *after* Graph has already created the user, so
-   * the caller must persist these IDs here -- not after this function
-   * returns -- or a retry after that failure hits a duplicate-UPN error
-   * against a user Graph already created but the local config never
-   * recorded.
+   * [OPTIONAL] Invoked right after the Graph user is created, before license
+   * assignment is attempted, so the caller persists these IDs even if an
+   * invalid `--license` throws afterward.
    */
   onUserCreated?: (created: { agenticUserId: string; userPrincipalName: string }) => void
 ): Promise<AgenticUserResult> {
@@ -364,16 +351,23 @@ export async function runCreateAgenticUser(
     }
 
     const usageLocation = await resolveUsageLocation(org.countryLetterCode, usageLocationOption, silent);
-    const slug = slugifyAgentName(agentName);
-    const userPrincipalName = `${slug}@${org.defaultDomain}`;
+    let slug = slugifyAgentName(agentName);
+    let userPrincipalName = `${slug}@${org.defaultDomain}`;
 
     if (!silent && isInteractive() && !isAutoConfirm()) {
-      const proceed = await confirm({
-        message: `Create agentic user ${pc.cyan(userPrincipalName)}?`,
-        default: true,
-      });
-      if (!proceed) {
-        throw new CliError('AGENT_IDENTITY_USER_FAILED', 'Agentic user creation cancelled.');
+      while (true) {
+        const proceed = await confirm({
+          message: `Create agentic user ${pc.cyan(userPrincipalName)}?`,
+          default: true,
+        });
+        if (proceed) break;
+
+        const customLocalPart = await input({
+          message: 'User principal name local part (before the @):',
+          validate: (value) => (value.trim() ? true : 'User principal name local part cannot be empty.'),
+        });
+        slug = slugifyAgentName(customLocalPart);
+        userPrincipalName = `${slug}@${org.defaultDomain}`;
       }
     }
 
@@ -394,9 +388,7 @@ export async function runCreateAgenticUser(
         })
     );
 
-    // Persist before attempting license assignment -- a throw below still leaves the user
-    // created in Graph, so the caller needs these IDs recorded now to avoid a duplicate-UPN
-    // error on retry.
+    // Persist now -- a throw below during license assignment still leaves the user created in Graph.
     onUserCreated?.({ agenticUserId: user.id, userPrincipalName });
 
     const license = await resolveLicenseAssignment(adminToken, user.id, licenseOption, silent);
@@ -413,12 +405,9 @@ export async function runCreateAgenticUser(
 }
 
 /**
- * Assigns a specific license SKU (by `skuId` or `skuPartNumber`, matched
- * case-insensitively) to a freshly created agentic user, for `--license
- * <skuId>` non-interactive callers. Unlike the interactive picker, this
- * throws on failure -- the caller explicitly asked for this SKU, so
- * silently falling back to `needsLicense` would hide a real problem (typo,
- * no seats left, etc.) from a script relying on the exit code/JSON output.
+ * Assigns a specific license SKU (by `skuId` or `skuPartNumber`) for
+ * `--license <skuId>`. Unlike the interactive picker, throws on failure
+ * since the caller explicitly asked for this SKU.
  */
 async function assignSpecificLicense(
   adminToken: string,
@@ -475,16 +464,10 @@ async function assignSpecificLicense(
 }
 
 /**
- * Best-effort license assignment for a freshly created agentic user.
- * There's no single SKU name that works across tenants -- the license an
- * agentic user needs (e.g. an M365 plan with Teams/Exchange) depends on
- * what the tenant has purchased -- so this looks up the tenant's
- * subscribed SKUs with available seats and lets the user pick one
- * interactively. Never throws -- a lookup/assignment failure, or no
- * interactive session to prompt in, shouldn't fail the whole `teams agent
- * user create` run since the user is already created at this point; it's
- * surfaced as `needsLicense` so the caller can tell the user to do it
- * manually instead.
+ * Best-effort license assignment for a freshly created agentic user: looks
+ * up the tenant's subscribed SKUs with available seats and lets the user
+ * pick one interactively. Never throws -- surfaces `needsLicense` instead
+ * so the caller can tell the user to do it manually.
  */
 async function tryAssignLicenseInteractively(
   adminToken: string,
@@ -505,13 +488,7 @@ async function tryAssignLicenseInteractively(
     return { needsLicense: true };
   }
 
-  // Only show SKUs that are actually eligible for user assignment: `appliesTo`
-  // must be `'User'` (`'Company'` SKUs are tenant-wide and can't be assigned
-  // to an individual user), `capabilityStatus` must be `'Enabled'` (not
-  // `Suspended`/`Deleted`/`LockedOut`), it must still have a free seat, and it
-  // must actually grant Teams (the agentic user needs Teams/Exchange to be
-  // usable -- this excludes non-M365 standalone SKUs like Power BI Pro,
-  // Visio, or EMS that would otherwise show up as assignable but useless).
+  // Eligible SKUs: user-assignable, enabled, with a free seat, and granting Teams.
   const available = skus.filter(
     (sku) =>
       sku.appliesTo === 'User' &&
@@ -552,11 +529,9 @@ async function tryAssignLicenseInteractively(
 }
 
 /**
- * Dispatches to the right license-assignment strategy for `teams agent
- * user create`: `--no-license` (`licenseOption === false`) skips entirely
- * (no Graph lookup at all), `--license <skuId>` assigns that exact SKU
- * and throws on any failure, and otherwise falls back to the best-effort
- * interactive picker.
+ * Dispatches to the right license-assignment strategy: `--no-license`
+ * skips entirely, `--license <skuId>` assigns that exact SKU and throws on
+ * failure, otherwise falls back to the best-effort interactive picker.
  */
 async function resolveLicenseAssignment(
   adminToken: string,
@@ -580,11 +555,9 @@ export interface AgentUserUpdateResult {
 }
 
 /**
- * Updates an existing agentic user's display name, usage location,
- * and/or license. Unlike `runCreateAgenticUser`'s best-effort license
- * handling, `--license`/`--no-license` here always throw on failure --
- * the caller is explicitly asking for a specific change to an existing
- * user, so silently no-op'ing would hide a real problem.
+ * Updates an existing agentic user's display name, usage location, and/or
+ * license. Unlike `runCreateAgenticUser`, `--license`/`--no-license` here
+ * always throw on failure since the caller asked for a specific change.
  */
 export async function runUpdateAgenticUser(
   userIdOrUpn: string,
@@ -654,10 +627,7 @@ export async function runUpdateAgenticUser(
       );
     }
 
-    // Keep the agent identity's own displayName in sync -- it's a
-    // separate `servicePrincipals/microsoft.graph.agentIdentity` object
-    // that the agentic user sits under, so renaming the user alone
-    // leaves the identity showing its original (create-time) name.
+    // Keep the agent identity's own displayName in sync, since it's a separate service principal.
     if (name?.trim()) {
       await withAgentSpinner(
         {
@@ -706,26 +676,18 @@ export interface AgentIdentityUserDeleteResult {
 }
 
 /**
- * Delete an agentic user and its parent agent identity directly by the
- * user's object ID or UPN, leaving the blueprint itself intact. A
- * blueprint can be reused across multiple agentic users (`teams agent
- * user create <blueprintId>`), so deleting the whole blueprint isn't
- * appropriate just to remove one identity/user -- use `teams agent
- * blueprint delete` for that instead. Looking the user up directly (by ID
- * or UPN) avoids needing to know which blueprint created it first.
+ * Deletes an agentic user and its parent agent identity directly by the
+ * user's object ID or UPN, leaving the blueprint intact. Use `teams agent
+ * blueprint delete` to remove the whole blueprint instead.
  */
 export async function runDeleteAgentIdentityAndUser(
   userIdOrUpn: string,
   account: AccountInfo,
   silent: boolean,
   /**
-   * [OPTIONAL] Already-known identity/user IDs from the local
-   * `agent.generated.config.json` record. Makes a partial prior deletion
-   * resumable: if the user was already deleted but the parent identity
-   * delete that follows then failed, a fresh lookup by `userIdOrUpn` now
-   * 404s and would otherwise throw "not found" before ever reaching the
-   * identity delete again. With `known` supplied, that 404 instead falls
-   * through to deleting the identity directly by its recorded ID.
+   * [OPTIONAL] Already-known identity/user IDs from the local config.
+   * Makes a partial prior deletion resumable: if a fresh lookup by
+   * `userIdOrUpn` now 404s, falls back to deleting by these recorded IDs.
    */
   known?: { agentIdentityId: string; agenticUserId: string }
 ): Promise<AgentIdentityUserDeleteResult> {

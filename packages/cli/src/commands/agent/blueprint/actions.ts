@@ -37,25 +37,15 @@ export interface AgentBlueprintResult {
 }
 
 /**
- * Create an agent identity blueprint directly via Microsoft Graph: the
- * blueprint application (sponsored/owned by the signed-in `teams login`
- * account), a client secret for it, and its service principal (the
- * "managed identity"/blueprint principal). Mirrors the manual flow
- * documented at https://learn.microsoft.com/entra/agent-id/create-blueprint.
+ * Creates an agent identity blueprint via Microsoft Graph: the blueprint
+ * application, a client secret, and its service principal (the "managed
+ * identity"). Uses an admin-delegated token from `az account get-access-token`
+ * since the shared public MSAL client isn't consented for the required
+ * `AgentIdentityBlueprint.*` permissions.
  *
- * Needs the delegated `AgentIdentityBlueprint.Create` /
- * `AgentIdentityBlueprint.AddRemoveCreds.All` /
- * `AgentIdentityBlueprintPrincipal.Create` permissions -- not something the
- * shared public MSAL client is consented for, so this shells out to
- * `az account get-access-token` for an admin-delegated token, the same
- * pattern already used for agentic user creation.
- *
- * `graphScopes` is the equivalent of a Teams app manifest's RSC
- * permissions list: additional Microsoft Graph delegated scopes (e.g.
- * `Mail.ReadWrite`, `Chat.ReadWrite`) to grant on the blueprint and
- * configure as inheritable, so every agent identity created from it gets
- * them automatically. Omit it for a blueprint with no Graph data access
- * beyond core messaging.
+ * `graphScopes` are additional Graph delegated scopes (e.g. `Mail.ReadWrite`)
+ * to grant and make inheritable by every agent identity created from this
+ * blueprint.
  */
 export async function runCreateAgentBlueprint(
   agentName: string,
@@ -108,10 +98,7 @@ export async function runCreateAgentBlueprint(
       () => createAgentBlueprintPrincipal(adminToken, blueprint.appId)
     );
 
-    // Required before the blueprint can authenticate as itself to create
-    // agent identities -- without it, `createAgentIdentity` 401s with
-    // `Authorization_IdentityNotFound` even with a valid client-credentials
-    // token.
+    // Required so `createAgentIdentity` doesn't 401 with Authorization_IdentityNotFound.
     await withAgentSpinner(
       {
         start: 'Granting AgentIdentity.CreateAsManager role...',
@@ -122,11 +109,7 @@ export async function runCreateAgentBlueprint(
       () => grantAgentIdentityCreateAsManagerRole(adminToken, principal.id)
     );
 
-    // Required for the agentic user's own messaging traffic -- without
-    // this, posting/replying as the agentic user fails with `invalid_grant`
-    // during the on-behalf-of token exchange, even though the role above
-    // is already granted (that role only covers creating the agent
-    // identity itself, not sending/receiving messages as the agentic user).
+    // Required for the agentic user's own messaging traffic, else `invalid_grant` on OBO token exchange.
     await withAgentSpinner(
       {
         start: 'Granting Messaging Bot API AgentData.ReadWrite permission...',
@@ -137,9 +120,7 @@ export async function runCreateAgentBlueprint(
       () => grantSmbaAgentDataPermission(adminToken, principal.id)
     );
 
-    // Makes every future agent identity created under this blueprint
-    // automatically inherit the Messaging Bot API scope above, instead of
-    // needing a separate `grantSmbaAgentDataPermission` call per identity.
+    // Makes every future agent identity under this blueprint inherit the scope above automatically.
     await withAgentSpinner(
       {
         start: 'Configuring inheritable Messaging Bot API permissions...',
@@ -150,11 +131,7 @@ export async function runCreateAgentBlueprint(
       () => configureInheritableResourcePermissions(adminToken, blueprint.id, SMBA_APP_ID, ['AgentData.ReadWrite'])
     );
 
-    // Equivalent of declaring RSC permissions in a Teams app manifest:
-    // explicitly-requested Microsoft Graph scopes (e.g. `Mail.ReadWrite`)
-    // are granted on the blueprint and marked inheritable so every agent
-    // identity created from it gets them automatically, without a
-    // per-identity grant step.
+    // Equivalent of RSC permissions in a Teams app manifest: grants and marks inheritable so every agent identity gets them.
     const dedupedGraphScopes = graphScopes?.length ? [...new Set(graphScopes)] : undefined;
     if (dedupedGraphScopes?.length) {
       await withAgentSpinner(
@@ -202,11 +179,9 @@ export interface AgentBlueprintCleanupTarget {
 }
 
 /**
- * Resolve the object IDs `runDeleteAgentBlueprint` needs for a blueprint ID
- * given directly on the command line, by looking it up via Graph instead of
- * requiring a local `agent.generated.config.json`. Used by `teams agent
- * blueprint delete <blueprintId>` so it can delete a blueprint from any
- * folder, not just the one that originally created it.
+ * Resolves the object IDs `runDeleteAgentBlueprint` needs for a blueprint ID
+ * given on the command line, by looking it up via Graph instead of requiring
+ * a local `agent.generated.config.json`.
  */
 export async function resolveBlueprintCleanupTarget(
   blueprintId: string,
@@ -259,12 +234,7 @@ export async function resolveBlueprintCleanupTarget(
   }
 }
 
-/**
- * Rename an existing agent blueprint (its AAD application's
- * `displayName`). This is purely a Graph-level change -- it doesn't
- * affect the blueprint's ID, secret, service principal, or any Teams app
- * package already created for it.
- */
+/** Renames an existing agent blueprint's AAD application `displayName`. Graph-level only. */
 export async function runRenameAgentBlueprint(
   blueprintId: string,
   account: AccountInfo,
@@ -300,19 +270,12 @@ export async function runRenameAgentBlueprint(
 }
 
 /**
- * Delete ALL Agent 365 resources for a blueprint via Microsoft Graph.
- * Cascade deletion of a blueprint is async and best-effort -- per
- * Microsoft's own docs, agents' user accounts in particular aren't always
- * automatically cleaned up as part of it -- so this looks up and deletes
- * every agent identity the blueprint has (a reusable blueprint can have
- * many, one per `teams agent user create` run against it) and each one's
- * agentic user explicitly first, instead of assuming the cascade already
- * ran. The blueprint's own service principal is deleted defensively
- * afterward in case the cascade doesn't cover it either (404s are
- * ignored). Its messaging endpoint backend configuration (on the separate
- * Agent 365 service) is also cleared best-effort first, so a reused
- * blueprint ID doesn't inherit a stale endpoint -- failures here don't
- * block the Graph deletion.
+ * Deletes all Agent 365 resources for a blueprint via Microsoft Graph:
+ * explicitly deletes each agent identity's user first (cascade deletion
+ * doesn't always clean those up), then the blueprint's service principal
+ * (defensively, 404s ignored), and best-effort clears its messaging
+ * endpoint on the separate Agent 365 service first so a reused blueprint
+ * ID doesn't inherit a stale endpoint.
  */
 export async function runDeleteAgentBlueprint(
   target: AgentBlueprintCleanupTarget,
@@ -405,16 +368,7 @@ export function assertHttpsEndpoint(endpoint: string): void {
   }
 }
 
-/**
- * Registers/updates the messaging endpoint for an agent blueprint via the
- * real Agent 365 backend service (`agent365.svc.cloud.microsoft`) -- the
- * same API the official `a365 setup blueprint` CLI uses. The classic Teams
- * Developer Portal bot-registration API (used for regular Teams bots) does
- * NOT apply here: Agent 365 blueprints track their messaging endpoint in
- * this separate service, not in TDP's bot records. Shared by `teams agent
- * blueprint update` and the optional endpoint prompt in `teams agent
- * blueprint create`.
- */
+/** Registers/updates an agent blueprint's messaging endpoint via the Agent 365 backend service (not TDP's bot-registration API). */
 export async function registerAgentBlueprintEndpoint(
   agentBlueprintId: string,
   tenantId: string,
