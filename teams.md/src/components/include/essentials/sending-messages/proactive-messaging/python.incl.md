@@ -54,10 +54,6 @@ async def send_targeted_notification(conversation_id: str, recipient: Account):
 
 `app.reply()`
 
-<!-- to-thread-id-method-name -->
-
-`to_threaded_conversation_id()`
-
 <!-- app-send-method-name -->
 
 `app.send()`
@@ -65,18 +61,31 @@ async def send_targeted_notification(conversation_id: str, recipient: Account):
 <!-- threading-proactive-example -->
 
 ```python
-# Send to a specific thread proactively
-await app.reply(conversation_id, message_id, "Thread update!")
-
-# Send to a flat conversation (1:1, group chat)
-await app.reply(conversation_id, "Hello!")
+# chat_or_channel_id is channel_data.chat.id or channel_data.channel.id
+# reply_chain_id is channel_data.reply_chain.id
+await app.reply(chat_or_channel_id, reply_chain_id, "Thread update!")
 ```
 
-<!-- threading-helper-example -->
+<!-- threading-top-level-example -->
 
 ```python
-from microsoft_teams.apps import to_threaded_conversation_id
-
-thread_id = to_threaded_conversation_id(conversation_id, message_id)
-await app.send(thread_id, "Sent via helper")
+# Send a new top-level message to the chat or channel
+await app.send(chat_or_channel_id, "Hello!")
 ```
+
+<!-- threading-agentic-example -->
+
+```python
+# agentic_identity is None unless the recipient is an agentic user
+await app.reply(
+    chat_or_channel_id,
+    reply_chain_id,
+    "Thread update!",
+    agentic_identity=ctx.activity.recipient.agentic_identity,
+)
+```
+
+<!-- threading-service-url-note -->
+
+Inside a handler, a response goes to the `service_url` of the inbound activity.
+`app.send()` and `app.reply()` go to the `service_url` argument when you pass one, and otherwise to the app's service URL: the `service_url` app option, else the `SERVICE_URL` environment variable, else `https://smba.trafficmanager.net/teams`.

@@ -11,7 +11,7 @@ await foreach (ChatResponseUpdate update in _chatClient.GetStreamingResponseAsyn
         await writer.AppendResponseAsync(update.Text, cancellationToken);
     }
 }
- await writer.FinalizeResponseAsync(CancellationToken: cancellationToken);
+ await writer.FinalizeResponseAsync(cancellationToken: cancellationToken);
 ```
 
 <!-- ai-label -->

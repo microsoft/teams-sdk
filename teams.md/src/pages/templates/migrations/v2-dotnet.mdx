@@ -210,7 +210,7 @@ await teams.SendAsync(
 await teams.SendAsync(
     conversationId,
     new MessageActivityInput("Welcome with activity object"),
-    serviceUrl: "https://smba.trafficmanager.net/teams/",
+    serviceUrl: new Uri("https://smba.trafficmanager.net/teams/"),
     cancellationToken: cancellationToken);
 
 await teams.ReplyAsync(
@@ -223,6 +223,9 @@ await teams.ReplyAsync(
     "Thread update",
     cancellationToken: cancellationToken);
 ```
+
+In SDK 2.2 and later, `ReplyAsync(chatOrChannelId, messageId, ...)` posts to the reply chain route, so it takes the chat or channel id from `channelData` and the reply chain id from `channelData.replyChain.id`.
+See [Proactive Threading](../essentials/sending-messages/proactive-messaging#proactive-threading).
 
 </TabItem>
 </Tabs>

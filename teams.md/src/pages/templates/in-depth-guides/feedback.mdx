@@ -28,3 +28,7 @@ When sending a message that you want feedback in, simply add feedback functional
 Once the user decides to like/dislike the message, you can handle the feedback in a received event. Once received, you can choose to include it in your persistent store.
 
 <LanguageInclude section="handling-feedback" />
+
+A message sent from the feedback handler is placed relative to the message that carries the feedback buttons.
+In a 1:1 chat, when that message is inside a thread, the message is sent into the thread.
+See [Responding to edits, reactions and card actions](../essentials/sending-messages#responding-to-edits-reactions-and-card-actions).

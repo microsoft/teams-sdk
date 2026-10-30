@@ -62,6 +62,14 @@ Input Controls provide ways for you to validate. More details can be found on th
 
 <LanguageInclude section="handlers-section" />
 
+## Responding from a card action
+
+A message sent from a card action handler is placed relative to the card that was clicked.
+In a 1:1 chat, when the card is inside a thread, <LanguageInclude content={{"typescript": "`send()`", "python": "`ctx.send()`", "csharp": "`context.SendAsync()`"}} /> sends the message into that thread, and when the card is at the top level it sends the message at the top level.
+This applies to `Action.Execute` and `Action.Submit`.
+In a channel, the response to a card button that arrives as a `message` (`Action.Submit`) is sent through the thread's reply chain, and the SDK sends the response to any other card action to the inbound conversation.
+See [Responding to edits, reactions and card actions](../../essentials/sending-messages#responding-to-edits-reactions-and-card-actions) for the rules.
+
 ## Dynamic Typeahead Search
 
 An `Input.ChoiceSet` can fetch its choices dynamically as the user types, instead of listing them statically. Leave `choices` as an empty array and add a `choices.data` `Data.Query` that names a `dataset`. As the user types, Teams sends your bot an `application/search` invoke, and you return the matching results.
