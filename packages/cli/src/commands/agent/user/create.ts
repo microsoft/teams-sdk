@@ -1,7 +1,7 @@
 import { input, select } from '@inquirer/prompts';
 import { Command } from 'commander';
 import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 import pc from 'picocolors';
 import {
   AGENT_GITIGNORE_ENTRIES,
@@ -323,7 +323,14 @@ export async function runAgentUserCreate(
   if (extraCredentialPath) {
     writeCredentials(extraCredentialPath, credentials);
   }
-  ensureGitignoreEntries(cwd, ['.env', ...AGENT_GITIGNORE_ENTRIES]);
+  ensureGitignoreEntries(cwd, [
+    '.env',
+    ...AGENT_GITIGNORE_ENTRIES,
+    // The C# scaffold has no ignore rule for `appsettings.Development.json`, and it now holds
+    // `CLIENT_SECRET` alongside `.env` -- ignore it too (relative to `cwd`) so committing the
+    // scaffolded project can't leak the secret.
+    ...(extraCredentialPath ? [relative(cwd, extraCredentialPath).split(sep).join('/')] : []),
+  ]);
 
   // Endpoint registration only applies to a brand new blueprint -- validated against reuse earlier.
   // Done after the config/credentials above are already persisted, and patched in afterward on

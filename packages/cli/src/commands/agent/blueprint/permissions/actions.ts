@@ -1,6 +1,7 @@
 import type { AccountInfo } from '@azure/msal-node';
 import {
   configureInheritableResourcePermissions,
+  findDelegatedPermissionGrant,
   grantDelegatedPermissions,
   listInheritablePermissions,
   MICROSOFT_GRAPH_APP_ID,
@@ -94,6 +95,28 @@ function currentEnumeratedScopes(existing: InheritablePermissionEntry[], resourc
   return entry?.inheritableScopes?.kind === 'enumerated' ? (entry.inheritableScopes.scopes ?? []) : [];
 }
 
+/**
+ * `add`/`remove` only know how to merge/subtract an explicit scope list
+ * (`enumerated`). A resource app already configured with `allAllowedScopes`
+ * (inherit everything the blueprint is granted) has no such list --
+ * `currentEnumeratedScopes` would treat it as having zero scopes, so `add`
+ * would silently narrow "inherit everything" down to just the new
+ * scope(s), and `remove` would delete the inheritance declaration entirely
+ * even though other scopes are still meant to be inherited. Reject
+ * mutating a non-enumerated entry outright and point the caller at `set`,
+ * which replaces the whole declaration explicitly instead of merging.
+ */
+function assertMutableInheritableEntry(existing: InheritablePermissionEntry[], resourceAppId: string): void {
+  const kind = existing.find((e) => e.resourceAppId === resourceAppId)?.inheritableScopes?.kind;
+  if (kind && kind !== 'enumerated') {
+    throw new CliError(
+      'AGENT_BLUEPRINT_PERMISSIONS_FAILED',
+      `${resourceAppDisplayName(resourceAppId)} is currently configured to inherit "${kind}" scopes, not an explicit list. ` +
+        `"add"/"remove" only support adjusting an explicit scope list -- use "teams agent blueprint permissions set" with the complete scope list instead.`
+    );
+  }
+}
+
 /** List every resource app currently configured as inheritable on a blueprint. */
 export async function listBlueprintPermissions(
   blueprintId: string,
@@ -123,9 +146,12 @@ export async function listBlueprintPermissions(
 
 /**
  * Grant a set of delegated scopes on a resource app to the blueprint and
- * mark them inheritable, merging with any scopes the resource app is
- * already configured to inherit (so repeated `add` calls accumulate
- * instead of clobbering each other). Equivalent of `teams app rsc add`.
+ * mark them inheritable. The direct OAuth2 grant is merged with whatever
+ * scopes the blueprint's service principal *actually* holds for this
+ * resource app (not just the ones already marked inheritable) so `add`
+ * can't silently revoke an out-of-band direct scope; the inheritable
+ * declaration is merged separately against the existing inheritable list.
+ * Equivalent of `teams app rsc add`.
  */
 export async function addBlueprintPermissions(
   blueprintId: string,
@@ -139,7 +165,11 @@ export async function addBlueprintPermissions(
     const adminToken = await acquireAdminToken(account, silent);
 
     const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
-    const merged = [...new Set([...currentEnumeratedScopes(existing, resourceAppId), ...scopes])];
+    assertMutableInheritableEntry(existing, resourceAppId);
+    const currentGrant = await findDelegatedPermissionGrant(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId);
+    const currentDirectScopes = currentGrant ? currentGrant.scope.split(' ').filter((s) => s.length > 0) : [];
+    const grantScopes = [...new Set([...currentDirectScopes, ...scopes])];
+    const inheritableScopes = [...new Set([...currentEnumeratedScopes(existing, resourceAppId), ...scopes])];
 
     await withAgentSpinner(
       {
@@ -148,7 +178,7 @@ export async function addBlueprintPermissions(
         error: 'Failed to grant the requested permission(s).',
       },
       silent,
-      () => grantDelegatedPermissions(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId, merged)
+      () => grantDelegatedPermissions(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId, grantScopes)
     );
 
     await withAgentSpinner(
@@ -158,10 +188,10 @@ export async function addBlueprintPermissions(
         error: 'Failed to configure inheritable permissions.',
       },
       silent,
-      () => configureInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, merged)
+      () => configureInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, inheritableScopes)
     );
 
-    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes: merged };
+    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes: inheritableScopes };
   } catch (error) {
     if (error instanceof CliError) throw error;
     throw new CliError('AGENT_BLUEPRINT_PERMISSIONS_FAILED', error instanceof Error ? error.message : String(error));
@@ -187,6 +217,7 @@ export async function removeBlueprintPermissions(
     const adminToken = await acquireAdminToken(account, silent);
 
     const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
+    assertMutableInheritableEntry(existing, resourceAppId);
     const currentScopes = currentEnumeratedScopes(existing, resourceAppId);
     const remaining = currentScopes.filter((s) => !scopes.includes(s));
 

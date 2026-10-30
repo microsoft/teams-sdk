@@ -593,10 +593,15 @@ export async function getServicePrincipalById(token: string, id: string): Promis
 }
 
 /**
- * Find the existing `oauth2PermissionGrant` (if any) that grants a
- * blueprint's service principal delegated scopes on a given resource app,
- * so an already-granted scope set can be read/updated/revoked instead of
- * blindly re-granted (which 409s on a duplicate clientId/resourceId pair).
+ * Find the existing tenant-wide (`AllPrincipals`) `oauth2PermissionGrant`
+ * (if any) that grants a blueprint's service principal delegated scopes
+ * on a given resource app, so an already-granted scope set can be
+ * read/updated/revoked instead of blindly re-granted (which 409s on a
+ * duplicate clientId/resourceId pair). Scoped to `AllPrincipals` because
+ * Graph allows a separate, independent `Principal` (single-user) grant
+ * for the same clientId/resourceId pair -- every caller here manages
+ * tenant-wide consent, so a single-user grant must never be matched,
+ * patched, or revoked in its place.
  */
 export async function findDelegatedPermissionGrant(
   token: string,
@@ -606,7 +611,7 @@ export async function findDelegatedPermissionGrant(
   const resourceSp = await getServicePrincipalByAppId(token, resourceAppId);
 
   const response = await apiFetch(
-    `${GRAPH_BASE_URL}/oauth2PermissionGrants?$filter=clientId eq '${blueprintServicePrincipalId}' and resourceId eq '${resourceSp.id}'`,
+    `${GRAPH_BASE_URL}/oauth2PermissionGrants?$filter=clientId eq '${blueprintServicePrincipalId}' and resourceId eq '${resourceSp.id}' and consentType eq 'AllPrincipals'`,
     {
       headers: { Authorization: authHeader(token) },
     }
