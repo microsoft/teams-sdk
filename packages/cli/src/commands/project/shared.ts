@@ -102,6 +102,21 @@ export function credentialDisplayPath(language: ProjectLanguage, projectName: st
   return path.posix.join(projectName, '.env');
 }
 
+/**
+ * Same as `credentialDisplayPath`, but relative to the project folder itself
+ * (one less `projectName` prefix) -- for the "run from the project folder"
+ * instruction, where the user has already `cd`'d into it.
+ */
+export function credentialDisplayPathFromProjectFolder(
+  language: ProjectLanguage,
+  projectName: string
+): string {
+  if (language === 'csharp') {
+    return path.posix.join(projectName, 'appsettings.Development.json');
+  }
+  return '.env';
+}
+
 export function appCreateCommandFor(agentName: string, credentialsPath: string): string {
   return `teams app create --name ${quoteCommandArg(agentName)} --env ${quoteCommandArg(credentialsPath)}`;
 }
@@ -216,9 +231,13 @@ export async function createProjectFromTemplate(
   }
 
   if (!hasProjectCredentials) {
+    const credentialDisplayFromProjectFolder = credentialDisplayPathFromProjectFolder(
+      strategy.language,
+      name
+    );
     logger.info('');
     logger.info(pc.bold('To provision an app or agentic user and write credentials, run from the project folder:'));
-    logger.info(pc.cyan(`  ${appCreateCommandFor(rawName.trim(), credentialDisplay)}`));
+    logger.info(pc.cyan(`  ${appCreateCommandFor(rawName.trim(), credentialDisplayFromProjectFolder)}`));
     logger.info(pc.dim('  (Teams app)'));
     logger.info(pc.cyan(`  ${agentUserCreateCommandHint()}`));
     logger.info(pc.dim('  (Agent 365 agentic user -- creates the blueprint + identity too)'));

@@ -193,7 +193,7 @@ describe('project new app provisioning', () => {
 
     expect(mockRunAppCreate).not.toHaveBeenCalled();
     expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('teams app create --name "PM Agent" --env "pm-agent/.env"')
+      expect.stringContaining('teams app create --name "PM Agent" --env ".env"')
     );
   });
 
