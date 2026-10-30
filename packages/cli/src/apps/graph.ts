@@ -29,6 +29,8 @@ export interface AadApp {
   id: string;
   appId: string;
   displayName: string;
+  /** Polymorphic type annotation (e.g. `#microsoft.graph.agentIdentityBlueprint`) when the app is a derived type. */
+  '@odata.type'?: string;
 }
 
 export interface ClientSecret {

@@ -59,7 +59,11 @@ function resolveDeleteTarget(userIdOrUpnArg: string | undefined, cwd: string, si
     );
   }
 
-  const target = users[0].userPrincipalName ?? users[0].agenticUserId;
+  // Always use the object ID here, never the cached UPN: UPNs aren't stable
+  // identifiers (a renamed or deleted user's UPN can later be reassigned to
+  // a different agentic user), so a stale cached UPN could resolve -- via a
+  // correctly-live Graph lookup -- to the wrong target entirely.
+  const target = users[0].agenticUserId;
   if (!silent) {
     logger.info(pc.dim(`Using agentic user ${target} from agent.generated.config.json.`));
   }
