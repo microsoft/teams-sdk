@@ -88,17 +88,28 @@ export async function runAgentUserDelete(
     return { agentIdentityId: '', agenticUserId: userIdOrUpn, dryRun: true };
   }
 
-  const result = await runDeleteAgentIdentityAndUser(userIdOrUpn, account, silent);
-
+  // Resolved up front (not just after deletion) so a retry can still find it: if the user was
+  // already deleted in Graph on a prior attempt but the identity delete that follows then failed,
+  // a fresh Graph lookup by `userIdOrUpn` now 404s, and this locally-recorded match is the only
+  // way left to resume cleanup of the still-orphaned identity.
   const configPath = getGeneratedConfigPath(cwd);
-  if (existsSync(configPath)) {
-    const config = readGeneratedConfig(cwd);
-    const match = (config.agentUsers ?? []).find(
-      (user) => user.agenticUserId === result.agenticUserId || user.userPrincipalName === userIdOrUpn
-    );
-    if (match) {
-      removeAgentUser(cwd, match.agenticUserId);
-    }
+  const match = existsSync(configPath)
+    ? (readGeneratedConfig(cwd).agentUsers ?? []).find(
+        (user) => user.agenticUserId === userIdOrUpn || user.userPrincipalName === userIdOrUpn
+      )
+    : undefined;
+
+  const result = await runDeleteAgentIdentityAndUser(
+    userIdOrUpn,
+    account,
+    silent,
+    match ? { agentIdentityId: match.agentIdentityId, agenticUserId: match.agenticUserId } : undefined
+  );
+
+  // Only removed from the local config now that both the user and its identity are confirmed
+  // deleted -- retaining the record on any earlier throw is what makes the retry path above work.
+  if (match) {
+    removeAgentUser(cwd, match.agenticUserId);
   }
 
   return { agentIdentityId: result.agentIdentityId, agenticUserId: result.agenticUserId, dryRun: false };

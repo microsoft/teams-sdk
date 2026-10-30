@@ -10,13 +10,12 @@ import {
   writeGeneratedConfig,
   type AgentGeneratedConfig,
 } from '../../../apps/agent-config.js';
-import { getConfig } from '../../../utils/config.js';
 import { writeCredentials } from '../../../utils/env.js';
 import { wrapAction } from '../../../utils/errors.js';
 import { isInteractive } from '../../../utils/interactive.js';
 import { outputJson } from '../../../utils/json-output.js';
 import { logger } from '../../../utils/logger.js';
-import { requireAgentAccount, resolveAgentName } from '../shared.js';
+import { requireAgentAccount, resolveAgentName, resolveGraphPermissionsDefault } from '../shared.js';
 import { assertHttpsEndpoint, registerAgentBlueprintEndpoint, runCreateAgentBlueprint } from './actions.js';
 
 export interface AgentBlueprintCreateOptions {
@@ -114,14 +113,7 @@ export async function runAgentBlueprintCreate(
   const account = await requireAgentAccount(silent);
 
   const cwd = options.cwd ?? process.cwd();
-  const permissionsFlag = options.permissions?.trim();
-  const permissionsDefault = !permissionsFlag ? await getConfig('agent-default-permissions') : undefined;
-  if (!permissionsFlag && permissionsDefault && !silent) {
-    logger.info(pc.dim(`Using default Graph permissions "${permissionsDefault}" from teams config.`));
-  }
-  const graphScopes = (permissionsFlag ?? permissionsDefault)?.trim()
-    ? [...new Set((permissionsFlag ?? permissionsDefault)!.split(',').map((s) => s.trim()).filter(Boolean))]
-    : undefined;
+  const graphScopes = await resolveGraphPermissionsDefault(options.permissions, silent);
   const blueprint = await runCreateAgentBlueprint(name, account, silent, graphScopes);
 
   const config: AgentGeneratedConfig = {

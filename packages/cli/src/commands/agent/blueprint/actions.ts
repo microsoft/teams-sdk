@@ -12,7 +12,7 @@ import {
   deleteApplication,
   deleteServicePrincipal,
   deleteUser,
-  findAgentIdentityForBlueprint,
+  findAgentIdentitiesForBlueprint,
   findAgenticUserForIdentity,
   getAadAppByClientId,
   getServicePrincipalByAppId,
@@ -304,13 +304,15 @@ export async function runRenameAgentBlueprint(
  * Cascade deletion of a blueprint is async and best-effort -- per
  * Microsoft's own docs, agents' user accounts in particular aren't always
  * automatically cleaned up as part of it -- so this looks up and deletes
- * the blueprint's agent identity and agentic user explicitly first,
- * instead of assuming the cascade already ran. The blueprint's own
- * service principal is deleted defensively afterward in case the cascade
- * doesn't cover it either (404s are ignored). Its messaging endpoint
- * backend configuration (on the separate Agent 365 service) is also
- * cleared best-effort first, so a reused blueprint ID doesn't inherit a
- * stale endpoint -- failures here don't block the Graph deletion.
+ * every agent identity the blueprint has (a reusable blueprint can have
+ * many, one per `teams agent user create` run against it) and each one's
+ * agentic user explicitly first, instead of assuming the cascade already
+ * ran. The blueprint's own service principal is deleted defensively
+ * afterward in case the cascade doesn't cover it either (404s are
+ * ignored). Its messaging endpoint backend configuration (on the separate
+ * Agent 365 service) is also cleared best-effort first, so a reused
+ * blueprint ID doesn't inherit a stale endpoint -- failures here don't
+ * block the Graph deletion.
  */
 export async function runDeleteAgentBlueprint(
   target: AgentBlueprintCleanupTarget,
@@ -337,19 +339,20 @@ export async function runDeleteAgentBlueprint(
 
     await withAgentSpinner(
       {
-        start: 'Looking up agent identity and agentic user...',
-        success: 'Agent identity and agentic user cleaned up.',
-        error: 'Failed to clean up the agent identity/agentic user.',
+        start: 'Looking up agent identities and agentic users...',
+        success: 'Agent identities and agentic users cleaned up.',
+        error: 'Failed to clean up the agent identities/agentic users.',
       },
       silent,
       async () => {
-        const identity = await findAgentIdentityForBlueprint(adminToken, target.agentBlueprintId);
-        if (!identity) return;
+        const identities = await findAgentIdentitiesForBlueprint(adminToken, target.agentBlueprintId);
 
-        const user = await findAgenticUserForIdentity(adminToken, identity.id);
-        if (user) await deleteUser(adminToken, user.id);
+        for (const identity of identities) {
+          const user = await findAgenticUserForIdentity(adminToken, identity.id);
+          if (user) await deleteUser(adminToken, user.id);
 
-        await deleteServicePrincipal(adminToken, identity.id);
+          await deleteServicePrincipal(adminToken, identity.id);
+        }
       }
     );
 

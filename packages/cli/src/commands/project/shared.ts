@@ -209,6 +209,7 @@ export async function createProjectFromTemplate(
       output.agenticUserId = provisionResult.result.agenticUserId;
       output.userPrincipalName = provisionResult.result.userPrincipalName;
       output.generatedConfigPath = provisionResult.result.generatedConfigPath;
+      output.credentialsFile = provisionResult.result.credentialsFile ?? credentialPath;
       delete output.appCreateCommand;
       hasProjectCredentials = true;
     }
@@ -269,7 +270,7 @@ async function maybeProvisionAppForCreatedProject(
     // defaulting its name to the project name (still editable).
     const result = await runAgentUserCreate(
       undefined,
-      { cwd: targetDir, forceNewBlueprint: true },
+      { cwd: targetDir, forceNewBlueprint: true, credentialPath },
       undefined,
       rawName.trim()
     );

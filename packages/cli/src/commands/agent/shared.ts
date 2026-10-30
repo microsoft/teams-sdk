@@ -132,3 +132,27 @@ export async function resolveLicenseDefault(
   }
   return configDefault;
 }
+
+/**
+ * Resolves the Microsoft Graph delegated scopes to grant and make
+ * inheritable on a newly created agent blueprint, falling back to the
+ * `agent-default-permissions` set via `teams config` when `--permissions`
+ * is omitted. Shared by every path that can create a brand-new blueprint
+ * (`teams agent blueprint create` and `teams agent user create` without
+ * an existing blueprint ID) so the configured default isn't silently
+ * dropped by whichever one doesn't call it.
+ */
+export async function resolveGraphPermissionsDefault(
+  permissionsFlag: string | undefined,
+  silent: boolean
+): Promise<string[] | undefined> {
+  const flag = permissionsFlag?.trim();
+  const configDefault = !flag ? await getConfig('agent-default-permissions') : undefined;
+  if (!flag && configDefault && !silent) {
+    logger.info(pc.dim(`Using default Graph permissions "${configDefault}" from teams config.`));
+  }
+  const scopes = flag ?? configDefault;
+  return scopes?.trim()
+    ? [...new Set(scopes.split(',').map((s) => s.trim()).filter(Boolean))]
+    : undefined;
+}

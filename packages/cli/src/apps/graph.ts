@@ -487,6 +487,29 @@ export async function grantDelegatedPermissions(
   resourceAppId: string,
   scopes: string[]
 ): Promise<void> {
+  // Patch the existing grant in place when one is already held for this resource app --
+  // POSTing again would 409 on the duplicate clientId/resourceId pair (see
+  // `findDelegatedPermissionGrant`), which otherwise breaks every repeated call (e.g.
+  // `permissions add`/`set`, or granting SMBA permissions to an already-permissioned blueprint).
+  const existing = await findDelegatedPermissionGrant(token, blueprintServicePrincipalId, resourceAppId);
+
+  if (existing) {
+    const patchResponse = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants/${existing.id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: authHeader(token),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ scope: scopes.join(' ') }),
+    });
+
+    if (!patchResponse.ok) {
+      const error = await patchResponse.text();
+      throw new Error(`Failed to update delegated scope(s) "${scopes.join(', ')}" on resource app ${resourceAppId}: ${patchResponse.status} ${error}`);
+    }
+    return;
+  }
+
   const resourceSp = await getServicePrincipalByAppId(token, resourceAppId);
 
   const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants`, {
@@ -767,31 +790,37 @@ export async function removeInheritablePermission(token: string, blueprintObject
  * swallowed (already deleted).
  */
 /**
- * Find the agent identity service principal (if any) created under a
- * blueprint. Cascade deletion of a blueprint is async and best-effort --
- * per Microsoft's own docs, agents' user accounts in particular "aren't
- * [always] automatically cleaned up as part of cascade deletion" -- so
- * `teams agent blueprint delete` looks this up itself and deletes it
- * explicitly rather than relying on the cascade to have already run.
+ * Find every agent identity service principal created under a blueprint,
+ * following `@odata.nextLink` pagination. Cascade deletion of a blueprint
+ * is async and best-effort -- per Microsoft's own docs, agents' user
+ * accounts in particular "aren't [always] automatically cleaned up as
+ * part of cascade deletion" -- so `teams agent blueprint delete` looks
+ * these up itself and deletes each one (and its agentic user) explicitly
+ * rather than relying on the cascade to have already run. A reusable
+ * blueprint can have many identities (one per `teams agent user create`
+ * against it), not just one.
  */
-export async function findAgentIdentityForBlueprint(
-  token: string,
-  blueprintId: string
-): Promise<{ id: string } | undefined> {
-  const response = await apiFetch(
-    `${GRAPH_BASE_URL}/servicePrincipals/microsoft.graph.agentIdentity?$filter=agentIdentityBlueprintId eq '${blueprintId}'&$count=true`,
-    {
-      headers: { Authorization: authHeader(token), ConsistencyLevel: 'eventual' },
-    }
-  );
+export async function findAgentIdentitiesForBlueprint(token: string, blueprintId: string): Promise<{ id: string }[]> {
+  const identities: { id: string }[] = [];
+  let url: string | undefined =
+    `${GRAPH_BASE_URL}/servicePrincipals/microsoft.graph.agentIdentity?$filter=agentIdentityBlueprintId eq '${blueprintId}'&$count=true`;
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to look up the blueprint's agent identity: ${response.status} ${error}`);
+  while (url) {
+    const response = await apiFetch(url, {
+      headers: { Authorization: authHeader(token), ConsistencyLevel: 'eventual' },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to look up the blueprint's agent identities: ${response.status} ${error}`);
+    }
+
+    const data = (await response.json()) as { value: { id: string }[]; '@odata.nextLink'?: string };
+    identities.push(...data.value);
+    url = data['@odata.nextLink'];
   }
 
-  const data = (await response.json()) as { value: { id: string }[] };
-  return data.value[0];
+  return identities;
 }
 
 /** Find the agentic user (if any) provisioned for an agent identity. */

@@ -323,7 +323,17 @@ export async function runCreateAgenticUser(
    */
   licenseOption?: string | false,
   /** [OPTIONAL] Two-letter country code to use as the usage location, skipping detection/confirmation. */
-  usageLocationOption?: string
+  usageLocationOption?: string,
+  /**
+   * [OPTIONAL] Invoked right after the Graph user is created, before
+   * license assignment is attempted. An invalid `--license` SKU or a SKU
+   * with no seats throws *after* Graph has already created the user, so
+   * the caller must persist these IDs here -- not after this function
+   * returns -- or a retry after that failure hits a duplicate-UPN error
+   * against a user Graph already created but the local config never
+   * recorded.
+   */
+  onUserCreated?: (created: { agenticUserId: string; userPrincipalName: string }) => void
 ): Promise<AgenticUserResult> {
   try {
     const adminToken = await withAgentSpinner(
@@ -383,6 +393,11 @@ export async function runCreateAgenticUser(
           usageLocation,
         })
     );
+
+    // Persist before attempting license assignment -- a throw below still leaves the user
+    // created in Graph, so the caller needs these IDs recorded now to avoid a duplicate-UPN
+    // error on retry.
+    onUserCreated?.({ agenticUserId: user.id, userPrincipalName });
 
     const license = await resolveLicenseAssignment(adminToken, user.id, licenseOption, silent);
 
@@ -702,7 +717,17 @@ export interface AgentIdentityUserDeleteResult {
 export async function runDeleteAgentIdentityAndUser(
   userIdOrUpn: string,
   account: AccountInfo,
-  silent: boolean
+  silent: boolean,
+  /**
+   * [OPTIONAL] Already-known identity/user IDs from the local
+   * `agent.generated.config.json` record. Makes a partial prior deletion
+   * resumable: if the user was already deleted but the parent identity
+   * delete that follows then failed, a fresh lookup by `userIdOrUpn` now
+   * 404s and would otherwise throw "not found" before ever reaching the
+   * identity delete again. With `known` supplied, that 404 instead falls
+   * through to deleting the identity directly by its recorded ID.
+   */
+  known?: { agentIdentityId: string; agenticUserId: string }
 ): Promise<AgentIdentityUserDeleteResult> {
   try {
     const adminToken = await withAgentSpinner(
@@ -725,7 +750,7 @@ export async function runDeleteAgentIdentityAndUser(
       () => getAgenticUserByIdOrUpn(adminToken, userIdOrUpn)
     );
 
-    if (!user) {
+    if (!user && !known) {
       throw new CliError(
         'AGENT_IDENTITY_USER_NOT_FOUND',
         'No agentic user was found with that ID/UPN.',
@@ -733,15 +758,19 @@ export async function runDeleteAgentIdentityAndUser(
       );
     }
 
-    await withAgentSpinner(
-      {
-        start: 'Deleting agentic user...',
-        success: 'Agentic user deleted.',
-        error: 'Failed to delete agentic user.',
-      },
-      silent,
-      () => deleteUser(adminToken, user.id)
-    );
+    if (user) {
+      await withAgentSpinner(
+        {
+          start: 'Deleting agentic user...',
+          success: 'Agentic user deleted.',
+          error: 'Failed to delete agentic user.',
+        },
+        silent,
+        () => deleteUser(adminToken, user.id)
+      );
+    }
+
+    const agentIdentityId = user?.identityParentId ?? known!.agentIdentityId;
 
     await withAgentSpinner(
       {
@@ -750,10 +779,10 @@ export async function runDeleteAgentIdentityAndUser(
         error: 'Failed to delete agent identity.',
       },
       silent,
-      () => deleteServicePrincipal(adminToken, user.identityParentId)
+      () => deleteServicePrincipal(adminToken, agentIdentityId)
     );
 
-    return { agentIdentityId: user.identityParentId, agenticUserId: user.id };
+    return { agentIdentityId, agenticUserId: user?.id ?? known!.agenticUserId };
   } catch (error) {
     if (error instanceof CliError) throw error;
     throw new CliError(

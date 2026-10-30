@@ -171,7 +171,11 @@ describe('project new app provisioning', () => {
     expect(mockRunAppCreate).not.toHaveBeenCalled();
     expect(mockRunAgentUserCreate).toHaveBeenCalledWith(
       undefined,
-      { cwd: path.join(tempDir, 'pm-agent'), forceNewBlueprint: true },
+      {
+        cwd: path.join(tempDir, 'pm-agent'),
+        forceNewBlueprint: true,
+        credentialPath: path.join(tempDir, 'pm-agent', '.env'),
+      },
       undefined,
       'PM Agent'
     );
