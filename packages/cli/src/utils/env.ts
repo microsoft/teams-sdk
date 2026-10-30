@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import pc from 'picocolors';
 import { CliError } from './errors.js';
 import { logger } from './logger.js';
+import { setJsonValue } from '../project/file-ops.js';
 
 export interface EnvValues {
   CLIENT_ID: string;
@@ -110,8 +111,37 @@ export function isJsonFile(filePath: string): boolean {
   return path.extname(filePath).toLowerCase() === '.json';
 }
 
+/**
+ * Write credentials into a .NET `AzureAd` config section (ClientId/TenantId
+ * plus a `ClientCredentials[0]` secret entry) -- the shape the Agents SDK's
+ * Azure Identity auth expects, used for C# agent project appsettings files.
+ * Matches `commands/project/new/csharp.ts`'s `mapBaseEnvVars` dotted keys.
+ */
+export function writeAzureAdCredentials(filePath: string, values: EnvValues): void {
+  const resolvedPath = path.resolve(filePath);
+  ensureParentDir(resolvedPath);
+  if (!fs.existsSync(resolvedPath)) {
+    fs.writeFileSync(resolvedPath, '{}\n');
+  }
+
+  setJsonValue(resolvedPath, 'AzureAd.ClientId', values.CLIENT_ID);
+  setJsonValue(resolvedPath, 'AzureAd.TenantId', values.TENANT_ID);
+  if (values.CLIENT_SECRET !== undefined) {
+    setJsonValue(resolvedPath, 'AzureAd.ClientCredentials.0.SourceType', 'ClientSecret');
+    setJsonValue(resolvedPath, 'AzureAd.ClientCredentials.0.ClientSecret', values.CLIENT_SECRET);
+  } else {
+    // Drop a stale secret so --no-secret never leaves an old ClientSecret behind.
+    setJsonValue(resolvedPath, 'AzureAd.ClientCredentials', undefined);
+  }
+}
+
 export function isLaunchSettingsFile(filePath: string): boolean {
   return path.basename(filePath).toLowerCase() === 'launchsettings.json';
+}
+
+/** C# scaffolds' appsettings.*.json -- uses the AzureAd shape, not the generic Teams shape. */
+export function isAppSettingsFile(filePath: string): boolean {
+  return isJsonFile(filePath) && path.basename(filePath).toLowerCase().startsWith('appsettings');
 }
 
 /**

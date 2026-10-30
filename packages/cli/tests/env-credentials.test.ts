@@ -2,7 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { writeEnvFile, writeJsonCredentials, outputCredentials, type EnvValues } from '../src/utils/env.js';
+import {
+  writeEnvFile,
+  writeJsonCredentials,
+  writeAzureAdCredentials,
+  isAppSettingsFile,
+  outputCredentials,
+  type EnvValues,
+} from '../src/utils/env.js';
 
 const TEST_VALUES: EnvValues = {
   CLIENT_ID: 'test-client-id',
@@ -169,6 +176,69 @@ describe('writeJsonCredentials', () => {
     expect(json.Teams.ClientId).toBe('id-123');
     expect(json.Teams.TenantId).toBe('tenant-456');
     expect(json.Teams).not.toHaveProperty('ClientSecret');
+  });
+});
+
+// ── writeAzureAdCredentials ───────────────────────────────────────────
+
+describe('writeAzureAdCredentials', () => {
+  const files: string[] = [];
+
+  afterEach(() => {
+    for (const f of files) {
+      if (fs.existsSync(f)) fs.unlinkSync(f);
+    }
+    files.length = 0;
+  });
+
+  it('writes the AzureAd section with a ClientCredentials secret entry', () => {
+    const filePath = tmpFile('appsettings.Development.json');
+    files.push(filePath);
+
+    writeAzureAdCredentials(filePath, TEST_VALUES);
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    expect(json.AzureAd.ClientId).toBe('test-client-id');
+    expect(json.AzureAd.TenantId).toBe('test-tenant-id');
+    expect(json.AzureAd.ClientCredentials).toEqual([
+      { SourceType: 'ClientSecret', ClientSecret: 'test-client-secret' },
+    ]);
+  });
+
+  it('preserves other top-level keys in an existing file', () => {
+    const filePath = tmpFile('appsettings.Development.json');
+    files.push(filePath);
+    fs.writeFileSync(filePath, JSON.stringify({ Logging: { LogLevel: { Default: 'Information' } } }, null, 2));
+
+    writeAzureAdCredentials(filePath, TEST_VALUES);
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    expect(json.Logging).toEqual({ LogLevel: { Default: 'Information' } });
+    expect(json.AzureAd.ClientId).toBe('test-client-id');
+  });
+
+  it('drops ClientCredentials when the secret is undefined', () => {
+    const filePath = tmpFile('appsettings.Development.json');
+    files.push(filePath);
+
+    writeAzureAdCredentials(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    expect(json.AzureAd.ClientId).toBe('id-123');
+    expect(json.AzureAd.TenantId).toBe('tenant-456');
+    expect(json.AzureAd).not.toHaveProperty('ClientCredentials');
+  });
+});
+
+describe('isAppSettingsFile', () => {
+  it('matches appsettings.json and appsettings.Development.json', () => {
+    expect(isAppSettingsFile('appsettings.json')).toBe(true);
+    expect(isAppSettingsFile('appsettings.Development.json')).toBe(true);
+  });
+
+  it('does not match launchSettings.json or .env', () => {
+    expect(isAppSettingsFile('launchSettings.json')).toBe(false);
+    expect(isAppSettingsFile('.env')).toBe(false);
   });
 });
 

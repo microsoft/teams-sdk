@@ -14,7 +14,7 @@ import {
   type AgentGeneratedConfig,
 } from '../../../apps/agent-config.js';
 import { agentChatLink } from '../../../apps/links.js';
-import { writeCredentials } from '../../../utils/env.js';
+import { isAppSettingsFile, writeAzureAdCredentials, writeCredentials } from '../../../utils/env.js';
 import { printLinkBanner } from '../../../utils/browser.js';
 import { CliError, wrapAction } from '../../../utils/errors.js';
 import { confirmAction, isInteractive } from '../../../utils/interactive.js';
@@ -300,7 +300,13 @@ export async function runAgentUserCreate(
       ? options.credentialPath
       : undefined;
   if (extraCredentialPath) {
-    writeCredentials(extraCredentialPath, credentials);
+    // C# appsettings files need the AzureAd shape (see csharp.ts's mapBaseEnvVars), not the
+    // generic Teams shape writeCredentials() uses for other JSON files.
+    if (isAppSettingsFile(extraCredentialPath)) {
+      writeAzureAdCredentials(extraCredentialPath, credentials);
+    } else {
+      writeCredentials(extraCredentialPath, credentials);
+    }
   }
   ensureGitignoreEntries(cwd, [
     '.env',
