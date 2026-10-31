@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { confirm, input } from '@inquirer/prompts';
+import { confirm, input, select } from '@inquirer/prompts';
 import pc from 'picocolors';
 import { CliError } from '../../utils/errors.js';
 import { outputJson } from '../../utils/json-output.js';
@@ -12,6 +12,7 @@ import {
   type ScaffoldOptions,
 } from '../../project/scaffold.js';
 import { runAppCreate, type AppCreateOutput } from '../app/create.js';
+import { type AgentUserCreateOutput, runAgentUserCreate } from '../agent/user/create.js';
 
 export interface ProjectNewOutput {
   name: string;
@@ -22,6 +23,10 @@ export interface ProjectNewOutput {
   appCreateCommand?: string;
   teamsAppId?: string;
   botId?: string;
+  agentBlueprintId?: string;
+  agenticUserId?: string;
+  userPrincipalName?: string;
+  generatedConfigPath?: string;
 }
 
 export interface ProjectNewCommandOptions {
@@ -97,8 +102,28 @@ export function credentialDisplayPath(language: ProjectLanguage, projectName: st
   return path.posix.join(projectName, '.env');
 }
 
+/**
+ * Same as `credentialDisplayPath`, but relative to the project folder itself
+ * (one less `projectName` prefix) -- for the "run from the project folder"
+ * instruction, where the user has already `cd`'d into it.
+ */
+export function credentialDisplayPathFromProjectFolder(
+  language: ProjectLanguage,
+  projectName: string
+): string {
+  if (language === 'csharp') {
+    return path.posix.join(projectName, 'appsettings.Development.json');
+  }
+  return '.env';
+}
+
 export function appCreateCommandFor(agentName: string, credentialsPath: string): string {
   return `teams app create --name ${quoteCommandArg(agentName)} --env ${quoteCommandArg(credentialsPath)}`;
+}
+
+/** `teams agent user create` takes an optional existing blueprint ID, not a name -- when creating a brand new blueprint it always prompts for the name interactively. */
+export function agentUserCreateCommandHint(): string {
+  return 'teams agent user create';
 }
 
 export function hasCredentialValues(envVars: Record<string, string>): boolean {
@@ -182,24 +207,40 @@ export async function createProjectFromTemplate(
 
   let hasProjectCredentials = hasCredentials;
   if (!hasProjectCredentials) {
-    const appCreateResult = await maybeProvisionAppForCreatedProject(
+    const provisionResult = await maybeProvisionAppForCreatedProject(
       rawName,
       options,
-      credentialPath
+      credentialPath,
+      targetDir
     );
-    if (appCreateResult) {
-      output.credentialsFile = appCreateResult.credentialsFile ?? credentialPath;
-      output.teamsAppId = appCreateResult.teamsAppId;
-      output.botId = appCreateResult.botId;
+    if (provisionResult?.kind === 'bot') {
+      output.credentialsFile = provisionResult.result.credentialsFile ?? credentialPath;
+      output.teamsAppId = provisionResult.result.teamsAppId;
+      output.botId = provisionResult.result.botId;
+      delete output.appCreateCommand;
+      hasProjectCredentials = true;
+    } else if (provisionResult?.kind === 'agent') {
+      output.agentBlueprintId = provisionResult.result.agentBlueprintId;
+      output.agenticUserId = provisionResult.result.agenticUserId;
+      output.userPrincipalName = provisionResult.result.userPrincipalName;
+      output.generatedConfigPath = provisionResult.result.generatedConfigPath;
+      output.credentialsFile = provisionResult.result.credentialsFile ?? credentialPath;
       delete output.appCreateCommand;
       hasProjectCredentials = true;
     }
   }
 
   if (!hasProjectCredentials) {
+    const credentialDisplayFromProjectFolder = credentialDisplayPathFromProjectFolder(
+      strategy.language,
+      name
+    );
     logger.info('');
-    logger.info(pc.bold('To provision an app and write credentials:'));
-    logger.info(pc.cyan(`  ${appCreateCommandFor(rawName.trim(), credentialDisplay)}`));
+    logger.info(pc.bold('To provision an app or agentic user and write credentials, run from the project folder:'));
+    logger.info(pc.cyan(`  ${appCreateCommandFor(rawName.trim(), credentialDisplayFromProjectFolder)}`));
+    logger.info(pc.dim('  (Teams app)'));
+    logger.info(pc.cyan(`  ${agentUserCreateCommandHint()}`));
+    logger.info(pc.dim('  (Agent 365 agentic user -- creates the blueprint + identity too)'));
   }
 
   if (options.start && strategy.startProject) {
@@ -211,27 +252,58 @@ export async function createProjectFromTemplate(
   return output;
 }
 
+type ProvisionResult =
+  | { kind: 'bot'; result: AppCreateOutput }
+  | { kind: 'agent'; result: AgentUserCreateOutput };
+
 async function maybeProvisionAppForCreatedProject(
   rawName: string,
   options: ProjectNewCommandOptions,
-  credentialPath: string
-): Promise<AppCreateOutput | undefined> {
+  credentialPath: string,
+  targetDir: string
+): Promise<ProvisionResult | undefined> {
   if (options.json || !isInteractive() || isAutoConfirm() || hasExplicitCredentials(options)) {
     return undefined;
   }
 
   const provisionApp = await confirm({
-    message: 'Provision an app now?',
+    message: 'Provision a Teams app or an Agent 365 agentic user now?',
     default: true,
   });
   if (!provisionApp) return undefined;
-  return runAppCreate(
+
+  const choice = await select({
+    message: 'What do you want to create?',
+    choices: [
+      { name: 'Teams app', value: 'bot' as const },
+      { name: 'Agentic user', value: 'agent' as const },
+    ],
+  });
+
+  if (choice === 'agent') {
+    // Agentic users don't produce a TDP Teams app/bot credentials file;
+    // the generated config lands directly in the new project's directory.
+    // A freshly scaffolded project never has an existing blueprint to
+    // reuse, so skip that prompt entirely (`forceNewBlueprint`) and go
+    // straight to creating a brand new blueprint + identity + user,
+    // defaulting its name to the project name (still editable).
+    const result = await runAgentUserCreate(
+      undefined,
+      { cwd: targetDir, forceNewBlueprint: true, credentialPath },
+      undefined,
+      rawName.trim()
+    );
+    return { kind: 'agent', result };
+  }
+
+  const result = await runAppCreate(
     { env: credentialPath },
     {
       defaultName: rawName.trim(),
       skipPostCreateActions: true,
     }
   );
+  return result ? { kind: 'bot', result } : undefined;
 }
 
 export async function scaffoldProjectWithCleanup(opts: ScaffoldOptions): Promise<void> {

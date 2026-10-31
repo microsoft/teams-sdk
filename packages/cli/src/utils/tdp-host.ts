@@ -7,7 +7,7 @@
  */
 
 const PROD_TDP_HOST = 'https://dev.teams.microsoft.com';
-const DEV_INT_TDP_HOST = 'https://dev-int.teams.microsoft.com';
+export const DEV_INT_TDP_HOST = 'https://dev-int.teams.microsoft.com';
 
 export const DEV_API_ENV_VAR = 'TEAMS_DEV_API';
 

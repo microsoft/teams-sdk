@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { select } from '@inquirer/prompts';
+import { input, select } from '@inquirer/prompts';
 import pc from 'picocolors';
 import { getConfig, setConfig, validateConfig, KNOWN_KEYS } from '../../utils/config.js';
 import { isInteractive } from '../../utils/interactive.js';
@@ -47,14 +47,17 @@ export const configSetCommand = new Command('set')
         const choices = CHOICES[key];
         if (choices) {
           value = await select({ message: key, choices, default: current });
+        } else {
+          value = await input({ message: `${KNOWN_KEYS[key].description}:`, default: current });
         }
       }
 
       if (!value) {
+        const spec = KNOWN_KEYS[key];
         throw new CliError(
           'VALIDATION_MISSING',
           `Missing value for ${key}.`,
-          `Valid values: ${KNOWN_KEYS[key].values.map((v) => displayValue(key, v)).join(', ')}`
+          spec.values ? `Valid values: ${spec.values.map((v) => displayValue(key, v)).join(', ')}` : spec.description
         );
       }
 
@@ -66,8 +69,7 @@ export const configSetCommand = new Command('set')
 
       const error = validateConfig(key, value);
       if (error) {
-        const friendly = KNOWN_KEYS[key].values.map((v) => displayValue(key, v)).join(', ');
-        throw new CliError('VALIDATION_FORMAT', `Invalid value for ${key}. Must be one of: ${friendly}`);
+        throw new CliError('VALIDATION_FORMAT', error);
       }
 
       const current = await getConfig(key);
