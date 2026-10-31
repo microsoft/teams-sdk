@@ -56,7 +56,9 @@ async function assertNoExistingConfig(cwd: string, silent: boolean): Promise<voi
   const path = getGeneratedConfigPath(cwd);
   if (!existsSync(path)) return;
 
-  logger.info(pc.yellow(`A blueprint is already recorded in ${path} and will be overwritten.`));
+  if (!silent) {
+    logger.info(pc.yellow(`A blueprint is already recorded in ${path} and will be overwritten.`));
+  }
   const proceed = await confirmAction('Overwrite it with a new blueprint?', silent);
   if (!proceed) {
     throw new CliError(

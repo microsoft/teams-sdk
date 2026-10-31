@@ -187,7 +187,12 @@ export async function addBlueprintPermissions(
     const adminToken = await acquireAdminToken(account, silent);
 
     const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
-    assertMutableInheritableEntry(existing, resourceAppId);
+    // Only the inheritable-permissions merge below needs an explicit enumerated list to merge into;
+    // a plain (non-inheritable) grant never touches that config, so don't reject it over an
+    // `allAllowedScopes`/other non-enumerated kind that --no-inheritable isn't going to change.
+    if (inheritable) {
+      assertMutableInheritableEntry(existing, resourceAppId);
+    }
     const inheritableScopes = inheritable
       ? [...new Set([...currentEnumeratedScopes(existing, resourceAppId), ...scopes])]
       : currentEnumeratedScopes(existing, resourceAppId);
