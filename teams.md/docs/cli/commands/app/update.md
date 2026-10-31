@@ -78,6 +78,8 @@ teams app update <appId> --scopes personal,team,copilot
 
 Selecting **copilot** automatically adds the `copilotAgents.customEngineAgents` block to the manifest and ensures **personal** is included. Removing **copilot** removes the `copilotAgents` block.
 
+Scope updates also keep the built-in personal tabs in sync: enabling **personal** adds **Chat** and **About** if missing; disabling it removes **Chat**, and removes **About** only if no other tabs remain. Custom tabs are preserved. Existing `supportsChannelFeatures` declarations are unchanged.
+
 ### webApplicationInfo (SSO)
 
 Set the `webApplicationInfo` fields used for SSO and app identity:

@@ -40,6 +40,10 @@ teams app create [options]
 
 Creates a complete Teams bot app in a single command: AAD app registration, client secret, manifest, Teams app import, and bot registration.
 
+### Manifest Version
+
+New apps use manifest schema version **1.30**. The generated `manifestVersion` and `$schema` URL use the same pinned version, updated with CLI releases rather than discovered through an API. Existing apps and their manifest versions are not changed.
+
 ### Bot Location
 
 By default, the bot is Teams-managed (no Azure subscription needed). Use `--azure` to create an Azure Bot instead, which is required for OAuth and SSO features.
@@ -60,6 +64,18 @@ During interactive creation, you can customize which scopes the bot supports:
 | **Copilot** | Available as a custom engine agent in M365 Copilot |
 
 Selecting **Copilot** automatically adds the `copilotAgents.customEngineAgents` block to the manifest and ensures the **Personal** scope is included (required by M365 Copilot).
+
+The built-in **Chat** (`conversations`) and **About** tabs are added only when **Personal** scope is enabled. Team-only and group-chat-only bots do not get personal tabs.
+
+### Channel Compatibility
+
+New apps leave `supportsChannelFeatures` unset, matching Teams Developer Portal's explicit opt-in. To declare that your app supports all channel features after confirming compatibility:
+
+```bash
+teams app manifest update <appId> --set-json 'supportsChannelFeatures="tier1"'
+```
+
+Changing bot scopes does not change an existing channel compatibility declaration.
 
 ### Examples
 
