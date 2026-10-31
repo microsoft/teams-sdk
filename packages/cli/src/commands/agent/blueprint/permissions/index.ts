@@ -10,18 +10,24 @@ import {
   removeBlueprintPermissions,
   resolveResourceAppId,
   setBlueprintPermissions,
-  type BlueprintPermissionEntry,
+  type BlueprintPermissionListEntry,
 } from './actions.js';
 
+/**
+ * Splits on commas and/or whitespace. Whitespace matters because an
+ * unquoted comma list in PowerShell can arrive here already space-joined
+ * (PowerShell parses the bare comma as array construction, then flattens
+ * it to a space-separated string when forwarding through `teams.ps1`).
+ */
 function parseScopes(raw: string): string[] {
-  return [...new Set(raw.split(',').map((s) => s.trim()).filter(Boolean))];
+  return [...new Set(raw.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean))];
 }
 
-function printPermissionsTable(entries: BlueprintPermissionEntry[]): void {
+function printPermissionsTable(entries: BlueprintPermissionListEntry[]): void {
   for (const entry of entries) {
-    logger.info(`${pc.bold(entry.resourceAppName)} ${pc.dim(`(${entry.resourceAppId})`)} — ${entry.kind}`);
-    if (entry.scopes.length > 0) {
-      logger.info(`  ${entry.scopes.join(', ')}`);
+    logger.info(`${pc.bold(entry.resourceAppName)} ${pc.dim(`(${entry.resourceAppId})`)}`);
+    for (const { scope, inheritable } of entry.scopes) {
+      logger.info(`  ${scope} ${inheritable ? pc.dim('(inheritable)') : pc.dim('(not inheritable)')}`);
     }
   }
 }
@@ -31,7 +37,7 @@ interface BlueprintPermissionsListOptions {
 }
 
 const permissionsListCommand = new Command('list')
-  .description('List a blueprint\'s inheritable permissions (scopes every agent identity created from it auto-receives)')
+  .description('List a blueprint\'s granted permissions, flagging which ones every agent identity created from it auto-receives')
   .argument('<blueprintId>', 'Agent blueprint (application) ID')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
@@ -45,7 +51,7 @@ const permissionsListCommand = new Command('list')
       }
 
       if (entries.length === 0) {
-        logger.info(pc.dim('No inheritable permissions configured.'));
+        logger.info(pc.dim('No permissions granted.'));
         return;
       }
 
@@ -55,6 +61,7 @@ const permissionsListCommand = new Command('list')
 
 interface BlueprintPermissionsAddOptions {
   resource: string;
+  inheritable: boolean;
   json?: boolean;
 }
 
@@ -63,6 +70,7 @@ const permissionsAddCommand = new Command('add')
   .argument('<blueprintId>', 'Agent blueprint (application) ID')
   .argument('<scopes>', 'Comma-separated delegated scope names (e.g. Mail.ReadWrite,Chat.ReadWrite)')
   .option('--resource <name>', '[OPTIONAL] Resource app the scopes belong to: "graph", "smba", "powerplatform", or a resource app ID (GUID).', 'graph')
+  .option('--no-inheritable', '[OPTIONAL] Grant the scope(s) directly to the blueprint without making them inheritable by spawned agent identities.')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintId: string, scopesArg: string, options: BlueprintPermissionsAddOptions) => {
@@ -73,14 +81,18 @@ const permissionsAddCommand = new Command('add')
 
       const resourceAppId = resolveResourceAppId(options.resource);
       const account = await requireAgentAccount(!!options.json);
-      const result = await addBlueprintPermissions(blueprintId, account, resourceAppId, scopes, !!options.json);
+      const result = await addBlueprintPermissions(blueprintId, account, resourceAppId, scopes, options.inheritable, !!options.json);
 
       if (options.json) {
         outputJson(result);
         return;
       }
 
-      logger.info(pc.green(`Granted and configured as inheritable: ${scopes.join(', ')} (${result.resourceAppName}).`));
+      if (options.inheritable) {
+        logger.info(pc.green(`Granted and configured as inheritable: ${scopes.join(', ')} (${result.resourceAppName}).`));
+      } else {
+        logger.info(pc.green(`Granted (not inheritable): ${scopes.join(', ')} (${result.resourceAppName}).`));
+      }
     })
   );
 
@@ -117,21 +129,23 @@ const permissionsRemoveCommand = new Command('remove')
 
 interface BlueprintPermissionsSetOptions {
   resource: string;
+  inheritable: boolean;
   json?: boolean;
 }
 
 const permissionsSetCommand = new Command('set')
-  .description('Declaratively set a resource app\'s inheritable scopes on a blueprint to an exact list')
+  .description('Declaratively set a resource app\'s granted scopes on a blueprint to an exact list')
   .argument('<blueprintId>', 'Agent blueprint (application) ID')
   .argument('<scopes>', 'Comma-separated delegated scope names (e.g. Mail.ReadWrite,Chat.ReadWrite). Pass "" to clear all.')
   .option('--resource <name>', '[OPTIONAL] Resource app the scopes belong to: "graph", "smba", "powerplatform", or a resource app ID (GUID).', 'graph')
+  .option('--no-inheritable', '[OPTIONAL] Grant the scope(s) directly to the blueprint without making them inheritable by spawned agent identities.')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintId: string, scopesArg: string, options: BlueprintPermissionsSetOptions) => {
       const scopes = parseScopes(scopesArg);
       const resourceAppId = resolveResourceAppId(options.resource);
       const account = await requireAgentAccount(!!options.json);
-      const result = await setBlueprintPermissions(blueprintId, account, resourceAppId, scopes, !!options.json);
+      const result = await setBlueprintPermissions(blueprintId, account, resourceAppId, scopes, options.inheritable, !!options.json);
 
       if (options.json) {
         outputJson(result);
@@ -139,9 +153,11 @@ const permissionsSetCommand = new Command('set')
       }
 
       if (scopes.length === 0) {
-        logger.info(pc.green(`Cleared all inheritable permissions for ${result.resourceAppName}.`));
-      } else {
+        logger.info(pc.green(`Cleared all permissions for ${result.resourceAppName}.`));
+      } else if (options.inheritable) {
         logger.info(pc.green(`Inheritable permissions set to: ${scopes.join(', ')} (${result.resourceAppName}).`));
+      } else {
+        logger.info(pc.green(`Permissions set (not inheritable): ${scopes.join(', ')} (${result.resourceAppName}).`));
       }
     })
   );

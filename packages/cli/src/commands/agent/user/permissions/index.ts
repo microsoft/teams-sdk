@@ -13,8 +13,14 @@ import {
   type AgentUserPermissionEntry,
 } from './actions.js';
 
+/**
+ * Splits on commas and/or whitespace. Whitespace matters because an
+ * unquoted comma list in PowerShell can arrive here already space-joined
+ * (PowerShell parses the bare comma as array construction, then flattens
+ * it to a space-separated string when forwarding through `teams.ps1`).
+ */
 function parseScopes(raw: string): string[] {
-  return [...new Set(raw.split(',').map((s) => s.trim()).filter(Boolean))];
+  return [...new Set(raw.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean))];
 }
 
 function printPermissionsTable(entries: AgentUserPermissionEntry[]): void {

@@ -1,5 +1,6 @@
 import { input } from '@inquirer/prompts';
 import { Command } from 'commander';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import pc from 'picocolors';
 import {
@@ -11,8 +12,8 @@ import {
   type AgentGeneratedConfig,
 } from '../../../apps/agent-config.js';
 import { writeCredentials } from '../../../utils/env.js';
-import { wrapAction } from '../../../utils/errors.js';
-import { isInteractive } from '../../../utils/interactive.js';
+import { CliError, wrapAction } from '../../../utils/errors.js';
+import { confirmAction, isInteractive } from '../../../utils/interactive.js';
 import { outputJson } from '../../../utils/json-output.js';
 import { logger } from '../../../utils/logger.js';
 import { requireAgentAccount, resolveAgentName, resolveGraphPermissionsDefault } from '../shared.js';
@@ -48,6 +49,22 @@ async function resolveOptionalEndpoint(endpointFlag: string | undefined, silent:
     message: 'Messaging endpoint (HTTPS URL, press enter to skip and set it later):',
   });
   return endpoint.trim() || undefined;
+}
+
+/** Warns and confirms before overwriting an existing agent.generated.config.json in `cwd`. */
+async function assertNoExistingConfig(cwd: string, silent: boolean): Promise<void> {
+  const path = getGeneratedConfigPath(cwd);
+  if (!existsSync(path)) return;
+
+  logger.info(pc.yellow(`A blueprint is already recorded in ${path} and will be overwritten.`));
+  const proceed = await confirmAction('Overwrite it with a new blueprint?', silent);
+  if (!proceed) {
+    throw new CliError(
+      'AGENT_CONFIG_EXISTS',
+      `${path} already exists.`,
+      'Run this command from a different folder to keep the existing blueprint config.'
+    );
+  }
 }
 
 export function toAgentBlueprintCreateOutput(
@@ -95,6 +112,8 @@ export async function runAgentBlueprintCreate(
   options: AgentBlueprintCreateOptions
 ): Promise<AgentBlueprintCreateOutput> {
   const silent = !!options.json;
+  const cwd = options.cwd ?? process.cwd();
+  await assertNoExistingConfig(cwd, silent);
 
   if (options.endpoint?.trim()) {
     assertHttpsEndpoint(options.endpoint.trim());
@@ -103,7 +122,6 @@ export async function runAgentBlueprintCreate(
   const name = await resolveAgentName(nameArg, silent);
   const account = await requireAgentAccount(silent);
 
-  const cwd = options.cwd ?? process.cwd();
   const graphScopes = await resolveGraphPermissionsDefault(options.permissions, silent);
   const blueprint = await runCreateAgentBlueprint(name, account, silent, graphScopes);
 

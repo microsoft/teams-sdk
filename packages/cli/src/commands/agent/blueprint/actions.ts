@@ -6,7 +6,7 @@ import {
 } from '../../../apps/agent365-service.js';
 import {
   addBlueprintSecret,
-  configureInheritableResourcePermissions,
+  addInheritableResourcePermissions,
   createAgentBlueprint,
   createAgentBlueprintPrincipal,
   deleteApplication,
@@ -128,7 +128,7 @@ export async function runCreateAgentBlueprint(
         error: 'Failed to configure inheritable permissions.',
       },
       silent,
-      () => configureInheritableResourcePermissions(adminToken, blueprint.id, SMBA_APP_ID, ['AgentData.ReadWrite'])
+      () => addInheritableResourcePermissions(adminToken, blueprint.id, SMBA_APP_ID, ['AgentData.ReadWrite'])
     );
 
     // Equivalent of RSC permissions in a Teams app manifest: grants and marks inheritable so every agent identity gets them.
@@ -151,7 +151,7 @@ export async function runCreateAgentBlueprint(
           error: 'Failed to configure inheritable Microsoft Graph permissions.',
         },
         silent,
-        () => configureInheritableResourcePermissions(adminToken, blueprint.id, MICROSOFT_GRAPH_APP_ID, dedupedGraphScopes)
+        () => addInheritableResourcePermissions(adminToken, blueprint.id, MICROSOFT_GRAPH_APP_ID, dedupedGraphScopes)
       );
     }
 

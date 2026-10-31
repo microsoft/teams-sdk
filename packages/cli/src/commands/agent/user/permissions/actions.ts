@@ -100,8 +100,8 @@ export async function listAgentUserPermissions(
 
 /**
  * Grants a set of delegated scopes on a resource app directly to an
- * agentic user's agent identity, merging with any scopes already granted
- * for that resource app.
+ * agentic user's agent identity. `grantDelegatedPermissions` merges these
+ * with any scopes already granted for that resource app.
  */
 export async function addAgentUserPermissions(
   userIdOrUpn: string,
@@ -114,10 +114,6 @@ export async function addAgentUserPermissions(
     const adminToken = await acquireAdminToken(account, silent);
     const identitySpId = await resolveIdentityServicePrincipalId(userIdOrUpn, adminToken, silent);
 
-    const existing = await findDelegatedPermissionGrant(adminToken, identitySpId, resourceAppId);
-    const current = existing ? existing.scope.split(' ').filter((s) => s.length > 0) : [];
-    const merged = [...new Set([...current, ...scopes])];
-
     await withAgentSpinner(
       {
         start: `Granting ${resourceAppDisplayName(resourceAppId)} permission(s): ${scopes.join(', ')}...`,
@@ -125,8 +121,11 @@ export async function addAgentUserPermissions(
         error: 'Failed to grant the requested permission(s).',
       },
       silent,
-      () => grantDelegatedPermissions(adminToken, identitySpId, resourceAppId, merged)
+      () => grantDelegatedPermissions(adminToken, identitySpId, resourceAppId, scopes)
     );
+
+    const grant = await findDelegatedPermissionGrant(adminToken, identitySpId, resourceAppId);
+    const merged = grant ? grant.scope.split(' ').filter((s) => s.length > 0) : scopes;
 
     return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), scopes: merged };
   } catch (error) {
@@ -199,9 +198,9 @@ export async function setAgentUserPermissions(
       );
     }
 
-    // Only needed when scopes is empty -- the full-replace grant above already drops any
-    // scope not in `scopes` otherwise, so revoking toRevoke again would be a no-op.
-    if (scopes.length === 0 && toRevoke.length > 0) {
+    // `grantDelegatedPermissions` merges rather than replaces, so dropping scopes no
+    // longer present in `scopes` always needs an explicit revoke, not just when empty.
+    if (toRevoke.length > 0) {
       await withAgentSpinner(
         {
           start: `Revoking ${resourceAppDisplayName(resourceAppId)} permission(s): ${toRevoke.join(', ')}...`,

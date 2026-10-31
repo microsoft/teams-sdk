@@ -1,18 +1,22 @@
 import type { AccountInfo } from '@azure/msal-node';
 import {
-  configureInheritableResourcePermissions,
-  findDelegatedPermissionGrant,
+  addInheritableResourcePermissions,
+  getServicePrincipalById,
   grantDelegatedPermissions,
+  listDelegatedPermissionGrants,
   listInheritablePermissions,
   MICROSOFT_GRAPH_APP_ID,
   POWER_PLATFORM_APP_ID,
-  removeInheritablePermission,
+  removeInheritableResourcePermissions,
   revokeDelegatedPermissions,
+  setDelegatedPermissions,
+  setInheritableResourcePermissions,
   SMBA_APP_ID,
   type InheritablePermissionEntry,
 } from '../../../../apps/graph.js';
 import { getAzAccessToken } from '../../../../utils/az.js';
 import { CliError } from '../../../../utils/errors.js';
+import { logger } from '../../../../utils/logger.js';
 import { withAgentSpinner } from '../../shared.js';
 import { resolveBlueprintCleanupTarget, type AgentBlueprintCleanupTarget } from '../actions.js';
 
@@ -64,13 +68,16 @@ export interface BlueprintPermissionEntry {
   scopes: string[];
 }
 
-function toBlueprintPermissionEntry(entry: InheritablePermissionEntry): BlueprintPermissionEntry {
-  return {
-    resourceAppId: entry.resourceAppId,
-    resourceAppName: resourceAppDisplayName(entry.resourceAppId),
-    kind: entry.inheritableScopes?.kind ?? 'unknown',
-    scopes: entry.inheritableScopes?.scopes ?? [],
-  };
+/** A scope directly granted to the blueprint's service principal, and whether it's also declared inheritable. */
+export interface BlueprintPermissionScope {
+  scope: string;
+  inheritable: boolean;
+}
+
+export interface BlueprintPermissionListEntry {
+  resourceAppId: string;
+  resourceAppName: string;
+  scopes: BlueprintPermissionScope[];
 }
 
 async function resolveBlueprintTarget(blueprintId: string, account: AccountInfo, silent: boolean): Promise<AgentBlueprintCleanupTarget> {
@@ -111,47 +118,68 @@ function assertMutableInheritableEntry(existing: InheritablePermissionEntry[], r
   }
 }
 
-/** List every resource app currently configured as inheritable on a blueprint. */
+/**
+ * List every scope directly granted to the blueprint's service principal, flagged with whether it's also inheritable.
+ */
 export async function listBlueprintPermissions(
   blueprintId: string,
   account: AccountInfo,
   silent: boolean
-): Promise<BlueprintPermissionEntry[]> {
+): Promise<BlueprintPermissionListEntry[]> {
   try {
     const target = await resolveBlueprintTarget(blueprintId, account, silent);
     const adminToken = await acquireAdminToken(account, silent);
 
-    const entries = await withAgentSpinner(
+    const [grants, inheritableEntries] = await withAgentSpinner(
       {
-        start: 'Fetching inheritable permissions...',
-        success: 'Inheritable permissions fetched.',
-        error: 'Failed to fetch inheritable permissions.',
+        start: 'Fetching granted and inheritable permissions...',
+        success: 'Permissions fetched.',
+        error: 'Failed to fetch permissions.',
       },
       silent,
-      () => listInheritablePermissions(adminToken, target.agentBlueprintObjectId)
+      () =>
+        Promise.all([
+          listDelegatedPermissionGrants(adminToken, target.agentBlueprintServicePrincipalObjectId),
+          listInheritablePermissions(adminToken, target.agentBlueprintObjectId),
+        ])
     );
 
-    return entries.map(toBlueprintPermissionEntry);
+    logger.debug(`Raw inheritable entries: ${JSON.stringify(inheritableEntries)}`);
+
+    const entries: BlueprintPermissionListEntry[] = [];
+    for (const grant of grants) {
+      const grantedScopes = grant.scope.split(' ').filter((s) => s.length > 0);
+      if (grantedScopes.length === 0) continue;
+
+      const resourceSp = await getServicePrincipalById(adminToken, grant.resourceId);
+      const resourceAppId = resourceSp.appId;
+      const inheritable = inheritableEntries.find((e) => e.resourceAppId === resourceAppId)?.inheritableScopes;
+      const inheritableScopeSet = new Set(inheritable?.kind === 'enumerated' ? inheritable.scopes ?? [] : []);
+
+      entries.push({
+        resourceAppId,
+        resourceAppName: resourceAppDisplayName(resourceAppId),
+        scopes: grantedScopes.map((scope) => ({
+          scope,
+          inheritable: inheritable?.kind === 'allAllowed' || inheritableScopeSet.has(scope),
+        })),
+      });
+    }
+
+    return entries;
   } catch (error) {
     if (error instanceof CliError) throw error;
     throw new CliError('AGENT_BLUEPRINT_PERMISSIONS_FAILED', error instanceof Error ? error.message : String(error));
   }
 }
 
-/**
- * Grant a set of delegated scopes on a resource app to the blueprint and
- * mark them inheritable. The direct OAuth2 grant is merged with whatever
- * scopes the blueprint's service principal *actually* holds for this
- * resource app (not just the ones already marked inheritable) so `add`
- * can't silently revoke an out-of-band direct scope; the inheritable
- * declaration is merged separately against the existing inheritable list.
- * Equivalent of `teams app rsc add`.
- */
+/** Grant scopes on a resource app to the blueprint, optionally also marking them inheritable. Equivalent of `teams app rsc add`. */
 export async function addBlueprintPermissions(
   blueprintId: string,
   account: AccountInfo,
   resourceAppId: string,
   scopes: string[],
+  inheritable: boolean,
   silent: boolean
 ): Promise<BlueprintPermissionEntry> {
   try {
@@ -160,10 +188,9 @@ export async function addBlueprintPermissions(
 
     const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
     assertMutableInheritableEntry(existing, resourceAppId);
-    const currentGrant = await findDelegatedPermissionGrant(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId);
-    const allCurrentScopes = currentGrant ? currentGrant.scope.split(' ').filter((s) => s.length > 0) : [];
-    const grantScopes = [...new Set([...allCurrentScopes, ...scopes])];
-    const inheritableScopes = [...new Set([...currentEnumeratedScopes(existing, resourceAppId), ...scopes])];
+    const inheritableScopes = inheritable
+      ? [...new Set([...currentEnumeratedScopes(existing, resourceAppId), ...scopes])]
+      : currentEnumeratedScopes(existing, resourceAppId);
 
     await withAgentSpinner(
       {
@@ -172,18 +199,20 @@ export async function addBlueprintPermissions(
         error: 'Failed to grant the requested permission(s).',
       },
       silent,
-      () => grantDelegatedPermissions(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId, grantScopes)
+      () => grantDelegatedPermissions(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId, scopes)
     );
 
-    await withAgentSpinner(
-      {
-        start: 'Configuring inheritable permissions...',
-        success: 'Inheritable permissions configured.',
-        error: 'Failed to configure inheritable permissions.',
-      },
-      silent,
-      () => configureInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, inheritableScopes)
-    );
+    if (inheritable) {
+      await withAgentSpinner(
+        {
+          start: 'Configuring inheritable permissions...',
+          success: 'Inheritable permissions configured.',
+          error: 'Failed to configure inheritable permissions.',
+        },
+        silent,
+        () => addInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, scopes)
+      );
+    }
 
     return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes: inheritableScopes };
   } catch (error) {
@@ -212,8 +241,7 @@ export async function removeBlueprintPermissions(
 
     const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
     assertMutableInheritableEntry(existing, resourceAppId);
-    const currentScopes = currentEnumeratedScopes(existing, resourceAppId);
-    const remaining = currentScopes.filter((s) => !scopes.includes(s));
+    const remaining = currentEnumeratedScopes(existing, resourceAppId).filter((s) => !scopes.includes(s));
 
     await withAgentSpinner(
       {
@@ -225,27 +253,15 @@ export async function removeBlueprintPermissions(
       () => revokeDelegatedPermissions(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId, scopes)
     );
 
-    if (remaining.length === 0) {
-      await withAgentSpinner(
-        {
-          start: 'Removing inheritable permissions entry...',
-          success: 'Inheritable permissions entry removed.',
-          error: 'Failed to remove the inheritable permissions entry.',
-        },
-        silent,
-        () => removeInheritablePermission(adminToken, target.agentBlueprintObjectId, resourceAppId)
-      );
-    } else {
-      await withAgentSpinner(
-        {
-          start: 'Updating inheritable permissions...',
-          success: 'Inheritable permissions updated.',
-          error: 'Failed to update inheritable permissions.',
-        },
-        silent,
-        () => configureInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, remaining)
-      );
-    }
+    await withAgentSpinner(
+      {
+        start: remaining.length === 0 ? 'Removing inheritable permissions entry...' : 'Updating inheritable permissions...',
+        success: remaining.length === 0 ? 'Inheritable permissions entry removed.' : 'Inheritable permissions updated.',
+        error: 'Failed to update inheritable permissions.',
+      },
+      silent,
+      () => removeInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, scopes)
+    );
 
     return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes: remaining };
   } catch (error) {
@@ -254,75 +270,41 @@ export async function removeBlueprintPermissions(
   }
 }
 
-/**
- * Declaratively set a resource app's inheritable scopes to an exact list,
- * granting newly-added scopes and revoking ones no longer present.
- * Equivalent of `teams app rsc set`.
- */
+/** Declaratively set a resource app's scopes to an exact list, optionally also as inheritable. Equivalent of `teams app rsc set`. */
 export async function setBlueprintPermissions(
   blueprintId: string,
   account: AccountInfo,
   resourceAppId: string,
   scopes: string[],
+  inheritable: boolean,
   silent: boolean
 ): Promise<BlueprintPermissionEntry> {
   try {
     const target = await resolveBlueprintTarget(blueprintId, account, silent);
     const adminToken = await acquireAdminToken(account, silent);
 
-    const currentGrant = await findDelegatedPermissionGrant(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId);
-    const allCurrentScopes = currentGrant ? currentGrant.scope.split(' ').filter((s) => s.length > 0) : [];
-    const toRevoke = allCurrentScopes.filter((s) => !scopes.includes(s));
+    await withAgentSpinner(
+      {
+        start: scopes.length === 0 ? `Clearing ${resourceAppDisplayName(resourceAppId)} permission(s)...` : `Setting ${resourceAppDisplayName(resourceAppId)} permission(s): ${scopes.join(', ')}...`,
+        success: 'Permission(s) set.',
+        error: 'Failed to set the requested permission(s).',
+      },
+      silent,
+      () => setDelegatedPermissions(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId, scopes)
+    );
 
-    if (scopes.length > 0) {
-      await withAgentSpinner(
-        {
-          start: `Granting ${resourceAppDisplayName(resourceAppId)} permission(s): ${scopes.join(', ')}...`,
-          success: 'Permission(s) granted.',
-          error: 'Failed to grant the requested permission(s).',
-        },
-        silent,
-        () => grantDelegatedPermissions(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId, scopes)
-      );
-    }
+    const inheritableScopes = inheritable ? scopes : [];
+    await withAgentSpinner(
+      {
+        start: inheritableScopes.length === 0 ? 'Removing inheritable permissions entry...' : 'Setting inheritable permissions...',
+        success: inheritableScopes.length === 0 ? 'Inheritable permissions entry removed.' : 'Inheritable permissions set.',
+        error: 'Failed to set inheritable permissions.',
+      },
+      silent,
+      () => setInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, inheritableScopes)
+    );
 
-    // Only needed when scopes is empty -- the full-replace grant above already drops any
-    // scope not in `scopes` otherwise, so revoking toRevoke again would be a no-op.
-    if (scopes.length === 0 && toRevoke.length > 0) {
-      await withAgentSpinner(
-        {
-          start: `Revoking ${resourceAppDisplayName(resourceAppId)} permission(s): ${toRevoke.join(', ')}...`,
-          success: 'Permission(s) revoked.',
-          error: 'Failed to revoke no-longer-requested permission(s).',
-        },
-        silent,
-        () => revokeDelegatedPermissions(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId, toRevoke)
-      );
-    }
-
-    if (scopes.length === 0) {
-      await withAgentSpinner(
-        {
-          start: 'Removing inheritable permissions entry...',
-          success: 'Inheritable permissions entry removed.',
-          error: 'Failed to remove the inheritable permissions entry.',
-        },
-        silent,
-        () => removeInheritablePermission(adminToken, target.agentBlueprintObjectId, resourceAppId)
-      );
-    } else {
-      await withAgentSpinner(
-        {
-          start: 'Configuring inheritable permissions...',
-          success: 'Inheritable permissions configured.',
-          error: 'Failed to configure inheritable permissions.',
-        },
-        silent,
-        () => configureInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, scopes)
-      );
-    }
-
-    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes };
+    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes: inheritableScopes };
   } catch (error) {
     if (error instanceof CliError) throw error;
     throw new CliError('AGENT_BLUEPRINT_PERMISSIONS_FAILED', error instanceof Error ? error.message : String(error));

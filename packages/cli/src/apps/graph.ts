@@ -476,12 +476,11 @@ export async function grantAgentIdentityCreateAsManagerRole(
 
 /**
  * Grant a blueprint's service principal a set of delegated OAuth2 scopes
- * on a resource app, consented tenant-wide (`AllPrincipals`). This is the
- * low-level primitive behind {@link grantSmbaAgentDataPermission} and
- * Microsoft Graph delegated-permission grants (e.g. `Mail.ReadWrite`,
- * `Chat.ReadWrite`); the blueprint must hold a scope directly before it
- * can be marked inheritable via {@link configureInheritableResourcePermissions}.
- * Requires the delegated `DelegatedPermissionGrant.ReadWrite.All` permission.
+ * on a resource app, consented tenant-wide (`AllPrincipals`). `scopes` is
+ * the *additional* scopes to grant -- merges with whatever's already held
+ * for the resource app, then delegates the actual PATCH/POST to
+ * {@link setDelegatedPermissions}. Requires the delegated
+ * `DelegatedPermissionGrant.ReadWrite.All` permission.
  */
 export async function grantDelegatedPermissions(
   token: string,
@@ -489,14 +488,44 @@ export async function grantDelegatedPermissions(
   resourceAppId: string,
   scopes: string[]
 ): Promise<void> {
-  // Patch the existing grant in place when one is already held for this resource app --
-  // POSTing again would 409 on the duplicate clientId/resourceId pair (see
-  // `findDelegatedPermissionGrant`), which otherwise breaks every repeated call (e.g.
-  // `permissions add`/`set`, or granting SMBA permissions to an already-permissioned blueprint).
+  const existing = await findDelegatedPermissionGrant(token, blueprintServicePrincipalId, resourceAppId);
+  const currentScopes = existing ? existing.scope.split(' ').filter((s) => s.length > 0) : [];
+  const merged = [...new Set([...currentScopes, ...scopes])];
+
+  await setDelegatedPermissions(token, blueprintServicePrincipalId, resourceAppId, merged);
+}
+
+/**
+ * Set a blueprint's delegated scopes on a resource app to exactly `scopes` (not merged),
+ * consented tenant-wide. Deletes the grant if `scopes` is empty, PATCHes it in place if
+ * there's already a grant, or POSTs a new one otherwise. Shared by
+ * {@link grantDelegatedPermissions} and {@link revokeDelegatedPermissions}, which compute
+ * the merged/remaining scope set before delegating the actual write here. Same
+ * `DelegatedPermissionGrant.ReadWrite.All` requirement as those callers.
+ */
+export async function setDelegatedPermissions(
+  token: string,
+  blueprintServicePrincipalId: string,
+  resourceAppId: string,
+  scopes: string[]
+): Promise<void> {
   const existing = await findDelegatedPermissionGrant(token, blueprintServicePrincipalId, resourceAppId);
 
+  if (scopes.length === 0) {
+    if (!existing) return;
+    const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants/${existing.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: authHeader(token) },
+    });
+    if (!response.ok && response.status !== 404) {
+      const error = await response.text();
+      throw new Error(`Failed to revoke delegated permission grant for resource app ${resourceAppId}: ${response.status} ${error}`);
+    }
+    return;
+  }
+
   if (existing) {
-    const patchResponse = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants/${existing.id}`, {
+    const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants/${existing.id}`, {
       method: 'PATCH',
       headers: {
         Authorization: authHeader(token),
@@ -504,16 +533,14 @@ export async function grantDelegatedPermissions(
       },
       body: JSON.stringify({ scope: scopes.join(' ') }),
     });
-
-    if (!patchResponse.ok) {
-      const error = await patchResponse.text();
-      throw new Error(`Failed to update delegated scope(s) "${scopes.join(', ')}" on resource app ${resourceAppId}: ${patchResponse.status} ${error}`);
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to update delegated scope(s) "${scopes.join(', ')}" on resource app ${resourceAppId}: ${response.status} ${error}`);
     }
     return;
   }
 
   const resourceSp = await getServicePrincipalByAppId(token, resourceAppId);
-
   const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants`, {
     method: 'POST',
     headers: {
@@ -527,7 +554,6 @@ export async function grantDelegatedPermissions(
       scope: scopes.join(' '),
     }),
   });
-
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Failed to grant delegated scope(s) "${scopes.join(', ')}" on resource app ${resourceAppId}: ${response.status} ${error}`);
@@ -631,9 +657,9 @@ export async function findDelegatedPermissionGrant(
 /**
  * Revoke a set of delegated scopes previously granted to a blueprint's
  * service principal for a resource app. Scopes not in `scopes` that the
- * blueprint still holds for that resource app are left untouched -- the
- * underlying grant's `scope` string is updated in place, or the grant
- * itself is deleted if removing `scopes` would leave it empty.
+ * blueprint still holds for that resource app are left untouched --
+ * subtracts `scopes` from what's currently granted, then delegates the
+ * actual PATCH/DELETE to {@link setDelegatedPermissions}.
  */
 export async function revokeDelegatedPermissions(
   token: string,
@@ -641,100 +667,107 @@ export async function revokeDelegatedPermissions(
   resourceAppId: string,
   scopes: string[]
 ): Promise<void> {
-  const grant = await findDelegatedPermissionGrant(token, blueprintServicePrincipalId, resourceAppId);
-  if (!grant) {
+  const existing = await findDelegatedPermissionGrant(token, blueprintServicePrincipalId, resourceAppId);
+  if (!existing) {
     return;
   }
 
-  const remaining = grant.scope.split(' ').filter((s) => s.length > 0 && !scopes.includes(s));
+  const remaining = existing.scope.split(' ').filter((s) => s.length > 0 && !scopes.includes(s));
 
-  if (remaining.length === 0) {
-    const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants/${grant.id}`, {
-      method: 'DELETE',
-      headers: { Authorization: authHeader(token) },
-    });
-    if (!response.ok && response.status !== 404) {
-      const error = await response.text();
-      throw new Error(`Failed to revoke delegated permission grant for resource app ${resourceAppId}: ${response.status} ${error}`);
-    }
-    return;
-  }
-
-  const response = await apiFetch(`${GRAPH_BASE_URL}/oauth2PermissionGrants/${grant.id}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: authHeader(token),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ scope: remaining.join(' ') }),
-  });
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to update delegated permission grant for resource app ${resourceAppId}: ${response.status} ${error}`);
-  }
+  await setDelegatedPermissions(token, blueprintServicePrincipalId, resourceAppId, remaining);
 }
 
 /**
- * Configure the blueprint so every agent identity created under it
- * automatically inherits a specific, named set of the blueprint's
- * already-granted delegated scopes for a resource app -- the
- * `inheritablePermissions` mechanism the real Agent 365 tooling uses,
- * instead of re-granting the same scope on each agent identity's own
- * service principal individually. Scopes must already be granted on the
- * blueprint (see {@link grantDelegatedPermissions}) before they can be
- * marked inheritable here. Uses the `enumeratedScopes` pattern (an
- * explicit `scopes` list) rather than `allAllowedScopes` so only the
- * exact scopes requested cascade down -- not every scope the blueprint
- * happens to hold for that resource app, now or in the future. Requires
- * the `agentIdentityBlueprint` Graph type and the same
- * `DelegatedPermissionGrant.ReadWrite.All`-class admin permissions as
- * {@link grantDelegatedPermissions}.
+ * Mark additional scopes inheritable for a resource app, so every agent identity created
+ * under this blueprint auto-inherits them. Scopes must already be granted on the blueprint
+ * (see {@link grantDelegatedPermissions}) first. `scopes` is the *additional* set to mark
+ * inheritable -- merges with whatever's already configured before writing. Uses
+ * `enumeratedScopes` (an explicit list) rather than `allAllowedScopes` so only the requested
+ * scopes cascade down. Delegates the actual write to {@link setInheritableResourcePermissions}
+ * (PATCH if an entry already exists, POST otherwise).
  */
-export async function configureInheritableResourcePermissions(
+export async function addInheritableResourcePermissions(
   token: string,
   blueprintObjectId: string,
   resourceAppId: string,
   scopes: string[]
 ): Promise<void> {
-  const body = JSON.stringify({
-    resourceAppId,
-    inheritableScopes: {
-      '@odata.type': 'microsoft.graph.enumeratedScopes',
-      scopes,
-    },
-  });
-  const baseUrl = `${GRAPH_BASE_URL}/applications/${blueprintObjectId}/microsoft.graph.agentIdentityBlueprint/inheritablePermissions`;
+  const current = await listInheritablePermissions(token, blueprintObjectId);
+  const existingScopes = current.find((e) => e.resourceAppId === resourceAppId)?.inheritableScopes?.scopes ?? [];
+  const merged = [...new Set([...existingScopes, ...scopes])];
 
-  const response = await apiFetch(baseUrl, {
-    method: 'POST',
-    headers: {
-      Authorization: authHeader(token),
-      'Content-Type': 'application/json',
-    },
-    body,
-  });
+  await setInheritableResourcePermissions(token, blueprintObjectId, resourceAppId, merged, current);
+}
 
-  if (response.ok) {
+/**
+ * Stop scopes from being inherited for a resource app, leaving other inheritable scopes
+ * untouched. Only updates the inheritable-permissions declaration -- doesn't revoke the
+ * scopes directly granted on the blueprint's own service principal (see
+ * {@link revokeDelegatedPermissions}). Subtracts `scopes` from what's currently configured,
+ * then delete-then-POSTs the remainder (or leaves it deleted if nothing remains).
+ */
+export async function removeInheritableResourcePermissions(
+  token: string,
+  blueprintObjectId: string,
+  resourceAppId: string,
+  scopes: string[]
+): Promise<void> {
+  const current = await listInheritablePermissions(token, blueprintObjectId);
+  const existingScopes = current.find((e) => e.resourceAppId === resourceAppId)?.inheritableScopes?.scopes ?? [];
+  const remaining = existingScopes.filter((s) => !scopes.includes(s));
+
+  await setInheritableResourcePermissions(token, blueprintObjectId, resourceAppId, remaining, current);
+}
+
+/**
+ * Set a resource app's inheritable scopes to exactly `scopes` (not merged). PATCHes the
+ * existing entry for `resourceAppId` if one's already configured, or POSTs a new entry if
+ * not -- Graph round-trips `inheritableScopes.scopes` correctly either way, so there's no
+ * need to delete-then-recreate. Deletes the entry instead if `scopes` is empty. Shared by
+ * {@link addInheritableResourcePermissions} and {@link removeInheritableResourcePermissions},
+ * which already have the current entries on hand and can pass them via `currentEntries` to
+ * skip a redundant list call.
+ */
+export async function setInheritableResourcePermissions(
+  token: string,
+  blueprintObjectId: string,
+  resourceAppId: string,
+  scopes: string[],
+  currentEntries?: InheritablePermissionEntry[]
+): Promise<void> {
+  if (scopes.length === 0) {
+    await deleteInheritablePermission(token, blueprintObjectId, resourceAppId);
     return;
   }
 
-  // An entry for this resourceAppId already exists (resourceAppId is the
-  // entry's primary key) -- update it in place instead of creating a
-  // duplicate. This lets callers "add" more scopes to a resource app
-  // that's already configured as inheritable.
-  if (response.status === 409) {
-    const patchResponse = await apiFetch(`${baseUrl}/${resourceAppId}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: authHeader(token),
-        'Content-Type': 'application/json',
-      },
-      body,
-    });
-    if (!patchResponse.ok) {
-      const error = await patchResponse.text();
-      throw new Error(`Failed to update inheritable permissions for resource app ${resourceAppId}: ${patchResponse.status} ${error}`);
-    }
+  const baseUrl = `${GRAPH_BASE_URL}/applications/${blueprintObjectId}/microsoft.graph.agentIdentityBlueprint/inheritablePermissions`;
+  const current = currentEntries ?? (await listInheritablePermissions(token, blueprintObjectId));
+  const exists = current.some((e) => e.resourceAppId === resourceAppId);
+
+  const inheritableScopes = {
+    '@odata.type': 'microsoft.graph.enumeratedScopes',
+    scopes,
+  };
+
+  const response = exists
+    ? await apiFetch(`${baseUrl}/${resourceAppId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: authHeader(token),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ inheritableScopes }),
+      })
+    : await apiFetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: authHeader(token),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resourceAppId, inheritableScopes }),
+      });
+
+  if (response.ok) {
     return;
   }
 
@@ -774,7 +807,7 @@ export async function listInheritablePermissions(token: string, blueprintObjectI
  * declaration -- it doesn't revoke the scopes directly granted on the
  * blueprint's own service principal (see {@link revokeDelegatedPermissions}).
  */
-export async function removeInheritablePermission(token: string, blueprintObjectId: string, resourceAppId: string): Promise<void> {
+export async function deleteInheritablePermission(token: string, blueprintObjectId: string, resourceAppId: string): Promise<void> {
   const response = await apiFetch(
     `${GRAPH_BASE_URL}/applications/${blueprintObjectId}/microsoft.graph.agentIdentityBlueprint/inheritablePermissions/${resourceAppId}`,
     {
