@@ -3,7 +3,7 @@ import { input, select } from '@inquirer/prompts';
 import { Command } from 'commander';
 import { existsSync } from 'node:fs';
 import pc from 'picocolors';
-import { getGeneratedConfigPath, readGeneratedConfig, updateAgentUser } from '../../../apps/agent-config.js';
+import { getGeneratedConfigPath, readGeneratedConfig } from '../../../apps/agent-config.js';
 import { CliError, wrapAction } from '../../../utils/errors.js';
 import { isInteractive } from '../../../utils/interactive.js';
 import { outputJson } from '../../../utils/json-output.js';
@@ -116,22 +116,9 @@ export async function runAgentUserUpdate(
     options.name,
     options.usageLocation,
     options.license,
-    options.upn
+    options.upn,
+    cwd
   );
-
-  const configPath = getGeneratedConfigPath(cwd);
-  if (existsSync(configPath) && (result.name || result.userPrincipalName)) {
-    const config = readGeneratedConfig(cwd);
-    const match = (config.agentUsers ?? []).find(
-      (user) => user.agenticUserId === result.agenticUserId || user.userPrincipalName === userIdOrUpn
-    );
-    if (match) {
-      updateAgentUser(cwd, match.agenticUserId, {
-        ...(result.name ? { agenticUserName: result.name } : {}),
-        ...(result.userPrincipalName ? { userPrincipalName: result.userPrincipalName } : {}),
-      });
-    }
-  }
 
   if (options.json) {
     outputJson(result);

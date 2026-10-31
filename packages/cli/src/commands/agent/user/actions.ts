@@ -3,7 +3,7 @@ import { confirm, input, select } from '@inquirer/prompts';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import pc from 'picocolors';
-import { readGeneratedConfig, getGeneratedConfigPath, type AgentGeneratedConfig } from '../../../apps/agent-config.js';
+import { readGeneratedConfig, getGeneratedConfigPath, updateAgentUser, type AgentGeneratedConfig } from '../../../apps/agent-config.js';
 import {
   addBlueprintSecret,
   assignLicense,
@@ -214,6 +214,39 @@ export async function runCreateAgentIdentity(
       error instanceof Error ? error.message : String(error),
       'Verify the blueprint was granted the AgentIdentity.CreateAsManager role, then retry.'
     );
+  }
+}
+
+/**
+ * Best-effort cleanup for an agent identity (service principal) that was
+ * just created but never got its agentic user, because
+ * `runCreateAgenticUser` failed before the Entra user itself was created.
+ * Without this, every failed retry mints another orphaned identity.
+ * Never throws -- logs and returns false on failure so the original
+ * creation error still reaches the caller.
+ */
+export async function rollbackAgentIdentity(
+  agentIdentityId: string,
+  account: AccountInfo,
+  silent: boolean
+): Promise<boolean> {
+  try {
+    const adminToken = await getAzAccessToken('https://graph.microsoft.com', account.tenantId);
+    await deleteServicePrincipal(adminToken, agentIdentityId);
+    if (!silent) {
+      logger.warn(pc.yellow(`Rolled back orphaned agent identity ${agentIdentityId} created before the failure above.`));
+    }
+    return true;
+  } catch (cleanupError) {
+    logger.debug(cleanupError instanceof Error ? cleanupError.message : String(cleanupError));
+    if (!silent) {
+      logger.warn(
+        pc.yellow(
+          `Could not automatically remove orphaned agent identity ${agentIdentityId}. Delete it manually via \`az ad sp delete --id ${agentIdentityId}\` or the Entra admin center before retrying.`
+        )
+      );
+    }
+    return false;
   }
 }
 
@@ -566,7 +599,9 @@ export async function runUpdateAgenticUser(
   name?: string,
   usageLocation?: string,
   licenseOption?: string | false,
-  upn?: string
+  upn?: string,
+  /** [OPTIONAL] Working directory holding `agent.generated.config.json`, synced immediately after each successful Graph update so a later failure (e.g. a bad `--license`) doesn't lose already-applied changes. Defaults to process.cwd(). */
+  cwd: string = process.cwd()
 ): Promise<AgentUserUpdateResult> {
   try {
     const adminToken = await withAgentSpinner(
@@ -625,6 +660,14 @@ export async function runUpdateAgenticUser(
         silent,
         () => updateUser(adminToken, agenticUser.id, updates)
       );
+      // Sync the local config now, not after license assignment below -- a later throw there
+      // (e.g. a bad --license) shouldn't cause this already-applied name/UPN change to be lost.
+      if ((result.name || result.userPrincipalName) && existsSync(getGeneratedConfigPath(cwd))) {
+        updateAgentUser(cwd, agenticUser.id, {
+          ...(result.name ? { agenticUserName: result.name } : {}),
+          ...(result.userPrincipalName ? { userPrincipalName: result.userPrincipalName } : {}),
+        });
+      }
     }
 
     // Keep the agent identity's own displayName in sync, since it's a separate service principal.

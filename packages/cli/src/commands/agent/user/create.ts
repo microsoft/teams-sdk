@@ -28,7 +28,7 @@ import {
   resolveLicenseDefault,
   resolveUsageLocationDefault,
 } from '../shared.js';
-import { resolveExistingBlueprint, runCreateAgentIdentity, runCreateAgenticUser } from './actions.js';
+import { resolveExistingBlueprint, rollbackAgentIdentity, runCreateAgentIdentity, runCreateAgenticUser, type AgenticUserResult } from './actions.js';
 
 export interface AgentUserCreateOptions {
   json?: boolean;
@@ -328,21 +328,35 @@ export async function runAgentUserCreate(
   const identity = await runCreateAgentIdentity(agenticUserName, agentBlueprintId, clientSecret, account, silent);
   const licenseOption = await resolveLicenseDefault(options.license, silent);
   const usageLocationOption = await resolveUsageLocationDefault(options.usageLocation, silent);
-  const user = await runCreateAgenticUser(
-    agenticUserName,
-    identity.agentIdentityId,
-    account,
-    silent,
-    licenseOption,
-    usageLocationOption,
-    (created) =>
-      appendAgentUser(cwd, {
-        agentIdentityId: identity.agentIdentityId,
-        agenticUserId: created.agenticUserId,
-        agenticUserName,
-        userPrincipalName: created.userPrincipalName,
-      })
-  );
+
+  // Tracks whether the Entra agentic user itself came into existence, so a later failure (e.g.
+  // a bad --license) doesn't roll back an identity that's now legitimately paired with a user.
+  let agenticUserCreated = false;
+  let user: AgenticUserResult;
+  try {
+    user = await runCreateAgenticUser(
+      agenticUserName,
+      identity.agentIdentityId,
+      account,
+      silent,
+      licenseOption,
+      usageLocationOption,
+      (created) => {
+        agenticUserCreated = true;
+        appendAgentUser(cwd, {
+          agentIdentityId: identity.agentIdentityId,
+          agenticUserId: created.agenticUserId,
+          agenticUserName,
+          userPrincipalName: created.userPrincipalName,
+        });
+      }
+    );
+  } catch (error) {
+    if (!agenticUserCreated) {
+      await rollbackAgentIdentity(identity.agentIdentityId, account, silent);
+    }
+    throw error;
+  }
 
   const output: AgentUserCreateOutput = {
     agentBlueprintId,
