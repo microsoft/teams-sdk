@@ -25,9 +25,16 @@ You can also remove reactions that your agent has previously added:
 
 ## Receiving Reactions
 
-Your agent can also listen for reactions that users add or remove on messages in conversations it participates in. The activity carries <LanguageInclude content={{"typescript": "`reactionsAdded` and `reactionsRemoved` arrays", "python": "`reactions_added` and `reactions_removed` lists", "csharp": "`ReactionsAdded` and `ReactionsRemoved` collections"}} />.
+Your agent can also listen for reactions that users add or remove on messages your agent sent.
+In 1:1 chats and channels, reactions on messages your agent did not send are not delivered.
+The activity carries <LanguageInclude content={{"typescript": "`reactionsAdded` and `reactionsRemoved` arrays", "python": "`reactions_added` and `reactions_removed` lists", "csharp": "`ReactionsAdded` and `ReactionsRemoved` collections"}} />.
+Its `replyToId` is the id of the message that was reacted to.
 
 <LanguageInclude section="receiving-reactions" />
+
+A message sent from a reaction handler is placed relative to the reacted message.
+In a 1:1 chat, when that message is inside a thread, the message is sent into the thread.
+See [Responding to edits, reactions and card actions](../essentials/sending-messages#responding-to-edits-reactions-and-card-actions).
 
 ## Available Reaction Types
 

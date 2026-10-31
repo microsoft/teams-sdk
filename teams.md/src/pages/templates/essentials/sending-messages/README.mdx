@@ -41,6 +41,12 @@ Every inbound activity gets its own stream, and the SDK closes that stream at th
 
 ![Animated image showing agent response text incrementally appearing in the chat window.](/screenshots/streaming-chat.gif)
 
+### Informative updates and stopping a stream
+
+An informative update shows a status line such as "Thinking..." while the agent works, before any response text exists.
+
+<LanguageInclude section="streaming-informative-and-cancel" />
+
 ### Chunk pacing and retries
 
 You do not need to throttle your own chunks. Rapid <LanguageInclude content={{"typescript": "`stream.emit()`", "python": "`ctx.stream.emit()`", "csharp": "`writer.AppendResponseAsync()`"}} /> calls are coalesced and spaced roughly 500 milliseconds apart, so a token-by-token loop becomes a couple of network calls per second rather than one call per token. Every streamed chunk carries the full text accumulated so far rather than just the newest delta, so collapsing several chunks into one send never loses content. Wrapping your own throttle or sleep around each chunk mostly slows the response down, since it would be pacing a path that is already paced.
@@ -70,6 +76,27 @@ Plain updates are subject to ordinary activity throttling rather than the stream
 ### Starting another streamed message
 
 Calling <LanguageInclude content={{"typescript": "`stream.emit()`", "python": "`ctx.stream.emit()`", "csharp": "`writer.AppendResponseAsync()`"}} /> again after the stream has been closed posts a second, separate message in the conversation by reusing the SDK object in your custom handler; it clears its buffered state and starts the new message. The second message gets its own stream id, so it also gets its own fresh two minute window. The message already finalized stays finalized and is not reopened or extended. Use this when your agent has a genuinely separate second answer to stream, not as a way to give one response more time.
+
+### Streaming in threads
+
+The first message of a stream is placed the same way as a response sent with <LanguageInclude section="context-send-method-name" />.
+See [Reactive Threading](#reactive-threading-within-a-handler) for the rules.
+In a 1:1 chat the stream starts in the thread when the inbound message is inside a thread, and at the top level otherwise.
+The SDK applies the same rules in channels: a channel stream starts in the thread of the inbound message.
+Without `channelData.replyChain.id` on the inbound activity, the stream is not placed in a reply chain.
+Teams itself supports streaming only in 1:1 chats, as noted above.
+
+Only the first chunk of each streamed message uses the reply chain route.
+The later chunks are sent to the inbound conversation with the stream id of the first message.
+In a 1:1 chat inside a thread, the streamed message appears in the thread pane (checked live with TypeScript and Python).
+In a channel, if the service answers 404 to the reply chain route, the first chunk falls back to the inbound conversation, as with <LanguageInclude section="context-send-method-name" />, and stays in the thread.
+In a 1:1 chat, a failed reply chain route does not fall back.
+How an error from the first chunk reaches your code depends on the language.
+In C#, the awaited writer call throws.
+In TypeScript, the error is logged and is not thrown from `emit()`.
+In Python, the first chunk is sent in a background task, so the error is raised there and not from `emit()`.
+
+<LanguageInclude section="streaming-threading-options" />
 
 ## @Mention
 
@@ -117,15 +144,84 @@ Reactions allow your agent to add or remove emoji reactions on messages in a con
 
 ## Threading
 
-In Teams channels, messages can be organized into threads. The SDK provides helpers to simplify working with threads.
+In Teams channels and 1:1 agent chats, the SDK can send messages into reply chains (threads).
+The SDK provides helpers to simplify working with threads.
+
+In this guide, top-level means a message in the main chat or channel conversation, and in-thread means a message in a reply chain (thread).
+
+Where a message lands depends on the method and the scope:
+
+| Method | 1:1 chat | Channel |
+|---|---|---|
+| <LanguageInclude content={{"typescript": "`context.send()`", "python": "`ctx.send()`", "csharp": "`context.SendAsync()`"}} /> | Matches level of user's message | In-thread |
+| <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} /> | Matches level of user's message | In-thread |
+
+The SDK places a response in a reply chain only when `channelData.replyChain.id` is present on the inbound activity.
+With no `replyChain`, these methods send to the inbound conversation.
+
+The reply method, <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} />, also quotes the user's message.
+To reply in-thread to a top-level message in a 1:1 chat, or to send a top-level message from inside a thread, see [Proactive Messaging](./proactive-messaging.mdx#proactive-threading).
 
 ### Reactive Threading (Within a Handler)
 
-When your agent receives a message in a thread, the conversation context already carries the thread ID. Use <LanguageInclude section="context-send-method-name" /> to send a message in the same thread without quoting, or <LanguageInclude section="context-reply-method-name" /> to send with a visual quote of the inbound message.
+When your agent receives a message in a reply chain (thread), the context sends into that same reply chain.
+In a channel, replying to a top-level post also sends into that post's thread.
+In a 1:1 chat, a response to a top-level message is also top-level, and a thread is started explicitly with a proactive reply (see below).
+Use <LanguageInclude section="context-send-method-name" /> to send reactively without quoting, or <LanguageInclude section="context-reply-method-name" /> to send a reactive, quoted reply.
+In a channel the answer is in the same thread, and in a 1:1 chat it matches the level of the inbound message.
 
 <LanguageInclude section="threading-reactive-example" />
 
-For proactive threading (sending to a thread outside of a handler), see [Proactive Messaging](./proactive-messaging#proactive-threading).
+#### Where the SDK takes the destination from
+
+The SDK reads `channelData` on the inbound activity to find the destination and does not parse the conversation id.
+To tell a channel from a chat, it also uses `conversation.conversationType`: `channel` selects the channel rules below, and anything else selects the chat rules.
+
+- **Channel:** a response to a `message` is sent through the reply chain `channelData.replyChain.id` of the channel `channelData.channel.id`.
+  If the reply chain route answers HTTP `404`, the SDK sends to the inbound conversation instead.
+  For a channel message, the inbound conversation id already identifies the same thread, so the response stays in it.
+  The SDK checks only the status code.
+- **1:1 chat:** when the inbound activity is inside a thread (see the table below), the response is sent through the reply chain `channelData.replyChain.id` of the chat `channelData.chat.id`.
+  Otherwise it is sent to the inbound conversation, at the top level.
+  An error from the reply chain route is thrown to your handler, and the response is not sent anywhere else.
+- **Missing ids:** when `channelData.replyChain`, or the id of the scope (`channelData.chat.id` in a 1:1 chat, `channelData.channel.id` in a channel), is missing, the SDK does not use the reply chain route and sends to the inbound conversation.
+  In a channel, the inbound conversation id can still keep the response in the thread.
+
+Typing indicators sent with <LanguageInclude content={{"typescript": "`send()`", "python": "`ctx.send()`", "csharp": "`context.TypingAsync()`"}} /> are not placed.
+Only message responses are.
+
+#### Responding to edits, reactions and card actions
+
+In a 1:1 chat the SDK also places a response to an inbound activity that is not a typed message.
+It compares `channelData.replyChain.id` with the id of the message the activity acts on, and the activity is inside a thread when they differ.
+
+| Inbound activity | Message it acts on | Inside a thread when |
+|---|---|---|
+| `message` typed by the user | The message, `activity.id` | `replyChain.id` differs from `activity.id` |
+| `messageUpdate`, `messageDelete` | The edited or deleted message, `activity.id` | `replyChain.id` differs from `activity.id` |
+| `messageReaction` | The reacted message, `replyToId` | `replyToId` is a plain number other than `0` that differs from `replyChain.id` |
+| `message` with `channelData.source`, sent by a card button (`messageBack`, `Action.Submit`) | The message with the card, `replyToId` | `replyToId` is a plain number other than `0` that differs from `replyChain.id` |
+| `invoke` with `value.messagePayload` (a message action) | The message the action ran on, `value.messagePayload.id` | That id is a plain number other than `0` that differs from `replyChain.id` |
+| Any other `invoke` with a `replyToId`, such as `adaptiveCard/action` from `Action.Execute`, `task/fetch` and `task/submit` from a card button, or `message/submitAction` feedback | The message with the card or feedback buttons, `replyToId` | `replyToId` is a plain number other than `0` that differs from `replyChain.id` |
+| `invoke` with neither, such as a compose box action or sign-in | None | `replyChain.id` is present |
+| Any other activity, such as `installationUpdate` or `conversationUpdate` | None | Never |
+
+So a response to a card button clicked on a top-level message is top-level, and a response to a card button clicked on a card inside a thread is sent into that thread.
+A `replyToId` that is not a plain number, such as an encrypted id, is never inside a thread.
+
+The SDK uses `conversation.conversationType` only to tell a channel from a chat.
+In a chat it does not require a particular type to place a response.
+In the 1:1 chat of an agentic user, card button clicks (`messageBack`, `Action.Submit`, `Action.Execute`) and the `task/fetch` and `task/submit` invokes they open have arrived with `conversationType` set to `groupChat`, a service issue that is being corrected.
+The SDK places the response to them from `channelData` like any other activity, so a response to a click inside a thread is sent into that thread.
+
+In a channel only a `message` is placed, and a card button click that arrives as a `message` is placed like any other.
+The SDK sends a response to any other activity in a channel to the inbound conversation.
+
+For proactive threading (sending to a thread outside of a handler), see [Proactive Messaging](./proactive-messaging.mdx#proactive-threading).
+
+#### Experimental status
+
+<LanguageInclude section="threading-experimental-note" />
 
 ## Quoted Replies
 
@@ -142,6 +238,11 @@ Each quoted reply entity contains the quoted message's ID, sender information, a
 ### Sending a Quoted Reply
 
 When your agent calls <LanguageInclude content={{"csharp": "`Reply()`", "typescript": "`reply()`", "python": "`reply()`"}} />, the SDK automatically stamps a quoted reply entity referencing the inbound message. The reply will appear as a quoted reply in Teams.
+
+This applies to messages, edits and deletes, whose `activity.id` is a message id.
+A reaction carries its own id, such as `f:<guid>`, and names the reacted message in `replyToId`.
+For a card button click, another invoke, a reaction, an `installationUpdate` or a `conversationUpdate`, `activity.id` is not a plain message id (card clicks and invokes carry a client id such as `f:<guid>`), so the quote it produces is rejected (the connector answered `400` in TypeScript, Python and C# for card clicks and invokes).
+In a card or invoke handler, send with <LanguageInclude content={{"csharp": "`SendAsync()`", "typescript": "`send()`", "python": "`send()`"}} />, or quote the message that holds the card with <LanguageInclude content={{"csharp": "`QuoteAsync()`", "typescript": "`quote()`", "python": "`quote()`"}} /> and its `replyToId`.
 
 <LanguageInclude section="quoted-replies-reply-example" />
 

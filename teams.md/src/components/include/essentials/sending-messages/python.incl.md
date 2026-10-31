@@ -88,6 +88,21 @@ async def handle_message(ctx: ActivityContext[MessageActivity]):
 
 Setting an id on an outgoing activity routes the send through the update path, so each edit replaces the finalized message instead of posting a new one.
 
+<!-- streaming-informative-and-cancel -->
+
+`ctx.stream.update()` sends an informative update.
+An update emitted after response text has accumulated is ignored.
+The SDK learns that the user stopped the stream from the answer to a chunk it sends.
+From then on `ctx.stream.canceled` is true and `ctx.stream.emit()` raises `StreamCancelledError`.
+A stream creates its message from response text or an informative update.
+If the first output is only attachments, `ctx.stream.close()` creates no message, so send the attachments with `ctx.send()` instead.
+
+<!-- streaming-threading-options -->
+
+`ctx.stream` is created with this placement already applied.
+To create an `HttpStream` yourself, pass `StreamOptions(StreamReplyChain(chat_or_channel_id, reply_chain_id))` as its `options`.
+Both types are experimental.
+
 <!-- mention-method-name -->
 
 `add_mention`
@@ -154,12 +169,24 @@ await app.send(conversation_id, public_message)
 ```python
 @app.on_message
 async def handle_message(ctx: ActivityContext[MessageActivity]):
-    # Send in the same thread, no quote
+    # Send reactively without quoting.
+    # In a channel, sends in the same thread.
+    # In a 1:1 chat, matches the level of the inbound message.
     await ctx.send("Acknowledged")
 
-    # Send in the same thread with a visual quote of the inbound message
+    # Send a reactive, quoted reply.
+    # In a channel, sends in the same thread.
+    # In a 1:1 chat, matches the level of the inbound message.
     await ctx.reply("Got it!")
 ```
+
+<!-- threading-experimental-note -->
+
+The reply chain types and operations are marked with `Diagnostic: ExperimentalTeamsThreading` in their docstrings.
+The marker is documentation only for the types, with no runtime warning.
+The two client methods `create_reply_chain_activity` and `create_targeted_reply_chain_activity` are also decorated with `@experimental`, so calling them directly emits an `ExperimentalWarning`.
+The marker covers `channel_data.chat` and `channel_data.reply_chain`, those two methods, `StreamOptions` and `StreamReplyChain`.
+`send`, `reply` and `app.reply` are not marked and do not warn.
 
 <!-- reactions-preview-note -->
 N/A

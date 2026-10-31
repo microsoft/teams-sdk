@@ -58,10 +58,6 @@ const sendTargetedNotification = async (conversationId: string, recipient: Accou
 
 `app.reply()`
 
-<!-- to-thread-id-method-name -->
-
-`toThreadedConversationId()`
-
 <!-- app-send-method-name -->
 
 `app.send()`
@@ -69,18 +65,29 @@ const sendTargetedNotification = async (conversationId: string, recipient: Accou
 <!-- threading-proactive-example -->
 
 ```typescript
-// Send to a specific thread proactively
-await app.reply(conversationId, messageId, 'Thread update!');
-
-// Send to a flat conversation (1:1, group chat)
-await app.reply(conversationId, 'Hello!');
+// chatOrChannelId is channelData.chat.id or channelData.channel.id
+// replyChainId is channelData.replyChain.id
+await app.reply(chatOrChannelId, replyChainId, 'Thread update!');
 ```
 
-<!-- threading-helper-example -->
+<!-- threading-top-level-example -->
 
 ```typescript
-import { toThreadedConversationId } from '@microsoft/teams.apps';
-
-const threadId = toThreadedConversationId(conversationId, messageId);
-await app.send(threadId, 'Sent via helper');
+// Send a new top-level message to the chat or channel
+await app.send(chatOrChannelId, 'Hello!');
 ```
+
+<!-- threading-agentic-example -->
+
+```typescript
+import { getAgenticIdentity } from '@microsoft/teams.api';
+
+// agenticIdentity is undefined unless the recipient is an agentic user
+const agenticIdentity = getAgenticIdentity(context.activity.recipient);
+await app.reply(chatOrChannelId, replyChainId, 'Thread update!', { agenticIdentity });
+```
+
+<!-- threading-service-url-note -->
+
+Inside a handler, a response goes to the `serviceUrl` of the inbound activity.
+`app.send()` and `app.reply()` have no inbound activity and take no service URL argument, so they go to the app's service URL: the `serviceUrl` app option, else the `SERVICE_URL` environment variable, else `https://smba.trafficmanager.net/teams`.

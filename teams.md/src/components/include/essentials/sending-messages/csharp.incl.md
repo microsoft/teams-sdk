@@ -11,7 +11,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -38,7 +38,7 @@ app.OnVerifyState(async (context, cancellationToken) =>
 You are not restricted to only replying to `message` activities. In the above example, the handler is listening to `OnVerifyState` events, which are sent when a user successfully signs in.
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 var flow = teams.GetOAuthFlow("graph");
@@ -73,7 +73,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 The 2.1 streams through a `TeamsStreamingWriter`. Create one from the turn context, push informative updates and response chunks, then finalize:
 
@@ -184,6 +184,19 @@ teams.OnMessage(async (context, cancellationToken) =>
 
 `context.SendAsync` always creates a new activity, even when the activity carries an id, so plain edits go through `context.Api.Conversations.UpdateActivityAsync`. Use `writer.TimedOut` to check whether the stream tripped the limit before you handed off.
 
+<!-- streaming-informative-and-cancel -->
+
+`writer.SendInformativeUpdateAsync()` sends an informative update.
+It throws `InvalidOperationException` once the first response chunk has been sent.
+The SDK learns that the user stopped the stream from the answer to a chunk it sends.
+From then on `writer.Cancelled` is true, and `AppendResponseAsync()`, `SendInformativeUpdateAsync()` and `FinalizeResponseAsync()` return without sending.
+`FinalizeResponseAsync()` also accepts a final activity that carries only attachments, and sends it as a new message when no streamed message exists.
+
+<!-- streaming-threading-options -->
+
+`TeamsStreamingWriter.CreateFromContext(context)` applies this placement.
+The options that carry it are internal, so there is no other way to start a writer in a reply chain.
+
 <!-- mention-method-name -->
 
 `AddMention`
@@ -201,7 +214,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -239,7 +252,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -287,7 +300,7 @@ await app.Send(conversationId, publicMessage);
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 var targetedMessageId = "1772050244572";
@@ -316,11 +329,11 @@ await app.Send(conversationId, publicMessage);
 
 <!-- context-send-method-name -->
 
-`Send()`
+`SendAsync()`
 
 <!-- context-reply-method-name -->
 
-`Reply()`
+`ReplyAsync()`
 
 <!-- threading-reactive-example -->
 
@@ -339,21 +352,32 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.2" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
 {
-    // Send in the same thread, no quote
+    // Send reactively without quoting.
+    // In a channel, sends in the same thread.
+    // In a 1:1 chat, matches the level of the inbound message.
     await context.SendAsync("Acknowledged", cancellationToken);
 
-    // Send in the same thread with a visual quote of the inbound message
-    await context.Reply("Got it!", cancellationToken);
+    // Send a reactive, quoted reply.
+    // In a channel, sends in the same thread.
+    // In a 1:1 chat, matches the level of the inbound message.
+    await context.ReplyAsync("Got it!", cancellationToken);
 });
 ```
 
   </TabItem>
 </Tabs>
+
+<!-- threading-experimental-note -->
+
+The reply chain operations on the clients, `ConversationApiClient.CreateReplyChainActivityAsync` and `CreateTargetedReplyChainActivityAsync`, and the core client's `SendReplyChainActivityAsync`, carry `[Experimental("ExperimentalTeamsThreading")]`.
+Calling them directly raises the compiler diagnostic `ExperimentalTeamsThreading` until you suppress it, for example with `#pragma warning disable ExperimentalTeamsThreading`.
+`TeamsChannelData.Chat` and `TeamsChannelData.ReplyChain` (`ChatInfo`, `ReplyChainInfo`) are marked in the XML documentation only.
+`SendAsync`, `ReplyAsync` and `app.ReplyAsync` are not marked.
 
 <!-- quoted-replies-receive-example -->
 
@@ -375,7 +399,7 @@ app.OnMessage(async context =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -409,7 +433,7 @@ app.OnMessage(async context =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -437,7 +461,7 @@ app.OnMessage(async context =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
@@ -481,7 +505,7 @@ await app.Send(conversationId, msg);
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.1 (current)" default>
+  <TabItem value="core" label="SDK 2.1+" default>
 
 ```csharp
 var parentMessageId = "1772050244572";

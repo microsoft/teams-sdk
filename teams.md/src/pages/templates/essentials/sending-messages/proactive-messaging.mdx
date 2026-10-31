@@ -31,18 +31,61 @@ When sending targeted messages proactively, you must explicitly specify the reci
 
 ## Proactive Threading
 
-Threads are only rendered visibly in Teams channels. In 1:1 chats, group chats, and meetings, messages appear flat; passing a thread root message ID has no visible effect in those scopes.
+The SDK sends messages into reply chains (threads) in channels and 1:1 chats.
+Whether a thread is shown depends on the service and the Teams client.
+The SDK sends a response from a handler through the reply chain route only when `channelData.replyChain.id` is present on the inbound activity.
+With no `replyChain`, the SDK skips that route and sends to the inbound conversation.
+In a channel, the suffix of that conversation id can still keep the response in the thread.
 
-To proactively send a message as a reply to a thread, use <LanguageInclude section="app-reply-method-name" /> with the conversation ID and thread root message ID. The SDK constructs the threaded conversation ID for you.
+In this guide, top-level means a message in the main chat or channel conversation, and in-thread means a message in a reply chain (thread).
+
+The `app` methods take explicit ids, so they work outside a handler.
+In 1:1 chats and channels they place the message as follows:
+
+| Method | 1:1 chat | Channel |
+|---|---|---|
+| <LanguageInclude content={{"typescript": "`app.send()`", "python": "`app.send()`", "csharp": "`app.SendAsync()`"}} /> | Top-level | Top-level |
+| <LanguageInclude content={{"typescript": "`app.reply()`", "python": "`app.reply()`", "csharp": "`app.ReplyAsync()`"}} /> | In-thread | In-thread |
+
+To proactively send a message as a reply in a thread, use <LanguageInclude section="app-reply-method-name" /> with the id of the chat or channel and the id of the top-level message of the thread.
+Take the ids from `channelData` on the inbound activity:
+
+- **Chat id:** `channelData.chat.id`, in a 1:1 chat.
+- **Channel id:** `channelData.channel.id`, in a channel.
+- **Reply chain id:** `channelData.replyChain.id`, the id of the top-level message of the thread.
+  - A `replyChain.id` that matches the message's own <LanguageInclude content={{"typescript": "`activity.id`", "python": "`activity.id`", "csharp": "`activity.Id`"}} /> indicates a top-level post.
+    A different `replyChain.id` indicates the message is in-thread.
+  - If `replyChain` is absent, there is no reply chain id to take from the inbound activity, so pass an id you stored yourself.
+    The SDK does not take it from the conversation id.
 
 <LanguageInclude section="threading-proactive-example" />
 
-You can also pass just a conversation ID to <LanguageInclude section="app-reply-method-name" /> for non-threaded conversations such as 1:1 chats and group chats. To target a specific thread, include the thread root message ID as shown above.
+To send a new top-level (non-threaded) message instead, send to the id of the chat or channel with <LanguageInclude section="app-send-method-name" />.
+
+<LanguageInclude section="threading-top-level-example" />
+
+If the reply chain call fails, <LanguageInclude content={{"typescript": "`app.reply()`", "python": "`app.reply()`", "csharp": "`app.ReplyAsync()`"}} /> throws the error to your code.
+It does not fall back to another route.
+
+<LanguageInclude section="threading-service-url-note" />
+
+A service URL without its cloud segment can be accepted and still post the message flat, outside the thread.
+Store the full service URL of the inbound activity, and pass or configure it for proactive calls, instead of rebuilding or trimming it.
+
+The API client's reply operation, <LanguageInclude content={{"typescript": "`api.conversations.replyToActivity()`", "python": "`api.conversations.reply_to_activity()`", "csharp": "`Api.Conversations.ReplyToActivityAsync()`"}} />, is a plain send to the conversation it is given.
+It posts to the activities route of that conversation and does not place the message in a reply chain.
+To call the reply chain route directly, use <LanguageInclude content={{"typescript": "`api.conversations.createReplyChainActivity()`", "python": "`api.conversations.create_reply_chain_activity()`", "csharp": "`Api.Conversations.CreateReplyChainActivityAsync()`"}} />, which is experimental.
+It takes the chat or channel id and the reply chain id, and has no fallback.
+
+If you stored a conversation id from a channel message, it ends in `;messageid=<root post id>`.
+That form identifies the thread, not the chat or channel, and the reply chain endpoint rejects it.
+Store `channelData.chat.id` or `channelData.channel.id` and `channelData.replyChain.id` instead.
+
+A proactive call has no inbound activity to take an identity from.
+When the recipient is an agentic user, pass its identity from the inbound activity's recipient.
+Without it, the call uses the app's own credentials instead of the agentic user's.
+An agentic app cannot get an app-only token, so the call fails with an authentication error (`AADSTS82001`) and nothing is sent.
+
+<LanguageInclude section="threading-agentic-example" />
 
 For reactive threading (within a handler), see [Threading](./#threading).
-
-### Thread ID Helper
-
-For advanced scenarios, the <LanguageInclude section="to-thread-id-method-name" /> helper constructs the threaded conversation ID directly. Use it with <LanguageInclude section="app-send-method-name" /> when you need full control.
-
-<LanguageInclude section="threading-helper-example" />
