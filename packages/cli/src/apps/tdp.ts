@@ -279,3 +279,57 @@ export async function updateBot(token: string, bot: BotDetails): Promise<void> {
   // We just wrote this exact object server-side, so refresh the cache with it.
   setCachedBot(bot.botId, { status: 'tm', bot });
 }
+
+function agentBlueprintBackendConfigurationUrl(agentBlueprintId: string): string {
+  return `${TDP_V2_BASE_URL}/v1.0/agentblueprints/${encodeURIComponent(agentBlueprintId)}/backendConfiguration`;
+}
+
+/**
+ * Register (or overwrite) the messaging endpoint for an agent blueprint via
+ * TDP's own `backendConfiguration` API -- the same call the Teams Developer
+ * Portal UI makes when switching a blueprint's config to "API based". This
+ * call is a full replace: calling it again with a new URL simply overwrites
+ * the previous callback, no prior clear needed.
+ */
+export async function setAgentBlueprintBackendConfiguration(
+  token: string,
+  agentBlueprintId: string,
+  callbackUri: string
+): Promise<void> {
+  const response = await apiFetch(agentBlueprintBackendConfigurationUrl(agentBlueprintId), {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ type: 'apiBased', apiBased: { callbackUri }, botBased: null }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to set agent blueprint backend configuration: ${response.status} ${error}`);
+  }
+}
+
+/**
+ * Clear the backend configuration for an agent blueprint. 404s are
+ * swallowed (already cleared/never registered).
+ */
+export async function clearAgentBlueprintBackendConfiguration(
+  token: string,
+  agentBlueprintId: string
+): Promise<void> {
+  const response = await apiFetch(agentBlueprintBackendConfigurationUrl(agentBlueprintId), {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ type: 'none', apiBased: null, botBased: null }),
+  });
+
+  if (!response.ok && response.status !== 404) {
+    const error = await response.text();
+    throw new Error(`Failed to clear agent blueprint backend configuration: ${response.status} ${error}`);
+  }
+}

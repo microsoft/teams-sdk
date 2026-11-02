@@ -1,9 +1,5 @@
 import type { AccountInfo } from '@azure/msal-node';
-import {
-  AGENT365_SERVICE_RESOURCE,
-  clearAgentBlueprintMessagingEndpoint,
-  setAgentBlueprintMessagingEndpoint,
-} from '../../../apps/agent365-service.js';
+import { getTokenSilent, teamsDevPortalScopes } from '../../../auth/index.js';
 import {
   addBlueprintSecret,
   addInheritableResourcePermissions,
@@ -23,6 +19,10 @@ import {
   SMBA_APP_ID,
   updateAadApp,
 } from '../../../apps/graph.js';
+import {
+  clearAgentBlueprintBackendConfiguration,
+  setAgentBlueprintBackendConfiguration,
+} from '../../../apps/tdp.js';
 import { getAzAccessToken } from '../../../utils/az.js';
 import { CliError } from '../../../utils/errors.js';
 import { withAgentSpinner } from '../shared.js';
@@ -281,9 +281,9 @@ export async function runRenameAgentBlueprint(
  * Deletes all Agent 365 resources for a blueprint via Microsoft Graph:
  * explicitly deletes each agent identity's user first (cascade deletion
  * doesn't always clean those up), then the blueprint's service principal
- * (defensively, 404s ignored), and best-effort clears its messaging
- * endpoint on the separate Agent 365 service first so a reused blueprint
- * ID doesn't inherit a stale endpoint.
+ * (defensively, 404s ignored), and best-effort clears its TDP backend
+ * configuration first so a reused blueprint ID doesn't inherit a stale
+ * endpoint.
  */
 export async function runDeleteAgentBlueprint(
   target: AgentBlueprintCleanupTarget,
@@ -302,8 +302,10 @@ export async function runDeleteAgentBlueprint(
     );
 
     try {
-      const serviceToken = await getAzAccessToken(AGENT365_SERVICE_RESOURCE, account.tenantId);
-      await clearAgentBlueprintMessagingEndpoint(serviceToken, account.tenantId, target.agentBlueprintId);
+      const tdpToken = await getTokenSilent(teamsDevPortalScopes);
+      if (tdpToken) {
+        await clearAgentBlueprintBackendConfiguration(tdpToken, target.agentBlueprintId);
+      }
     } catch {
       // Best-effort cleanup only -- the Graph deletion below is authoritative.
     }
@@ -376,10 +378,9 @@ export function assertHttpsEndpoint(endpoint: string): void {
   }
 }
 
-/** Registers/updates an agent blueprint's messaging endpoint via the Agent 365 backend service (not TDP's bot-registration API). */
+/** Registers/updates an agent blueprint's messaging endpoint via TDP's `backendConfiguration` API. */
 export async function registerAgentBlueprintEndpoint(
   agentBlueprintId: string,
-  tenantId: string,
   endpoint: string,
   silent: boolean
 ): Promise<void> {
@@ -392,8 +393,11 @@ export async function registerAgentBlueprintEndpoint(
     silent,
     async () => {
       try {
-        const token = await getAzAccessToken(AGENT365_SERVICE_RESOURCE, tenantId);
-        await setAgentBlueprintMessagingEndpoint(token, tenantId, agentBlueprintId, endpoint);
+        const token = await getTokenSilent(teamsDevPortalScopes);
+        if (!token) {
+          throw new CliError('AUTH_TOKEN_FAILED', 'Failed to get token.', 'Try `teams login` again.');
+        }
+        await setAgentBlueprintBackendConfiguration(token, agentBlueprintId, endpoint);
       } catch (error) {
         if (error instanceof CliError) throw error;
         throw new CliError(

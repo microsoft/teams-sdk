@@ -17,7 +17,7 @@ export interface AgentBlueprintUpdateOptions {
   name?: string;
   /** [OPTIONAL] Working directory holding `agent.generated.config.json`. Defaults to process.cwd(). */
   cwd?: string;
-  /** Tenant ID of the signed-in account, used to call the Agent 365 service. */
+  /** Tenant ID of the signed-in account. */
   tenantId: string;
 }
 
@@ -111,7 +111,7 @@ export async function runAgentBlueprintUpdate(
   }
 
   if (endpoint) {
-    await registerAgentBlueprintEndpoint(target.agentBlueprintId, account.tenantId, endpoint, silent);
+    await registerAgentBlueprintEndpoint(target.agentBlueprintId, endpoint, silent);
     if (target.syncsLocalConfig) {
       updateGeneratedConfig(cwd, { messagingEndpoint: endpoint });
     }

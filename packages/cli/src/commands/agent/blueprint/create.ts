@@ -148,7 +148,7 @@ export async function runAgentBlueprintCreate(
   const endpoint = await resolveOptionalEndpoint(options.endpoint, silent);
   if (endpoint) {
     assertHttpsEndpoint(endpoint);
-    await registerAgentBlueprintEndpoint(config.agentBlueprintId, account.tenantId, endpoint, silent);
+    await registerAgentBlueprintEndpoint(config.agentBlueprintId, endpoint, silent);
     updateGeneratedConfig(cwd, { messagingEndpoint: endpoint });
     config.messagingEndpoint = endpoint;
   }

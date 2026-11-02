@@ -318,7 +318,7 @@ export async function runAgentUserCreate(
     messagingEndpoint = await resolveOptionalEndpoint(options.endpoint, silent);
     if (messagingEndpoint) {
       assertHttpsEndpoint(messagingEndpoint);
-      await registerAgentBlueprintEndpoint(agentBlueprintId, account.tenantId, messagingEndpoint, silent);
+      await registerAgentBlueprintEndpoint(agentBlueprintId, messagingEndpoint, silent);
       updateGeneratedConfig(cwd, { messagingEndpoint });
     }
   }
