@@ -60,8 +60,9 @@ const STATUS_ICONS: Record<CheckStatus, string> = {
 function printResults(results: CheckResult[]): void {
   for (const r of results) {
     const icon = STATUS_ICONS[r.status];
-    const detail = r.detail ? ` ${pc.dim(`(${r.detail})`)}` : '';
-    logger.info(`  ${icon} ${r.label}${detail}`);
+    const label = r.label.replaceAll('AAD', 'Entra');
+    const detail = r.detail ? ` ${pc.dim(`(${r.detail.replaceAll('AAD', 'Entra')})`)}` : '';
+    logger.info(`  ${icon} ${label}${detail}`);
   }
 }
 
@@ -349,16 +350,16 @@ async function checkAadApp(
   botId: string,
   graphToken: string
 ): Promise<Record<string, unknown> | null> {
-  const cat = 'Entra App';
+  const cat = 'AAD App';
 
   let aadApp;
   try {
     aadApp = await getAadAppByClientId(graphToken, botId);
-    results.push({ category: cat, label: `Entra app found`, status: 'pass', detail: aadApp.appId });
+    results.push({ category: cat, label: `AAD app found`, status: 'pass', detail: aadApp.appId });
   } catch {
     results.push({
       category: cat,
-      label: 'Entra app not found',
+      label: 'AAD app not found',
       status: 'fail',
       detail: `No app with clientId ${botId}`,
     });
@@ -372,7 +373,7 @@ async function checkAadApp(
   } catch (e) {
     results.push({
       category: cat,
-      label: 'Could not fetch full Entra app details',
+      label: 'Could not fetch full AAD app details',
       status: 'warn',
       detail: e instanceof Error ? e.message : undefined,
     });
@@ -638,7 +639,7 @@ async function checkSso(
           category: cat,
           label: 'No OAuth connection found',
           status: 'warn',
-          detail: 'No Entra connection configured on Azure bot',
+          detail: 'No AAD connection configured on Azure bot',
         });
       } else {
         for (const conn of aadConnections) {
@@ -787,7 +788,7 @@ async function runDoctor(appIdArg: string | undefined, json?: boolean): Promise<
     fullAadApp = await checkAadApp(aadResults, botId, graphToken);
   } else {
     aadResults.push({
-      category: 'Entra App',
+      category: 'AAD App',
       label: 'Could not get Graph token',
       status: 'warn',
       detail: 'Run teams login to grant Graph permissions',
