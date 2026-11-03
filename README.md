@@ -18,11 +18,7 @@ The SDK code for each language are in individual repos:
 
 For language-specific bugs or issues, please use the Issues tab in the respective language repository.
 
-## Agent Accelerator Templates
-
-You can find a set of open-source agent accelerator templates in the [Teams Agent Accelerators repository](https://github.com/microsoft/teams-agent-accelerator-templates). These templates provide a great starting point for building your own agents using the Teams SDK.
-
-### Quick start
+## Quick start
 
 The Teams Developer CLI makes it easy to bootstrap your first agent. First, install the CLI via NPM:
 
@@ -38,7 +34,7 @@ npx @microsoft/teams.cli new <typescript | csharp | python> quote-agent --templa
 
 For more information, follow our quickstart guide: [C#](http://microsoft.github.io/teams-sdk/csharp/getting-started/quickstart), [Typescript](http://microsoft.github.io/teams-sdk/typescript/getting-started/quickstart), [Python](http://microsoft.github.io/teams-sdk/python/getting-started/quickstart)
 
-### SDK
+## SDK
 
 Microsoft Teams has a robust developer ecosystem with a broad suite of capabilities, now unified via Teams SDK. Whether you are building AI-powered agents ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/ai/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/ai/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/ai/)), Message Extensions ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/message-extensions/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/message-extensions/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/message-extensions/)), embedded web applications, or Graph, Teams SDK has you covered.
 
