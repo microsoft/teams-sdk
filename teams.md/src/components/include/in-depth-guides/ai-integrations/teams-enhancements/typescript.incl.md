@@ -1,10 +1,14 @@
 <!-- streaming -->
 
 ```typescript
-const runner = client.chat.completions.runTools({ model, messages: history, tools, stream: true });
-runner.on('content', (delta: string) => stream.emit(delta));
-await runner.done();
+app.on('message', async ({ activity, stream }) => {
+  const userText = activity.stripMentionsText().text ?? '';
+  const result = await agent.run(activity.conversation.id, userText, stream);
+  shipResult(result, stream, activity.from.id);
+});
 ```
+
+The selected provider implementation emits text chunks through the same `IStreamer`.
 
 <!-- ai-label -->
 
@@ -31,7 +35,9 @@ function shipResult(result: AgentRunResult, stream: IStreamer, recipientId: stri
   if (result.pendingCard) {
     // Clarification card — discard any streamed text, then emit card-only.
     stream.clearText();
-    stream.emit(new MessageActivityInput().addCard('adaptive', result.pendingCard).addAiGenerated());
+    stream.emit(
+      new MessageActivityInput().addCard('adaptive', result.pendingCard).addAiGenerated()
+    );
     return;
   }
   // normal reply: attach follow-ups, citations, feedback (below).
@@ -43,7 +49,10 @@ The user's choice is captured by a card-action handler and fed straight back int
 ```typescript
 app.on('card.action.clarification', async ({ activity, stream }) => {
   const data = (activity.value.action.data ?? {}) as Record<string, unknown>;
-  const choice = typeof data[CLARIFICATION_INPUT_ID] === 'string' ? (data[CLARIFICATION_INPUT_ID] as string) : '';
+  const choice =
+    typeof data[CLARIFICATION_INPUT_ID] === 'string'
+      ? (data[CLARIFICATION_INPUT_ID] as string)
+      : '';
   if (choice) {
     const result = await agent.run(activity.conversation.id, choice, stream);
     shipResult(result, stream, activity.from.id);
@@ -61,11 +70,29 @@ const FOLLOW_UPS_PROMPT =
 
 const FOLLOW_UPS_SCHEMA = {
   type: 'object',
-  properties: { prompt1: { type: 'string' }, prompt2: { type: 'string' } },
+  properties: {
+    prompt1: { type: 'string' },
+    prompt2: { type: 'string' },
+  },
   required: ['prompt1', 'prompt2'],
   additionalProperties: false,
 } as const;
 
+function parseFollowUps(raw: string): string[] {
+  const parsed = JSON.parse(raw) as {
+    prompt1?: unknown;
+    prompt2?: unknown;
+  };
+  return [parsed.prompt1, parsed.prompt2].filter(
+    (prompt): prompt is string => typeof prompt === 'string' && prompt.length > 0
+  );
+}
+```
+
+<Tabs groupId="ai-provider">
+  <TabItem value="azure-openai" label="Azure OpenAI">
+
+```typescript
 async function generateFollowUps(history: ChatCompletionMessageParam[]): Promise<string[]> {
   try {
     const completion = await client.chat.completions.create({
@@ -73,16 +100,49 @@ async function generateFollowUps(history: ChatCompletionMessageParam[]): Promise
       messages: [...history, { role: 'system', content: FOLLOW_UPS_PROMPT }],
       response_format: {
         type: 'json_schema',
-        json_schema: { name: 'follow_ups', strict: true, schema: FOLLOW_UPS_SCHEMA },
+        json_schema: {
+          name: 'follow_ups',
+          strict: true,
+          schema: FOLLOW_UPS_SCHEMA,
+        },
       },
     });
-    const parsed = JSON.parse(completion.choices[0]?.message?.content ?? '{}');
-    return [parsed.prompt1, parsed.prompt2].filter((s): s is string => typeof s === 'string' && s.length > 0);
-  } catch {
-    return []; // degrade silently — the main reply still ships
+    return parseFollowUps(completion.choices[0]?.message?.content ?? '{}');
+  } catch (error) {
+    log.warn(`Follow-up generation failed: ${String(error)}`);
+    return [];
   }
 }
 ```
+
+  </TabItem>
+  <TabItem value="anthropic" label="Anthropic Claude">
+
+```typescript
+async function generateFollowUps(history: Anthropic.MessageParam[]): Promise<string[]> {
+  try {
+    const response = await client.messages.create({
+      model,
+      max_tokens: 200,
+      system: 'Return valid JSON only with string properties "prompt1" and "prompt2".',
+      messages: [...history, { role: 'user', content: FOLLOW_UPS_PROMPT }],
+    });
+    const raw = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+      .map((block) => block.text)
+      .join('');
+    return parseFollowUps(raw.match(/\{[\s\S]*\}/)?.[0] ?? '{}');
+  } catch (error) {
+    log.warn(`Follow-up generation failed: ${String(error)}`);
+    return [];
+  }
+}
+```
+
+  </TabItem>
+</Tabs>
+
+Treat follow-up generation as optional. If parsing or the extra model call fails, return an empty array so the main response still ships.
 
 Attach the generated prompts to the reply with `withSuggestedActions`:
 

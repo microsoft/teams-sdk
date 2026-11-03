@@ -91,6 +91,8 @@ async def _generate_follow_ups(last_user_text: str, last_ai_text: str) -> list[C
     return [CardAction(type=CardActionType.IM_BACK, title=q, value=q) for q in data.get("followUps", [])[:2]]
 ```
 
+The checked-in sample uses the selected Agent Framework client for this optional call, so Azure OpenAI and Anthropic follow the same path. You can also omit follow-up generation entirely; the Teams suggested-actions code below is provider-neutral.
+
 Attach the generated prompts to the reply with `with_suggested_actions`:
 
 ```python
