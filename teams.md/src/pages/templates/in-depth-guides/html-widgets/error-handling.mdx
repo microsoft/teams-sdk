@@ -34,6 +34,8 @@ When a widget calls one of your tools, return a result with <LanguageInclude con
 
 <LanguageInclude section="tool-error" />
 
+Because the widget owns its own protocol runtime, how it reports an error result, and what it does when a request never gets a response, is up to that runtime. For example, the Python sample runtime resolves a request that gets no response within 30 seconds with an error object whose message is `Request timed out`, so widget code should be ready to handle an error in place of a result.
+
 ## Render errors are not reported back
 
 If the Teams client cannot render the widget HTML it shows a "Couldn't load widget" message inline in the chat. This is a client-side failure: it is **not** delivered to your app as an activity, invoke, or callback. Your app has no way to detect it after the message is sent.

@@ -69,22 +69,3 @@ forecast = build_html_widget_markdown(
 text = f"Today:\n\n{weather}\n\nLooking ahead:\n\n{forecast}"
 await ctx.send(MessageActivityInput(text=text, text_format="extendedmarkdown"))
 ```
-
-<!-- inject-code -->
-
-```python
-from microsoft_teams.apps.utils.html_widget import (
-    InjectWidgetProtocolOptions,
-    inject_widget_protocol,
-)
-
-html = inject_widget_protocol(
-    "<body><h1>Hello</h1></body>",
-    InjectWidgetProtocolOptions(
-        name="My Widget",
-        version="2.0.0",
-        available_display_modes=["inline", "fullscreen"],
-        notifications=["tool-result", "tool-input"],
-    ),
-)
-```

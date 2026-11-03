@@ -64,17 +64,3 @@ await context.Send(
     new MessageActivityInput { Text = text, TextFormat = TextFormats.ExtendedMarkdown },
     cancellationToken);
 ```
-
-<!-- inject-code -->
-
-```csharp
-var html = HtmlWidgetHelpers.InjectWidgetProtocol(
-    "<body><h1>Hello</h1></body>",
-    new InjectWidgetProtocolOptions
-    {
-        Name = "My Widget",
-        Version = "2.0.0",
-        AvailableDisplayModes = ["inline", "fullscreen"],
-        Notifications = ["tool-result", "tool-input"],
-    });
-```

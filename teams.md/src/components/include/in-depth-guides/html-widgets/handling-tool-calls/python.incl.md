@@ -44,6 +44,7 @@ async def handle_widget_call_tool(
 
 Return an `HtmlWidgetCallToolResponse` with `response_type` set to `htmlwidget/calltoolresult` and a `call_tool_result` payload.
 The result's `content` is a list of content blocks; `structured_content` holds data the widget can render from; `is_error` signals a failure.
+`McpUiCallToolResult` always serializes all three fields, defaulting to `[]`, `{}` and `False`, because an omitted field can reach the widget as `null`.
 
 <!-- response-code -->
 
@@ -59,3 +60,7 @@ return HtmlWidgetCallToolResponse(
     call_tool_result=result,
 )
 ```
+
+<!-- context-intro -->
+
+There is no separate Python type for the entry; read it from `ctx.activity.value.arguments["__msteams__"]` if you need `mcpUrl` or `correlationId`, and strip it before treating the remaining `arguments` as your tool's input.

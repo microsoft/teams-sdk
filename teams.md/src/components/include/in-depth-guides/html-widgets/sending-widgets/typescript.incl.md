@@ -59,16 +59,3 @@ await send({
   textFormat: 'extendedmarkdown',
 });
 ```
-
-<!-- inject-code -->
-
-```typescript
-import { injectWidgetProtocol } from '@microsoft/teams.apps';
-
-const html = injectWidgetProtocol('<body><h1>Hello</h1></body>', {
-  name: 'My Widget',
-  version: '2.0.0',
-  appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] },
-  notifications: ['tool-result', 'tool-input'],
-});
-```

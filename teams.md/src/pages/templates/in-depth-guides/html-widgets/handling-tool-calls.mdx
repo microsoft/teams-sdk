@@ -36,6 +36,12 @@ Teams currently renders `text` content; the other MCP content types (`image`, `a
 
 <LanguageInclude section="response-code" />
 
+## Client-supplied call context
+
+The Teams client adds an `__msteams__` entry to the `arguments` of every call, carrying the `mcpUrl` and `correlationId` from the widget payload when they were set. The client overwrites any value the widget supplied, and the SDK passes `arguments` to your handler untouched. Ignore `__msteams__` when you read your tool's arguments, validate the other arguments as untrusted input, never throw from the handler, and do not authorize from `activity.from`.
+
+<LanguageInclude section="context-intro" />
+
 ## Throttling in large contexts
 
 In large or busy contexts the Teams platform may throttle widget tool calls, so your app can receive fewer `htmlwidget/calltool` invokes than the widget issued. This throttling happens on the platform before the invoke reaches your app, so there is no error or `429` status for your handler to catch and nothing for the SDK to retry. Design your tool handlers so that a dropped call is not fatal: keep them idempotent, and let the widget reflect its own state rather than assuming every call reaches your app.

@@ -19,18 +19,14 @@ try {
 <!-- tool-error -->
 
 ```typescript
-import { IHtmlWidgetCallToolResponse } from '@microsoft/teams.api';
+import { buildCallToolResponse } from '@microsoft/teams.api';
 
 app.on('widget.callTool', async ({ activity }) => {
   const { name } = activity.value;
 
-  const response: IHtmlWidgetCallToolResponse = {
-    responseType: 'htmlwidget/calltoolresult',
-    callToolResult: {
-      content: [{ type: 'text', text: `Unknown tool: ${name}` }],
-      isError: true,
-    },
-  };
-  return response;
+  return buildCallToolResponse({
+    content: [{ type: 'text', text: `Unknown tool: ${name}` }],
+    isError: true,
+  });
 });
 ```

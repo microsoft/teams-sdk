@@ -33,13 +33,7 @@ Remember to set the text format to `extendedmarkdown` so the Teams client parses
 
 <LanguageInclude section="build-markdown-code" />
 
-## Preparing interactive widget HTML
+## Interactive widget HTML
 
-Interactive widgets need the MCP Apps protocol handshake script in their HTML so the widget and your app can exchange messages.
-The build helpers add this for you: whenever you call <LanguageInclude content={{"typescript": "`buildHtmlWidgetMessage` or `buildHtmlWidgetMarkdown`", "python": "`build_html_widget_message` or `build_html_widget_markdown`", "csharp": "`BuildHtmlWidgetMessage` or `BuildHtmlWidgetMarkdown`"}} />, the protocol script is injected automatically.
-Configure it through the <LanguageInclude content={{"typescript": "`protocolOptions`", "python": "`protocol_options`", "csharp": "`ProtocolOptions`"}} /> field to set the widget name, version, requested display modes, and notification subscriptions.
-
-You only need to inject the protocol yourself when you build widget HTML by hand instead of going through the build helpers.
-In that case call <LanguageInclude content={{"typescript": "`injectWidgetProtocol`", "python": "`inject_widget_protocol`", "csharp": "`HtmlWidgetHelpers.InjectWidgetProtocol`"}} /> with your HTML and options describing the widget; it returns the HTML with the protocol script inserted before the closing `</body>` tag, and leaves the HTML unchanged if the protocol is already present.
-
-<LanguageInclude section="inject-code" />
+The SDK sends your HTML exactly as authored and does not inject any script into it.
+An interactive widget must carry its own `ui/initialize` handshake and `ui/notifications/size-changed` reporting, as described in [Your widget owns the handshake and sizing](./#your-widget-owns-the-handshake-and-sizing).

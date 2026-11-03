@@ -35,11 +35,11 @@ Attach the policy to the payload you send. When you omit `securityPolicy`, the S
 
 ## Validating a policy
 
-<LanguageInclude content={{"typescript": "`validateSecurityPolicy`", "python": "`validate_security_policy`", "csharp": "`HtmlWidgetHelpers.ValidateSecurityPolicy`"}} /> scans your HTML for external references and returns a warning for any origin that is not covered by the appropriate policy field.
+The helper <LanguageInclude content={{"typescript": "`validateSecurityPolicy`", "python": "`validate_security_policy`", "csharp": "`HtmlWidgetHelpers.ValidateSecurityPolicy`"}} /> scans your HTML for external references and returns a warning for any origin that is not covered by the appropriate policy field.
 This is a development-time audit tool, not a security boundary; the browser's CSP enforcement is the real protection.
 Run it while developing to catch a missing `connectDomains` or `resourceDomains` entry before you ship, so the widget does not silently fail to load a font or reach an API.
 
-Call it with your HTML and the policy you intend to send behind a development-only flag so it never runs in production. It returns <LanguageInclude content={{"typescript": "an array", "python": "a list", "csharp": "a list"}} /> of warnings; an empty <LanguageInclude content={{"typescript": "array", "python": "list", "csharp": "list"}} /> means every external reference is covered.
+Call it with your HTML and the policy you intend to send behind a development-only flag so it never runs in production. It returns a collection of warnings; an empty result means every external reference is covered.
 
 <LanguageInclude section="validate-code" />
 
