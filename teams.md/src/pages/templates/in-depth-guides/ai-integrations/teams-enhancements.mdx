@@ -104,6 +104,10 @@ When building the final reply, attach only the citations whose position actually
 
 ## Sensitivity labels
 
+:::info[Coming Soon]
+Sensitivity labels are planned for the next SDK release, version 2.2.0.
+:::
+
 Sensitivity labels mark a message with a Microsoft Purview label, which Teams shows as a shield on the message with the label name on hover.
 
 Add a message-level label with <LanguageInclude content={{"typescript": "`addSensitivityLabel`", "python": "`add_sensitivity_label`", "csharp": "`AddSensitivityLabel`"}} />, passing the label ID as <LanguageInclude content={{"typescript": "`'@id'`", "python": "`at_id`", "csharp": "`Id`"}} />, which is sent to Teams as `@id`. Calling it again replaces the previous label. To label an individual source, set <LanguageInclude content={{"typescript": "`usageInfo`", "python": "`usage_info`", "csharp": "`SensitivityUsageInfo`"}} /> on the citation appearance.
