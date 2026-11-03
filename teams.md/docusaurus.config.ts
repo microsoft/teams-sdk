@@ -219,10 +219,6 @@ const config: Config = {
                             label: 'Blog',
                             to: '/blog',
                         },
-                        {
-                            label: 'Teams agent accelerator templates',
-                            href: 'https://microsoft.github.io/teams-agent-accelerator-templates/',
-                        },
                     ],
                 },
             ],
