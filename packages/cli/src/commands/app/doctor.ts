@@ -349,16 +349,16 @@ async function checkAadApp(
   botId: string,
   graphToken: string
 ): Promise<Record<string, unknown> | null> {
-  const cat = 'AAD App';
+  const cat = 'Entra App';
 
   let aadApp;
   try {
     aadApp = await getAadAppByClientId(graphToken, botId);
-    results.push({ category: cat, label: `AAD app found`, status: 'pass', detail: aadApp.appId });
+    results.push({ category: cat, label: `Entra app found`, status: 'pass', detail: aadApp.appId });
   } catch {
     results.push({
       category: cat,
-      label: 'AAD app not found',
+      label: 'Entra app not found',
       status: 'fail',
       detail: `No app with clientId ${botId}`,
     });
@@ -372,7 +372,7 @@ async function checkAadApp(
   } catch (e) {
     results.push({
       category: cat,
-      label: 'Could not fetch full AAD app details',
+      label: 'Could not fetch full Entra app details',
       status: 'warn',
       detail: e instanceof Error ? e.message : undefined,
     });
@@ -638,7 +638,7 @@ async function checkSso(
           category: cat,
           label: 'No OAuth connection found',
           status: 'warn',
-          detail: 'No AAD connection configured on Azure bot',
+          detail: 'No Entra connection configured on Azure bot',
         });
       } else {
         for (const conn of aadConnections) {
@@ -681,7 +681,7 @@ async function checkSso(
                 detail: 'tokenExchangeUrl, identifier URI, and manifest resource should match',
               });
               logger.debug(`  tokenExchangeUrl: ${tokenExchange}`);
-              logger.debug(`  AAD identifier:   ${aadIdentifier}`);
+              logger.debug(`  Entra identifier: ${aadIdentifier}`);
               logger.debug(`  manifest resource: ${manifestResource}`);
             }
           } else {
@@ -773,7 +773,7 @@ async function runDoctor(appIdArg: string | undefined, json?: boolean): Promise<
   const { botId, location, tmBot, azure } = botInfo;
 
   // 2. AAD App
-  spinner.update({ text: 'Checking AAD app...' }).start();
+  spinner.update({ text: 'Checking Entra app...' }).start();
   let graphToken: string | null = null;
   try {
     graphToken = await getTokenSilent(graphScopes);
@@ -787,7 +787,7 @@ async function runDoctor(appIdArg: string | undefined, json?: boolean): Promise<
     fullAadApp = await checkAadApp(aadResults, botId, graphToken);
   } else {
     aadResults.push({
-      category: 'AAD App',
+      category: 'Entra App',
       label: 'Could not get Graph token',
       status: 'warn',
       detail: 'Run teams login to grant Graph permissions',
@@ -795,7 +795,7 @@ async function runDoctor(appIdArg: string | undefined, json?: boolean): Promise<
   }
   spinner.stop();
   if (!json) {
-    logger.info(`\n${pc.bold('AAD App')}`);
+    logger.info(`\n${pc.bold('Entra App')}`);
     printResults(aadResults);
   }
   allResults.push(...aadResults);

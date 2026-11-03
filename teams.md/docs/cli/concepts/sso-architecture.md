@@ -6,17 +6,17 @@ Single Sign-On (SSO) lets your Teams bot authenticate users silently using their
 
 SSO for Teams bots involves three systems working together:
 
-1. **AAD app registration** — configured with the right identifier URI, scopes, and pre-authorized clients
-2. **Azure Bot OAuth connection** — bridges the bot to AAD for token exchange
+1. **Entra app registration** — configured with the right identifier URI, scopes, and pre-authorized clients
+2. **Azure Bot OAuth connection** — bridges the bot to Entra for token exchange
 3. **Teams app manifest** — tells Teams where to find the SSO configuration
 
 ## SSO Setup Components
 
 Setting up SSO requires configuring three parts:
 
-### 1. AAD App Configuration
+### 1. Entra App Configuration
 
-The AAD app registration needs:
+The Entra app registration needs:
 
 - **Identifier URI** → `api://botid-{botId}`
   - The `botid-` prefix is required — Teams validates this with a regex
@@ -28,15 +28,15 @@ The AAD app registration needs:
   - `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams web)
 - **Redirect URI** → `https://token.botframework.com/.auth/web/redirect`
   - Bot Framework's redirect endpoint for completing the OAuth flow
-- **Token version** → v2 tokens (AAD v2 endpoint)
+- **Token version** → v2 tokens (Entra v2 endpoint)
 
 ### 2. Azure Bot OAuth Connection
 
 An OAuth connection setting on the Azure Bot that:
 
-- Uses **Aadv2** provider (Azure AD v2)
+- Uses **Aadv2** provider (Entra v2)
 - Has a connection name (typically `sso`)
-- References the AAD app's client ID and secret
+- References the Entra app's client ID and secret
 - Sets **token exchange URL** → `api://botid-{botId}` (must match identifier URI exactly)
 - Specifies tenant ID and scopes (e.g., `User.Read`)
 
@@ -55,7 +55,7 @@ Once SSO is configured, the authentication flow works like this:
 ```
 1. User opens bot in Teams
    ↓
-2. Teams client requests SSO token from AAD
+2. Teams client requests SSO token from Entra
    (using pre-authorized client ID, identifier URI scope)
    ↓
 3. Teams sends token to bot via invoke activity
@@ -74,7 +74,7 @@ The user sees no login prompt — it's completely silent.
 
 - Bot must be in **Azure** — SSO requires OAuth connection management
 - Azure CLI (`az`) must be installed and logged in
-- AAD app must exist (created automatically by `teams app create`)
+- Entra app must exist (created automatically by `teams app create`)
 
 If your bot is Teams-managed, [migrate it first](../commands/app/bot-migrate):
 

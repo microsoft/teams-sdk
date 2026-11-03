@@ -38,7 +38,7 @@ teams app create [options]
 
 ## Details
 
-Creates a complete Teams bot app in a single command: AAD app registration, client secret, manifest, Teams app import, and bot registration.
+Creates a complete Teams bot app in a single command: Entra app registration, client secret, manifest, Teams app import, and bot registration.
 
 ### Bot Location
 

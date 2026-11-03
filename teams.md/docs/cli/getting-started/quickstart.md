@@ -18,7 +18,7 @@ Follow the device code flow — open the URL, enter the code, sign in with your 
 teams app create
 ```
 
-The CLI will prompt you for a name and handle everything else: AAD app registration, manifest generation, Teams app import, and bot registration.
+The CLI will prompt you for a name and handle everything else: Entra app registration, manifest generation, Teams app import, and bot registration.
 
 **Scripted mode** — pass all values as flags:
 

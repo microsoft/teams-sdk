@@ -103,6 +103,8 @@ describe('createApp action', () => {
       },
     });
     expect(progress.start).toHaveBeenCalledWith('Acquiring tokens...');
+    expect(progress.start).toHaveBeenCalledWith('Creating Entra app...');
+    expect(progress.success).toHaveBeenCalledWith('Created Entra app (client-id)');
     expect(progress.success).toHaveBeenCalledWith('Bot registered');
     expect(mockSetSocketMode).not.toHaveBeenCalled();
   });

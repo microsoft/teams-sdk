@@ -1,16 +1,16 @@
-# AAD App Lifecycle
+# Entra App Lifecycle
 
-Every Teams bot needs an Azure Active Directory (AAD) app registration. This page explains how teams creates and manages AAD apps.
+Every Teams bot needs an Entra app registration. This page explains how teams creates and manages Entra apps.
 
-## Why TDP Creates AAD Apps
+## Why TDP Creates Entra Apps
 
-teams creates AAD apps through the Teams Developer Portal (TDP) API (`/aadapp/v2`), **not** through the Microsoft Graph API directly.
+teams creates Entra apps through the Teams Developer Portal (TDP) API (`/aadapp/v2`), **not** through the Microsoft Graph API directly.
 
 The reason: TDP's backend creates the **service principal** server-side as part of the app creation. A service principal is required for single-tenant bot registration (SFI requirement), and creating it via Graph would require additional API calls and permissions.
 
 ## The ID Mapping Issue
 
-TDP returns an `id` field for the newly created AAD app, but this is **not** the same as the Graph API's object ID. When teams needs to perform Graph operations (like creating a client secret), it must:
+TDP returns an `id` field for the newly created Entra app, but this is **not** the same as the Graph API's object ID. When teams needs to perform Graph operations (like creating a client secret), it must:
 
 1. Look up the app by `clientId` using `GET /applications?$filter=appId eq '{clientId}'`
 2. Use the Graph object ID from the response
@@ -20,9 +20,9 @@ This lookup-with-retry pattern is used by `app create` and `app auth secret crea
 
 ## Sign-In Audience
 
-AAD apps created by teams use:
+Entra apps created by teams use:
 
-- `signInAudience: AzureADMultipleOrgs` — the app accepts sign-ins from any Azure AD tenant
+- `signInAudience: AzureADMultipleOrgs` — the app accepts sign-ins from any Entra tenant
 
 This is required even though bot registration uses `isSingleTenant: true`. Using `AzureADMyOrg` (single org) causes service principal creation to fail silently.
 
@@ -31,7 +31,7 @@ This is required even though bot registration uses `isSingleTenant: true`. Using
 The full flow when teams creates a new app:
 
 ```
-1. TDP creates AAD app (/aadapp/v2)
+1. TDP creates Entra app (/aadapp/v2)
    ↓
 2. Graph lookup by clientId (with retry for replication lag)
    ↓

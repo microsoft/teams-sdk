@@ -46,7 +46,7 @@ export async function createAadAppViaTdp(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to create AAD app: ${response.status} ${error}`);
+    throw new Error(`Failed to create Entra app: ${response.status} ${error}`);
   }
 
   return response.json();
@@ -64,7 +64,7 @@ async function createAadAppViaTdpV2(
   displayName: string,
   signInAudience: SignInAudience
 ): Promise<AadApp> {
-  logger.debug('Creating AAD app via TDP v2 API v1.0/aadapplications');
+  logger.debug('Creating Entra app via TDP v2 API v1.0/aadapplications');
   const response = await apiFetch(`${TDP_V2_BASE_URL}/v1.0/aadapplications`, {
     method: 'POST',
     headers: {
@@ -76,7 +76,7 @@ async function createAadAppViaTdpV2(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to create AAD app: ${response.status} ${error}`);
+    throw new Error(`Failed to create Entra app: ${response.status} ${error}`);
   }
 
   const app = (await response.json()) as TdpV2AadApplicationResponse;

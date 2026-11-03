@@ -32,7 +32,7 @@ interface GenerateSecretOptions {
 }
 
 /**
- * Core secret generation logic. Acquires graph token, looks up bot/AAD app,
+ * Core secret generation logic. Acquires graph token, looks up bot/Entra app,
  * creates secret, and outputs credentials.
  *
  * Throws on failure. Caller decides how to handle errors.
@@ -80,9 +80,9 @@ export async function generateSecret(opts: GenerateSecretOptions): Promise<void>
   const clientId = app.bots[0].botId;
   spinner.success({ text: `Found bot (${clientId})` });
 
-  spinner = createSilentSpinner('Looking up AAD app...', silent).start();
+  spinner = createSilentSpinner('Looking up Entra app...', silent).start();
   const aadApp = await getAadAppByClientId(graphToken, clientId);
-  spinner.success({ text: `Found AAD app (${aadApp.displayName})` });
+  spinner.success({ text: `Found Entra app (${aadApp.displayName})` });
 
   spinner = createSilentSpinner('Generating client secret...', silent).start();
   const secret = await createClientSecret(graphToken, aadApp.id);

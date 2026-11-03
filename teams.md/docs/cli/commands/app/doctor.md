@@ -29,7 +29,7 @@ teams app doctor [appId] [options]
 
 ## Details
 
-Runs a comprehensive diagnostic check across your app's bot registration, AAD app, manifest, and SSO configuration. Reports pass/fail/warn/info for each check.
+Runs a comprehensive diagnostic check across your app's bot registration, Entra app, manifest, and SSO configuration. Reports pass/fail/warn/info for each check.
 
 ### Check Categories
 
@@ -38,8 +38,8 @@ Runs a comprehensive diagnostic check across your app's bot registration, AAD ap
 - Teams channel is enabled
 - Messaging endpoint is reachable (HTTP probe)
 
-**AAD App**
-- AAD app exists and is accessible via Graph
+**Entra App**
+- Entra app exists and is accessible via Graph
 - Client secret expiry status
 - Sign-in audience is correct (`AzureADMultipleOrgs`)
 
