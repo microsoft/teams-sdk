@@ -50,7 +50,7 @@ Every widget is described by a payload with the following fields:
 | `domain` | yes | A valid domain URL applied to sandbox metadata. It does not need to resolve or serve content, but must be non-empty. This is informational metadata, not a verified identity claim. |
 | `description` | no | A description of the widget. |
 | `securityPolicy` | no | Allowed origins for network requests, resources, frames, and base URIs. See [Security policy](./security-policy). |
-| `toolInput` | no | Data passed to the widget as initial context, made available to the widget as initial context. |
+| `toolInput` | no | Data passed to the widget as initial context. |
 | `toolOutput` | no | Data the tool produced alongside the widget, available to the widget at render time. |
 | `permissions` | no | Capabilities the widget requests from the host (camera, microphone, geolocation, clipboard write). |
 | `mcpUrl` | no | The URL of the MCP server that produced the widget. The Teams client combines it with the owner id to derive the widget's hosting origin, so it is not itself the origin. A widget produced by an MCP server must set it to that server's URL to get its own hosting scope. |

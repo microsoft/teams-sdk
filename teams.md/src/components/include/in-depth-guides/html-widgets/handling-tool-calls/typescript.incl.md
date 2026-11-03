@@ -51,4 +51,3 @@ return buildCallToolResponse(callToolResult);
 <!-- context-intro -->
 
 The `IHtmlWidgetCallToolContext` type describes the `__msteams__` entry, with optional `mcpUrl` and `correlationId` fields.
-
