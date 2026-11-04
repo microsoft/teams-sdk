@@ -36,4 +36,4 @@ Remember to set the text format to `extendedmarkdown` so the Teams client parses
 ## Interactive widget HTML
 
 The SDK sends your HTML exactly as authored and does not inject any script into it.
-An interactive widget must carry its own `ui/initialize` handshake and `ui/notifications/size-changed` reporting, as described in [Your widget owns the handshake and sizing](./#your-widget-owns-the-handshake-and-sizing).
+Every widget must carry its own `ui/initialize` handshake and `ui/notifications/size-changed` reporting, or it will not initialize or size correctly. This is described in [Your widget owns the handshake and sizing](./#your-widget-owns-the-handshake-and-sizing).
