@@ -110,6 +110,7 @@ export function createManifest(options: ManifestOptions): object {
   const manifest: Record<string, unknown> = {
     $schema: `https://developer.microsoft.com/json-schemas/teams/v${MANIFEST_VERSION}/MicrosoftTeams.schema.json`,
     manifestVersion: MANIFEST_VERSION,
+    supportsChannelFeatures: 'tier1',
     version: '1.0.0',
     id: botId,
     developer: developer ?? {

@@ -118,6 +118,7 @@ describe('createManifest manifest version', () => {
     expect(manifest).toMatchObject({
       manifestVersion: '1.30',
       $schema: 'https://developer.microsoft.com/json-schemas/teams/v1.30/MicrosoftTeams.schema.json',
+      supportsChannelFeatures: 'tier1',
     });
   });
 });
@@ -133,7 +134,7 @@ describe('createManifest scope defaults', () => {
     { scopes: ['copilot'], hasPersonal: true },
   ];
 
-  it.each(cases)('matches TDP defaults for scopes $scopes', ({ scopes, hasPersonal }) => {
+  it.each(cases)('sets personal tabs and channel support for scopes $scopes', ({ scopes, hasPersonal }) => {
     const manifest = createManifest({
       botId: 'test-bot-id',
       botName: 'Test Bot',
@@ -148,7 +149,7 @@ describe('createManifest scope defaults', () => {
     } else {
       expect(manifest).not.toHaveProperty('staticTabs');
     }
-    expect(manifest).not.toHaveProperty('supportsChannelFeatures');
+    expect(manifest).toHaveProperty('supportsChannelFeatures', 'tier1');
   });
 });
 

@@ -69,7 +69,7 @@ The built-in **Chat** (`conversations`) and **About** tabs are added only when *
 
 ### Channel Compatibility
 
-New apps leave `supportsChannelFeatures` unset, matching Teams Developer Portal's explicit opt-in. To declare that your app supports all channel features after confirming compatibility:
+New apps include `supportsChannelFeatures: "tier1"` to declare support across all channel types. To add this declaration to an existing app after confirming compatibility:
 
 ```bash
 teams app manifest update <appId> --set-json 'supportsChannelFeatures="tier1"'
