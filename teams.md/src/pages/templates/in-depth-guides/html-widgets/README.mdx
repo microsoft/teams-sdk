@@ -25,6 +25,10 @@ HTML Widgets are in preview and the API surface may change.
 <LanguageInclude content={{"typescript": "Every widget type and helper is annotated `@experimental` in its JSDoc (diagnostic `ExperimentalTeamsHtmlWidget`) to mark it as preview.", "python": "Every widget type and helper is decorated with `@experimental` (`ExperimentalTeamsHtmlWidget`), which emits a runtime preview warning when it is used.", "csharp": "Every widget type and helper is guarded by the `ExperimentalTeamsHtmlWidget` compiler diagnostic, so you opt in explicitly to use them."}} />
 :::
 
+:::warning Message export
+There is a gap in the export APIs that prevents widget content from being exported. If your organization determines this is a problem, you can disable bots that may send widgets.
+:::
+
 ## How it works
 
 A widget travels inside a normal message.
@@ -69,7 +73,7 @@ Every widget is described by a payload with the following fields:
 The SDK sends your HTML exactly as you author it. It does not add any script to it.
 Your widget must do two things itself:
 
-- **Complete the handshake.** Send a `ui/initialize` request to the host with `protocolVersion` (`2026-01-26`), `appInfo` (`name` and `version`), and `appCapabilities`. Wait for the response before sending any other request, because a request sent earlier gets an empty result. When the response arrives, send `ui/notifications/initialized`. The `ui/initialize` result carries `protocolVersion` and `hostCapabilities`. If the response is an error, the handshake failed and the widget must not continue.
+- **Complete the handshake.** Send a `ui/initialize` request to the host with `protocolVersion` (`2026-01-26`), `appInfo` (`name` and `version`), and `appCapabilities`. Wait for the response before sending any other request, because a request sent earlier gets an empty result. When the response arrives, send `ui/notifications/initialized`. The `ui/initialize` result carries `protocolVersion`, `hostCapabilities`, `hostInfo`, and `hostContext` (such as the theme, locale, and display modes). If the response is an error, the handshake failed and the widget must not continue.
 - **Report its size.** Report its height with `ui/notifications/size-changed` after the handshake and whenever its content changes. Without a size report the host leaves the widget at about 150px tall. Observe the widget's root element with a single `ResizeObserver` and report `getBoundingClientRect().height` as is. Rounding the value can leave a gap or clip the content by a pixel.
 
 Messages travel as JSON-RPC 2.0 objects over `window.parent.postMessage`. A request carries an `id` and gets a response with the same `id`. A notification has no `id`.
