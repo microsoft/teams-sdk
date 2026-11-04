@@ -73,13 +73,12 @@ export function syncBotStaticTabs(
     return remaining.length === 1 && remaining[0].entityId === 'about' ? [] : remaining;
   }
 
-  let aboutIndex = tabs.findIndex((tab) => tab.entityId === 'about');
-  if (aboutIndex < 0) {
+  if (!tabs.some((tab) => tab.entityId === 'about')) {
     tabs.push({ entityId: 'about', scopes: ['personal'] });
-    aboutIndex = tabs.length - 1;
   }
   if (!tabs.some((tab) => tab.entityId === 'conversations')) {
-    tabs.splice(aboutIndex, 0, { entityId: 'conversations', scopes: ['personal'] });
+    // Teams implicitly places Chat first when a personal bot omits it.
+    tabs.unshift({ entityId: 'conversations', scopes: ['personal'] });
   }
   return tabs;
 }
