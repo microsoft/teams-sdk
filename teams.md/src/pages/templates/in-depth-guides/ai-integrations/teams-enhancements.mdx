@@ -114,7 +114,6 @@ Add a message-level label with <LanguageInclude content={{"typescript": "`addSen
 
 <LanguageInclude section="sensitivity-labels" />
 
-- Label IDs are the Purview sensitivity label IDs configured in your tenant. Look them up from your tenant's Purview labels.
 - <LanguageInclude content={{"typescript": "`name`", "python": "`name`", "csharp": "`Name`"}} /> is optional but recommended. Teams shows it when it cannot resolve `@id`, for example for a deleted label, and shows no label at all if there is no <LanguageInclude content={{"typescript": "`name`", "python": "`name`", "csharp": "`Name`"}} /> either. Set it whenever you set <LanguageInclude content={{"typescript": "`description`", "python": "`description`", "csharp": "`Description`"}} />, because Teams can reject a message whose label has a description but no name.
 - The sensitivity label, the AI-generated label, and citations are all written to the same root message entity, so an activity always carries exactly one root message entity, regardless of the order you call them in.
 
