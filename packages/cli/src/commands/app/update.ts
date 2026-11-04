@@ -23,6 +23,7 @@ import {
   getBotCommunicationConfiguration,
   isBotCommunicationApiAvailable,
   setSocketMode,
+  syncBotStaticTabs,
 } from '../../apps/index.js';
 import { ensureAz, isAzInstalled, isAzLoggedIn } from '../../utils/az.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
@@ -43,7 +44,7 @@ const VALID_SCOPES: BotScope[] = ['personal', 'team', 'groupChat', 'copilot'];
 
 /**
  * Build the partial AppDetails update for a scope change.
- * Enforces `personal` when `copilot` is selected, and manages the `copilotAgents` block.
+ * Keeps personal tabs and the `copilotAgents` block consistent with the selected scopes.
  */
 export function buildScopeUpdates(appDetails: AppDetails, newScopes: BotScope[]): Partial<AppDetails> {
   if (newScopes.length === 0) return {};
@@ -62,6 +63,11 @@ export function buildScopeUpdates(appDetails: AppDetails, newScopes: BotScope[])
   const updates: Partial<AppDetails> = {
     bots: [{ ...currentBot, scopes }],
   };
+
+  const staticTabs = syncBotStaticTabs(appDetails.staticTabs, scopes);
+  if (appDetails.staticTabs || staticTabs.length > 0) {
+    updates.staticTabs = staticTabs;
+  }
 
   if (hasCopilot) {
     updates.copilotAgents = {
