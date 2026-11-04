@@ -13,7 +13,7 @@ teams.OnMessage(async (context, cancellationToken) =>
             Domain = "https://teams.microsoft.com",
         });
 
-    await context.Send(message, cancellationToken);
+    await context.SendAsync(message, cancellationToken);
 });
 ```
 
@@ -33,7 +33,7 @@ var message = HtmlWidgetHelpers.BuildHtmlWidgetMessage(
         After = "No callbacks needed for static content.",
     });
 
-await context.Send(message, cancellationToken);
+await context.SendAsync(message, cancellationToken);
 ```
 
 <!-- build-markdown-code -->
@@ -60,7 +60,7 @@ var forecast = HtmlWidgetHelpers.BuildHtmlWidgetMarkdown(
     });
 
 var text = $"Today:\n\n{weather}\n\nLooking ahead:\n\n{forecast}";
-await context.Send(
+await context.SendAsync(
     new MessageActivityInput { Text = text, TextFormat = TextFormats.ExtendedMarkdown },
     cancellationToken);
 ```

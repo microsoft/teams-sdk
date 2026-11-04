@@ -22,13 +22,13 @@ teams.OnWidgetCallTool(async (context, cancellationToken) =>
     };
 
     await Task.CompletedTask;
-    return response;
+    return InvokeResponse.Ok(response);
 });
 ```
 
 <!-- response-intro -->
 
-Return an `HtmlWidgetCallToolResponse` whose `ResponseType` is `htmlwidget/calltoolresult` and whose `CallToolResult` holds the payload.
+Return `InvokeResponse.Ok(...)` wrapping an `HtmlWidgetCallToolResponse` whose `ResponseType` is `htmlwidget/calltoolresult` and whose `CallToolResult` holds the payload.
 The result's `Content` is a list of content blocks; `StructuredContent` holds data the widget can render from; `IsError` signals a failure.
 `Content`, `StructuredContent` and `IsError` are always serialized, defaulting to an empty array, an empty object and `false`, because an omitted field can reach the widget as `null`.
 For the common text-only case, use the `FromText` and `FromError` factory methods.

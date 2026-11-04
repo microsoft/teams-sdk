@@ -12,10 +12,12 @@ try:
             domain="https://teams.microsoft.com",
         )
     )
-    await ctx.send(message)
 except ValueError as err:
     # Raised when name or html is empty, or domain is not a valid https:// URL.
     logger.error("Invalid widget payload: %s", err)
+    return
+
+await ctx.send(message)
 ```
 
 <!-- tool-error -->

@@ -20,7 +20,7 @@ var message = HtmlWidgetHelpers.BuildHtmlWidgetMessage(
         },
     });
 
-await context.Send(message, cancellationToken);
+await context.SendAsync(message, cancellationToken);
 ```
 
 <!-- validate-code -->
@@ -51,6 +51,8 @@ if (isDevelopment)
 }
 
 // In development the audit above would warn that this HTML loads the Roboto
-// stylesheet from fonts.googleapis.com and the font files from fonts.gstatic.com,
-// so you would add both origins to ResourceDomains before shipping.
+// stylesheet from fonts.googleapis.com, so you would add that origin to ResourceDomains.
+// The audit scans only the HTML you pass it and cannot see inside the stylesheet,
+// so it does not report the font files that stylesheet loads from fonts.gstatic.com.
+// Add that origin to ResourceDomains yourself.
 ```

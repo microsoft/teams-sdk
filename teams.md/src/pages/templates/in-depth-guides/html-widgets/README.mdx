@@ -83,6 +83,7 @@ const root = document.getElementById('root');
 const post = (message) => window.parent.postMessage({ jsonrpc: '2.0', ...message }, '*');
 
 window.addEventListener('message', (event) => {
+  if (event.source !== window.parent) return;
   const data = event.data;
   if (data?.id === 'init') {
     if (data.error) return console.error('Widget handshake failed', data.error);

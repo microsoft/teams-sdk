@@ -39,7 +39,7 @@ The helper <LanguageInclude content={{"typescript": "`validateSecurityPolicy`", 
 This is a development-time audit tool, not a security boundary; the browser's CSP enforcement is the real protection.
 Run it while developing to catch a missing `connectDomains` or `resourceDomains` entry before you ship, so the widget does not silently fail to load a font or reach an API.
 
-Call it with your HTML and the policy you intend to send behind a development-only flag so it never runs in production. It returns a collection of warnings; an empty result means every external reference is covered.
+Call it with your HTML and the policy you intend to send behind a development-only flag so it never runs in production. It returns a collection of warnings; an empty result means every external reference in that HTML is covered. It does not cover resources that those references load in turn, such as the font files a linked stylesheet requests.
 
 <LanguageInclude section="validate-code" />
 
