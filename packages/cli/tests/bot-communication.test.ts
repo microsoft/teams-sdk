@@ -72,18 +72,18 @@ describe('bot communication configuration', () => {
     });
   });
 
-  it('GET includes Entra ownership guidance in the 403 message', async () => {
+  it('GET includes the existing-bot limitation in the 403 message', async () => {
     responses = [{ status: 403 }];
     await expect(getBotCommunicationConfiguration('t', CLIENT_ID)).rejects.toMatchObject({
       code: 'API_ERROR',
       statusCode: 403,
       message:
-        "Failed to read bot communication configuration: access denied (403). You must be an owner of this bot's Microsoft Entra app registration. " +
-        "Contact your tenant's administrator to have yourself added as an owner.",
+        'Failed to read bot communication configuration: access denied (403). This feature is only available for new bots currently. ' +
+        'Support for existing bots is coming soon.',
     });
   });
 
-  it('setSocketMode replaces the raw PUT 403 response with actionable ownership guidance', async () => {
+  it('setSocketMode replaces the raw PUT 403 response with the existing-bot limitation', async () => {
     responses = [
       { status: 200, body: stored },
       {
@@ -95,8 +95,8 @@ describe('bot communication configuration', () => {
       code: 'API_ERROR',
       statusCode: 403,
       message:
-        "Failed to update bot communication configuration: access denied (403). You must be an owner of this bot's Microsoft Entra app registration. " +
-        "Contact your tenant's administrator to have yourself added as an owner.",
+        'Failed to update bot communication configuration: access denied (403). This feature is only available for new bots currently. ' +
+        'Support for existing bots is coming soon.',
     });
     expect(calls.map((call) => call.method)).toEqual(['GET', 'PUT']);
   });
