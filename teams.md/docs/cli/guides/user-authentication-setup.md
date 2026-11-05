@@ -82,7 +82,7 @@ Two separate PATCH requests to `PATCH /v1.0/applications/{objectId}` — the sco
 }
 ```
 
-> **Key detail:** `requestedAccessTokenVersion: 2` must be set. Teams issues v2 tokens (Entra v2 endpoint); if the app is still configured for v1, the token exchange will fail because the formats don't match.
+> **Key detail:** `requestedAccessTokenVersion: 2` must be set. Teams issues v2 tokens (Microsoft identity platform v2.0 endpoint); if the app is still configured for v1, the token exchange will fail because the formats don't match.
 
 **PATCH 2 — pre-authorized apps** (after scope exists):
 ```json
