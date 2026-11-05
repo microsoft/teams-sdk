@@ -287,25 +287,31 @@ describe('buildScopeUpdates', () => {
     expect({ ...app, ...updates }).toHaveProperty('supportsChannelFeatures', 'tier1');
   });
 
-  it('inserts a missing conversation tab before the existing about tab without changing custom tabs', async () => {
+  it.each([false, true])('preserves implicit Chat-first ordering with an existing About tab: %s', async (hasAbout) => {
     const { buildScopeUpdates } = await import('../src/commands/app/update.js');
-    const customTab = { entityId: 'custom', scopes: ['personal'], contentUrl: 'https://example.com/tab' };
+    const customTab = { entityId: 'home', scopes: ['personal'], contentUrl: 'https://example.com/tab', objectId: 'home-id' };
     const aboutTab = { entityId: 'about', scopes: ['personal'], objectId: 'about-id' };
-    const updates = buildScopeUpdates({
+    const app = {
       ...baseApp,
-      staticTabs: [customTab, aboutTab],
-    }, ['personal']);
+      bots: [{ botId: 'test-bot-id', scopes: ['personal'] }],
+      staticTabs: hasAbout ? [customTab, aboutTab] : [customTab],
+    };
+    const original = structuredClone(app);
+    const updates = buildScopeUpdates(app, ['personal', 'team']);
 
     expect(updates.staticTabs).toEqual([
-      customTab,
       { entityId: 'conversations', scopes: ['personal'] },
-      aboutTab,
+      customTab,
+      hasAbout ? aboutTab : { entityId: 'about', scopes: ['personal'] },
     ]);
+    expect(app).toEqual(original);
+    expect(buildScopeUpdates({ ...app, ...updates }, ['personal', 'team']).staticTabs).toEqual(updates.staticTabs);
   });
 
   it('preserves existing built-in tabs without duplicates', async () => {
     const { buildScopeUpdates } = await import('../src/commands/app/update.js');
     const staticTabs = [
+      { entityId: 'home', scopes: ['personal'], contentUrl: 'https://example.com/tab' },
       { entityId: 'conversations', scopes: ['personal'], objectId: 'chat-id' },
       { entityId: 'about', scopes: ['personal'], objectId: 'about-id' },
     ];
