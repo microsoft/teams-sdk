@@ -469,7 +469,7 @@ async function renderAppCreateResult(
 }
 
 export const appCreateCommand = new Command('create')
-  .description('Create a new Teams app with bot')
+  .description('Create a new Teams app with a bot')
   .option('-n, --name <name>', 'App/bot name')
   .option('-e, --endpoint <url>', '[OPTIONAL] Messaging endpoint URL')
   .addOption(

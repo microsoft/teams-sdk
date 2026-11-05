@@ -24,7 +24,7 @@ teams project new typescript [name] [options]
 
 | Flag | Description |
 |------|-------------|
-| `-t, --template <template>` | App template (ai, echo, graph, mcp, mcpclient, tab) (default: `echo`) |
+| `-t, --template <template>` | App template (echo, graph, tab) (default: `echo`) |
 | `--client-id <id>` | [OPTIONAL] Azure app client ID |
 | `--client-secret <secret>` | [OPTIONAL] Azure app client secret |
 | `-s, --start` | [OPTIONAL] Auto-start project after creation |

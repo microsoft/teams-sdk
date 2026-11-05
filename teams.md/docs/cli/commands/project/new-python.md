@@ -24,7 +24,7 @@ teams project new python [name] [options]
 
 | Flag | Description |
 |------|-------------|
-| `-t, --template <template>` | App template (ai, echo, graph) (default: `echo`) |
+| `-t, --template <template>` | App template (echo, graph) (default: `echo`) |
 | `--client-id <id>` | [OPTIONAL] Azure app client ID |
 | `--client-secret <secret>` | [OPTIONAL] Azure app client secret |
 | `--json` | [OPTIONAL] Output as JSON |
