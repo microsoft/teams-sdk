@@ -2,7 +2,7 @@
 sidebar_position: 2
 sidebar_label: Teams Enhancements
 title: Teams Enhancements
-summary: Round out a Teams agent reply with streaming, the AI-generated label, custom feedback, clarification cards, dynamic follow-up prompts, and inline citations.
+summary: Round out a Teams agent reply with streaming, the AI-generated label, custom feedback, clarification cards, dynamic follow-up prompts, inline citations, and sensitivity labels.
 languages: ['python', 'typescript', 'csharp']
 ---
 
@@ -101,3 +101,22 @@ When building the final reply, attach only the citations whose position actually
   alt="Animated screenshot showing a user hovering over a footnote citation in an agent response, with a pop-up showing explanatory text."
   style={{ width: '100%', maxWidth: 900 }}
 />
+
+## Sensitivity labels
+
+:::info[Coming Soon]
+Sensitivity labels are planned for the next SDK release, version 2.2.0.
+:::
+
+Sensitivity labels mark a message with a Microsoft Purview label, which Teams shows as a shield on the message with the label name on hover.
+
+Add a message-level label with <LanguageInclude content={{"typescript": "`addSensitivityLabel`", "python": "`add_sensitivity_label`", "csharp": "`AddSensitivityLabel`"}} />, passing the label ID as <LanguageInclude content={{"typescript": "`'@id'`", "python": "`at_id`", "csharp": "`Id`"}} />, which is sent to Teams as `@id`. Calling it again replaces the previous label. To label an individual source, set <LanguageInclude content={{"typescript": "`usageInfo`", "python": "`usage_info`", "csharp": "`SensitivityUsageInfo`"}} /> on the citation appearance.
+
+<LanguageInclude section="sensitivity-labels" />
+
+- <LanguageInclude content={{"typescript": "`name`", "python": "`name`", "csharp": "`Name`"}} /> is optional but recommended. Teams shows it when it cannot resolve `@id`, for example for a deleted label, and shows no label at all if there is no <LanguageInclude content={{"typescript": "`name`", "python": "`name`", "csharp": "`Name`"}} /> either. Set it whenever you set <LanguageInclude content={{"typescript": "`description`", "python": "`description`", "csharp": "`Description`"}} />, because Teams can reject a message whose label has a description but no name.
+- The sensitivity label, the AI-generated label, and citations are all written to the same root message entity, so an activity always carries exactly one root message entity, regardless of the order you call them in.
+
+### Where label IDs come from
+
+The label ID is the GUID of a Purview sensitivity label configured in your tenant. Get it from the Microsoft Purview portal or from your tenant admin.
