@@ -1,6 +1,6 @@
 # Quickstart
 
-Create your first Teams bot app from scratch in under 5 minutes.
+Create your first Teams bot app with a Microsoft Entra ID app registration from scratch in under 5 minutes.
 
 ## 1. Log in
 

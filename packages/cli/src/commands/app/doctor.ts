@@ -57,11 +57,22 @@ const STATUS_ICONS: Record<CheckStatus, string> = {
   info: pc.blue('ℹ'),
 };
 
+const TEXT_LABELS: ReadonlyMap<string, string> = new Map([
+  ['AAD app found', 'Entra app found'],
+  ['AAD app not found', 'Entra app not found'],
+  ['Could not fetch full AAD app details', 'Could not fetch full Entra app details'],
+]);
+
+const TEXT_DETAILS: ReadonlyMap<string, string> = new Map([
+  ['No AAD connection configured on Azure bot', 'No Entra connection configured on Azure bot'],
+]);
+
 function printResults(results: CheckResult[]): void {
   for (const r of results) {
     const icon = STATUS_ICONS[r.status];
-    const label = r.label.replaceAll('AAD', 'Entra');
-    const detail = r.detail ? ` ${pc.dim(`(${r.detail.replaceAll('AAD', 'Entra')})`)}` : '';
+    const label = TEXT_LABELS.get(r.label) ?? r.label;
+    const textDetail = r.detail ? TEXT_DETAILS.get(r.detail) ?? r.detail : undefined;
+    const detail = textDetail ? ` ${pc.dim(`(${textDetail})`)}` : '';
     logger.info(`  ${icon} ${label}${detail}`);
   }
 }
@@ -343,7 +354,7 @@ async function checkBotRegistration(
   return { botId, location, tmBot, azure };
 }
 
-// --- AAD App checks ---
+// --- Entra App checks ---
 
 async function checkAadApp(
   results: CheckResult[],
@@ -773,7 +784,7 @@ async function runDoctor(appIdArg: string | undefined, json?: boolean): Promise<
 
   const { botId, location, tmBot, azure } = botInfo;
 
-  // 2. AAD App
+  // 2. Entra App
   spinner.update({ text: 'Checking Entra app...' }).start();
   let graphToken: string | null = null;
   try {

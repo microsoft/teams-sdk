@@ -13,12 +13,10 @@ export interface CreateAadAppViaTdpOptions {
 }
 
 /**
- * Create an AAD app via TDP, which also creates the service principal server-side.
+ * Create an Entra app via TDP, which also creates the service principal server-side.
  *
- * When the TDP v2 API is available (TEAMS_DEV_API=1), uses its
- * `v1.0/aadapplications` endpoint, which also makes the caller an owner of the
- * app (required by the bot communication API). That endpoint doesn't accept a
- * serviceManagementReference, so the legacy endpoint is used when one is set.
+ * When the TDP v2 API is available (TEAMS_DEV_API=1), uses its `v1.0/aadapplications` endpoint, which also makes the caller an owner of the app (required by the bot communication API).
+ * That endpoint doesn't accept a serviceManagementReference, so the legacy endpoint is used when one is set.
  */
 export async function createAadAppViaTdp(
   token: string,

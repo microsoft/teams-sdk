@@ -24,7 +24,7 @@ teams app bot migrate <appId> --subscription <id> --resource-group <your-resourc
    - `botId` — Your bot's client ID
    - `azure.subscription` — Azure subscription ID
    - `azure.resourceGroup` — Resource group containing the bot
-   - `azure.tenantId` — Entra tenant ID
+   - `azure.tenantId` — Microsoft Entra ID tenant ID
 
 You can discover these values using `teams app bot get <appId>` and `az bot show`.
 
@@ -44,6 +44,8 @@ SSO builds on top of the same Azure Bot Service OAuth connection infrastructure 
 | `requestedAccessTokenVersion` | not required | must be `2` |
 | Bot Framework redirect URI | required | required |
 | Manifest `webApplicationInfo` | not required | required |
+
+`Aadv2` is the API value for the Entra v2 provider.
 
 ---
 
@@ -188,7 +190,8 @@ az bot authsetting delete \
 
 ### Adding OAuth Connections
 
-You can add OAuth connections for any provider supported by Azure Bot Service (Aadv2, GitHub, Google, etc.).
+You can add OAuth connections for any provider supported by Azure Bot Service (Entra, GitHub, Google, etc.).
+For Entra v2, use the API value `Aadv2`.
 
 #### Step 1: Create the OAuth connection
 

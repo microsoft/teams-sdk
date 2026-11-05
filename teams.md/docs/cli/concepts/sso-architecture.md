@@ -6,7 +6,7 @@ Single Sign-On (SSO) lets your Teams bot authenticate users silently using their
 
 SSO for Teams bots involves three systems working together:
 
-1. **Entra app registration** — configured with the right identifier URI, scopes, and pre-authorized clients
+1. **Microsoft Entra ID app registration** — configured with the right identifier URI, scopes, and pre-authorized clients
 2. **Azure Bot OAuth connection** — bridges the bot to Entra for token exchange
 3. **Teams app manifest** — tells Teams where to find the SSO configuration
 
@@ -34,7 +34,7 @@ The Entra app registration needs:
 
 An OAuth connection setting on the Azure Bot that:
 
-- Uses **Aadv2** provider (Entra v2)
+- Uses the Entra v2 provider (`Aadv2` is the API value)
 - Has a connection name (typically `sso`)
 - References the Entra app's client ID and secret
 - Sets **token exchange URL** → `api://botid-{botId}` (must match identifier URI exactly)

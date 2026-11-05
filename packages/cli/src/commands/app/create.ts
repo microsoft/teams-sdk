@@ -469,7 +469,7 @@ async function renderAppCreateResult(
 }
 
 export const appCreateCommand = new Command('create')
-  .description('Create a new Teams app with bot')
+  .description('Create a Teams app with a bot and Microsoft Entra ID app registration')
   .option('-n, --name <name>', 'App/bot name')
   .option('-e, --endpoint <url>', '[OPTIONAL] Messaging endpoint URL')
   .addOption(
@@ -483,8 +483,8 @@ export const appCreateCommand = new Command('create')
   .option('--no-secret', '[OPTIONAL] Skip client secret generation (for managed identity or federated credentials)')
   .option('--azure', '[OPTIONAL] Create bot in Azure (requires az CLI)')
   .option('--teams-managed', '[OPTIONAL] Create bot managed by Teams (default)')
-  .option('--service-management-reference <id>', '[OPTIONAL] ServiceTree service ID for Microsoft Entra app attribution')
-  .option('--sign-in-audience <audience>', '[OPTIONAL] Microsoft Entra sign-in audience: myOrg or multipleOrgs')
+  .option('--service-management-reference <id>', '[OPTIONAL] ServiceTree service ID for Entra app attribution')
+  .option('--sign-in-audience <audience>', '[OPTIONAL] Entra sign-in audience: myOrg or multipleOrgs')
   .option('--subscription <id>', '[OPTIONAL] Azure subscription ID (defaults to az CLI default)')
   .option('--resource-group <name>', 'Azure resource group (required for --azure)')
   .option('--create-resource-group', "[OPTIONAL] Create the resource group if it doesn't exist")

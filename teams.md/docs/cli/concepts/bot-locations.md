@@ -63,7 +63,7 @@ teams config set default-bot-location azure
 
 If you try to use a feature that requires Azure (like OAuth or SSO) on a Teams-managed bot, the CLI will automatically detect this and offer to migrate your bot for you.
 
-You can also migrate manually at any time without changing your Entra app or credentials:
+You can also migrate manually at any time without changing your Microsoft Entra ID app registration or credentials:
 
 ```bash
 teams app bot migrate <appId> --subscription <id> --resource-group my-rg

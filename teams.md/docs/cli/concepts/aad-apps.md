@@ -1,4 +1,4 @@
-# Entra App Lifecycle
+# Microsoft Entra ID App Registration Lifecycle
 
 Every Teams bot needs an Entra app registration. This page explains how teams creates and manages Entra apps.
 
@@ -22,9 +22,9 @@ This lookup-with-retry pattern is used by `app create` and `app auth secret crea
 
 Entra apps created by teams use:
 
-- `signInAudience: AzureADMultipleOrgs` — the app accepts sign-ins from any Entra tenant
+- `signInAudience: AzureADMultipleOrgs` (API value) — the app accepts sign-ins from any Entra tenant
 
-This is required even though bot registration uses `isSingleTenant: true`. Using `AzureADMyOrg` (single org) causes service principal creation to fail silently.
+This is required even though bot registration uses `isSingleTenant: true`. Using `AzureADMyOrg` (the single-org API value) causes service principal creation to fail silently.
 
 ## Credential Flow
 

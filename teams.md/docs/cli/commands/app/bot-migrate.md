@@ -33,7 +33,7 @@ teams app bot migrate [appId] [options]
 
 ## Details
 
-Migrates a Teams-managed bot to Azure Bot Service. This is needed when you want to use features that require Azure, such as OAuth connections or SSO.
+Migrates a Teams-managed bot to Azure Bot Service, preserving its Microsoft Entra ID app registration. This is needed when you want to use features that require Azure, such as OAuth connections or SSO.
 
 ### What Happens
 

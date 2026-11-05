@@ -7,6 +7,8 @@ slug: /
 
 Teams Developer CLI for managing Microsoft Teams apps. Create, manage, and configure Teams apps from the command line.
 
+Manage Microsoft Entra ID app registrations alongside your Teams apps.
+
 ## Features
 
 - **App Lifecycle** — Create, get, update, and manage Teams apps including manifest and package operations.
