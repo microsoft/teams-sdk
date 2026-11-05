@@ -13,12 +13,10 @@ export interface CreateAadAppViaTdpOptions {
 }
 
 /**
- * Create an AAD app via TDP, which also creates the service principal server-side.
+ * Create an Entra app via TDP, which also creates the service principal server-side.
  *
- * When the TDP v2 API is available (TEAMS_DEV_API=1), uses its
- * `v1.0/aadapplications` endpoint, which also makes the caller an owner of the
- * app (required by the bot communication API). That endpoint doesn't accept a
- * serviceManagementReference, so the legacy endpoint is used when one is set.
+ * When the TDP v2 API is available (TEAMS_DEV_API=1), uses its `v1.0/aadapplications` endpoint, which also makes the caller an owner of the app (required by the bot communication API).
+ * That endpoint doesn't accept a serviceManagementReference, so the legacy endpoint is used when one is set.
  */
 export async function createAadAppViaTdp(
   token: string,
@@ -46,7 +44,7 @@ export async function createAadAppViaTdp(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to create AAD app: ${response.status} ${error}`);
+    throw new Error(`Failed to create Entra app: ${response.status} ${error}`);
   }
 
   return response.json();
@@ -64,7 +62,7 @@ async function createAadAppViaTdpV2(
   displayName: string,
   signInAudience: SignInAudience
 ): Promise<AadApp> {
-  logger.debug('Creating AAD app via TDP v2 API v1.0/aadapplications');
+  logger.debug('Creating Entra app via TDP v2 API v1.0/aadapplications');
   const response = await apiFetch(`${TDP_V2_BASE_URL}/v1.0/aadapplications`, {
     method: 'POST',
     headers: {
@@ -76,7 +74,7 @@ async function createAadAppViaTdpV2(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to create AAD app: ${response.status} ${error}`);
+    throw new Error(`Failed to create Entra app: ${response.status} ${error}`);
   }
 
   const app = (await response.json()) as TdpV2AadApplicationResponse;

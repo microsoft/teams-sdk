@@ -126,9 +126,9 @@ Before creating a PR:
 
 # Architecture Decisions
 
-## AAD App Creation — Use TDP, Not Graph API
+## Entra App Creation — Use TDP, Not Graph API
 
-Create AAD apps via TDP's `/aadapp/v2` endpoint (`createAadAppViaTdp` in `src/apps/tdp.ts`), NOT via Graph API directly. TDP's backend creates the service principal server-side, which is required for single-tenant bot registration.
+Create Entra app registrations via TDP's `/aadapp/v2` endpoint (`createAadAppViaTdp` in `src/apps/tdp.ts`), NOT via Graph API directly. TDP's backend creates the service principal server-side, which is required for single-tenant bot registration.
 
 - `isSingleTenant`: Always `true` on bot registration (SFI requirement)
 - TDP returns a different `id` than Graph's object ID — use `getAadAppByClientId` to look up the Graph object ID before calling `addPassword`

@@ -29,7 +29,7 @@ export async function createAadApp(token: string, displayName: string): Promise<
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to create AAD app: ${response.status} ${error}`);
+    throw new Error(`Failed to create Entra app: ${response.status} ${error}`);
   }
 
   return response.json();
@@ -44,19 +44,19 @@ export async function getAadAppByClientId(token: string, clientId: string): Prom
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to look up AAD app: ${response.status} ${error}`);
+    throw new Error(`Failed to look up Entra app: ${response.status} ${error}`);
   }
 
   const data = (await response.json()) as { value: AadApp[] };
   if (data.value.length === 0) {
-    throw new Error(`No AAD app found with clientId ${clientId}`);
+    throw new Error(`No Entra app found with clientId ${clientId}`);
   }
 
   return data.value[0];
 }
 
 /**
- * Get the full AAD application object by Graph object ID.
+ * Get the full Entra application object by Graph object ID.
  * Returns all fields (unlike getAadAppByClientId which returns a subset).
  */
 export async function getAadAppFull(
@@ -69,14 +69,14 @@ export async function getAadAppFull(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to get AAD app: ${response.status} ${error}`);
+    throw new Error(`Failed to get Entra app: ${response.status} ${error}`);
   }
 
   return response.json();
 }
 
 /**
- * PATCH an AAD application with partial updates.
+ * PATCH an Entra application with partial updates.
  */
 export async function updateAadApp(
   token: string,
@@ -94,7 +94,7 @@ export async function updateAadApp(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to update AAD app: ${response.status} ${error}`);
+    throw new Error(`Failed to update Entra app: ${response.status} ${error}`);
   }
 }
 

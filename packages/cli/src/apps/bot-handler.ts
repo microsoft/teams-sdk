@@ -314,8 +314,8 @@ async function findBotByMsaAppId(botId: string): Promise<BotResource | null> {
   return findBotByMsaAppIdViaList(botId);
 }
 
-// Bot ids are AAD client ids (GUIDs). Reject anything else before using them
-// in interpolated contexts (e.g. KQL queries) to keep the surface tight.
+// Bot ids are Entra client ids (GUIDs).
+// Reject anything else before using them in interpolated contexts (e.g. KQL queries) to keep the surface tight.
 const BOT_ID_PATTERN = /^[0-9a-fA-F-]{36}$/;
 
 async function findBotByMsaAppIdViaGraph(botId: string): Promise<BotResource | null> {

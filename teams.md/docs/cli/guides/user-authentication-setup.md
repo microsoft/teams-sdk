@@ -24,7 +24,7 @@ teams app bot migrate <appId> --subscription <id> --resource-group <your-resourc
    - `botId` — Your bot's client ID
    - `azure.subscription` — Azure subscription ID
    - `azure.resourceGroup` — Resource group containing the bot
-   - `azure.tenantId` — Azure AD tenant ID
+   - `azure.tenantId` — Microsoft Entra ID tenant ID
 
 You can discover these values using `teams app bot get <appId>` and `az bot show`.
 
@@ -38,12 +38,14 @@ SSO builds on top of the same Azure Bot Service OAuth connection infrastructure 
 |---|---|---|
 | `az bot authsetting create` | any provider | `Aadv2` only |
 | `tokenExchangeUrl` parameter | not set | required (`api://botid-{botId}`) |
-| AAD app identifier URI | not required | required (`api://botid-{botId}`) |
+| Entra app identifier URI | not required | required (`api://botid-{botId}`) |
 | `access_as_user` scope | not required | required |
 | Teams clients pre-authorized | not required | required |
 | `requestedAccessTokenVersion` | not required | must be `2` |
 | Bot Framework redirect URI | required | required |
 | Manifest `webApplicationInfo` | not required | required |
+
+`Aadv2` is the API value for the Entra v2 provider.
 
 ---
 
@@ -53,7 +55,7 @@ SSO builds on top of the same Azure Bot Service OAuth connection infrastructure 
 
 Setting up SSO requires three sequential steps:
 
-#### Step 1: AAD App Configuration (Microsoft Graph)
+#### Step 1: Entra App Configuration (Microsoft Graph)
 
 Two separate PATCH requests to `PATCH /v1.0/applications/{objectId}` — the scope must be created **before** pre-authorized apps reference it.
 
@@ -80,7 +82,7 @@ Two separate PATCH requests to `PATCH /v1.0/applications/{objectId}` — the sco
 }
 ```
 
-> **Key detail:** `requestedAccessTokenVersion: 2` must be set. Teams issues v2 tokens (AAD v2 endpoint); if the app is still configured for v1, the token exchange will fail because the formats don't match.
+> **Key detail:** `requestedAccessTokenVersion: 2` must be set. Teams issues v2 tokens (Microsoft identity platform v2.0 endpoint); if the app is still configured for v1, the token exchange will fail because the formats don't match.
 
 **PATCH 2 — pre-authorized apps** (after scope exists):
 ```json
@@ -156,7 +158,7 @@ az bot authsetting list \
   --subscription {subscription}
 ```
 
-Filter to AAD connections by checking if `properties.serviceProviderDisplayName` contains `"Azure Active Directory"`. Then fetch each candidate with `az bot authsetting show` and check for a `tokenExchangeUrl` parameter — only connections with this parameter are SSO connections.
+Filter to Entra connections by checking if `properties.serviceProviderDisplayName` contains the legacy API value `"Azure Active Directory"`. Then fetch each candidate with `az bot authsetting show` and check for a `tokenExchangeUrl` parameter — only connections with this parameter are SSO connections.
 
 ### Updating SSO Connections
 
@@ -180,7 +182,7 @@ az bot authsetting delete \
   --subscription {subscription}
 ```
 
-**Important:** This only removes the OAuth connection. You'll need to manually clean up the AAD app registration (identifier URI, scopes, pre-authorized apps) and the manifest `webApplicationInfo` field.
+**Important:** This only removes the OAuth connection. You'll need to manually clean up the Entra app registration (identifier URI, scopes, pre-authorized apps) and the manifest `webApplicationInfo` field.
 
 ---
 
@@ -188,7 +190,8 @@ az bot authsetting delete \
 
 ### Adding OAuth Connections
 
-You can add OAuth connections for any provider supported by Azure Bot Service (Aadv2, GitHub, Google, etc.).
+You can add OAuth connections for any provider supported by Azure Bot Service (Entra, GitHub, Google, etc.).
+For Entra v2, use the API value `Aadv2`.
 
 #### Step 1: Create the OAuth connection
 
@@ -243,7 +246,7 @@ az bot authsetting list \
   --subscription {subscription}
 ```
 
-This returns all connections regardless of provider type (unlike SSO listing which filters to AAD).
+This returns all connections regardless of provider type (unlike SSO listing which filters to Entra).
 
 ### Removing OAuth Connections
 
@@ -266,7 +269,7 @@ Once you've configured SSO, here's how the silent authentication flow works:
 ```
 1. User opens bot in Teams
    ↓
-2. Teams client requests SSO token from AAD
+2. Teams client requests SSO token from Entra
    (using pre-authorized client ID and api://botid-{botId} scope)
    ↓
 3. Teams sends the token to the bot via an invoke activity
@@ -279,7 +282,7 @@ Once you've configured SSO, here's how the silent authentication flow works:
 6. Bot receives access token with the requested scopes (e.g. User.Read)
 ```
 
-The user sees no login prompt — the flow is completely silent when the AAD app is correctly configured.
+The user sees no login prompt — the flow is completely silent when the Entra app is correctly configured.
 
 ---
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppCreateInput } from '../src/commands/app/create-action.js';
 
 const mockCreateAadAppViaTdp = vi.fn();
@@ -48,6 +48,10 @@ const baseInput: AppCreateInput = {
 };
 
 describe('createApp action', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetAccount.mockResolvedValue({ tenantId: 'tenant-id' });
@@ -103,6 +107,8 @@ describe('createApp action', () => {
       },
     });
     expect(progress.start).toHaveBeenCalledWith('Acquiring tokens...');
+    expect(progress.start).toHaveBeenCalledWith('Creating Entra app...');
+    expect(progress.success).toHaveBeenCalledWith('Created Entra app (client-id)');
     expect(progress.success).toHaveBeenCalledWith('Bot registered');
     expect(mockSetSocketMode).not.toHaveBeenCalled();
   });
@@ -119,6 +125,27 @@ describe('createApp action', () => {
     );
     expect(result.socketMode).toBe(true);
     expect(result.socketModeError).toBeUndefined();
+  });
+
+  it('keeps NOT_FOUND_AAD with Entra messages when Graph replication retries are exhausted', async () => {
+    vi.useFakeTimers();
+    mockGetAadAppByClientId.mockRejectedValue(new Error('Graph replication pending'));
+    const progress = { start: vi.fn(), success: vi.fn(), error: vi.fn() };
+    const { createApp } = await import('../src/commands/app/create-action.js');
+
+    const assertion = expect(createApp(baseInput, progress)).rejects.toMatchObject({
+      code: 'NOT_FOUND_AAD',
+      message: 'Entra app not yet available in Graph API. Last error: Graph replication pending',
+      suggestion: 'Try again shortly.',
+    });
+    await vi.runAllTimersAsync();
+    await assertion;
+
+    expect(progress.error).toHaveBeenCalledWith('Entra app not available in Graph API');
+    expect(mockGetAadAppByClientId).toHaveBeenCalledTimes(10);
+    expect(mockCreateClientSecret).not.toHaveBeenCalled();
+    expect(mockImportAppPackage).not.toHaveBeenCalled();
+    expect(mockCreateBot).not.toHaveBeenCalled();
   });
 
   it('still returns the created app when enabling socket mode fails', async () => {

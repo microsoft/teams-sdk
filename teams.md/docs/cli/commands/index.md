@@ -22,7 +22,7 @@ teams
 ├── feedback                       Open the CLI feedback issue form on GitHub
 ├── app                            Manage Teams apps (interactive menu)
 │   ├── list                       List your Teams apps
-│   ├── create                     Create a new Teams app with bot
+│   ├── create                     Create a Teams app with a bot and Microsoft Entra ID app registration
 │   ├── get [appId]                Get a Teams app
 │   ├── update [appId]             Update app properties
 │   ├── doctor [appId]             Run diagnostic checks

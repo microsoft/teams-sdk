@@ -20,8 +20,8 @@ export const TDP_HOST = isDevApiEnabled() ? DEV_INT_TDP_HOST : PROD_TDP_HOST;
 export const TDP_BASE_URL = `${TDP_HOST}/api`;
 
 /**
- * Whether TDP v2 API features (AAD app creation, bot communication
- * configuration) can be used. Only dev-int for now.
+ * Whether TDP v2 API features (Entra app creation, bot communication configuration) can be used.
+ * Only dev-int for now.
  * TODO(prod): enable as each TDP v2 endpoint ships to prod.
  */
 export function isTdpV2Enabled(): boolean {

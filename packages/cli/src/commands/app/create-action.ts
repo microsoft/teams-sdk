@@ -107,13 +107,13 @@ export async function createApp(
   }
   progress?.success('Tokens acquired');
 
-  progress?.start('Creating Azure AD app...');
+  progress?.start('Creating Entra app...');
   const aadApp = await createAadAppViaTdp(tdpToken, input.name, {
     serviceManagementReference: input.serviceManagementReference,
     signInAudience: input.signInAudience,
   });
   const clientId = aadApp.appId;
-  progress?.success(`Created Azure AD app (${clientId})`);
+  progress?.success(`Created Entra app (${clientId})`);
 
   const manifestOpts: ManifestOptions = {
     botId: clientId,
@@ -144,12 +144,12 @@ export async function createApp(
       }
     }
     if (!graphApp) {
-      progress?.error('AAD app not available in Graph API');
+      progress?.error('Entra app not available in Graph API');
       const lastError =
         graphLookupError instanceof Error ? ` Last error: ${graphLookupError.message}` : '';
       throw new CliError(
         'NOT_FOUND_AAD',
-        `AAD app not yet available in Graph API.${lastError}`,
+        `Entra app not yet available in Graph API.${lastError}`,
         'Try again shortly.'
       );
     }

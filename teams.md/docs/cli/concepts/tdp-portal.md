@@ -2,12 +2,14 @@
 
 The Teams Developer Portal (TDP) is the web UI at [dev.teams.microsoft.com](https://dev.teams.microsoft.com) for managing Teams apps. teams provides CLI equivalents for most portal operations — and some that go beyond what the portal offers.
 
+The CLI also manages Microsoft Entra ID app registrations for your bots.
+
 ## Command-to-Portal Mapping
 
 | CLI Command | Portal Equivalent |
 |-------------|-------------------|
 | `teams app list` | Apps → app list |
-| `teams app create` | Apps → New app *(CLI also handles AAD + bot registration in one step)* |
+| `teams app create` | Apps → New app *(CLI also handles Entra app registration + bot registration in one step)* |
 | `teams app get` | Apps → select app → overview |
 | `teams app update` | Apps → select app → Basic information |
 | `teams app manifest download` | Apps → select app → App package → Download |
@@ -24,7 +26,7 @@ The Teams Developer Portal (TDP) is the web UI at [dev.teams.microsoft.com](http
 
 In the portal, creating a Teams app and registering a bot are separate steps. In teams, `app create` does everything in a single command:
 
-1. Creates an AAD app (via TDP API)
+1. Creates an Entra app (via TDP API)
 2. Generates a client secret (via Graph API)
 3. Generates and imports the manifest (via TDP API)
 4. Registers the bot (via TDP or Azure)
@@ -40,7 +42,7 @@ For streamlined SSO and OAuth setup, see the [User Authentication Setup guide](.
 
 ### App Doctor
 
-`teams app doctor` has no portal equivalent. It cross-references data from TDP, Graph, and Azure to verify your app is correctly configured — checking bot registration, AAD app health, manifest consistency, and SSO configuration.
+`teams app doctor` has no portal equivalent. It cross-references data from TDP, Graph, and Azure to verify your app is correctly configured — checking bot registration, Entra app health, manifest consistency, and SSO configuration.
 
 ### Bot Migration
 
