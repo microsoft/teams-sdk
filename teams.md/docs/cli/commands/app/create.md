@@ -99,6 +99,21 @@ teams app create --name "My Bot" --env appsettings.json
 
 This writes credentials under a `Teams` section with PascalCase keys (`ClientId`, `ClientSecret`, `TenantId`).
 
+For the current C# SDK's `AzureAd` configuration, write credentials to a launch profile:
+
+```bash
+teams app create --name "My Bot" --env Properties/launchSettings.json
+```
+
+This writes `AzureAd__TenantId`, `AzureAd__ClientId`, and
+`AzureAd__ClientCredentials__0__SourceType` / `AzureAd__ClientCredentials__0__ClientSecret`
+into the first profile's `environmentVariables`, replacing legacy `Teams__*` credential keys.
+Existing profiles and unrelated settings are preserved. If no profile exists, a
+`Development` profile with `commandName: "Project"` is created. Missing
+`DOTNET_ENVIRONMENT` and `AzureAd__Instance` settings default to `Development` and
+`https://login.microsoftonline.com/`. With `--no-secret`, stale client secret values
+and their `ClientSecret` source type are removed.
+
 ### Skipping Secret Generation
 
 Use `--no-secret` to skip client secret generation when using managed identity or federated credentials:

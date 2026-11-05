@@ -58,7 +58,7 @@ describe('writeLaunchSettingsCredentials', () => {
     files.length = 0;
   });
 
-  it('writes Teams__ env vars into the first profile, preserving existing vars', () => {
+  it('writes AzureAd env vars into the first profile, preserving existing vars', () => {
     const filePath = tmpFile('launchSettings.json');
     files.push(filePath);
     fs.writeFileSync(
@@ -79,9 +79,12 @@ describe('writeLaunchSettingsCredentials', () => {
     const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     const env = json.profiles.http.environmentVariables;
     expect(env.ASPNETCORE_ENVIRONMENT).toBe('Development');
-    expect(env.Teams__ClientId).toBe('test-client-id');
-    expect(env.Teams__ClientSecret).toBe('test-client-secret');
-    expect(env.Teams__TenantId).toBe('test-tenant-id');
+    expect(env.AzureAd__ClientId).toBe('test-client-id');
+    expect(env.AzureAd__ClientCredentials__0__SourceType).toBe('ClientSecret');
+    expect(env.AzureAd__ClientCredentials__0__ClientSecret).toBe('test-client-secret');
+    expect(env.AzureAd__TenantId).toBe('test-tenant-id');
+    expect(env.DOTNET_ENVIRONMENT).toBe('Development');
+    expect(env.AzureAd__Instance).toBe('https://login.microsoftonline.com/');
     // profile shape preserved
     expect(json.profiles.http.commandName).toBe('Project');
     expect(json.profiles.http.applicationUrl).toBe('http://localhost:3978');
@@ -103,11 +106,11 @@ describe('writeLaunchSettingsCredentials', () => {
     writeLaunchSettingsCredentials(filePath, TEST_VALUES);
 
     const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    expect(json.profiles.http.environmentVariables.Teams__ClientId).toBe('test-client-id');
-    expect(json.profiles.https.environmentVariables).not.toHaveProperty('Teams__ClientId');
+    expect(json.profiles.http.environmentVariables.AzureAd__ClientId).toBe('test-client-id');
+    expect(json.profiles.https.environmentVariables).toEqual({});
   });
 
-  it('omits Teams__ClientSecret when the secret is undefined', () => {
+  it('omits client secret configuration when the secret is undefined', () => {
     const filePath = tmpFile('launchSettings.json');
     files.push(filePath);
     fs.writeFileSync(
@@ -119,9 +122,10 @@ describe('writeLaunchSettingsCredentials', () => {
 
     const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     const env = json.profiles.http.environmentVariables;
-    expect(env.Teams__ClientId).toBe('id-123');
-    expect(env.Teams__TenantId).toBe('tenant-456');
-    expect(env).not.toHaveProperty('Teams__ClientSecret');
+    expect(env.AzureAd__ClientId).toBe('id-123');
+    expect(env.AzureAd__TenantId).toBe('tenant-456');
+    expect(env).not.toHaveProperty('AzureAd__ClientCredentials__0__ClientSecret');
+    expect(env).not.toHaveProperty('AzureAd__ClientCredentials__0__SourceType');
   });
 
   it('creates a minimal launchSettings.json when the file does not exist', () => {
@@ -131,10 +135,21 @@ describe('writeLaunchSettingsCredentials', () => {
     writeLaunchSettingsCredentials(filePath, TEST_VALUES);
 
     const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    const firstProfile = json.profiles[Object.keys(json.profiles)[0]];
-    expect(firstProfile.environmentVariables.Teams__ClientId).toBe('test-client-id');
-    expect(firstProfile.environmentVariables.Teams__ClientSecret).toBe('test-client-secret');
-    expect(firstProfile.environmentVariables.Teams__TenantId).toBe('test-tenant-id');
+    expect(json).toEqual({
+      profiles: {
+        Development: {
+          commandName: 'Project',
+          environmentVariables: {
+            DOTNET_ENVIRONMENT: 'Development',
+            AzureAd__TenantId: 'test-tenant-id',
+            AzureAd__ClientId: 'test-client-id',
+            AzureAd__ClientCredentials__0__SourceType: 'ClientSecret',
+            AzureAd__ClientCredentials__0__ClientSecret: 'test-client-secret',
+            AzureAd__Instance: 'https://login.microsoftonline.com/',
+          },
+        },
+      },
+    });
   });
 
   it('creates the parent directory when it does not exist', () => {
@@ -147,10 +162,10 @@ describe('writeLaunchSettingsCredentials', () => {
 
     const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     const firstProfile = json.profiles[Object.keys(json.profiles)[0]];
-    expect(firstProfile.environmentVariables.Teams__ClientId).toBe('test-client-id');
+    expect(firstProfile.environmentVariables.AzureAd__ClientId).toBe('test-client-id');
   });
 
-  it('removes an existing Teams__ClientSecret when the secret is undefined', () => {
+  it('migrates legacy credentials and removes a stale secret when the secret is undefined', () => {
     const filePath = tmpFile('launchSettings.json');
     files.push(filePath);
     fs.writeFileSync(
@@ -162,6 +177,10 @@ describe('writeLaunchSettingsCredentials', () => {
               Teams__ClientId: 'old-id',
               Teams__ClientSecret: 'stale-secret',
               Teams__TenantId: 'old-tenant',
+              AzureAd__ClientId: 'old-id',
+              AzureAd__TenantId: 'old-tenant',
+              AzureAd__ClientCredentials__0__SourceType: 'ClientSecret',
+              AzureAd__ClientCredentials__0__ClientSecret: 'stale-secret',
             },
           },
         },
@@ -172,10 +191,84 @@ describe('writeLaunchSettingsCredentials', () => {
 
     const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     const env = json.profiles.http.environmentVariables;
-    expect(env.Teams__ClientId).toBe('id-123');
-    expect(env.Teams__TenantId).toBe('tenant-456');
+    expect(env.AzureAd__ClientId).toBe('id-123');
+    expect(env.AzureAd__TenantId).toBe('tenant-456');
+    expect(env).not.toHaveProperty('Teams__ClientId');
     expect(env).not.toHaveProperty('Teams__ClientSecret');
+    expect(env).not.toHaveProperty('Teams__TenantId');
+    expect(env).not.toHaveProperty('AzureAd__ClientCredentials__0__ClientSecret');
+    expect(env).not.toHaveProperty('AzureAd__ClientCredentials__0__SourceType');
   });
+
+  it('replaces legacy credentials while preserving custom environment and cloud settings', () => {
+    const filePath = tmpFile('launchSettings.json');
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify({
+        profiles: {
+          SocketModeBot: {
+            commandName: 'Project',
+            environmentVariables: {
+              DOTNET_ENVIRONMENT: 'Staging',
+              AzureAd__Instance: 'https://login.microsoftonline.us/',
+              Teams__ClientId: 'old-id',
+              Teams__ClientSecret: 'old-secret',
+              Teams__TenantId: 'old-tenant',
+              AzureAd__ClientCredentials__0__ClientSecret: 'old-secret',
+              AzureAd__ClientCredentials__1__SourceType: 'KeyVault',
+            },
+          },
+        },
+      })
+    );
+
+    writeLaunchSettingsCredentials(filePath, TEST_VALUES);
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    expect(json.profiles.SocketModeBot.environmentVariables).toEqual({
+      DOTNET_ENVIRONMENT: 'Staging',
+      AzureAd__Instance: 'https://login.microsoftonline.us/',
+      AzureAd__ClientId: 'test-client-id',
+      AzureAd__TenantId: 'test-tenant-id',
+      AzureAd__ClientCredentials__0__SourceType: 'ClientSecret',
+      AzureAd__ClientCredentials__0__ClientSecret: 'test-client-secret',
+      AzureAd__ClientCredentials__1__SourceType: 'KeyVault',
+    });
+  });
+
+  it('preserves a non-secret credential source when no secret is provided', () => {
+    const filePath = tmpFile('launchSettings.json');
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify({
+        profiles: {
+          SocketModeBot: {
+            environmentVariables: {
+              AzureAd__ClientCredentials__0__SourceType: 'ManagedIdentity',
+            },
+          },
+        },
+      })
+    );
+
+    writeLaunchSettingsCredentials(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
+
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    expect(
+      json.profiles.SocketModeBot.environmentVariables.AzureAd__ClientCredentials__0__SourceType
+    ).toBe('ManagedIdentity');
+  });
+
+  it.each(['{', '[]', 'null'])(
+    'rejects invalid JSON input %s without modifying the file',
+    (content: string) => {
+      const filePath = tmpFile('launchSettings.json');
+      fs.writeFileSync(filePath, content);
+
+      expect(() => writeLaunchSettingsCredentials(filePath, TEST_VALUES)).toThrow();
+      expect(fs.readFileSync(filePath, 'utf-8')).toBe(content);
+    }
+  );
 });
 
 // ── writeCredentials (dispatch) ──────────────────────────────────────
@@ -199,7 +292,7 @@ describe('writeCredentials dispatch', () => {
 
     const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     expect(json).not.toHaveProperty('Teams');
-    expect(json.profiles.http.environmentVariables.Teams__ClientId).toBe('test-client-id');
+    expect(json.profiles.http.environmentVariables.AzureAd__ClientId).toBe('test-client-id');
   });
 
   it('routes other .json files to the Teams section', () => {
