@@ -72,11 +72,42 @@ describe('bot communication configuration', () => {
     });
   });
 
-  it('maps 403 to a CliError with an ownership hint', async () => {
+  it('GET includes Entra ownership guidance in the 403 message', async () => {
     responses = [{ status: 403 }];
     await expect(getBotCommunicationConfiguration('t', CLIENT_ID)).rejects.toMatchObject({
       code: 'API_ERROR',
       statusCode: 403,
+      message:
+        "Failed to read bot communication configuration: access denied (403). You must be an owner of this bot's Microsoft Entra app registration. " +
+        "Contact your tenant's administrator to have yourself added as an owner.",
+    });
+  });
+
+  it('setSocketMode replaces the raw PUT 403 response with actionable ownership guidance', async () => {
+    responses = [
+      { status: 200, body: stored },
+      {
+        status: 403,
+        body: { errorMessage: 'User is not the owner of application', errorCode: 'Forbidden' },
+      },
+    ];
+    await expect(setSocketMode('t', CLIENT_ID, true)).rejects.toMatchObject({
+      code: 'API_ERROR',
+      statusCode: 403,
+      message:
+        "Failed to update bot communication configuration: access denied (403). You must be an owner of this bot's Microsoft Entra app registration. " +
+        "Contact your tenant's administrator to have yourself added as an owner.",
+    });
+    expect(calls.map((call) => call.method)).toEqual(['GET', 'PUT']);
+  });
+
+  it('preserves response details for other API errors', async () => {
+    responses = [{ status: 500, body: { errorMessage: 'Service unavailable' } }];
+    await expect(putBotCommunicationConfiguration('t', CLIENT_ID, stored)).rejects.toMatchObject({
+      code: 'API_ERROR',
+      statusCode: 500,
+      message:
+        'Failed to update bot communication configuration: 500 {"errorMessage":"Service unavailable"}',
     });
   });
 

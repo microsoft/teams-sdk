@@ -116,8 +116,9 @@ async function toApiError(action: string, response: Response): Promise<CliError>
   if (response.status === 403) {
     return new CliError(
       'API_ERROR',
-      message,
-      'Make sure you are an owner of the Microsoft Entra app for this bot.',
+      `Failed to ${action}: access denied (403). You must be an owner of this bot's Microsoft Entra app registration. ` +
+        "Contact your tenant's administrator to have yourself added as an owner.",
+      undefined,
       403
     );
   }
