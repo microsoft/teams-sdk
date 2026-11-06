@@ -1,0 +1,84 @@
+<!-- handler-code -->
+
+```python
+from typing import Any
+
+from microsoft_teams.api import HtmlWidgetCallToolInvokeActivity
+from microsoft_teams.api.models.html_widget import (
+    HtmlWidgetCallToolResponse,
+    McpUiCallToolResult,
+    McpUiTextContent,
+)
+from microsoft_teams.apps import ActivityContext
+
+
+@app.on_widget_call_tool
+async def handle_widget_call_tool(
+    ctx: ActivityContext[HtmlWidgetCallToolInvokeActivity],
+) -> HtmlWidgetCallToolResponse:
+    tool_name = ctx.activity.value.name
+    args: dict[str, Any] = ctx.activity.value.arguments or {}
+
+    if tool_name == "getTime":
+        from datetime import datetime, timezone
+
+        now = datetime.now(tz=timezone.utc)
+        result = McpUiCallToolResult(
+            content=[McpUiTextContent(type="text", text=now.strftime("%H:%M:%S"))],
+            structured_content={"time": now.isoformat()},
+            is_error=False,
+        )
+    else:
+        result = McpUiCallToolResult(
+            content=[McpUiTextContent(type="text", text=f"Unknown tool: {tool_name}")],
+            is_error=True,
+        )
+
+    return HtmlWidgetCallToolResponse(
+        response_type="htmlwidget/calltoolresult",
+        call_tool_result=result,
+    )
+```
+
+<!-- response-intro -->
+
+Return an `HtmlWidgetCallToolResponse` with `response_type` set to `htmlwidget/calltoolresult` and a `call_tool_result` payload.
+The result's `content` is a list of content blocks; `structured_content` holds data the widget can render from; `is_error` signals a failure.
+`McpUiCallToolResult` always serializes all three fields, defaulting to `[]`, `{}` and `False`, because an omitted field can reach the widget as `null`.
+Python has no `buildCallToolResult` equivalent, because `McpUiCallToolResult` applies those defaults when you construct it, including when a field is `None`.
+
+<!-- response-code -->
+
+```python
+result = McpUiCallToolResult(
+    content=[McpUiTextContent(type="text", text="Refreshed!")],
+    structured_content={"counter": 1, "lastAction": "refresh"},
+    is_error=False,
+)
+
+return HtmlWidgetCallToolResponse(
+    response_type="htmlwidget/calltoolresult",
+    call_tool_result=result,
+)
+```
+
+<!-- context-intro -->
+
+There is no separate Python type for the entry. `arguments` is typed `Any`, and it is a `dict` when the widget sent an object.
+Read the entry from `ctx.activity.value.arguments` if you need `mcpUrl` or `correlationId`, and strip it before treating the remaining arguments as your tool's input:
+
+```python
+raw = ctx.activity.value.arguments
+if raw is not None and not isinstance(raw, dict):
+    return HtmlWidgetCallToolResponse(
+        response_type="htmlwidget/calltoolresult",
+        call_tool_result=McpUiCallToolResult(
+            content=[McpUiTextContent(type="text", text="arguments must be an object")],
+            is_error=True,
+        ),
+    )
+
+context = (raw or {}).get("__msteams__", {})
+args = {k: v for k, v in (raw or {}).items() if k != "__msteams__"}
+correlation_id = context.get("correlationId")
+```
