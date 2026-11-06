@@ -25,6 +25,7 @@ teams app update [appId] [options]
 | Flag | Description |
 |------|-------------|
 | `--endpoint <url>` | [OPTIONAL] Set the messaging endpoint URL |
+| `--messaging-mode <mode>` | [OPTIONAL] Set how Teams delivers messages: socket or http |
 | `--scopes <scopes>` | [OPTIONAL] Set bot scopes (comma-separated: personal,team,groupChat,copilot) |
 | `--name <name>` | [OPTIONAL] Set the app short name (max 30 chars) |
 | `--long-name <name>` | [OPTIONAL] Set the app long name (max 100 chars) |
@@ -53,6 +54,19 @@ Updates app properties in both TDP and (for endpoint changes on Azure bots) via 
 ### Endpoint Updates
 
 When you change the endpoint, teams also updates the `validDomains` array in the manifest to include the new endpoint's domain. For Azure bots, the endpoint is updated via `az bot update`.
+
+### Messaging Mode
+
+Choose **Messaging mode** in the interactive update menu, or set it explicitly:
+
+```bash
+teams app update <appId> --messaging-mode socket
+teams app update <appId> --messaging-mode http --endpoint https://mybot.azurewebsites.net/api/messages
+```
+
+Both Teams-managed and Azure bots use the production TDP bot communication API. Mode changes preserve the existing callback URL and message-notification settings. When switching to HTTP with `--endpoint`, the endpoint is updated before socket mode is disabled. `--endpoint` alone does not change the messaging mode.
+
+Restart your Teams SDK application after changing the mode. Socket mode is currently available only for new bots; support for existing bots is coming soon.
 
 ### Examples
 

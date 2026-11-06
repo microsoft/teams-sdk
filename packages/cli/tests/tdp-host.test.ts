@@ -1,56 +1,25 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { TDP_HOST, TDP_BASE_URL, TDP_V2_BASE_URL } from '../src/utils/tdp-host.js';
+import { teamsDevPortalScopes } from '../src/auth/config.js';
+import { installLink, portalLink } from '../src/apps/links.js';
 
-async function loadWithFlag(value: string | undefined) {
-  if (value === undefined) delete process.env.TEAMS_DEV_API;
-  else process.env.TEAMS_DEV_API = value;
-  vi.resetModules();
-  const host = await import('../src/utils/tdp-host.js');
-  const auth = await import('../src/auth/config.js');
-  const links = await import('../src/apps/links.js');
-  return { host, auth, links };
-}
-
-describe('TDP host selection', () => {
-  const original = process.env.TEAMS_DEV_API;
-
-  afterEach(() => {
-    if (original === undefined) delete process.env.TEAMS_DEV_API;
-    else process.env.TEAMS_DEV_API = original;
-    vi.resetModules();
+describe('production TDP routing', () => {
+  it('uses production for legacy and v2 APIs', () => {
+    expect(TDP_HOST).toBe('https://dev.teams.microsoft.com');
+    expect(TDP_BASE_URL).toBe('https://dev.teams.microsoft.com/api');
+    expect(TDP_V2_BASE_URL).toBe('https://dev.teams.microsoft.com/cosmicprodamer');
   });
 
-  it('defaults to prod', async () => {
-    const { host, auth, links } = await loadWithFlag(undefined);
-
-    expect(host.isDevApiEnabled()).toBe(false);
-    expect(host.TDP_BASE_URL).toBe('https://dev.teams.microsoft.com/api');
-    expect(host.isTdpV2Enabled()).toBe(false);
-    expect(host.TDP_V2_BASE_URL).toBe('https://dev.teams.microsoft.com/cosmicprodamer');
-    expect(auth.teamsDevPortalScopes).toEqual([
+  it('requests the production token scope', () => {
+    expect(teamsDevPortalScopes).toEqual([
       'https://dev.teams.microsoft.com/AppDefinitions.ReadWrite',
     ]);
-    expect(links.portalLink('app-id')).toBe('https://dev.teams.microsoft.com/apps/app-id');
   });
 
-  it('switches every TDP value to dev-int when TEAMS_DEV_API=1', async () => {
-    const { host, auth, links } = await loadWithFlag('1');
-
-    expect(host.isDevApiEnabled()).toBe(true);
-    expect(host.TDP_BASE_URL).toBe('https://dev-int.teams.microsoft.com/api');
-    expect(host.TDP_V2_BASE_URL).toBe('https://dev-int.teams.microsoft.com/cosmictestamer');
-    expect(host.isTdpV2Enabled()).toBe(true);
-    expect(auth.teamsDevPortalScopes).toEqual([
-      'https://dev-int.teams.microsoft.com/AppDefinitions.ReadWrite',
-    ]);
-    expect(links.portalLink('app-id')).toBe('https://dev-int.teams.microsoft.com/apps/app-id');
-  });
-
-  it.each(['0', 'true', 'yes', ''])('stays on prod when TEAMS_DEV_API=%j', async (value) => {
-    const { host } = await loadWithFlag(value);
-
-    expect(host.isDevApiEnabled()).toBe(false);
-    expect(host.TDP_BASE_URL).toBe('https://dev.teams.microsoft.com/api');
-    expect(host.isTdpV2Enabled()).toBe(false);
-    expect(host.TDP_V2_BASE_URL).toBe('https://dev.teams.microsoft.com/cosmicprodamer');
+  it('links to the production portal and Teams install flow', () => {
+    expect(portalLink('app-id')).toBe('https://dev.teams.microsoft.com/apps/app-id');
+    expect(installLink('app-id', 'tenant-id')).toBe(
+      'https://teams.microsoft.com/l/app/app-id?installAppPackage=true&appTenantId=tenant-id'
+    );
   });
 });

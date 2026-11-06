@@ -1,11 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-// Mock the host module instead of setting TEAMS_DEV_API so process.env is never mutated.
-vi.mock('../src/utils/tdp-host.js', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../src/utils/tdp-host.js')>()),
-  TDP_V2_BASE_URL: 'https://dev-int.teams.microsoft.com/cosmictestamer',
-  isTdpV2Enabled: () => true,
-}));
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 interface RecordedCall {
   url: string;
@@ -59,7 +52,7 @@ describe('bot communication configuration', () => {
     responses = [{ status: 404 }];
     await expect(getBotCommunicationConfiguration('t', CLIENT_ID)).resolves.toBeNull();
     expect(calls[0]!.url).toBe(
-      `https://dev-int.teams.microsoft.com/cosmictestamer/v1.0/applications/${CLIENT_ID}/bot/communicationConfiguration`
+      `https://dev.teams.microsoft.com/cosmicprodamer/v1.0/applications/${CLIENT_ID}/bot/communicationConfiguration`
     );
   });
 
@@ -136,6 +129,9 @@ describe('bot communication configuration', () => {
 
     expect(calls.map((c) => c.method)).toEqual(['GET', 'PUT']);
     expect(calls[1]!.body).toEqual(expected);
+    expect(calls[1]!.url).toBe(
+      `https://dev.teams.microsoft.com/cosmicprodamer/v1.0/applications/${CLIENT_ID}/bot/communicationConfiguration`
+    );
     expect(result).toEqual({ configuration: expected, changed: true });
   });
 
@@ -159,31 +155,24 @@ describe('bot communication configuration', () => {
     expect(calls).toHaveLength(1);
     expect(result.changed).toBe(false);
   });
-});
+  it('disables socket mode while preserving the endpoint and notification settings', async () => {
+    const enabled = {
+      ...stored,
+      endpointConfiguration: { ...stored.endpointConfiguration, supportsSocketMode: true },
+    };
+    responses = [{ status: 200, body: enabled }, { status: 200, body: stored }];
 
-describe('bot communication configuration without TEAMS_DEV_API', () => {
-  beforeEach(() => {
-    calls.length = 0;
-    vi.resetModules();
-    vi.doMock('../src/utils/tdp-host.js', async (importOriginal) => ({
-      ...(await importOriginal<typeof import('../src/utils/tdp-host.js')>()),
-      isTdpV2Enabled: () => false,
-    }));
+    const result = await setSocketMode('t', CLIENT_ID, false);
+
+    expect(calls[1]!.body).toEqual(stored);
+    expect(result).toEqual({ configuration: stored, changed: true });
   });
 
-  afterEach(() => {
-    vi.doUnmock('../src/utils/tdp-host.js');
-    vi.resetModules();
-  });
-
-  it('is unavailable and makes no network calls', async () => {
-    const mod = await import('../src/apps/bot-communication.js');
-
-    expect(mod.isBotCommunicationApiAvailable()).toBe(false);
-    await expect(mod.getBotCommunicationConfiguration('t', CLIENT_ID)).rejects.toMatchObject({
-      code: 'API_ERROR',
-      suggestion: expect.stringContaining('TEAMS_DEV_API=1'),
-    });
-    expect(calls).toHaveLength(0);
+  it('encodes the client ID in the production route', async () => {
+    responses = [{ status: 404 }];
+    await getBotCommunicationConfiguration('t', 'app/id?query');
+    expect(calls[0]!.url).toBe(
+      'https://dev.teams.microsoft.com/cosmicprodamer/v1.0/applications/app%2Fid%3Fquery/bot/communicationConfiguration'
+    );
   });
 });
