@@ -184,6 +184,7 @@ async function prepareAppCreate(
     messagingMode === undefined &&
     options.endpoint === undefined &&
     interactive &&
+    !silent &&
     !hasFlags
   ) {
     socketMode = (await promptMessagingMode()) === 'socket';
