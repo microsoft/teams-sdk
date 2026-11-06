@@ -3,18 +3,17 @@ import pc from 'picocolors';
 import type { AppSummary, AppDetails } from './types.js';
 import { fetchApp, fetchAppDetailsV2 } from './api.js';
 import { fetchBot } from './tdp.js';
-import { getBotCommunicationConfiguration, isBotCommunicationApiAvailable } from './bot-communication.js';
+import { getBotCommunicationConfiguration } from './bot-communication.js';
 import { getCachedAppDetails } from './app-details-cache.js';
 import { getCachedBot } from './bot-cache.js';
 import { logger } from '../utils/logger.js';
 import { openInBrowser, printLinkBanner } from '../utils/browser.js';
-import { isInstallLinkSupported, printInstallInstructions } from './links.js';
 import { createSilentSpinner } from '../utils/spinner.js';
 
 export interface AppDetailData {
   appDetails: AppDetails;
   endpoint: string | null;
-  /** null when not applicable or unknown (no bot, API unavailable, or read failed). */
+  /** null when not applicable or unknown (no bot or read failed). */
   socketMode: boolean | null;
   installLink: string;
   portalLink: string;
@@ -71,13 +70,11 @@ export async function fetchAppDetail(
       // Bot fetch failed (e.g. Azure bot), skip
     }
     // Socket mode is keyed by the Entra app ID, so it applies to Teams-managed and Azure bots alike.
-    if (isBotCommunicationApiAvailable()) {
-      try {
-        const config = await getBotCommunicationConfiguration(token, botId);
-        socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
-      } catch {
-        // Leave as unknown
-      }
+    try {
+      const config = await getBotCommunicationConfiguration(token, botId);
+      socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
+    } catch (error) {
+      logger.debug(`Could not read messaging mode: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -113,7 +110,7 @@ export async function showAppDetail(
     logger.info(`${pc.dim('Messaging mode:')} ${socketMode ? 'Sockets' : 'HTTP endpoint'}`);
   }
   logger.info('');
-  printInstallInstructions(appDetails.teamsAppId, installLink);
+  printLinkBanner('Install in Teams', installLink);
   printLinkBanner('Developer Portal', portalLink);
 
   logger.info(
@@ -126,7 +123,7 @@ export async function showAppDetail(
         const action = await select({
           message: '',
           choices: [
-            ...(isInstallLinkSupported() ? [{ name: 'Install in Teams', value: 'install' }] : []),
+            { name: 'Install in Teams', value: 'install' },
             { name: 'Open in Developer Portal', value: 'portal' },
             { name: 'Back', value: 'back' },
           ],

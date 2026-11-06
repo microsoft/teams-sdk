@@ -35,13 +35,15 @@ Displays detailed information about a Teams app.
 
 ### JSON Output
 
-Use `--json` to output specific fields for scripting:
+Use `--json` to output app details for scripting:
 
 ```bash
-teams app get <appId> --json appId,name,endpoint
+teams app get <appId> --json
 ```
 
-Available fields: `appId`, `teamsAppId`, `name`, `longName`, `version`, `developer`, `shortDescription`, `longDescription`, `websiteUrl`, `privacyUrl`, `termsOfUseUrl`, `endpoint`, `installLink`.
+Available fields: `appId`, `teamsAppId`, `name`, `longName`, `version`, `developer`, `shortDescription`, `longDescription`, `websiteUrl`, `privacyUrl`, `termsOfUseUrl`, `endpoint`, `socketMode`, `installLink`, `portalLink`.
+
+`socketMode` is always included: `true` for sockets, `false` for HTTP (including bots without a communication configuration), or `null` when there is no bot or the mode could not be read.
 
 ### Install Link
 
