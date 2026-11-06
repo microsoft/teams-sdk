@@ -25,6 +25,7 @@ export default {
         'commands/login',
         'commands/logout',
         'commands/status',
+        'commands/feedback',
         {
           type: 'category',
           label: 'app',

@@ -38,7 +38,7 @@ Using the Teams SDK, you can bring an [Agent 365](https://learn.microsoft.com/mi
 
 The SDK handles the token resolution automatically per turn. You don't change how you call APIs; you just optionally check whether the turn is agentic using `context.Activity.Recipient?.GetAgenticIdentity()`.
 
-See the [Agentic Identity guide](/csharp/in-depth-guides/agentic-identity).
+See the [Agent 365 guide](/csharp/in-depth-guides/agent-365/).
 
 ### Multi-flow OAuth
 

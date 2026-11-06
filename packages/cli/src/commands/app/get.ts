@@ -6,7 +6,6 @@ import {
   fetchAppDetail,
   showAppDetail,
   installLink,
-  isBotCommunicationApiAvailable,
   portalLink,
 } from '../../apps/index.js';
 import { outputJson } from '../../utils/json-output.js';
@@ -28,8 +27,8 @@ interface AppGetOutput {
   privacyUrl: string;
   termsOfUseUrl: string;
   endpoint: string | null;
-  /** Only present when TEAMS_DEV_API=1. null = no Teams-managed bot or read failed. */
-  socketMode?: boolean | null;
+  /** null = no bot or read failed. */
+  socketMode: boolean | null;
   installLink: string;
   portalLink: string;
 }
@@ -97,7 +96,7 @@ export const appGetCommand = new Command('get')
           privacyUrl: appDetails.privacyUrl,
           termsOfUseUrl: appDetails.termsOfUseUrl,
           endpoint,
-          ...(isBotCommunicationApiAvailable() ? { socketMode } : {}),
+          socketMode,
           installLink: installLink(appDetails.teamsAppId, tenantId),
           portalLink: portalLink(appDetails.teamsAppId),
         };

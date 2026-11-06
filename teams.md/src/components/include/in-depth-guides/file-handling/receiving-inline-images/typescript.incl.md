@@ -1,21 +1,44 @@
-<!-- download-image -->
+<!-- list-inline-images -->
 
 ```typescript
-app.on('message', async ({ activity }) => {
-  const image = activity.attachments?.find(
-    (attachment) => attachment.contentType?.startsWith('image/') && attachment.contentUrl
-  );
+app.on('message', async ({ files, send }) => {
+  const pastedImages = await files.list({ attachmentStyle: 'inlineImage' });
 
-  if (image?.contentUrl) {
-    // Request binary data so the client does not decode the image as text or JSON.
-    const res = await app.api.http.get<ArrayBuffer>(image.contentUrl, {
-      responseType: 'arraybuffer',
-    });
-
-    const bytes = Buffer.from(res.data);
-    const base64 = bytes.toString('base64');
-
-    // Pass `bytes` or `base64` to your image-processing or model client.
+  if (pastedImages.length === 0) {
+    await send('Paste an image into your message and I will read it.');
+    return;
   }
+
+  await send(`You pasted ${pastedImages.length} image(s).`);
 });
+```
+
+<!-- download-inline-image -->
+
+```typescript
+const image = await files.first({ attachmentStyle: 'inlineImage' });
+
+if (image) {
+  const downloaded = await image.download();
+  const base64 = Buffer.from(downloaded.bytes).toString('base64');
+
+  // Pass `downloaded.bytes` or `base64`, with `downloaded.contentType`, to your image-processing or model client.
+}
+```
+
+<!-- errors-handling -->
+
+```typescript
+import { InlineImageTransformationError } from '@microsoft/teams.apps';
+
+try {
+  const downloaded = await image.download();
+  // ...
+} catch (err) {
+  if (err instanceof InlineImageTransformationError) {
+    await send('That pasted image cannot be downloaded. Try sending it as a file attachment instead.');
+  } else {
+    throw err;
+  }
+}
 ```

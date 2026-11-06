@@ -3,7 +3,7 @@ import pc from 'picocolors';
 import type { AppSummary, AppDetails } from './types.js';
 import { fetchApp, fetchAppDetailsV2 } from './api.js';
 import { fetchBot } from './tdp.js';
-import { getBotCommunicationConfiguration, isBotCommunicationApiAvailable } from './bot-communication.js';
+import { getBotCommunicationConfiguration } from './bot-communication.js';
 import { getCachedAppDetails } from './app-details-cache.js';
 import { getCachedBot } from './bot-cache.js';
 import { logger } from '../utils/logger.js';
@@ -13,7 +13,7 @@ import { createSilentSpinner } from '../utils/spinner.js';
 export interface AppDetailData {
   appDetails: AppDetails;
   endpoint: string | null;
-  /** null when not applicable or unknown (no bot, Azure bot, API unavailable, or read failed). */
+  /** null when not applicable or unknown (no bot or read failed). */
   socketMode: boolean | null;
   installLink: string;
   portalLink: string;
@@ -63,21 +63,18 @@ export async function fetchAppDetail(
   let socketMode: boolean | null = null;
   if (appDetails.bots && appDetails.bots.length > 0) {
     const botId = appDetails.bots[0].botId;
-    let isTeamsManaged = false;
     try {
       const bot = await fetchBot(token, botId);
       endpoint = bot.messagingEndpoint || null;
-      isTeamsManaged = true;
     } catch {
       // Bot fetch failed (e.g. Azure bot), skip
     }
-    if (isTeamsManaged && isBotCommunicationApiAvailable()) {
-      try {
-        const config = await getBotCommunicationConfiguration(token, botId);
-        socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
-      } catch {
-        // Leave as unknown
-      }
+    // Socket mode is keyed by the Entra app ID, so it applies to Teams-managed and Azure bots alike.
+    try {
+      const config = await getBotCommunicationConfiguration(token, botId);
+      socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
+    } catch (error) {
+      logger.debug(`Could not read messaging mode: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

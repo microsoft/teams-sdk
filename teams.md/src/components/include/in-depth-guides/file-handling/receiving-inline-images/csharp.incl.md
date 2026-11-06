@@ -1,35 +1,52 @@
-<!-- download-image -->
+<!-- list-inline-images -->
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Teams.Apps.Clients;
-using Microsoft.Teams.Apps.Schema;
+using Microsoft.Teams.Apps.Files;
 
-HttpClient imageClient = app.Services
-    .GetRequiredService<IHttpClientFactory>()
-    .CreateClient(nameof(ApiClient));
-
-teams.OnMessage(async (context, cancellationToken) =>
+teamsApp.OnMessage(async (context, cancellationToken) =>
 {
-    TeamsAttachment? image = context.Activity.Attachments?.FirstOrDefault(
-        attachment =>
-            attachment.ContentType is not null
-            && attachment.ContentType.Value.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
-            && attachment.ContentUrl is not null);
+    IList<IncomingFile> pastedImages = await context.Files.ListAsync(
+        new FileListOptions { AttachmentStyle = AttachmentStyle.InlineImage },
+        cancellationToken);
 
-    if (image?.ContentUrl is Uri contentUrl)
+    if (pastedImages.Count == 0)
     {
-        using HttpResponseMessage response = await imageClient.GetAsync(
-            contentUrl,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        // Read the response body as raw image bytes.
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-        string base64 = Convert.ToBase64String(bytes);
-
-        // Pass bytes or base64 to your image-processing or model client.
+        await context.ReplyAsync("Paste an image into your message and I will read it.", cancellationToken);
+        return;
     }
+
+    await context.ReplyAsync($"You pasted {pastedImages.Count} image(s).", cancellationToken);
 });
+```
+
+<!-- download-inline-image -->
+
+```csharp
+IncomingFile? image = await context.Files.FirstAsync(
+    new FileListOptions { AttachmentStyle = AttachmentStyle.InlineImage },
+    cancellationToken);
+
+if (image is not null)
+{
+    DownloadedFile downloaded = await image.DownloadAsync(cancellationToken);
+    string base64 = Convert.ToBase64String(downloaded.Bytes);
+
+    // Pass downloaded.Bytes or base64, with downloaded.ContentType, to your image-processing or model client.
+}
+```
+
+<!-- errors-handling -->
+
+```csharp
+using Microsoft.Teams.Apps.Files;
+
+try
+{
+    DownloadedFile downloaded = await image.DownloadAsync(cancellationToken);
+    // ...
+}
+catch (InlineImageTransformationException)
+{
+    await context.ReplyAsync("That pasted image cannot be downloaded. Try sending it as a file attachment instead.", cancellationToken);
+}
 ```

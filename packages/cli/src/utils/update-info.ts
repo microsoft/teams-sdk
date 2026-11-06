@@ -103,3 +103,22 @@ export function compareCliVersions(leftVersion: string, rightVersion: string): n
 export function isNewerVersion(latest: string, current = getCurrentVersion()): boolean {
   return compareCliVersions(latest, current) > 0;
 }
+
+export interface CliVersionStatus {
+  current: string;
+  /** Version the `latest` dist-tag points to, or null if the registry could not be reached. */
+  latest: string | null;
+  updateAvailable: boolean;
+}
+
+export async function getCliVersionStatus(
+  fetchLatest: () => Promise<string | null> = fetchLatestVersion,
+  current = getCurrentVersion()
+): Promise<CliVersionStatus> {
+  const latest = await fetchLatest();
+  return {
+    current,
+    latest,
+    updateAvailable: latest !== null && isNewerVersion(latest, current),
+  };
+}

@@ -22,10 +22,20 @@ if file:
     await ctx.reply(f"Reading {file.name}...")
 ```
 
+<!-- filter-by-style -->
+
+```python
+# Only files sent as file attachments
+attached_files = await ctx.files.list(attachment_style="file")
+
+# Only images pasted into the message
+pasted_images = await ctx.files.list(attachment_style="inlineImage")
+```
+
 <!-- reading-download -->
 
 ```python
-file = await ctx.files.first()
+file = await ctx.files.first(attachment_style="file")
 
 if file:
     downloaded = await file.download()
@@ -36,7 +46,7 @@ if file:
 <!-- reading-text -->
 
 ```python
-file = await ctx.files.first()
+file = await ctx.files.first(attachment_style="file")
 
 if file:
     contents = await file.text()
@@ -63,10 +73,11 @@ async for chunk in file.stream():
 | `unique_id` | The OneDrive/SharePoint drive-item id, when the platform provides it. Present only for files backed by ODSP storage. |
 | `name` | File name including its extension (e.g. `report.pdf`). |
 | `extension` | File extension without the dot (e.g. `pdf`), from the platform-supplied `file_type`. Absent when the platform omits it. |
-| `content_type` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `extension`. To learn the type of the bytes you actually received, read `content_type` on the downloaded file, which is resolved from the download response. |
+| `attachment_style` | How the file was attached: `"file"` when sent as a file attachment, or `"inlineImage"` when pasted into the message. |
+| `content_type` | The file's MIME type, when the source provides one. Always unset for file attachments received from a bot activity: the `file.download.info` attachment carries no MIME type, only the extension surfaced as `extension`. To learn the type of the bytes you actually received, read `content_type` on the downloaded file, which is resolved from the download response. For an inline image, see [Receiving Inline Images](./receiving-inline-images#how-pasted-images-are-named-and-typed). |
 | `scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `source` | Where the SDK found the file. Currently always `botActivity`. |
-| `content_url` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
+| `content_url` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. For an inline image, it is the image's Bot API location. |
 | `raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
 <!-- reusing-downloaded-file -->
@@ -99,6 +110,8 @@ from microsoft_teams.apps import (
     FileError,
     FileScopeNotSupportedError,
     FileUrlExpiredError,
+    InlineImageAccessError,
+    InlineImageTransformationError,
 )
 ```
 
@@ -115,6 +128,10 @@ except FileCredentialError as err:
     await ctx.reply(f"Could not read that file as {err.actor or 'the identity used'}: no Graph credential was available.")
 except FileAccessError as err:
     await ctx.reply(f"Could not read that file as {err.actor or 'the identity used'}: the service returned {err.status}.")
+except InlineImageTransformationError:
+    await ctx.reply("That pasted image cannot be downloaded. Try sending it as a file attachment instead.")
+except InlineImageAccessError as err:
+    await ctx.reply(f"Could not read that pasted image as {err.actor or 'the identity used'}: the service returned {err.status}.")
 except FileScopeNotSupportedError as err:
     await ctx.reply(f"Downloading files from {err.scope} conversations is not supported yet.")
 except FileError:

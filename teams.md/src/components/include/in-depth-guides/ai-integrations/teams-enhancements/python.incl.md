@@ -124,3 +124,24 @@ def _attach_citations(reply: MessageActivityInput, full_text: str) -> None:
 ```
 
 `tool_logger` is the `CitationMiddleware` instance from [Build an agent](./build-agent#grounding-responses-with-citations); its `citations` dict is reset at the start of each turn.
+
+<!-- sensitivity-labels -->
+
+```python
+from microsoft_teams.api import CitationAppearance, MessageActivityInput, SensitivityUsageInfo
+
+label_id = "<purview-label-id>"
+
+reply = (
+    MessageActivityInput(text="Here is the quarterly summary [1].")
+    .add_sensitivity_label(SensitivityUsageInfo(at_id=label_id, name="Confidential"))
+    .add_citation(
+        position=1,
+        appearance=CitationAppearance(
+            name="Quarterly report",
+            abstract="Revenue and forecast for the quarter.",
+            usage_info=SensitivityUsageInfo(at_id=label_id, name="Confidential"),
+        ),
+    )
+)
+```

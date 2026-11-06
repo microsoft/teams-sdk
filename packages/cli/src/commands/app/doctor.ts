@@ -10,7 +10,6 @@ import {
   discoverAzureBot,
   extractDomain,
   getBotCommunicationConfiguration,
-  isBotCommunicationApiAvailable,
 } from '../../apps/index.js';
 import type { AppDetails } from '../../apps/types.js';
 import type { BotDetails } from '../../apps/tdp.js';
@@ -155,6 +154,28 @@ async function checkBotRegistration(
   let tmBot: BotDetails | null = null;
   let azure: AzureContext | null = null;
 
+  // Socket mode is keyed by the Entra app ID, so the check is the same for both bot locations.
+  const checkMessagingMode = async (): Promise<boolean> => {
+    try {
+      const config = await getBotCommunicationConfiguration(tdpToken, botId);
+      const enabled = config?.endpointConfiguration.supportsSocketMode ?? false;
+      results.push({
+        category: cat,
+        label: `Messaging mode: ${enabled ? 'Sockets' : 'HTTP endpoint'}`,
+        status: 'pass',
+      });
+      return enabled;
+    } catch (e) {
+      results.push({
+        category: cat,
+        label: 'Could not check messaging mode',
+        status: 'info',
+        detail: e instanceof Error ? e.message : undefined,
+      });
+      return false;
+    }
+  };
+
   if (location === 'tm') {
     // Teams-managed specific checks
     try {
@@ -174,25 +195,7 @@ async function checkBotRegistration(
       }
 
       // Socket mode
-      let socketMode = false;
-      if (isBotCommunicationApiAvailable()) {
-        try {
-          const config = await getBotCommunicationConfiguration(tdpToken, botId);
-          socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
-          results.push({
-            category: cat,
-            label: `Messaging mode: ${socketMode ? 'Sockets' : 'HTTP endpoint'}`,
-            status: 'pass',
-          });
-        } catch (e) {
-          results.push({
-            category: cat,
-            label: 'Could not check messaging mode',
-            status: 'info',
-            detail: e instanceof Error ? e.message : undefined,
-          });
-        }
-      }
+      const socketMode = await checkMessagingMode();
 
       // Endpoint
       if (tmBot.messagingEndpoint) {
@@ -225,6 +228,7 @@ async function checkBotRegistration(
     }
   } else {
     // Azure-specific checks
+    const socketMode = await checkMessagingMode();
     if (!(await isAzInstalled())) {
       results.push({
         category: cat,
@@ -311,7 +315,7 @@ async function checkBotRegistration(
                 detail: 'timeout or network error',
               });
             }
-          } else {
+          } else if (!socketMode) {
             results.push({ category: cat, label: 'Messaging endpoint not set', status: 'warn' });
           }
         } catch (e) {

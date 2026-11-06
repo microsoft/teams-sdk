@@ -10,10 +10,6 @@
   "essentials/on-event": [
     "csharp"
   ],
-  "in-depth-guides/agentic-identity": [
-    "typescript",
-    "python"
-  ],
   "in-depth-guides/observability/logging": [
     "csharp"
   ],

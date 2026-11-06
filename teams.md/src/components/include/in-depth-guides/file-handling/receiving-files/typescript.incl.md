@@ -23,10 +23,20 @@ if (file) {
 }
 ```
 
+<!-- filter-by-style -->
+
+```typescript
+// Only files sent as file attachments
+const attachedFiles = await files.list({ attachmentStyle: 'file' });
+
+// Only images pasted into the message
+const pastedImages = await files.list({ attachmentStyle: 'inlineImage' });
+```
+
 <!-- reading-download -->
 
 ```typescript
-const file = await files.first();
+const file = await files.first({ attachmentStyle: 'file' });
 
 if (file) {
   const downloaded = await file.download();
@@ -38,7 +48,7 @@ if (file) {
 <!-- reading-text -->
 
 ```typescript
-const file = await files.first();
+const file = await files.first({ attachmentStyle: 'file' });
 
 if (file) {
   const contents = await file.text();
@@ -69,10 +79,11 @@ for await (const chunk of stream) {
 | `uniqueId` | The OneDrive/SharePoint drive-item id, when the platform provides it. Present only for files backed by ODSP storage. |
 | `name` | File name including its extension (e.g. `report.pdf`). |
 | `extension` | File extension without the dot (e.g. `pdf`), from the platform-supplied `fileType`. Absent when the platform omits it. |
-| `contentType` | The file's MIME type, when the source provides one. Always unset for files received from a bot activity (every file today): the `file.download.info` attachment carries no MIME type, only the extension surfaced as `extension`. To learn the type of the bytes you actually received, read `contentType` on the downloaded file, which is resolved from the download response. |
+| `attachmentStyle` | How the file was attached: `'file'` when sent as a file attachment, or `'inlineImage'` when pasted into the message. |
+| `contentType` | The file's MIME type, when the source provides one. Always unset for file attachments received from a bot activity: the `file.download.info` attachment carries no MIME type, only the extension surfaced as `extension`. To learn the type of the bytes you actually received, read `contentType` on the downloaded file, which is resolved from the download response. For an inline image, see [Receiving Inline Images](./receiving-inline-images#how-pasted-images-are-named-and-typed). |
 | `scope` | The conversation scope the file arrived in (`personal`, `groupChat`, or `channel`). |
 | `source` | Where the SDK found the file. Currently always `botActivity`. |
-| `contentUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. |
+| `contentUrl` | A browsable link to the file in OneDrive/SharePoint, when known. Not a fetchable download URL. For an inline image, it is the image's Bot API location. |
 | `raw` | The original wire attachment (the metadata object, not the bytes) — see [Access the raw attachment](#access-the-raw-attachment). |
 
 <!-- reusing-downloaded-file -->
@@ -106,6 +117,8 @@ import {
   FileError,
   FileScopeNotSupportedError,
   FileUrlExpiredError,
+  InlineImageAccessError,
+  InlineImageTransformationError,
 } from '@microsoft/teams.apps';
 ```
 
@@ -122,6 +135,10 @@ try {
     await send(`Could not read that file as ${err.actor ?? 'the identity used'}: no Graph credential was available.`);
   } else if (err instanceof FileAccessError) {
     await send(`Could not read that file as ${err.actor ?? 'the identity used'}: the service returned ${err.status}.`);
+  } else if (err instanceof InlineImageTransformationError) {
+    await send('That pasted image cannot be downloaded. Try sending it as a file attachment instead.');
+  } else if (err instanceof InlineImageAccessError) {
+    await send(`Could not read that pasted image as ${err.actor ?? 'the identity used'}: the service returned ${err.status}.`);
   } else if (err instanceof FileScopeNotSupportedError) {
     await send(`Downloading files from ${err.scope} conversations is not supported yet.`);
   } else if (err instanceof FileError) {

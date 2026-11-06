@@ -5,13 +5,18 @@ const mockFetchBot = vi.fn();
 const mockUpdateBot = vi.fn();
 const mockUpdateAppDetails = vi.fn();
 const mockFetchAppDetailsV2 = vi.fn();
+const mockFetchAppDetail = vi.fn();
 const mockCreateBot = vi.fn();
 const mockCreateAadAppViaTdp = vi.fn();
 const mockCreateManifestZip = vi.fn();
 const mockImportAppPackage = vi.fn();
-const mockIsBotCommunicationApiAvailable = vi.fn().mockReturnValue(false);
 const mockSetSocketMode = vi.fn();
 const mockGetBotLocation = vi.fn().mockResolvedValue('tm');
+const mockDiscoverAzureBot = vi.fn();
+const mockGetAzureBotEndpoint = vi.fn();
+const mockAzureUpdateEndpoint = vi.fn().mockResolvedValue(undefined);
+const mockIsAzInstalled = vi.fn().mockResolvedValue(true);
+const mockIsAzLoggedIn = vi.fn().mockResolvedValue(true);
 
 vi.mock('../src/apps/index.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/apps/index.js')>();
@@ -22,6 +27,7 @@ vi.mock('../src/apps/index.js', async (importOriginal) => {
     updateBot: mockUpdateBot,
     updateAppDetails: mockUpdateAppDetails,
     fetchAppDetailsV2: mockFetchAppDetailsV2,
+    fetchAppDetail: mockFetchAppDetail,
     showBasicInfoEditor: vi.fn(),
     getBotLocation: mockGetBotLocation,
     createTdpBotHandler: vi.fn().mockReturnValue({
@@ -29,16 +35,16 @@ vi.mock('../src/apps/index.js', async (importOriginal) => {
     }),
     createAzureBotHandler: vi.fn().mockReturnValue({
       createBot: vi.fn().mockResolvedValue(undefined),
-      updateEndpoint: vi.fn().mockResolvedValue(undefined),
+      updateEndpoint: mockAzureUpdateEndpoint,
     }),
-    discoverAzureBot: vi.fn(),
+    discoverAzureBot: mockDiscoverAzureBot,
+    getAzureBotEndpoint: mockGetAzureBotEndpoint,
     uploadIcon: vi.fn(),
     createAadAppViaTdp: mockCreateAadAppViaTdp,
     createClientSecret: vi.fn().mockResolvedValue({ secretText: 'fake-secret-text' }),
     getAadAppByClientId: vi.fn().mockResolvedValue({ id: 'aad-object-id' }),
     createManifestZip: mockCreateManifestZip,
     importAppPackage: mockImportAppPackage,
-    isBotCommunicationApiAvailable: mockIsBotCommunicationApiAvailable,
     setSocketMode: mockSetSocketMode,
     installLink: vi.fn((id: string, tenantId: string) =>
       `https://teams.microsoft.com/l/app/${id}?installAppPackage=true&appTenantId=${tenantId}`
@@ -90,6 +96,8 @@ vi.mock('../src/utils/browser.js', () => ({
 vi.mock('../src/utils/az.js', () => ({
   ensureAz: vi.fn(),
   runAz: vi.fn(),
+  isAzInstalled: mockIsAzInstalled,
+  isAzLoggedIn: mockIsAzLoggedIn,
 }));
 
 vi.mock('../src/utils/az-prompts.js', () => ({
@@ -384,12 +392,7 @@ describe('app create --messaging-mode', () => {
     });
     mockCreateManifestZip.mockReturnValue(Buffer.from('fake-zip'));
     mockImportAppPackage.mockResolvedValue({ teamsAppId: 'fake-teams-app-id' });
-    mockIsBotCommunicationApiAvailable.mockReturnValue(true);
     mockSetSocketMode.mockResolvedValue({ configuration: {}, changed: true });
-  });
-
-  afterAll(() => {
-    mockIsBotCommunicationApiAvailable.mockReturnValue(false);
   });
 
   it('creates a Teams-managed bot without an endpoint and enables socket mode', async () => {
@@ -437,28 +440,105 @@ describe('app create --messaging-mode', () => {
     expect(mockGetAccount).not.toHaveBeenCalled();
   });
 
-  it('rejects --messaging-mode socket with --azure before auth', async () => {
+  it('creates an Azure bot without an endpoint and enables socket mode', async () => {
+    const { resolveSubscription, resolveResourceGroup } = await import('../src/utils/az-prompts.js');
+    vi.mocked(resolveSubscription).mockResolvedValue('sub');
+    vi.mocked(resolveResourceGroup).mockResolvedValue('rg');
     const command = await freshCreateCommand();
 
-    await expect(
-      command.parseAsync(['--name', 'Bot', '--messaging-mode', 'socket', '--azure', '--json'], { from: 'user' })
-    ).rejects.toThrow('process.exit(1)');
+    await command.parseAsync(
+      ['--name', 'Socket Bot', '--messaging-mode', 'socket', '--azure', '--resource-group', 'rg', '--json'],
+      { from: 'user' }
+    );
 
-    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
-    expect(mockGetAccount).not.toHaveBeenCalled();
+    expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'fake-client-id', true);
+    expect(jsonOutput).toEqual(
+      expect.objectContaining({ botLocation: 'azure', endpoint: null, socketMode: true })
+    );
   });
 
-  it('rejects --messaging-mode socket when the API is unavailable (TEAMS_DEV_API unset)', async () => {
-    mockIsBotCommunicationApiAvailable.mockReturnValue(false);
+  it('exposes messaging mode in create help', async () => {
     const command = await freshCreateCommand();
 
-    await expect(
-      command.parseAsync(['--name', 'Bot', '--messaging-mode', 'socket', '--json'], { from: 'user' })
-    ).rejects.toThrow('process.exit(1)');
+    expect(command.helpInformation()).toContain('--messaging-mode <mode>');
+  });
+});
 
-    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_MISSING' } });
-    expect(mockGetAccount).not.toHaveBeenCalled();
-    expect(mockSetSocketMode).not.toHaveBeenCalled();
+describe('app get production output', () => {
+  async function freshGetCommand() {
+    vi.resetModules();
+    const { appGetCommand } = await import('../src/commands/app/get.js');
+    return appGetCommand;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    jsonOutput = null;
+    mockGetAccount.mockResolvedValue({ tenantId: 'fake-tenant-id' });
+    mockFetchApp.mockResolvedValue({
+      appId: 'aad-object-id',
+      appName: 'Test App',
+      teamsAppId: 'some-app-id',
+    });
+    mockFetchAppDetail.mockResolvedValue({
+      appDetails: {
+        appId: 'aad-object-id',
+        teamsAppId: 'some-app-id',
+        shortName: 'Test App',
+      },
+      endpoint: null,
+      socketMode: true,
+    });
+  });
+
+  it.each([true, false, null])('always includes socketMode=%s in JSON', async (socketMode) => {
+    mockFetchAppDetail.mockResolvedValueOnce({
+      appDetails: {
+        appId: 'aad-object-id',
+        teamsAppId: 'some-app-id',
+        shortName: 'Test App',
+      },
+      endpoint: null,
+      socketMode,
+    });
+    const command = await freshGetCommand();
+
+    await command.parseAsync(['some-app-id', '--json'], { from: 'user' });
+
+    expect(jsonOutput).toMatchObject({
+      socketMode,
+      portalLink: 'https://dev.teams.microsoft.com/apps/some-app-id',
+      installLink:
+        'https://teams.microsoft.com/l/app/some-app-id?installAppPackage=true&appTenantId=fake-tenant-id',
+    });
+  });
+
+  it('prints a pipe-friendly install link without fetching bot details', async () => {
+    const { logger } = await import('../src/utils/logger.js');
+    const command = await freshGetCommand();
+
+    await command.parseAsync(['some-app-id', '--install-link'], { from: 'user' });
+
+    expect(logger.info).toHaveBeenCalledExactlyOnceWith(
+      'https://teams.microsoft.com/l/app/some-app-id?installAppPackage=true&appTenantId=fake-tenant-id'
+    );
+    expect(mockFetchAppDetail).not.toHaveBeenCalled();
+  });
+
+  it('prints both production links with --web', async () => {
+    const { printLinkBanner } = await import('../src/utils/browser.js');
+    const command = await freshGetCommand();
+
+    await command.parseAsync(['some-app-id', '--web'], { from: 'user' });
+
+    expect(printLinkBanner).toHaveBeenCalledWith(
+      'Install in Teams',
+      'https://teams.microsoft.com/l/app/some-app-id?installAppPackage=true&appTenantId=fake-tenant-id'
+    );
+    expect(printLinkBanner).toHaveBeenCalledWith(
+      'Developer Portal',
+      'https://dev.teams.microsoft.com/apps/some-app-id'
+    );
   });
 });
 
@@ -497,12 +577,7 @@ describe('app update --messaging-mode', () => {
       validDomains: [],
       bots: [{ botId: 'bot-id', scopes: ['personal'] }],
     });
-    mockIsBotCommunicationApiAvailable.mockReturnValue(true);
     mockSetSocketMode.mockResolvedValue({ configuration: {}, changed: true });
-  });
-
-  afterAll(() => {
-    mockIsBotCommunicationApiAvailable.mockReturnValue(false);
   });
 
   it('enables socket mode with --messaging-mode socket', async () => {
@@ -604,30 +679,96 @@ describe('app update --messaging-mode', () => {
     expect(mockGetAccount).not.toHaveBeenCalled();
   });
 
-  it('rejects mode flags when the API is unavailable (TEAMS_DEV_API unset)', async () => {
-    mockIsBotCommunicationApiAvailable.mockReturnValue(false);
+  it('exposes messaging mode in update help', async () => {
     const command = await freshUpdateCommand();
 
-    await expect(
-      command.parseAsync(['some-app-id', '--messaging-mode', 'http', '--json'], { from: 'user' })
-    ).rejects.toThrow('process.exit(1)');
-
-    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_MISSING' } });
-    expect(mockGetAccount).not.toHaveBeenCalled();
+    expect(command.helpInformation()).toContain('--messaging-mode <mode>');
   });
 
-  it('rejects Azure bots before any mutation', async () => {
-    mockGetBotLocation.mockResolvedValue('azure');
-    const command = await freshUpdateCommand();
+  describe('Azure bots', () => {
+    const azureContext = {
+      subscription: 'sub-id',
+      resourceGroup: 'rg',
+      region: 'global',
+      tenantId: 'fake-tenant-id',
+      name: 'my-azure-bot',
+    };
 
-    await expect(
-      command.parseAsync(['some-app-id', '--messaging-mode', 'socket', '--name', 'New Name', '--json'], {
-        from: 'user',
-      })
-    ).rejects.toThrow('process.exit(1)');
+    beforeEach(() => {
+      mockGetBotLocation.mockResolvedValue('azure');
+      mockFetchBot.mockRejectedValue(new Error('Not found'));
+      mockDiscoverAzureBot.mockResolvedValue(azureContext);
+      mockGetAzureBotEndpoint.mockResolvedValue('https://azure.example.com/api/messages');
+      mockIsAzInstalled.mockResolvedValue(true);
+      mockIsAzLoggedIn.mockResolvedValue(true);
+    });
 
-    expect(jsonOutput).toMatchObject({ ok: false, error: { code: 'VALIDATION_CONFLICT' } });
-    expect(mockSetSocketMode).not.toHaveBeenCalled();
-    expect(mockUpdateAppDetails).not.toHaveBeenCalled();
+    it('enables socket mode without touching Azure', async () => {
+      const command = await freshUpdateCommand();
+
+      await command.parseAsync(['some-app-id', '--messaging-mode', 'socket', '--json'], { from: 'user' });
+
+      expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', true);
+      expect(mockDiscoverAzureBot).not.toHaveBeenCalled();
+      expect(mockAzureUpdateEndpoint).not.toHaveBeenCalled();
+      expect(jsonOutput).toMatchObject({ botId: 'bot-id', updated: { socketMode: true } });
+    });
+
+    it('saves the Azure endpoint before switching to HTTP', async () => {
+      const command = await freshUpdateCommand();
+      const order: string[] = [];
+      mockAzureUpdateEndpoint.mockImplementationOnce(async () => {
+        order.push('endpoint');
+      });
+      mockSetSocketMode.mockImplementationOnce(async () => {
+        order.push('mode');
+        return { configuration: {}, changed: true };
+      });
+
+      await command.parseAsync(
+        ['some-app-id', '--messaging-mode', 'http', '--endpoint', 'https://new.example.com/api/messages', '--json'],
+        { from: 'user' }
+      );
+
+      expect(mockAzureUpdateEndpoint).toHaveBeenCalledWith('bot-id', 'https://new.example.com/api/messages');
+      expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', false);
+      expect(order).toEqual(['endpoint', 'mode']);
+      expect(jsonOutput).not.toHaveProperty('needsEndpoint');
+    });
+
+    it('does not switch to HTTP when the Azure endpoint update fails', async () => {
+      const command = await freshUpdateCommand();
+      mockAzureUpdateEndpoint.mockRejectedValueOnce(new Error('az failed'));
+
+      await expect(
+        command.parseAsync(
+          ['some-app-id', '--messaging-mode', 'http', '--endpoint', 'https://new.example.com/api/messages', '--json'],
+          { from: 'user' }
+        )
+      ).rejects.toThrow('process.exit(1)');
+
+      expect(mockSetSocketMode).not.toHaveBeenCalled();
+    });
+
+    it('flags needsEndpoint when the Azure bot has no endpoint', async () => {
+      mockGetAzureBotEndpoint.mockResolvedValue(null);
+      const command = await freshUpdateCommand();
+
+      await command.parseAsync(['some-app-id', '--messaging-mode', 'http', '--json'], { from: 'user' });
+
+      expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', false);
+      expect(jsonOutput).toMatchObject({ needsEndpoint: true, updated: { socketMode: false } });
+    });
+
+    it('switches to HTTP without az and omits needsEndpoint when az is unavailable', async () => {
+      mockIsAzInstalled.mockResolvedValue(false);
+      const command = await freshUpdateCommand();
+
+      await command.parseAsync(['some-app-id', '--messaging-mode', 'http', '--json'], { from: 'user' });
+
+      expect(mockDiscoverAzureBot).not.toHaveBeenCalled();
+      expect(mockSetSocketMode).toHaveBeenCalledWith('fake-token', 'bot-id', false);
+      expect(jsonOutput).not.toHaveProperty('needsEndpoint');
+    });
   });
 });
