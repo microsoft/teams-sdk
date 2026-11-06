@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockFetchAppDetailsV2 = vi.fn();
 const mockFetchBot = vi.fn();
 const mockGetConfig = vi.fn();
-const mockIsApiAvailable = vi.fn();
 
 vi.mock('../src/apps/api.js', () => ({
   fetchApp: vi.fn(),
@@ -12,7 +11,6 @@ vi.mock('../src/apps/api.js', () => ({
 vi.mock('../src/apps/tdp.js', () => ({ fetchBot: mockFetchBot }));
 vi.mock('../src/apps/bot-communication.js', () => ({
   getBotCommunicationConfiguration: mockGetConfig,
-  isBotCommunicationApiAvailable: mockIsApiAvailable,
 }));
 vi.mock('../src/utils/spinner.js', () => ({
   createSilentSpinner: () => ({ start: vi.fn().mockReturnThis(), stop: vi.fn() }),
@@ -27,7 +25,6 @@ describe('fetchAppDetail socketMode', () => {
     vi.clearAllMocks();
     mockFetchAppDetailsV2.mockResolvedValue({ teamsAppId: 'app-1', bots: [{ botId: 'bot-1' }] });
     mockFetchBot.mockResolvedValue({ messagingEndpoint: '' });
-    mockIsApiAvailable.mockReturnValue(true);
   });
 
   it('reports the stored socket mode for a Teams-managed bot', async () => {
@@ -51,8 +48,8 @@ describe('fetchAppDetail socketMode', () => {
     expect((await fetchAppDetail(summary, 'token', true)).socketMode).toBeNull();
   });
 
-  it('skips the lookup when the API is unavailable', async () => {
-    mockIsApiAvailable.mockReturnValue(false);
+  it('skips the lookup when the app has no bot', async () => {
+    mockFetchAppDetailsV2.mockResolvedValue({ teamsAppId: 'app-1', bots: [] });
 
     expect((await fetchAppDetail(summary, 'token', true)).socketMode).toBeNull();
     expect(mockGetConfig).not.toHaveBeenCalled();

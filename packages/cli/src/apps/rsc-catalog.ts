@@ -289,10 +289,22 @@ export const RSC_PERMISSIONS_CHAT: RscPermissionGroup = {
       description: 'Allows the app to read the transcripts of meetings associated with this chat.',
     },
     {
+      name: 'OnlineMeeting.Read.Chat',
+      displayName: 'Read properties of the meetings associated with this chat',
+      description:
+        'Allows the app to read properties of the meetings associated with this chat, without a signed-in user.',
+    },
+    {
       name: 'OnlineMeeting.ReadBasic.Chat',
       displayName: 'Read basic properties of a meeting associated with this chat',
       description:
         'Allows the app to read basic properties, such as name, schedule, organizer, join link, and start/end notifications, of a meeting associated with this chat, without a signed-in user.',
+    },
+    {
+      name: 'OnlineMeeting.ReadWrite.Chat',
+      displayName: 'Read and write properties of the meetings associated with this chat',
+      description:
+        'Allows the app to read and write properties of the meetings associated with this chat, without a signed-in user.',
     },
     {
       name: 'OnlineMeetingRecording.Read.Chat',
@@ -310,6 +322,24 @@ export const RSC_PERMISSIONS_CHAT: RscPermissionGroup = {
       displayName: 'Read the participants of meetings associated with this chat',
       description:
         'Allows the app to read participant information, including name, role, id, joined and left times, of meetings associated with this chat, without a signed-in user.',
+    },
+    {
+      name: 'OnlineMeetingArtifact.Read.Chat',
+      displayName: 'Read artifacts, such as attendance reports, of meetings associated with this chat.',
+      description:
+        'Read attendance reports & attendance records for virtual events (webinar or town hall) associated with this chat.',
+    },
+    {
+      name: 'VirtualEvent.Read.Chat',
+      displayName:
+        'Read details, such as schedules, speakers, event settings and webinar registrations, of virtual events associated with this chat.',
+      description:
+        'Read details, such as schedules, speakers, event settings and webinar registrations of virtual events, webinars and town halls associated with this chat.',
+    },
+    {
+      name: 'VirtualEventRegistration-Anon.ReadWrite.Chat',
+      displayName: 'Manage registrations for virtual events associated with this chat.',
+      description: 'Manage registrations for webinars/virtual events associated with this chat.',
     },
   ],
   Delegated: [

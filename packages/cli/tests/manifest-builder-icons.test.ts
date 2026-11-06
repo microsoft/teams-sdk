@@ -6,7 +6,9 @@
 // GREEN (validDomains): restored "*.botframework.com" — test passes.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createManifest } from '../src/apps/manifest.js';
+import AdmZip from 'adm-zip';
+import { createManifest, createManifestZip } from '../src/apps/manifest.js';
+import type { BotScope } from '../src/apps/manifest.js';
 
 vi.mock('../src/utils/interactive.js', () => ({
   isInteractive: () => true,
@@ -88,6 +90,67 @@ describe('collectManifestCustomization', () => {
     expect(result.icons).toBeUndefined();
   });
 
+});
+
+describe('createManifest manifest version', () => {
+  it('uses the pinned version and matching schema without discovery', () => {
+    const manifest = createManifest({
+      botId: 'test-bot-id',
+      botName: 'Test Bot',
+    });
+
+    expect(manifest).toMatchObject({
+      manifestVersion: '1.30',
+      $schema: 'https://developer.microsoft.com/json-schemas/teams/v1.30/MicrosoftTeams.schema.json',
+      version: '1.0.0',
+      bots: [{ botId: 'test-bot-id', scopes: ['personal', 'team', 'groupChat'] }],
+    });
+    expect(manifest).not.toHaveProperty('authorization');
+  });
+
+  it('includes the pinned version and schema URL in the generated app package', () => {
+    const zip = new AdmZip(createManifestZip({
+      botId: 'test-bot-id',
+      botName: 'Test Bot',
+    }));
+    const manifest: unknown = JSON.parse(zip.readAsText('manifest.json'));
+
+    expect(manifest).toMatchObject({
+      manifestVersion: '1.30',
+      $schema: 'https://developer.microsoft.com/json-schemas/teams/v1.30/MicrosoftTeams.schema.json',
+      supportsChannelFeatures: 'tier1',
+    });
+  });
+});
+
+describe('createManifest scope defaults', () => {
+  const cases: Array<{ scopes: BotScope[] | undefined; hasPersonal: boolean }> = [
+    { scopes: undefined, hasPersonal: true },
+    { scopes: [], hasPersonal: true },
+    { scopes: ['personal'], hasPersonal: true },
+    { scopes: ['team'], hasPersonal: false },
+    { scopes: ['groupChat'], hasPersonal: false },
+    { scopes: ['team', 'groupChat'], hasPersonal: false },
+    { scopes: ['copilot'], hasPersonal: true },
+  ];
+
+  it.each(cases)('sets personal tabs and channel support for scopes $scopes', ({ scopes, hasPersonal }) => {
+    const manifest = createManifest({
+      botId: 'test-bot-id',
+      botName: 'Test Bot',
+      scopes,
+    });
+
+    if (hasPersonal) {
+      expect(manifest).toHaveProperty('staticTabs', [
+        { entityId: 'conversations', scopes: ['personal'] },
+        { entityId: 'about', scopes: ['personal'] },
+      ]);
+    } else {
+      expect(manifest).not.toHaveProperty('staticTabs');
+    }
+    expect(manifest).toHaveProperty('supportsChannelFeatures', 'tier1');
+  });
 });
 
 describe('createManifest copilotAgents', () => {
@@ -173,6 +236,95 @@ describe('buildScopeUpdates', () => {
     const updates = buildScopeUpdates(baseApp, ['copilot']);
     expect(updates.bots?.[0]?.scopes).toContain('personal');
     expect(updates.bots?.[0]?.scopes).toContain('copilot');
+    expect(updates.staticTabs).toEqual([
+      { entityId: 'conversations', scopes: ['personal'] },
+      { entityId: 'about', scopes: ['personal'] },
+    ]);
+  });
+
+  it('adds personal tabs when personal scope is enabled', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const updates = buildScopeUpdates({
+      ...baseApp,
+      bots: [{ botId: 'test-bot-id', scopes: ['team'] }],
+    }, ['personal', 'team']);
+
+    expect(updates.staticTabs).toEqual([
+      { entityId: 'conversations', scopes: ['personal'] },
+      { entityId: 'about', scopes: ['personal'] },
+    ]);
+  });
+
+  it('removes the conversation tab and an otherwise empty about tab when personal scope is disabled', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const updates = buildScopeUpdates({
+      ...baseApp,
+      staticTabs: [
+        { entityId: 'conversations', scopes: ['personal'] },
+        { entityId: 'about', scopes: ['personal'] },
+      ],
+    }, ['team']);
+
+    expect(updates.staticTabs).toEqual([]);
+  });
+
+  it('preserves custom tabs, their metadata, and the about tab when personal scope is disabled', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const app = {
+      ...baseApp,
+      supportsChannelFeatures: 'tier1',
+      staticTabs: [
+        { entityId: 'conversations', scopes: ['personal'] },
+        { entityId: 'custom', scopes: ['personal'], contentUrl: 'https://example.com/tab', objectId: 'custom-id' },
+        { entityId: 'about', scopes: ['personal'], objectId: 'about-id' },
+      ],
+    };
+    const original = structuredClone(app);
+    const updates = buildScopeUpdates(app, ['groupChat']);
+
+    expect(updates.staticTabs).toEqual(original.staticTabs.slice(1));
+    expect(app).toEqual(original);
+    expect({ ...app, ...updates }).toHaveProperty('supportsChannelFeatures', 'tier1');
+  });
+
+  it.each([false, true])('preserves implicit Chat-first ordering with an existing About tab: %s', async (hasAbout) => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const customTab = { entityId: 'home', scopes: ['personal'], contentUrl: 'https://example.com/tab', objectId: 'home-id' };
+    const aboutTab = { entityId: 'about', scopes: ['personal'], objectId: 'about-id' };
+    const app = {
+      ...baseApp,
+      bots: [{ botId: 'test-bot-id', scopes: ['personal'] }],
+      staticTabs: hasAbout ? [customTab, aboutTab] : [customTab],
+    };
+    const original = structuredClone(app);
+    const updates = buildScopeUpdates(app, ['personal', 'team']);
+
+    expect(updates.staticTabs).toEqual([
+      { entityId: 'conversations', scopes: ['personal'] },
+      customTab,
+      hasAbout ? aboutTab : { entityId: 'about', scopes: ['personal'] },
+    ]);
+    expect(app).toEqual(original);
+    expect(buildScopeUpdates({ ...app, ...updates }, ['personal', 'team']).staticTabs).toEqual(updates.staticTabs);
+  });
+
+  it('preserves existing built-in tabs without duplicates', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const staticTabs = [
+      { entityId: 'home', scopes: ['personal'], contentUrl: 'https://example.com/tab' },
+      { entityId: 'conversations', scopes: ['personal'], objectId: 'chat-id' },
+      { entityId: 'about', scopes: ['personal'], objectId: 'about-id' },
+    ];
+    const updates = buildScopeUpdates({ ...baseApp, staticTabs }, ['personal', 'team']);
+
+    expect(updates.staticTabs).toEqual(staticTabs);
+  });
+
+  it('does not add a staticTabs property when personal scope is disabled and no tabs exist', async () => {
+    const { buildScopeUpdates } = await import('../src/commands/app/update.js');
+    const updates = buildScopeUpdates(baseApp, ['team']);
+
+    expect(updates).not.toHaveProperty('staticTabs');
   });
 
   it('returns empty object when app has no bots', async () => {

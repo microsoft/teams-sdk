@@ -2,6 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
 import { staticsDir } from '../project/paths.js';
+import type { AppStaticTab } from './types.js';
+
+const MANIFEST_VERSION = '1.30';
 
 export type BotScope = 'personal' | 'team' | 'groupChat' | 'copilot';
 
@@ -60,6 +63,26 @@ export interface Manifest {
   [key: string]: unknown;
 }
 
+export function syncBotStaticTabs(
+  staticTabs: readonly AppStaticTab[] | undefined,
+  scopes: readonly BotScope[]
+): AppStaticTab[] {
+  const tabs = [...(staticTabs ?? [])];
+  if (!scopes.includes('personal')) {
+    const remaining = tabs.filter((tab) => tab.entityId !== 'conversations');
+    return remaining.length === 1 && remaining[0].entityId === 'about' ? [] : remaining;
+  }
+
+  if (!tabs.some((tab) => tab.entityId === 'about')) {
+    tabs.push({ entityId: 'about', scopes: ['personal'] });
+  }
+  if (!tabs.some((tab) => tab.entityId === 'conversations')) {
+    // Teams implicitly places Chat first when a personal bot omits it.
+    tabs.unshift({ entityId: 'conversations', scopes: ['personal'] });
+  }
+  return tabs;
+}
+
 export function createManifest(options: ManifestOptions): object {
   const {
     botId,
@@ -68,7 +91,7 @@ export function createManifest(options: ManifestOptions): object {
     description,
     developer,
   } = options;
-  let scopes = options.scopes?.length ? options.scopes : ['personal', 'team', 'groupChat'];
+  let scopes: BotScope[] = options.scopes?.length ? options.scopes : ['personal', 'team', 'groupChat'];
 
   const hasCopilot = scopes.includes('copilot');
 
@@ -84,9 +107,9 @@ export function createManifest(options: ManifestOptions): object {
   }
 
   const manifest: Record<string, unknown> = {
-    $schema:
-      'https://developer.microsoft.com/json-schemas/teams/v1.25/MicrosoftTeams.schema.json',
-    manifestVersion: '1.25',
+    $schema: `https://developer.microsoft.com/json-schemas/teams/v${MANIFEST_VERSION}/MicrosoftTeams.schema.json`,
+    manifestVersion: MANIFEST_VERSION,
+    supportsChannelFeatures: 'tier1',
     version: '1.0.0',
     id: botId,
     developer: developer ?? {
@@ -116,14 +139,14 @@ export function createManifest(options: ManifestOptions): object {
         isNotificationOnly: false,
       },
     ],
-    staticTabs: [
-      { entityId: 'conversations', scopes: ['personal'] },
-      { entityId: 'about', scopes: ['personal'] },
-    ],
     permissions: [],
     validDomains,
-    supportsChannelFeatures: 'tier1',
   };
+
+  const staticTabs = syncBotStaticTabs(undefined, scopes);
+  if (staticTabs.length > 0) {
+    manifest.staticTabs = staticTabs;
+  }
 
   if (hasCopilot) {
     manifest.copilotAgents = {

@@ -1,11 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-// Mock the host module instead of setting TEAMS_DEV_API so process.env is never mutated.
-vi.mock('../src/utils/tdp-host.js', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../src/utils/tdp-host.js')>()),
-  TDP_V2_BASE_URL: 'https://dev-int.teams.microsoft.com/cosmictestamer',
-  isTdpV2Enabled: () => true,
-}));
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 interface RecordedCall {
   url: string;
@@ -59,7 +52,7 @@ describe('bot communication configuration', () => {
     responses = [{ status: 404 }];
     await expect(getBotCommunicationConfiguration('t', CLIENT_ID)).resolves.toBeNull();
     expect(calls[0]!.url).toBe(
-      `https://dev-int.teams.microsoft.com/cosmictestamer/v1.0/applications/${CLIENT_ID}/bot/communicationConfiguration`
+      `https://dev.teams.microsoft.com/cosmicprodamer/v1.0/applications/${CLIENT_ID}/bot/communicationConfiguration`
     );
   });
 
@@ -72,11 +65,42 @@ describe('bot communication configuration', () => {
     });
   });
 
-  it('maps 403 to a CliError with an ownership hint', async () => {
+  it('GET includes the existing-bot limitation in the 403 message', async () => {
     responses = [{ status: 403 }];
     await expect(getBotCommunicationConfiguration('t', CLIENT_ID)).rejects.toMatchObject({
       code: 'API_ERROR',
       statusCode: 403,
+      message:
+        'Failed to read bot communication configuration: access denied (403). This feature is only available for new bots currently. ' +
+        'Support for existing bots is coming soon.',
+    });
+  });
+
+  it('setSocketMode replaces the raw PUT 403 response with the existing-bot limitation', async () => {
+    responses = [
+      { status: 200, body: stored },
+      {
+        status: 403,
+        body: { errorMessage: 'User is not the owner of application', errorCode: 'Forbidden' },
+      },
+    ];
+    await expect(setSocketMode('t', CLIENT_ID, true)).rejects.toMatchObject({
+      code: 'API_ERROR',
+      statusCode: 403,
+      message:
+        'Failed to update bot communication configuration: access denied (403). This feature is only available for new bots currently. ' +
+        'Support for existing bots is coming soon.',
+    });
+    expect(calls.map((call) => call.method)).toEqual(['GET', 'PUT']);
+  });
+
+  it('preserves response details for other API errors', async () => {
+    responses = [{ status: 500, body: { errorMessage: 'Service unavailable' } }];
+    await expect(putBotCommunicationConfiguration('t', CLIENT_ID, stored)).rejects.toMatchObject({
+      code: 'API_ERROR',
+      statusCode: 500,
+      message:
+        'Failed to update bot communication configuration: 500 {"errorMessage":"Service unavailable"}',
     });
   });
 
@@ -105,6 +129,9 @@ describe('bot communication configuration', () => {
 
     expect(calls.map((c) => c.method)).toEqual(['GET', 'PUT']);
     expect(calls[1]!.body).toEqual(expected);
+    expect(calls[1]!.url).toBe(
+      `https://dev.teams.microsoft.com/cosmicprodamer/v1.0/applications/${CLIENT_ID}/bot/communicationConfiguration`
+    );
     expect(result).toEqual({ configuration: expected, changed: true });
   });
 
@@ -128,31 +155,24 @@ describe('bot communication configuration', () => {
     expect(calls).toHaveLength(1);
     expect(result.changed).toBe(false);
   });
-});
+  it('disables socket mode while preserving the endpoint and notification settings', async () => {
+    const enabled = {
+      ...stored,
+      endpointConfiguration: { ...stored.endpointConfiguration, supportsSocketMode: true },
+    };
+    responses = [{ status: 200, body: enabled }, { status: 200, body: stored }];
 
-describe('bot communication configuration without TEAMS_DEV_API', () => {
-  beforeEach(() => {
-    calls.length = 0;
-    vi.resetModules();
-    vi.doMock('../src/utils/tdp-host.js', async (importOriginal) => ({
-      ...(await importOriginal<typeof import('../src/utils/tdp-host.js')>()),
-      isTdpV2Enabled: () => false,
-    }));
+    const result = await setSocketMode('t', CLIENT_ID, false);
+
+    expect(calls[1]!.body).toEqual(stored);
+    expect(result).toEqual({ configuration: stored, changed: true });
   });
 
-  afterEach(() => {
-    vi.doUnmock('../src/utils/tdp-host.js');
-    vi.resetModules();
-  });
-
-  it('is unavailable and makes no network calls', async () => {
-    const mod = await import('../src/apps/bot-communication.js');
-
-    expect(mod.isBotCommunicationApiAvailable()).toBe(false);
-    await expect(mod.getBotCommunicationConfiguration('t', CLIENT_ID)).rejects.toMatchObject({
-      code: 'API_ERROR',
-      suggestion: expect.stringContaining('TEAMS_DEV_API=1'),
-    });
-    expect(calls).toHaveLength(0);
+  it('encodes the client ID in the production route', async () => {
+    responses = [{ status: 404 }];
+    await getBotCommunicationConfiguration('t', 'app/id?query');
+    expect(calls[0]!.url).toBe(
+      'https://dev.teams.microsoft.com/cosmicprodamer/v1.0/applications/app%2Fid%3Fquery/bot/communicationConfiguration'
+    );
   });
 });
