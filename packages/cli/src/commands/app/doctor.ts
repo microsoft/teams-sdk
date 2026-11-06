@@ -10,7 +10,6 @@ import {
   discoverAzureBot,
   extractDomain,
   getBotCommunicationConfiguration,
-  isBotCommunicationApiAvailable,
 } from '../../apps/index.js';
 import type { AppDetails } from '../../apps/types.js';
 import type { BotDetails } from '../../apps/tdp.js';
@@ -157,7 +156,6 @@ async function checkBotRegistration(
 
   // Socket mode is keyed by the Entra app ID, so the check is the same for both bot locations.
   const checkMessagingMode = async (): Promise<boolean> => {
-    if (!isBotCommunicationApiAvailable()) return false;
     try {
       const config = await getBotCommunicationConfiguration(tdpToken, botId);
       const enabled = config?.endpointConfiguration.supportsSocketMode ?? false;

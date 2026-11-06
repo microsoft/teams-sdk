@@ -13,7 +13,7 @@ export function isVerbose(): boolean {
 export const logger = {
   debug: (...args: unknown[]) => {
     if (verbose) {
-      console.debug(pc.dim('[debug]'), ...args);
+      console.error(pc.dim('[debug]'), ...args);
     }
   },
   info: (...args: unknown[]) => {

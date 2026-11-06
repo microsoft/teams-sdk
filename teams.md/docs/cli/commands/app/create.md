@@ -20,6 +20,7 @@ teams app create [options]
 |------|-------------|
 | `-n, --name <name>` | App/bot name |
 | `-e, --endpoint <url>` | [OPTIONAL] Messaging endpoint URL |
+| `--messaging-mode <mode>` | [OPTIONAL] How Teams delivers messages: socket or http |
 | `--env <path>` | [OPTIONAL] Path to credentials file (.env or appsettings.json) |
 | `--env-file <path>` | [OPTIONAL] Alias for --env |
 | `--no-secret` | [OPTIONAL] Skip client secret generation (for managed identity or federated credentials) |
@@ -51,6 +52,20 @@ By default, the bot is Teams-managed (no Azure subscription needed). Use `--azur
 **Precedence:** `--azure`/`--teams-managed` flag > `teams config set default-bot-location` > Teams-managed default.
 
 See [Bot Locations](../../concepts/bot-locations) for details on the trade-offs.
+
+### Messaging Mode
+
+Use `--messaging-mode socket` to receive messages without a public HTTP endpoint or tunnel:
+
+```bash
+teams app create --name "My Bot" --messaging-mode socket
+```
+
+The CLI uses the production Teams Developer Portal to configure socket mode for both Teams-managed and Azure bots. Interactive creation offers a messaging-mode choice; scripted creation keeps HTTP mode unless socket mode is requested. `--messaging-mode socket` cannot be combined with `--endpoint`.
+
+New Entra apps are created through the TDP v2 API so the caller is an owner, as required by the bot communication API. Service-attributed apps still use the legacy creation endpoint; socket mode may fail if the caller is not an owner.
+
+If the app is created but enabling socket mode fails, the CLI prints a retry hint. JSON output includes `socketMode: false` and `socketModeError` in that case.
 
 ### Scopes
 

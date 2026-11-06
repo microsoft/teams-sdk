@@ -1,4 +1,4 @@
-import { Command, Option } from 'commander';
+import { Command } from 'commander';
 import { select, input, checkbox } from '@inquirer/prompts';
 import pc from 'picocolors';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../auth/index.js';
@@ -21,13 +21,11 @@ import {
   formatVersionBumpReinstallHint,
   logVersionBumpReinstallHint,
   getBotCommunicationConfiguration,
-  isBotCommunicationApiAvailable,
   setSocketMode,
   syncBotStaticTabs,
 } from '../../apps/index.js';
 import { ensureAz, isAzInstalled, isAzLoggedIn } from '../../utils/az.js';
 import { CliError, wrapAction } from '../../utils/errors.js';
-import { DEV_API_ENV_VAR, isTdpV2Enabled } from '../../utils/tdp-host.js';
 import { readAndValidateIcon } from '../../utils/icon.js';
 import { outputJson } from '../../utils/json-output.js';
 import { logger } from '../../utils/logger.js';
@@ -234,7 +232,7 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
 
   let bot: BotDetails | null = null;
   let botLocation: BotLocation | null = null;
-  // null = unknown or not applicable (no bot, API unavailable, or read failed)
+  // null = unknown or not applicable (no bot or read failed)
   let socketMode: boolean | null = null;
   if (appDetails.bots && appDetails.bots.length > 0) {
     const botId = appDetails.bots[0].botId;
@@ -247,13 +245,11 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       }
     }
     // Socket mode is keyed by the Entra app ID, so it works the same for Teams-managed and Azure bots.
-    if (isBotCommunicationApiAvailable()) {
-      try {
-        const config = await getBotCommunicationConfiguration(token, botId);
-        socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
-      } catch {
-        // Leave as unknown; the menu entry still lets the user set it.
-      }
+    try {
+      const config = await getBotCommunicationConfiguration(token, botId);
+      socketMode = config?.endpointConfiguration.supportsSocketMode ?? false;
+    } catch (error) {
+      logger.debug(`Could not read messaging mode: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -265,21 +261,18 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
     if (bot) {
       logger.info(`${pc.dim('Endpoint:')} ${bot.messagingEndpoint || pc.yellow('(not set)')}`);
     }
-    const showMessagingMode = botLocation !== null && isBotCommunicationApiAvailable();
+    const showMessagingMode = botLocation !== null;
     if (showMessagingMode) {
       const label =
         socketMode === null ? pc.yellow('(unknown)') : socketMode ? 'Sockets' : 'HTTP endpoint';
       logger.info(`${pc.dim('Messaging mode:')} ${label}`);
     }
 
-    // Messaging mode includes the endpoint prompt, so Endpoint is only listed on its own when mode changes aren't available.
-    const showEndpoint = !showMessagingMode && (bot || botLocation === 'azure');
     const hasBots = appDetails.bots && appDetails.bots.length > 0;
     const action = await select({
       message: 'What would you like to update?',
       choices: [
         { name: 'Basic info', value: 'edit-basic-info' },
-        ...(showEndpoint ? [{ name: 'Endpoint', value: 'edit-endpoint' }] : []),
         ...(showMessagingMode ? [{ name: 'Messaging mode', value: 'edit-messaging-mode' }] : []),
         ...(hasBots ? [{ name: 'Scopes', value: 'edit-scopes' }] : []),
         { name: 'Icons', value: 'edit-icons' },
@@ -452,47 +445,6 @@ export async function showUpdateMenu(app: AppSummary, token: string): Promise<vo
       continue;
     }
 
-    if (action === 'edit-endpoint') {
-      if (botLocation === 'azure') {
-        const botId = appDetails.bots![0].botId;
-        const newEndpoint = await input({
-          message: 'Enter new messaging endpoint URL:',
-          validate: (value) => {
-            if (!value.trim()) return true;
-            return validateEndpoint(value.trim()) ?? true;
-          },
-        });
-
-        if (!newEndpoint.trim()) {
-          logger.info(pc.dim('\nNo changes made.'));
-          continue;
-        }
-
-        if (!(await updateAzureEndpoint(token, app.teamsAppId, appDetails, botId, newEndpoint.trim()))) {
-          logger.error(pc.red('Could not find this bot in Azure.'));
-        }
-        continue;
-      }
-
-      if (bot) {
-        const newEndpoint = await input({
-          message: 'Enter new messaging endpoint URL:',
-          default: bot.messagingEndpoint,
-          validate: (value) => {
-            if (!value.trim()) return true;
-            return validateEndpoint(value.trim()) ?? true;
-          },
-        });
-
-        if (newEndpoint.trim() === bot.messagingEndpoint) {
-          logger.info(pc.dim('\nNo changes made.'));
-          continue;
-        }
-
-        bot = await updateTeamsManagedEndpoint(token, app.teamsAppId, appDetails, bot, newEndpoint.trim());
-        continue;
-      }
-    }
   }
 }
 
@@ -500,12 +452,7 @@ export const appUpdateCommand = new Command('update')
   .description("Update a Teams app's properties")
   .argument('[appId]', 'App ID')
   .option('--endpoint <url>', '[OPTIONAL] Set the messaging endpoint URL')
-  .addOption(
-    new Option(
-      '--messaging-mode <mode>',
-      '[OPTIONAL] Set how Teams delivers messages: socket or http'
-    ).hideHelp(!isTdpV2Enabled())
-  )
+  .option('--messaging-mode <mode>', '[OPTIONAL] Set how Teams delivers messages: socket or http')
   .option('--scopes <scopes>', '[OPTIONAL] Set bot scopes (comma-separated: personal,team,groupChat,copilot)')
   .option('--name <name>', '[OPTIONAL] Set the app short name (max 30 chars)')
   .option('--long-name <name>', '[OPTIONAL] Set the app long name (max 100 chars)')
@@ -560,13 +507,6 @@ export const appUpdateCommand = new Command('update')
           'VALIDATION_CONFLICT',
           'Cannot specify both --messaging-mode socket and --endpoint.',
           'Use --messaging-mode http --endpoint <url> to switch to an HTTP endpoint.'
-        );
-      }
-      if (messagingMode !== undefined && !isBotCommunicationApiAvailable()) {
-        throw new CliError(
-          'VALIDATION_MISSING',
-          'Messaging mode changes are not available in this environment yet.',
-          `Set ${DEV_API_ENV_VAR}=1 to use the dev-int Teams Developer Portal.`
         );
       }
       const colorIconData = options.colorIcon
