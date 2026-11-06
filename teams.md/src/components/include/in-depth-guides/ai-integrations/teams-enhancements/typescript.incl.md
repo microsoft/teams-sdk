@@ -129,3 +129,17 @@ if (result.followUps.length > 0) {
 }
 stream.emit(finalMarker);
 ```
+
+<!-- sensitivity-labels -->
+
+```typescript
+const labelId = '<purview-label-id>';
+
+const reply = new MessageActivityInput('Here is the quarterly summary [1].')
+  .addSensitivityLabel({ '@id': labelId, name: 'Confidential' })
+  .addCitation(1, {
+    name: 'Quarterly report',
+    abstract: 'Revenue and forecast for the quarter.',
+    usageInfo: { '@id': labelId, name: 'Confidential' },
+  });
+```

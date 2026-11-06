@@ -3,7 +3,7 @@ import { apiFetch } from '../utils/http.js';
 import { invalidateAppDetails } from './app-details-cache.js';
 import { getCachedBot, setCachedBot, invalidateBot, type BotResource } from './bot-cache.js';
 import { logger } from '../utils/logger.js';
-import { TDP_BASE_URL, TDP_V2_BASE_URL, isTdpV2Enabled } from '../utils/tdp-host.js';
+import { TDP_BASE_URL, TDP_V2_BASE_URL } from '../utils/tdp-host.js';
 
 export type SignInAudience = 'AzureADMyOrg' | 'AzureADMultipleOrgs';
 
@@ -15,17 +15,17 @@ export interface CreateAadAppViaTdpOptions {
 /**
  * Create an AAD app via TDP, which also creates the service principal server-side.
  *
- * When the TDP v2 API is available (TEAMS_DEV_API=1), uses its
- * `v1.0/aadapplications` endpoint, which also makes the caller an owner of the
- * app (required by the bot communication API). That endpoint doesn't accept a
- * serviceManagementReference, so the legacy endpoint is used when one is set.
+ * Uses the TDP v2 API's `v1.0/aadapplications` endpoint, which also makes the
+ * caller an owner of the app (required by the bot communication API). That
+ * endpoint doesn't accept a serviceManagementReference, so the legacy endpoint
+ * is used when one is set.
  */
 export async function createAadAppViaTdp(
   token: string,
   displayName: string,
   options: CreateAadAppViaTdpOptions
 ): Promise<AadApp> {
-  if (isTdpV2Enabled() && !options.serviceManagementReference) {
+  if (!options.serviceManagementReference) {
     return createAadAppViaTdpV2(token, displayName, options.signInAudience);
   }
 

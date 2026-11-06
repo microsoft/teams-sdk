@@ -1,10 +1,6 @@
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
-import { DEV_API_ENV_VAR, TDP_V2_BASE_URL, isTdpV2Enabled } from '../utils/tdp-host.js';
-
-export function isBotCommunicationApiAvailable(): boolean {
-  return isTdpV2Enabled();
-}
+import { TDP_V2_BASE_URL } from '../utils/tdp-host.js';
 
 export type MessageNotificationMode = 'atMentionedMessagesOnly' | 'allMessages' | 'unknownFutureValue';
 
@@ -95,13 +91,6 @@ function toCompleteConfiguration(
 }
 
 function communicationConfigurationUrl(clientId: string): string {
-  if (!isTdpV2Enabled()) {
-    throw new CliError(
-      'API_ERROR',
-      'Bot communication configuration is not available in this environment yet.',
-      `Set ${DEV_API_ENV_VAR}=1 to use the dev-int Teams Developer Portal.`
-    );
-  }
   return `${TDP_V2_BASE_URL}/v1.0/applications/${encodeURIComponent(clientId)}/bot/communicationConfiguration`;
 }
 
@@ -116,8 +105,9 @@ async function toApiError(action: string, response: Response): Promise<CliError>
   if (response.status === 403) {
     return new CliError(
       'API_ERROR',
-      message,
-      'Make sure you are an owner of the Microsoft Entra app for this bot.',
+      `Failed to ${action}: access denied (403). This feature is only available for new bots currently. ` +
+        'Support for existing bots is coming soon.',
+      undefined,
       403
     );
   }
