@@ -82,6 +82,25 @@ app.on('message', async ({ activity, send, stream }) => {
 
 Setting an id on an outgoing activity routes the send through the update path, so each edit replaces the finalized message instead of posting a new one.
 
+<!-- streaming-informative-and-cancel -->
+
+`stream.update()` sends an informative update.
+An update emitted after response text has accumulated is ignored.
+The SDK learns that the user stopped the stream from the answer to a chunk it sends.
+From then on `stream.canceled` is true and `stream.emit()` throws `StreamCancelledError`.
+A stream creates its message from response text or an informative update.
+If the first output is only attachments, `stream.close()` creates no message, so send the attachments with `send()` instead.
+
+<!-- streaming-threading-errors -->
+
+An error from the first chunk is logged, and `stream.emit()` does not throw it.
+
+<!-- streaming-threading-options -->
+
+`stream` in a handler is created with this placement already applied.
+The `StreamOptions` type, with `replyChain: { chatOrChannelId, replyChainId }`, is what `IActivitySender.createStream(ref, options)` accepts when you implement a custom sender, and it is experimental.
+The stream falls back to the inbound conversation on a 404 only when `ref.conversation.conversationType` is `channel`.
+
 <!-- mention-method-name -->
 
 `addMention`
@@ -151,13 +170,24 @@ await app.send(conversationId, publicMessage);
 
 ```typescript
 app.on('message', async ({ send, reply }) => {
-  // Send in the same thread, no quote
+  // Send reactively without quoting.
+  // In a channel, sends in the same thread.
+  // In a 1:1 chat, matches the level of the inbound message.
   await send('Acknowledged');
 
-  // Send in the same thread with a visual quote of the inbound message
+  // Send a reactive, quoted reply.
+  // In a channel, sends in the same thread.
+  // In a 1:1 chat, matches the level of the inbound message.
   await reply('Got it!');
 });
 ```
+
+<!-- threading-experimental-note -->
+
+The reply chain types and operations are marked `@experimental` (diagnostic `ExperimentalTeamsThreading`) in the API reference.
+The marker is documentation only, with no compiler or runtime warning.
+It covers `channelData.chat`, `channelData.replyChain` and `channelData.source`, `api.conversations.createReplyChainActivity` and `createTargetedReplyChainActivity` (and `createReplyChain` and `createTargetedReplyChain` on `ConversationActivityClient`), `ActivitySenderOptions.replyChainId` and `StreamOptions`.
+`send`, `reply` and `app.reply` are not marked.
 
 <!-- quoted-replies-receive-example -->
 
