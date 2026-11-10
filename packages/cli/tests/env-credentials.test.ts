@@ -170,6 +170,20 @@ describe('writeJsonCredentials', () => {
     expect(json.Teams.TenantId).toBe('tenant-456');
     expect(json.Teams).not.toHaveProperty('ClientSecret');
   });
+
+  it('parses an appsettings.json written with a UTF-8 BOM and preserves the BOM', () => {
+    const filePath = tmpFile('appsettings.json');
+    files.push(filePath);
+    fs.writeFileSync(filePath, '\uFEFF' + JSON.stringify({ AllowedHosts: '*' }, null, 2));
+
+    expect(() => writeJsonCredentials(filePath, TEST_VALUES)).not.toThrow();
+
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    expect(raw.startsWith('\uFEFF')).toBe(true);
+    const json = JSON.parse(raw.slice(1));
+    expect(json.AllowedHosts).toBe('*');
+    expect(json.Teams.ClientId).toBe('test-client-id');
+  });
 });
 
 // ── outputCredentials (format dispatch) ──────────────────────────────
