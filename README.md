@@ -29,34 +29,38 @@ npm install -g @microsoft/teams.cli
 Next, use the CLI to create your agent:
 
 ```sh
-npx @microsoft/teams.cli new <typescript | csharp | python> quote-agent --template echo
+teams project new <typescript | csharp | python> quote-agent --template echo
 ```
 
 For more information, follow our quickstart guide: [C#](http://microsoft.github.io/teams-sdk/csharp/getting-started/quickstart), [Typescript](http://microsoft.github.io/teams-sdk/typescript/getting-started/quickstart), [Python](http://microsoft.github.io/teams-sdk/python/getting-started/quickstart)
 
 ## SDK
 
-Microsoft Teams has a robust developer ecosystem with a broad suite of capabilities, now unified via Teams SDK. Whether you are building AI-powered agents ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/ai/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/ai/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/ai/)), Message Extensions ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/message-extensions/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/message-extensions/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/message-extensions/)), embedded web applications, or Graph, Teams SDK has you covered.
+Microsoft Teams has a robust developer ecosystem with a broad suite of capabilities, now unified via Teams SDK. Whether you are building AI-powered agents ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/ai-integrations/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/ai-integrations/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/ai-integrations/)), Message Extensions ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/message-extensions/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/message-extensions/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/message-extensions/)), embedded web applications, or Graph, Teams SDK has you covered.
 
 Here is a simple example, which responds to incoming messages with information retrieved from Graph.
 
+This example requires an OAuth connection named `graph` with Microsoft Graph `User.Read` permission. See the [user authentication guide](https://microsoft.github.io/teams-sdk/teams/user-authentication/) for setup.
+
 ```typescript
 import { App } from '@microsoft/teams.apps';
-import { DevtoolsPlugin } from '@microsoft/teams.dev';
+import { Client as GraphClient } from '@microsoft/teams.graph';
 import * as endpoints from '@microsoft/teams.graph-endpoints';
 
-const app = new App({
-  plugins: [new DevtoolsPlugin()],
+const app = new App();
+const graph = app.addOAuthFlow('graph');
+
+app.on('message', async (ctx) => {
+  const token = await graph.signIn(ctx);
+  if (!token) return; // Sign-in is pending; completion is handled below.
+
+  const client = new GraphClient({ token: () => token }, { baseUrlRoot: app.graphBaseUrl });
+  const me = await client.call(endpoints.me.get);
+  await ctx.send(`Hello, ${me.displayName} from Earth!`);
 });
 
-// Listen for incoming messages
-app.on('message', async ({ userGraph, isSignedIn, send, signin }) => {
-  if (!isSignedIn) {
-    await signin(); // initiates Entra login flow
-    return;
-  }
-  const me = await userGraph.call(endpoints.me.get);
-  await send(`Hello, ${me.displayName} from Earth!`);
+graph.onSignInComplete(async (ctx) => {
+  await ctx.send('Signed in! Send another message to see your profile.');
 });
 
 // Start your application
