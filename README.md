@@ -29,14 +29,14 @@ npm install -g @microsoft/teams.cli
 Next, use the CLI to create your agent:
 
 ```sh
-npx @microsoft/teams.cli new <typescript | csharp | python> quote-agent --template echo
+teams project new <typescript | csharp | python> quote-agent --template echo
 ```
 
 For more information, follow our quickstart guide: [C#](http://microsoft.github.io/teams-sdk/csharp/getting-started/quickstart), [Typescript](http://microsoft.github.io/teams-sdk/typescript/getting-started/quickstart), [Python](http://microsoft.github.io/teams-sdk/python/getting-started/quickstart)
 
 ## SDK
 
-Microsoft Teams has a robust developer ecosystem with a broad suite of capabilities, now unified via Teams SDK. Whether you are building AI-powered agents ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/ai/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/ai/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/ai/)), Message Extensions ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/message-extensions/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/message-extensions/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/message-extensions/)), embedded web applications, or Graph, Teams SDK has you covered.
+Microsoft Teams has a robust developer ecosystem with a broad suite of capabilities, now unified via Teams SDK. Whether you are building AI-powered agents ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/ai-integrations/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/ai-integrations/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/ai-integrations/)), Message Extensions ([TS](https://microsoft.github.io/teams-sdk/typescript/in-depth-guides/message-extensions/), [C#](https://microsoft.github.io/teams-sdk/csharp/in-depth-guides/message-extensions/), [Python](https://microsoft.github.io/teams-sdk/python/in-depth-guides/message-extensions/)), embedded web applications, or Graph, Teams SDK has you covered.
 
 Here is a simple example, which responds to incoming messages with information retrieved from Graph.
 
