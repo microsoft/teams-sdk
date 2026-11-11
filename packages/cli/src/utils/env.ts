@@ -28,11 +28,12 @@ export function readEnvValue(filePath: string, key: string): string | undefined 
   if (!fs.existsSync(resolvedPath)) return undefined;
 
   const content = fs.readFileSync(resolvedPath, 'utf-8');
+  let value: string | undefined;
   for (const line of content.split(/\r?\n/)) {
     const match = line.match(/^([A-Z_]+)=(.*)$/);
-    if (match && match[1] === key) return match[2];
+    if (match && match[1] === key) value = match[2];
   }
-  return undefined;
+  return value;
 }
 
 export function writeEnvFile(filePath: string, values: EnvValues): void {
