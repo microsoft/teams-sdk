@@ -180,6 +180,15 @@ describe('writeLaunchSettingsCredentials', () => {
               AzureAd__TenantId: 'old-tenant',
               AzureAd__ClientCredentials__0__SourceType: 'ClientSecret',
               AzureAd__ClientCredentials__0__ClientSecret: 'stale-secret',
+              AZUREAD__CLIENTCREDENTIALS__0__CLIENTSECRET: 'uppercase-secret',
+              AzureAd__ClientCredentials__1__SourceType: 'clientsecret',
+              AzureAd__ClientCredentials__1__ClientSecret: 'second-secret',
+              AZUREAD__CLIENTCREDENTIALS__2__SOURCETYPE: 'CLIENTSECRET',
+              AZUREAD__CLIENTCREDENTIALS__2__CLIENTSECRET: 'third-secret',
+              AzureAd__ClientCredentials__3__SourceType: 'ManagedIdentity',
+              AzureAd__ClientCredentials__4__SourceType: 'KeyVault',
+              AzureAd__ClientCredentials__4__KeyVaultUrl: 'https://example.vault.azure.net/',
+              TEAMS__CLIENTSECRET: 'legacy-uppercase-secret',
             },
           },
         },
@@ -197,6 +206,14 @@ describe('writeLaunchSettingsCredentials', () => {
     expect(env).not.toHaveProperty('Teams__TenantId');
     expect(env).not.toHaveProperty('AzureAd__ClientCredentials__0__ClientSecret');
     expect(env).not.toHaveProperty('AzureAd__ClientCredentials__0__SourceType');
+    expect(env).toEqual({
+      DOTNET_ENVIRONMENT: 'Development',
+      AzureAd__ClientId: 'id-123',
+      AzureAd__TenantId: 'tenant-456',
+      AzureAd__ClientCredentials__3__SourceType: 'ManagedIdentity',
+      AzureAd__ClientCredentials__4__SourceType: 'KeyVault',
+      AzureAd__ClientCredentials__4__KeyVaultUrl: 'https://example.vault.azure.net/',
+    });
   });
 
   it('replaces legacy credentials while preserving custom environment and cloud settings', () => {

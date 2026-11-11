@@ -158,9 +158,16 @@ export function writeLaunchSettingsCredentials(filePath: string, values: EnvValu
     envVarsObj['AzureAd__ClientCredentials__0__SourceType'] = 'ClientSecret';
     envVarsObj['AzureAd__ClientCredentials__0__ClientSecret'] = values.CLIENT_SECRET;
   } else {
-    delete envVarsObj['AzureAd__ClientCredentials__0__ClientSecret'];
-    if (envVarsObj['AzureAd__ClientCredentials__0__SourceType'] === 'ClientSecret') {
-      delete envVarsObj['AzureAd__ClientCredentials__0__SourceType'];
+    for (const [key, value] of Object.entries(envVarsObj)) {
+      if (
+        /^AzureAd__ClientCredentials__\d+__ClientSecret$/i.test(key) ||
+        (/^AzureAd__ClientCredentials__\d+__SourceType$/i.test(key) &&
+          typeof value === 'string' &&
+          value.toLowerCase() === 'clientsecret') ||
+        /^Teams__ClientSecret$/i.test(key)
+      ) {
+        delete envVarsObj[key];
+      }
     }
   }
 
