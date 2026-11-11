@@ -60,7 +60,7 @@ function resolveUpdateTarget(userIdOrUpnArg: string | undefined, cwd: string, si
     );
   }
 
-  const target = users[0].userPrincipalName ?? users[0].agenticUserId;
+  const target = users[0].agenticUserId;
   if (!silent) {
     logger.info(pc.dim(`Using agentic user ${target} from agent.generated.config.json.`));
   }
