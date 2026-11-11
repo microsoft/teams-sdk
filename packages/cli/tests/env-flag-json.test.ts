@@ -72,6 +72,13 @@ vi.mock('../src/commands/agent/user/actions.js', async (importOriginal) => ({
   })),
 }));
 
+vi.mock('../src/apps/graph.js', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../src/apps/graph.js')>(),
+  getAadAppByClientId: vi.fn(),
+  getServicePrincipalByAppId: vi.fn(),
+  addBlueprintSecret: vi.fn(),
+}));
+
 vi.mock('../src/utils/az.js', async (importOriginal) => ({
   ...await importOriginal<typeof import('../src/utils/az.js')>(),
   getAzAccessToken: vi.fn().mockRejectedValue(new Error('Unexpected blueprint credential minting')),
@@ -362,6 +369,84 @@ describe('app and agent user create — credential destinations', () => {
       }
     } finally {
       process.chdir(originalCwd);
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects a regular app before minting a secret or overwriting local credentials', async () => {
+    const tempDir = tmpFile('not-blueprint');
+    fs.mkdirSync(tempDir);
+    const envPath = path.join(tempDir, '.env');
+    const originalEnv = 'CLIENT_ID=unrelated-app\nCLIENT_SECRET=keep-existing-secret\n';
+    fs.writeFileSync(envPath, originalEnv);
+
+    try {
+      vi.resetModules();
+      const { getAzAccessToken } = await import('../src/utils/az.js');
+      const { getAadAppByClientId, getServicePrincipalByAppId, addBlueprintSecret } = await import('../src/apps/graph.js');
+      const { runAgentUserCreate } = await import('../src/commands/agent/user/create.js');
+      vi.mocked(getAzAccessToken).mockResolvedValueOnce('admin-token');
+      vi.mocked(getAadAppByClientId).mockResolvedValueOnce({
+        id: 'regular-app-object', appId: FAKE_CLIENT_ID, displayName: 'Regular App',
+      });
+      vi.mocked(getServicePrincipalByAppId).mockResolvedValue({ id: 'regular-app-principal' });
+      vi.mocked(addBlueprintSecret).mockResolvedValue({
+        secretText: 'unexpected-secret', displayName: 'default', endDateTime: '2028-01-01T00:00:00Z',
+      });
+
+      await expect(runAgentUserCreate(FAKE_CLIENT_ID, {
+        cwd: tempDir, json: true, license: false, usageLocation: 'US',
+      })).rejects.toMatchObject({
+        code: 'AGENT_BLUEPRINT_NOT_FOUND',
+        message: expect.stringContaining('not an Agent 365 blueprint'),
+      });
+
+      expect(getServicePrincipalByAppId).not.toHaveBeenCalled();
+      expect(addBlueprintSecret).not.toHaveBeenCalled();
+      expect(fs.readFileSync(envPath, 'utf8')).toBe(originalEnv);
+      expect(fs.readdirSync(tempDir)).toEqual(['.env']);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('mints and saves a secret for a verified blueprint when no local credentials exist', async () => {
+    const tempDir = tmpFile('verified-blueprint');
+    fs.mkdirSync(tempDir);
+
+    try {
+      vi.resetModules();
+      const { getAzAccessToken } = await import('../src/utils/az.js');
+      const { getAadAppByClientId, getServicePrincipalByAppId, addBlueprintSecret } = await import('../src/apps/graph.js');
+      const { runAgentUserCreate } = await import('../src/commands/agent/user/create.js');
+      vi.mocked(getAzAccessToken).mockResolvedValueOnce('admin-token');
+      vi.mocked(getAadAppByClientId).mockResolvedValueOnce({
+        id: 'blueprint-object-id',
+        appId: FAKE_CLIENT_ID,
+        displayName: 'Verified Blueprint',
+        '@odata.type': '#microsoft.graph.agentIdentityBlueprint',
+      });
+      vi.mocked(getServicePrincipalByAppId).mockResolvedValueOnce({ id: 'blueprint-principal-id' });
+      vi.mocked(addBlueprintSecret).mockResolvedValueOnce({
+        secretText: FAKE_SECRET, displayName: 'default', endDateTime: '2028-01-01T00:00:00Z',
+      });
+
+      const output = await runAgentUserCreate(FAKE_CLIENT_ID, {
+        cwd: tempDir, json: true, license: false, usageLocation: 'US',
+      });
+
+      expect(output.secretMinted).toBe(true);
+      expect(getAzAccessToken).toHaveBeenCalledExactlyOnceWith('https://graph.microsoft.com', FAKE_TENANT_ID);
+      expect(addBlueprintSecret).toHaveBeenCalledExactlyOnceWith('admin-token', 'blueprint-object-id');
+      expect(fs.readFileSync(path.join(tempDir, '.env'), 'utf8')).toContain(`CLIENT_SECRET=${FAKE_SECRET}`);
+      const { readGeneratedConfig } = await import('../src/apps/agent-config.js');
+      expect(readGeneratedConfig(tempDir)).toMatchObject({
+        agentBlueprintId: FAKE_CLIENT_ID,
+        agentBlueprintObjectId: 'blueprint-object-id',
+        agentBlueprintServicePrincipalObjectId: 'blueprint-principal-id',
+        agentBlueprintName: 'Verified Blueprint',
+      });
+    } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
   });

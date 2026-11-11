@@ -3,6 +3,7 @@ import type { AgentGeneratedConfig } from '../src/apps/agent-config.js';
 import { toAgentBlueprintCreateOutput } from '../src/commands/agent/blueprint/create.js';
 import { resolveGraphPermissionsDefault } from '../src/commands/agent/shared.js';
 import { getConfig } from '../src/utils/config.js';
+import { logger } from '../src/utils/logger.js';
 
 vi.mock('../src/utils/config.js', () => ({
   getConfig: vi.fn(),
@@ -56,6 +57,7 @@ describe('toAgentBlueprintCreateOutput', () => {
 describe('blueprint creation permissions', () => {
   afterEach(() => {
     vi.mocked(getConfig).mockReset();
+    vi.restoreAllMocks();
   });
 
   it.each([
@@ -78,5 +80,14 @@ describe('blueprint creation permissions', () => {
       'Chat.ReadWrite',
     ]);
     expect(getConfig).toHaveBeenCalledWith('agent-default-permissions');
+  });
+
+  it.each(['', ' \t '])('explicit empty permissions %j bypass defaults without logging', async (scopes: string) => {
+    vi.mocked(getConfig).mockResolvedValue('Mail.ReadWrite');
+    const info = vi.spyOn(logger, 'info').mockImplementation(() => {});
+
+    expect(await resolveGraphPermissionsDefault(scopes, false)).toBeUndefined();
+    expect(getConfig).not.toHaveBeenCalled();
+    expect(info).not.toHaveBeenCalled();
   });
 });

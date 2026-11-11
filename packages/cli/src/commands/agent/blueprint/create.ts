@@ -171,7 +171,7 @@ export const agentBlueprintCreateCommand = new Command('create')
   .option('--endpoint <url>', '[OPTIONAL] HTTPS messaging endpoint to register right away')
   .option(
     '--permissions <scopes>',
-    '[OPTIONAL] Comma-separated Microsoft Graph delegated scopes (e.g. Mail.ReadWrite,Chat.ReadWrite) to grant and make inheritable by every agent identity created from this blueprint. Falls back to `teams config` default-permissions when omitted.'
+    '[OPTIONAL] Comma-separated Microsoft Graph delegated scopes (e.g. Mail.ReadWrite,Chat.ReadWrite) to grant and make inheritable by every agent identity created from this blueprint. Falls back to `teams config` agent-default-permissions when omitted.'
   )
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(

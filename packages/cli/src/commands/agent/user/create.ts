@@ -405,11 +405,11 @@ export const agentUserCreateCommand = new Command('create')
     '--endpoint <url>',
     '[OPTIONAL] HTTPS messaging endpoint to register on a newly created blueprint. Not valid together with [blueprintId].'
   )
-  .option('--license <skuId>', '[OPTIONAL] License SKU ID or part number to assign to the agentic user. Falls back to `teams config` default-license when omitted.')
+  .option('--license <skuId>', '[OPTIONAL] License SKU ID or part number to assign to the agentic user. Falls back to `teams config` agent-default-license when omitted.')
   .option('--no-license', '[OPTIONAL] Skip license assignment (do it manually later)')
   .option(
     '--usage-location <code>',
-    '[OPTIONAL] Two-letter country code for the agentic user\u2019s usage location (e.g. US). Falls back to `teams config` default-usage-location when omitted.'
+    '[OPTIONAL] Two-letter country code for the agentic user\u2019s usage location (e.g. US). Falls back to `teams config` agent-default-usage-location when omitted.'
   )
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or C# appsettings.json)')
   .option('--json', '[OPTIONAL] Output as JSON')

@@ -11,8 +11,7 @@ vi.mock('../src/apps/graph.js', () => ({
 }));
 
 // Skip the real spinner entirely -- these tests only care about the
-// Graph/az orchestration, not spinner rendering (already covered by
-// agent-shared-progress.test.ts).
+// Graph/az orchestration, not spinner rendering.
 vi.mock('../src/commands/agent/shared.js', () => ({
   withAgentSpinner: async (_text: unknown, _silent: boolean, fn: (spinner: unknown) => unknown) => fn({}),
 }));

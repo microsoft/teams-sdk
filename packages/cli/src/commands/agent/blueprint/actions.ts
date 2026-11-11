@@ -178,6 +178,52 @@ export interface AgentBlueprintCleanupTarget {
   agentBlueprintServicePrincipalObjectId: string;
 }
 
+export interface ResolvedAgentBlueprint extends AgentBlueprintCleanupTarget {
+  agentBlueprintName: string;
+}
+
+/** Look up and validate a blueprint before resolving its service principal. */
+export async function resolveAgentBlueprint(
+  blueprintId: string,
+  adminToken: string,
+  silent: boolean
+): Promise<ResolvedAgentBlueprint> {
+  const app = await withAgentSpinner(
+    {
+      start: 'Looking up agent blueprint...',
+      success: 'Agent blueprint found.',
+      error: 'Could not find an agent blueprint with that ID.',
+    },
+    silent,
+    () => getAadAppByClientId(adminToken, blueprintId)
+  );
+
+  if (app['@odata.type'] !== '#microsoft.graph.agentIdentityBlueprint') {
+    throw new CliError(
+      'AGENT_BLUEPRINT_NOT_FOUND',
+      `The application '${blueprintId}' is not an Agent 365 blueprint.`,
+      'Verify the blueprint ID is correct.'
+    );
+  }
+
+  const principal = await withAgentSpinner(
+    {
+      start: 'Looking up blueprint service principal...',
+      success: 'Blueprint service principal found.',
+      error: 'Could not find the blueprint service principal.',
+    },
+    silent,
+    () => getServicePrincipalByAppId(adminToken, blueprintId)
+  );
+
+  return {
+    agentBlueprintId: blueprintId,
+    agentBlueprintObjectId: app.id,
+    agentBlueprintServicePrincipalObjectId: principal.id,
+    agentBlueprintName: app.displayName,
+  };
+}
+
 /**
  * Resolves the object IDs `runDeleteAgentBlueprint` needs for a blueprint ID
  * given on the command line, by looking it up via Graph instead of requiring
@@ -199,39 +245,7 @@ export async function resolveBlueprintCleanupTarget(
       () => getAzAccessToken('https://graph.microsoft.com', account.tenantId)
     );
 
-    const app = await withAgentSpinner(
-      {
-        start: 'Looking up agent blueprint...',
-        success: 'Agent blueprint found.',
-        error: 'Could not find an agent blueprint with that ID.',
-      },
-      silent,
-      () => getAadAppByClientId(adminToken, blueprintId)
-    );
-
-    if (app['@odata.type'] !== '#microsoft.graph.agentIdentityBlueprint') {
-      throw new CliError(
-        'AGENT_BLUEPRINT_NOT_FOUND',
-        `The application '${blueprintId}' is not an Agent 365 blueprint.`,
-        'Verify the blueprint ID is correct.'
-      );
-    }
-
-    const principal = await withAgentSpinner(
-      {
-        start: 'Looking up blueprint service principal...',
-        success: 'Blueprint service principal found.',
-        error: 'Could not find the blueprint service principal.',
-      },
-      silent,
-      () => getServicePrincipalByAppId(adminToken, blueprintId)
-    );
-
-    return {
-      agentBlueprintId: blueprintId,
-      agentBlueprintObjectId: app.id,
-      agentBlueprintServicePrincipalObjectId: principal.id,
-    };
+    return await resolveAgentBlueprint(blueprintId, adminToken, silent);
   } catch (error) {
     if (error instanceof CliError) throw error;
     throw new CliError(

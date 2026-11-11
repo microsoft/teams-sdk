@@ -143,8 +143,8 @@ export async function resolveGraphPermissionsDefault(
   silent: boolean
 ): Promise<string[] | undefined> {
   const flag = permissionsFlag?.trim();
-  const configDefault = !flag ? await getConfig('agent-default-permissions') : undefined;
-  if (!flag && configDefault && !silent) {
+  const configDefault = flag === undefined ? await getConfig('agent-default-permissions') : undefined;
+  if (flag === undefined && configDefault && !silent) {
     logger.info(pc.dim(`Using default Graph permissions "${configDefault}" from teams config.`));
   }
   const scopes = flag ?? configDefault;

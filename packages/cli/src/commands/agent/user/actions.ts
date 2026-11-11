@@ -14,10 +14,8 @@ import {
   getAgenticUserByIdOrUpn,
   getAssignedLicenseSkuIds,
   listSubscribedSkus,
-  getAadAppByClientId,
   getBlueprintToken,
   getOrganizationInfo,
-  getServicePrincipalByAppId,
   removeLicenses,
   updateServicePrincipal,
   updateUser,
@@ -30,6 +28,7 @@ import { logger } from '../../../utils/logger.js';
 import { isAutoConfirm, isInteractive } from '../../../utils/interactive.js';
 import { createSilentSpinner } from '../../../utils/spinner.js';
 import { withAgentSpinner } from '../shared.js';
+import { resolveAgentBlueprint } from '../blueprint/actions.js';
 
 export interface ResolvedBlueprint {
   agentBlueprintId: string;
@@ -108,25 +107,7 @@ export async function resolveExistingBlueprint(
       () => getAzAccessToken('https://graph.microsoft.com', account.tenantId)
     );
 
-    const app = await withAgentSpinner(
-      {
-        start: 'Looking up agent blueprint...',
-        success: 'Agent blueprint found.',
-        error: 'Could not find an agent blueprint with that ID.',
-      },
-      silent,
-      () => getAadAppByClientId(adminToken, blueprintId)
-    );
-
-    const principal = await withAgentSpinner(
-      {
-        start: 'Looking up blueprint service principal...',
-        success: 'Blueprint service principal found.',
-        error: 'Could not find the blueprint service principal.',
-      },
-      silent,
-      () => getServicePrincipalByAppId(adminToken, blueprintId)
-    );
+    const blueprint = await resolveAgentBlueprint(blueprintId, adminToken, silent);
 
     const secret = await withAgentSpinner(
       {
@@ -135,14 +116,11 @@ export async function resolveExistingBlueprint(
         error: 'Failed to mint a client secret.',
       },
       silent,
-      () => addBlueprintSecret(adminToken, app.id)
+      () => addBlueprintSecret(adminToken, blueprint.agentBlueprintObjectId)
     );
 
     return {
-      agentBlueprintId: blueprintId,
-      agentBlueprintObjectId: app.id,
-      agentBlueprintServicePrincipalObjectId: principal.id,
-      agentBlueprintName: app.displayName,
+      ...blueprint,
       clientSecret: secret.secretText,
       secretMinted: true,
     };
