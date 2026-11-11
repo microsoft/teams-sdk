@@ -84,7 +84,7 @@ describe('writeLaunchSettingsCredentials', () => {
     expect(env.AzureAd__ClientCredentials__0__ClientSecret).toBe('test-client-secret');
     expect(env.AzureAd__TenantId).toBe('test-tenant-id');
     expect(env.DOTNET_ENVIRONMENT).toBe('Staging');
-    expect(env.AzureAd__Instance).toBe('https://login.microsoftonline.com/');
+    expect(env).not.toHaveProperty('AzureAd__Instance');
     // profile shape preserved
     expect(json.profiles.http.commandName).toBe('Project');
     expect(json.profiles.http.applicationUrl).toBe('http://localhost:3978');
@@ -145,7 +145,6 @@ describe('writeLaunchSettingsCredentials', () => {
             AzureAd__ClientId: 'test-client-id',
             AzureAd__ClientCredentials__0__SourceType: 'ClientSecret',
             AzureAd__ClientCredentials__0__ClientSecret: 'test-client-secret',
-            AzureAd__Instance: 'https://login.microsoftonline.com/',
           },
         },
       },

@@ -111,8 +111,9 @@ into the first profile's `environmentVariables`, replacing legacy `Teams__*` cre
 Existing profiles and unrelated settings are preserved. If no profile exists, a
 `Development` profile with `commandName: "Project"` is created. Missing
 `DOTNET_ENVIRONMENT` defaults to the existing `ASPNETCORE_ENVIRONMENT`, or `Development`
-if neither is set. Missing `AzureAd__Instance` defaults to
-`https://login.microsoftonline.com/`. With `--no-secret`, stale client secret values
+if neither is set. `AzureAd__Instance` is left unchanged or absent so the launch profile
+does not override an authority configured in `appsettings.json`; the SDK supplies the
+public-cloud default when no authority is configured. With `--no-secret`, stale client secret values
 and their `ClientSecret` source type are removed.
 
 ### Skipping Secret Generation
