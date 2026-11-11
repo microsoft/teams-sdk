@@ -148,7 +148,12 @@ export async function resolveGraphPermissionsDefault(
     logger.info(pc.dim(`Using default Graph permissions "${configDefault}" from teams config.`));
   }
   const scopes = flag ?? configDefault;
-  return scopes?.trim()
-    ? [...new Set(scopes.split(',').map((s) => s.trim()).filter(Boolean))]
-    : undefined;
+  return scopes?.trim() ? parseScopes(scopes) : undefined;
+}
+
+/**
+ * PowerShell can forward an unquoted comma list as a space-separated string.
+ */
+export function parseScopes(raw: string): string[] {
+  return [...new Set(raw.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean))];
 }

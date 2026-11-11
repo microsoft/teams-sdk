@@ -3,7 +3,7 @@ import pc from 'picocolors';
 import { outputJson } from '../../../../utils/json-output.js';
 import { CliError, wrapAction } from '../../../../utils/errors.js';
 import { logger } from '../../../../utils/logger.js';
-import { requireAgentAccount } from '../../shared.js';
+import { parseScopes, requireAgentAccount } from '../../shared.js';
 import {
   addBlueprintPermissions,
   listBlueprintPermissions,
@@ -12,16 +12,6 @@ import {
   setBlueprintPermissions,
   type BlueprintPermissionListEntry,
 } from './actions.js';
-
-/**
- * Splits on commas and/or whitespace. Whitespace matters because an
- * unquoted comma list in PowerShell can arrive here already space-joined
- * (PowerShell parses the bare comma as array construction, then flattens
- * it to a space-separated string when forwarding through `teams.ps1`).
- */
-function parseScopes(raw: string): string[] {
-  return [...new Set(raw.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean))];
-}
 
 function printPermissionsTable(entries: BlueprintPermissionListEntry[]): void {
   for (const entry of entries) {

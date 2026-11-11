@@ -14,7 +14,8 @@ import {
   type AgentGeneratedConfig,
 } from '../../../apps/agent-config.js';
 import { agentChatLink } from '../../../apps/links.js';
-import { isAppSettingsFile, writeAzureAdCredentials, writeCredentials } from '../../../utils/env.js';
+import { isAppSettingsFile, outputCredentials, writeAzureAdCredentials, writeCredentials } from '../../../utils/env.js';
+import { resolveCredentialDestination } from '../../../utils/credential-destination.js';
 import { printLinkBanner } from '../../../utils/browser.js';
 import { CliError, wrapAction } from '../../../utils/errors.js';
 import { confirmAction, isInteractive } from '../../../utils/interactive.js';
@@ -46,8 +47,8 @@ export interface AgentUserCreateOptions {
   cwd?: string;
   /** [OPTIONAL] Internal: skips the "reuse an existing blueprint" prompt and always creates a new one. Used by `teams project new`. */
   forceNewBlueprint?: boolean;
-  /** [OPTIONAL] Internal: additional file to also write credentials to (e.g. a C# project's `appsettings.Development.json`). Used by `teams project new`. */
-  credentialPath?: string;
+  /** [OPTIONAL] Additional credentials file to write alongside the root `.env` (e.g. a C# project's `appsettings.Development.json`). */
+  env?: string;
 }
 
 export interface AgentUserCreateOutput {
@@ -220,6 +221,13 @@ export async function runAgentUserCreate(
     assertHttpsEndpoint(options.endpoint.trim());
   }
 
+  const credentialPath = await resolveCredentialDestination({
+    explicit: options.env,
+    interactive: !silent && isInteractive(),
+    json: options.json,
+    cwd,
+  });
+
   const account = await requireAgentAccount(silent);
 
   let agentName: string;
@@ -296,8 +304,8 @@ export async function runAgentUserCreate(
   };
   writeCredentials(envPath, credentials);
   const extraCredentialPath =
-    options.credentialPath && resolve(options.credentialPath) !== resolve(envPath)
-      ? options.credentialPath
+    credentialPath && resolve(credentialPath) !== resolve(envPath)
+      ? credentialPath
       : undefined;
   if (extraCredentialPath) {
     // C# appsettings files need the AzureAd shape (see csharp.ts's mapBaseEnvVars), not the
@@ -379,6 +387,9 @@ export async function runAgentUserCreate(
   }
 
   renderAgentUserCreateResult(output);
+  if (!credentialPath) {
+    outputCredentials(undefined, credentials, 'Blueprint credentials:');
+  }
   return output;
 }
 
@@ -400,6 +411,7 @@ export const agentUserCreateCommand = new Command('create')
     '--usage-location <code>',
     '[OPTIONAL] Two-letter country code for the agentic user\u2019s usage location (e.g. US). Falls back to `teams config` default-usage-location when omitted.'
   )
+  .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or C# appsettings.json)')
   .option('--json', '[OPTIONAL] Output as JSON')
   .action(
     wrapAction(async (blueprintIdArg: string | undefined, options: AgentUserCreateOptions) => {

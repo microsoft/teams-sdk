@@ -122,8 +122,8 @@ export function appCreateCommandFor(agentName: string, credentialsPath: string):
 }
 
 /** `teams agent user create` takes an optional existing blueprint ID, not a name -- when creating a brand new blueprint it always prompts for the name interactively. */
-export function agentUserCreateCommandHint(): string {
-  return 'teams agent user create';
+export function agentUserCreateCommandHint(credentialsPath: string): string {
+  return `teams agent user create --env ${quoteCommandArg(credentialsPath)}`;
 }
 
 export function hasCredentialValues(envVars: Record<string, string>): boolean {
@@ -239,7 +239,7 @@ export async function createProjectFromTemplate(
     logger.info(pc.bold('To provision an app or agentic user and write credentials, run from the project folder:'));
     logger.info(pc.cyan(`  ${appCreateCommandFor(rawName.trim(), credentialDisplayFromProjectFolder)}`));
     logger.info(pc.dim('  (Teams app)'));
-    logger.info(pc.cyan(`  ${agentUserCreateCommandHint()}`));
+    logger.info(pc.cyan(`  ${agentUserCreateCommandHint(credentialDisplayFromProjectFolder)}`));
     logger.info(pc.dim('  (Agent 365 agentic user -- creates the blueprint + identity too)'));
   }
 
@@ -289,7 +289,7 @@ async function maybeProvisionAppForCreatedProject(
     // defaulting its name to the project name (still editable).
     const result = await runAgentUserCreate(
       undefined,
-      { cwd: targetDir, forceNewBlueprint: true, credentialPath },
+      { cwd: targetDir, forceNewBlueprint: true, env: credentialPath },
       undefined,
       rawName.trim()
     );

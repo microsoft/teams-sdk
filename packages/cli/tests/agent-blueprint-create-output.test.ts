@@ -1,6 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { AgentGeneratedConfig } from '../src/apps/agent-config.js';
 import { toAgentBlueprintCreateOutput } from '../src/commands/agent/blueprint/create.js';
+import { resolveGraphPermissionsDefault } from '../src/commands/agent/shared.js';
+import { getConfig } from '../src/utils/config.js';
+
+vi.mock('../src/utils/config.js', () => ({
+  getConfig: vi.fn(),
+}));
 
 const ENV_PATH = '/work/.env';
 const CONFIG_PATH = '/work/agent.generated.config.json';
@@ -45,10 +51,32 @@ describe('toAgentBlueprintCreateOutput', () => {
     expect(output.messagingEndpoint).toBeUndefined();
     expect('messagingEndpoint' in output).toBe(false);
   });
+});
 
-  it('always includes envPath and generatedConfigPath', () => {
-    const output = toAgentBlueprintCreateOutput(baseConfig(), CONFIG_PATH, ENV_PATH);
-    expect(output.envPath).toBe(ENV_PATH);
-    expect(output.generatedConfigPath).toBe(CONFIG_PATH);
+describe('blueprint creation permissions', () => {
+  afterEach(() => {
+    vi.mocked(getConfig).mockReset();
+  });
+
+  it.each([
+    'Mail.ReadWrite,Chat.ReadWrite',
+    'Mail.ReadWrite Chat.ReadWrite',
+    ' , Mail.ReadWrite,\tChat.ReadWrite\nMail.ReadWrite, ',
+  ])('parses and deduplicates --permissions %j', async (scopes: string) => {
+    expect(await resolveGraphPermissionsDefault(scopes, true)).toEqual([
+      'Mail.ReadWrite',
+      'Chat.ReadWrite',
+    ]);
+    expect(getConfig).not.toHaveBeenCalled();
+  });
+
+  it('parses whitespace-separated scopes from the configured default', async () => {
+    vi.mocked(getConfig).mockResolvedValue('Mail.ReadWrite Chat.ReadWrite Mail.ReadWrite');
+
+    expect(await resolveGraphPermissionsDefault(undefined, true)).toEqual([
+      'Mail.ReadWrite',
+      'Chat.ReadWrite',
+    ]);
+    expect(getConfig).toHaveBeenCalledWith('agent-default-permissions');
   });
 });

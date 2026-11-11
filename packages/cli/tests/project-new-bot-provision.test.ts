@@ -174,7 +174,7 @@ describe('project new app provisioning', () => {
       {
         cwd: path.join(tempDir, 'pm-agent'),
         forceNewBlueprint: true,
-        credentialPath: path.join(tempDir, 'pm-agent', '.env'),
+        env: path.join(tempDir, 'pm-agent', '.env'),
       },
       undefined,
       'PM Agent'
@@ -263,6 +263,20 @@ describe('project new app provisioning', () => {
         defaultName: 'PM Agent',
         skipPostCreateActions: true,
       }
+    );
+  });
+
+  it('includes the nested C# credentials path in deferred agent provisioning guidance', async () => {
+    mockConfirm.mockResolvedValueOnce(false);
+
+    const { logger } = await import('../src/utils/logger.js');
+    const { createCsharpProject } = await import('../src/commands/project/new/csharp.js');
+
+    await createCsharpProject('PM Agent', { template: 'echo' });
+
+    expect(mockRunAgentUserCreate).not.toHaveBeenCalled();
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('teams agent user create --env "PmAgent/appsettings.Development.json"')
     );
   });
 

@@ -220,6 +220,14 @@ describe('writeAzureAdCredentials', () => {
   it('drops ClientCredentials when the secret is undefined', () => {
     const filePath = tmpFile('appsettings.Development.json');
     files.push(filePath);
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify({
+        AzureAd: {
+          ClientCredentials: [{ SourceType: 'ClientSecret', ClientSecret: 'stale-secret' }],
+        },
+      })
+    );
 
     writeAzureAdCredentials(filePath, { CLIENT_ID: 'id-123', TENANT_ID: 'tenant-456' });
 
