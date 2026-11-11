@@ -97,9 +97,8 @@ export function isLaunchSettingsFile(filePath: string): boolean {
 
 /**
  * Write credentials into a .NET launchSettings.json file as environment
- * variables on the first profile. Uses the legacy double-underscore keys
- * (Teams__ClientId, Teams__ClientSecret, Teams__TenantId) so ASP.NET
- * configuration binds them to the Teams settings section.
+ * variables on the first profile, using the AzureAd configuration section
+ * and its ClientCredentials array.
  */
 export function writeLaunchSettingsCredentials(filePath: string, values: EnvValues): void {
   const resolvedPath = path.resolve(filePath);
@@ -129,7 +128,7 @@ export function writeLaunchSettingsCredentials(filePath: string, values: EnvValu
     Array.isArray(profiles) ||
     Object.keys(profiles).length === 0
   ) {
-    profiles = { http: { commandName: 'Project', environmentVariables: {} } };
+    profiles = { Development: { commandName: 'Project', environmentVariables: {} } };
     json.profiles = profiles;
   }
 
@@ -148,14 +147,29 @@ export function writeLaunchSettingsCredentials(filePath: string, values: EnvValu
   }
   const envVarsObj = envVars as Record<string, unknown>;
 
-  envVarsObj['Teams__ClientId'] = values.CLIENT_ID;
+  delete envVarsObj['Teams__ClientId'];
+  delete envVarsObj['Teams__ClientSecret'];
+  delete envVarsObj['Teams__TenantId'];
+
+  envVarsObj['DOTNET_ENVIRONMENT'] ??= envVarsObj['ASPNETCORE_ENVIRONMENT'] ?? 'Development';
+  envVarsObj['AzureAd__ClientId'] = values.CLIENT_ID;
+  envVarsObj['AzureAd__TenantId'] = values.TENANT_ID;
   if (values.CLIENT_SECRET !== undefined) {
-    envVarsObj['Teams__ClientSecret'] = values.CLIENT_SECRET;
+    envVarsObj['AzureAd__ClientCredentials__0__SourceType'] = 'ClientSecret';
+    envVarsObj['AzureAd__ClientCredentials__0__ClientSecret'] = values.CLIENT_SECRET;
   } else {
-    // Drop a stale secret so --no-secret never leaves an old ClientSecret behind.
-    delete envVarsObj['Teams__ClientSecret'];
+    for (const [key, value] of Object.entries(envVarsObj)) {
+      if (
+        /^AzureAd__ClientCredentials__\d+__ClientSecret$/i.test(key) ||
+        (/^AzureAd__ClientCredentials__\d+__SourceType$/i.test(key) &&
+          typeof value === 'string' &&
+          value.toLowerCase() === 'clientsecret') ||
+        /^Teams__ClientSecret$/i.test(key)
+      ) {
+        delete envVarsObj[key];
+      }
+    }
   }
-  envVarsObj['Teams__TenantId'] = values.TENANT_ID;
 
   ensureParentDir(resolvedPath);
   fs.writeFileSync(resolvedPath, JSON.stringify(json, null, 2) + '\n');
