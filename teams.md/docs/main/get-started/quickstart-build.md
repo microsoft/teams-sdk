@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: "Quickstart: Build your first bot"
+title: 'Quickstart: Build your first bot'
 summary: Wire up a message handler in TypeScript, C#, or Python with the Teams SDK.
 ---
 
@@ -35,13 +35,13 @@ app.on('message', async ({ send, activity }) => {
 app.start(process.env.PORT || 3978).catch(console.error);
 ```
 
-| Part | Purpose |
-|---|---|
-| `new App()` | Reads credentials from `.env` automatically |
-| `app.on('message', ...)` | Registers a handler for incoming messages |
+| Part                       | Purpose                                            |
+| -------------------------- | -------------------------------------------------- |
+| `new App()`                | Reads credentials from `.env` automatically        |
+| `app.on('message', ...)`   | Registers a handler for incoming messages          |
 | `send({ type: 'typing' })` | Shows the typing indicator while you build a reply |
-| `send(...)` | Replies in the same conversation |
-| `app.start(port)` | Starts the HTTP server on the given port |
+| `send(...)`                | Replies in the same conversation                   |
+| `app.start(port)`          | Starts the HTTP server on the given port           |
 
 Run it:
 
@@ -132,6 +132,28 @@ python src/main.py
 ```
 
 Continue with the [Python guide](/python/getting-started) for events, sending messages, Adaptive Cards, AI, and more.
+
+</TabItem>
+</Tabs>
+
+## Add AI
+
+Keep the Teams message handler as your channel boundary, then connect the model or agent framework that fits your application.
+
+<Tabs groupId="language">
+<TabItem value="typescript" label="TypeScript" default>
+
+Use the [AI agent quickstart](/typescript/in-depth-guides/ai-integrations/agent-quickstart) to run the same Teams agent with either Azure OpenAI or Anthropic Claude. The sample includes streaming, MCP tools, citations, clarification cards, follow-up prompts, and feedback.
+
+</TabItem>
+<TabItem value="csharp" label="C#">
+
+Use the [AI agent quickstart](/csharp/in-depth-guides/ai-integrations/agent-quickstart) to run the validated `IChatClient` sample with either Azure OpenAI or Anthropic Claude, then continue with [Build an agent in Teams](/csharp/in-depth-guides/ai-integrations/build-agent).
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+Use the [AI agent quickstart](/python/in-depth-guides/ai-integrations/agent-quickstart) to run the validated Agent Framework sample with either Azure OpenAI or Anthropic Claude, then continue with [Build an agent in Teams](/python/in-depth-guides/ai-integrations/build-agent).
 
 </TabItem>
 </Tabs>
