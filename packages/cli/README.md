@@ -45,7 +45,12 @@ https://aka.ms/Teams-Skills
 
 ## Issues
 
-Report CLI issues at https://aka.ms/teams-cli-issues.
+Run `teams feedback` to open the CLI issue form on GitHub and submit feedback.
+The form is prefilled with your CLI version and Node.js version. Select your operating system and install method manually.
+In remote or non-interactive sessions, the command prints the link instead.
+Use `teams feedback --json` to return the URL without opening a browser.
+
+You can also report CLI issues at https://aka.ms/teams-cli-issues.
 
 ## License
 

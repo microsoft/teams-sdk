@@ -1,0 +1,125 @@
+---
+sidebar_position: 1
+title: 'HTML Widgets'
+suppressLanguageIncludeWarning: true
+---
+
+# HTML Widgets
+
+HTML Widgets let your app render rich, interactive HTML inside a Teams message.
+A widget is an [MCP Apps (ext-apps)](https://github.com/modelcontextprotocol/ext-apps) surface that the Teams client renders in a sandboxed iframe.
+The widget can call tools on your app, send messages back, request display mode changes, open links, and contribute content to the model context for future turns.
+
+The SDK helps you send a widget and handle its tool calls, but it does not run any code inside the widget.
+Your widget's own JavaScript must complete the MCP Apps handshake and report its size, or it will not display correctly.
+
+:::info What your widget must do
+- **Send `ui/initialize`, then `ui/notifications/initialized`.** Do not send other requests until the `ui/initialize` response arrives.
+- **Report its size with `ui/notifications/size-changed`.** Without a report the host leaves the widget at about 150px tall.
+
+See [Your widget owns the handshake and sizing](#your-widget-owns-the-handshake-and-sizing).
+:::
+
+:::warning Preview
+HTML Widgets are in preview and the API surface may change. HTML Widgets are planned for public preview on 11/16.
+<LanguageInclude content={{"typescript": "Every widget type and helper is annotated `@experimental` in its JSDoc (diagnostic `ExperimentalTeamsHtmlWidget`) to mark it as preview.", "python": "Every widget type and helper is decorated with `@experimental` (`ExperimentalTeamsHtmlWidget`), which emits a runtime preview warning when it is used.", "csharp": "Every widget type and helper is guarded by the `ExperimentalTeamsHtmlWidget` compiler diagnostic, so you opt in explicitly to use them."}} />
+:::
+
+:::warning Message export
+There is a gap in the export APIs that prevents widget content from being exported. If your organization determines this is a problem, you can disable bots that may send widgets.
+:::
+
+## How it works
+
+A widget travels inside a normal message.
+The app sends a message with `textFormat: 'extendedmarkdown'` whose text contains a fenced `html-widget` code block holding a JSON payload:
+
+````text
+Here is your widget:
+
+```html-widget
+{
+  "type": "widget/mcp-ui",
+  "name": "My Widget",
+  "html": "<div>Hello</div>",
+  "domain": "https://teams.microsoft.com"
+}
+```
+````
+
+The Teams client parses that block and loads the widget HTML in a sandboxed iframe.
+The widget speaks the MCP Apps protocol to the client over `postMessage`, and from that point the widget and your app communicate through a small set of methods.
+
+## The widget payload
+
+Every widget is described by a payload with the following fields:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `type` | yes | The widget type identifier. Currently only `widget/mcp-ui` is supported. The SDK builders default this for you. |
+| `name` | yes | The display name of the widget. |
+| `html` | yes | The HTML content that makes up the widget. |
+| `domain` | yes | A valid domain URL applied to sandbox metadata. It does not need to resolve or serve content, but must be non-empty. This is informational metadata, not a verified identity claim. |
+| `description` | no | A description of the widget. |
+| `securityPolicy` | no | Allowed origins for network requests, resources, frames, and base URIs. See [Security policy](./security-policy). |
+| `toolInput` | no | Data passed to the widget as initial context. The host delivers it after the handshake in a `ui/notifications/tool-input` notification, as `params.arguments`. |
+| `toolOutput` | no | Data the tool produced alongside the widget. The host delivers it after the handshake in a `ui/notifications/tool-result` notification, with the `content`, `structuredContent`, and `isError` fields as `params`. |
+| `permissions` | no | Capabilities the widget requests from the host (camera, microphone, geolocation, clipboard write). |
+| `mcpUrl` | no | The URL of the MCP server that produced the widget. The Teams client combines it with the owner id to derive the widget's hosting origin, so it is not itself the origin. A widget produced by an MCP server must set it to that server's URL to get its own hosting scope. |
+| `correlationId` | no | A correlation vector for the widget. The Teams client returns it to your app on tool calls from the widget. |
+
+## Your widget owns the handshake and sizing
+
+The SDK sends your HTML exactly as you author it. It does not add any script to it.
+Your widget must do two things itself:
+
+- **Complete the handshake.** Send a `ui/initialize` request to the host with `protocolVersion` (`2026-01-26`), `appInfo` (`name` and `version`), and `appCapabilities`. Wait for the response before sending any other request, because a request sent earlier gets an empty result. When the response arrives, send `ui/notifications/initialized`. The `ui/initialize` result carries `protocolVersion`, `hostCapabilities`, `hostInfo`, and `hostContext` (such as the theme, locale, and display modes). If the response is an error, the handshake failed and the widget must not continue.
+- **Report its size.** Report its height with `ui/notifications/size-changed` after the handshake and whenever its content changes. Without a size report the host leaves the widget at about 150px tall. Observe the widget's root element with a single `ResizeObserver` and report `getBoundingClientRect().height` as is. Rounding the value can leave a gap or clip the content by a pixel.
+
+Messages travel as JSON-RPC 2.0 objects over `window.parent.postMessage`. A request carries an `id` and gets a response with the same `id`. A notification has no `id`.
+
+```js
+const root = document.getElementById('root');
+const post = (message) => window.parent.postMessage({ jsonrpc: '2.0', ...message }, '*');
+
+window.addEventListener('message', (event) => {
+  if (event.source !== window.parent) return;
+  const data = event.data;
+  if (data?.id === 'init') {
+    if (data.error) return console.error('Widget handshake failed', data.error);
+    post({ method: 'ui/notifications/initialized', params: {} });
+    new ResizeObserver(() =>
+      post({ method: 'ui/notifications/size-changed', params: { height: root.getBoundingClientRect().height } })
+    ).observe(root);
+  }
+  if (data?.method === 'ui/notifications/tool-input') console.log(data.params.arguments);
+  if (data?.method === 'ui/notifications/tool-result') console.log(data.params.structuredContent);
+});
+
+post({
+  id: 'init',
+  method: 'ui/initialize',
+  params: { protocolVersion: '2026-01-26', appInfo: { name: 'my-widget', version: '1.0.0' }, appCapabilities: {} },
+});
+```
+
+A widget can ask the host to change its display mode by sending a `ui/request-display-mode` request with `{ "mode": "fullscreen" }`.
+
+## What the SDK provides
+
+The SDK does not change the wire contract.
+Everything a widget needs could be assembled by hand.
+Instead the SDK ships a small set of helpers so you never have to build the fenced code block, escape the JSON, or hand-parse invoke payloads.
+The SDK does not run inside the widget, so it does not perform the `ui/initialize` handshake, report the widget's size, or deliver `toolInput` and `toolOutput`. The widget does the first two, and the host sends the last two as `ui/notifications/tool-input` and `ui/notifications/tool-result` after the handshake.
+
+- **Build helpers**: <LanguageInclude content={{"typescript": "`buildHtmlWidgetMessage` and `buildHtmlWidgetMarkdown`", "python": "`build_html_widget_message` and `build_html_widget_markdown`", "csharp": "`HtmlWidgetHelpers.BuildHtmlWidgetMessage` and `HtmlWidgetHelpers.BuildHtmlWidgetMarkdown`"}} /> turn a payload into a ready-to-send message (or the raw markdown string) with the correct `html-widget` fence and `extendedmarkdown` text format. See [Sending widgets](./sending-widgets).
+- **A typed tool-call handler**: <LanguageInclude content={{"typescript": "the `widget.callTool` event", "python": "the `@app.on_widget_call_tool` decorator", "csharp": "the `OnWidgetCallTool` handler"}} /> receives `htmlwidget/calltool` invokes when a widget calls one of your tools, gives you the typed tool name and arguments, and lets you return a typed result. See [Handling tool calls](./handling-tool-calls).
+- **Security helpers**: <LanguageInclude content={{"typescript": "`validateSecurityPolicy`", "python": "`validate_security_policy`", "csharp": "`HtmlWidgetHelpers.ValidateSecurityPolicy`"}} /> audits that external references in your HTML are covered by your declared security policy. See [Security policy](./security-policy).
+- **A model-context helper**: <LanguageInclude content={{"typescript": "`tryGetWidgetModelContext`", "python": "`try_get_widget_model_context`", "csharp": "`HtmlWidgetHelpers.TryGetWidgetModelContext`"}} /> parses a widget's `ui/update-model-context` request off an incoming message activity. See [Updating model context](./updating-model-context).
+
+For how failures surface at each stage, from sending to rendering, see [Error handling](./error-handling).
+
+## Resources
+
+- [MCP Apps (ext-apps) specification](https://github.com/modelcontextprotocol/ext-apps)
+- [Model Context Protocol](https://modelcontextprotocol.io)

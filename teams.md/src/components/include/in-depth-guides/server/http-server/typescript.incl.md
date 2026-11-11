@@ -31,8 +31,8 @@ expressApp.get('/health', (_req, res) => {
   res.json({ status: 'healthy' });
 });
 
-// 2. Wrap it in the ExpressAdapter
-const adapter = new ExpressAdapter(httpServer);
+// 2. Wrap your Express app, not the http.Server (avoids a duplicate listener crash)
+const adapter = new ExpressAdapter(expressApp);
 
 // 3. Create the Teams app with the adapter
 const app = new App({ httpServerAdapter: adapter });

@@ -23,6 +23,7 @@ teams status [options]
 
 ## What it shows
 
+- **CLI version** — warns when a newer version is published, with a hint to run `teams self-update` (the current version is shown with `--verbose`)
 - **Login status** — username, tenant ID (with `--verbose`)
 - **TDP access** — whether a Teams Developer Portal token can be acquired
 - **Sideloading (tenant)** — whether the tenant admin has enabled custom app sideloading
@@ -33,6 +34,8 @@ teams status [options]
 
 ```json
 {
+  "cliVersion": { "current": "3.0.3", "latest": "3.0.4" },
+  "updateAvailable": true,
   "loggedIn": true,
   "username": "user@contoso.com",
   "tenantId": "abc-123",
@@ -51,3 +54,4 @@ teams status [options]
 }
 ```
 
+`cliVersion.latest` is `null` if the npm registry can't be reached. `updateAvailable` is only present when a newer version is published.

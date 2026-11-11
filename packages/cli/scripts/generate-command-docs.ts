@@ -14,6 +14,7 @@ import path from 'node:path';
 // Import all command objects directly (avoids triggering program.parse())
 import { loginCommand, logoutCommand } from '../src/commands/auth/index.js';
 import { statusCommand } from '../src/commands/status.js';
+import { feedbackCommand } from '../src/commands/feedback.js';
 import { appCommand } from '../src/commands/app/index.js';
 import { agentCommand } from '../src/commands/agent/index.js';
 import { selfUpdateCommand } from '../src/commands/self-update.js';
@@ -35,6 +36,7 @@ program.name('teams').description('CLI for scaffolding Teams applications');
 program.addCommand(loginCommand);
 program.addCommand(logoutCommand);
 program.addCommand(statusCommand);
+program.addCommand(feedbackCommand);
 program.addCommand(appCommand);
 program.addCommand(agentCommand);
 program.addCommand(selfUpdateCommand);

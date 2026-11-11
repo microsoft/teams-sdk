@@ -72,5 +72,5 @@ async def handle_message_feedback(ctx: ActivityContext[MessageSubmitActionInvoke
     reaction_text: str = f" and {reaction}" if reaction else ""
     text_part: str = f" with comment: '{feedback_text}'" if feedback_text else ""
 
-    await ctx.reply(f"✅ Thank you for your feedback{reaction_text}{text_part}!")
+    await ctx.send(f"✅ Thank you for your feedback{reaction_text}{text_part}!")
 ```

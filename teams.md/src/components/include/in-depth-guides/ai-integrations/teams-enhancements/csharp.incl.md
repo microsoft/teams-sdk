@@ -11,7 +11,7 @@ await foreach (ChatResponseUpdate update in _chatClient.GetStreamingResponseAsyn
         await writer.AppendResponseAsync(update.Text, cancellationToken);
     }
 }
- await writer.FinalizeResponseAsync(CancellationToken: cancellationToken);
+ await writer.FinalizeResponseAsync(cancellationToken: cancellationToken);
 ```
 
 <!-- ai-label -->
@@ -153,4 +153,20 @@ public void AttachCitations(MessageActivityInput reply, string fullText)
             });
     }
 }
+```
+
+<!-- sensitivity-labels -->
+
+```csharp
+string labelId = "<purview-label-id>";
+
+MessageActivityInput reply = new MessageActivityInput()
+    .WithText("Here is the quarterly summary [1].")
+    .AddSensitivityLabel(new SensitivityUsageInfo { Id = labelId, Name = "Confidential" })
+    .AddCitation(1, new CitationAppearance
+    {
+        Name = "Quarterly report",
+        Abstract = "Revenue and forecast for the quarter.",
+        SensitivityUsageInfo = new SensitivityUsageInfo { Id = labelId, Name = "Confidential" }
+    });
 ```

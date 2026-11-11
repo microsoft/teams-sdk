@@ -1,12 +1,9 @@
 import { input, select } from '@inquirer/prompts';
-import { Command, Option } from 'commander';
+import { Command } from 'commander';
 import pc from 'picocolors';
 import {
   type BotScope,
-  isBotCommunicationApiAvailable,
-  isInstallLinkSupported,
   normalizeAppMetadata,
-  printInstallInstructions,
   validateAppMetadata,
   validateAppMetadataField,
   validateEndpoint,
@@ -25,7 +22,6 @@ import { getConfig } from '../../utils/config.js';
 import { ensureAz, runAz } from '../../utils/az.js';
 import { resolveSubscription, resolveResourceGroup, ensureTenantMatch } from '../../utils/az-prompts.js';
 import { createSilentSpinner } from '../../utils/spinner.js';
-import { DEV_API_ENV_VAR, isTdpV2Enabled } from '../../utils/tdp-host.js';
 import { openInBrowser, printLinkBanner } from '../../utils/browser.js';
 import { parseMessagingMode, promptMessagingMode } from './messaging-mode.js';
 import {
@@ -123,7 +119,7 @@ export async function runAppCreate(
 
   const result = await createApp(
     prepared.input,
-    createSpinnerProgress(prepared.silent || prepared.input.botLocation === 'azure')
+    createSpinnerProgress(prepared.silent)
   );
   const output = toAppCreateOutput(result, prepared.envPath);
   await renderAppCreateResult(output, result, prepared.envPath, options, runOptions);
@@ -152,20 +148,6 @@ async function prepareAppCreate(
       throw new CliError(
         'VALIDATION_CONFLICT',
         'Cannot specify both --messaging-mode socket and --endpoint.'
-      );
-    }
-    if (!isBotCommunicationApiAvailable()) {
-      throw new CliError(
-        'VALIDATION_MISSING',
-        'Socket mode is not available in this environment yet.',
-        `Set ${DEV_API_ENV_VAR}=1 to use the dev-int Teams Developer Portal.`
-      );
-    }
-    if (location === 'azure') {
-      throw new CliError(
-        'VALIDATION_CONFLICT',
-        'Socket mode is only supported for Teams-managed bots.',
-        'Use --teams-managed.'
       );
     }
   }
@@ -202,9 +184,8 @@ async function prepareAppCreate(
     messagingMode === undefined &&
     options.endpoint === undefined &&
     interactive &&
-    !hasFlags &&
-    location === 'tm' &&
-    isBotCommunicationApiAvailable()
+    !silent &&
+    !hasFlags
   ) {
     socketMode = (await promptMessagingMode()) === 'socket';
   }
@@ -313,7 +294,7 @@ async function prepareAppCreate(
       const rgRegion = options.region ?? 'westus2';
       const rgSpinner = createSilentSpinner(
         `Creating resource group ${resourceGroup}...`,
-        true
+        silent
       ).start();
       await runAz([
         'group',
@@ -443,7 +424,7 @@ async function renderAppCreateResult(
     logger.warn(`  To retry, run: ${pc.cyan(`teams app update ${result.teamsAppId} --messaging-mode socket`)}`);
   }
   logger.info('');
-  printInstallInstructions(result.teamsAppId, result.installLink);
+  printLinkBanner('Install in Teams', result.installLink);
   printLinkBanner('Developer Portal', result.portalLink);
 
   if (!runOptions.suppressCredentialOutput) {
@@ -462,7 +443,7 @@ async function renderAppCreateResult(
       const action = await select({
         message: '',
         choices: [
-          ...(isInstallLinkSupported() ? [{ name: 'Install in Teams', value: 'install' }] : []),
+          { name: 'Install in Teams', value: 'install' },
           { name: 'Open in Developer Portal', value: 'portal' },
           { name: 'Done', value: 'done' },
         ],
@@ -480,12 +461,7 @@ export const appCreateCommand = new Command('create')
   .description('Create a new Teams app with a bot')
   .option('-n, --name <name>', 'App/bot name')
   .option('-e, --endpoint <url>', '[OPTIONAL] Messaging endpoint URL')
-  .addOption(
-    new Option(
-      '--messaging-mode <mode>',
-      '[OPTIONAL] How Teams delivers messages: socket or http (socket requires a Teams-managed bot)'
-    ).hideHelp(!isTdpV2Enabled())
-  )
+  .option('--messaging-mode <mode>', '[OPTIONAL] How Teams delivers messages: socket or http')
   .option('--env <path>', '[OPTIONAL] Path to credentials file (.env or appsettings.json)')
   .option('--env-file <path>', '[OPTIONAL] Alias for --env')
   .option('--no-secret', '[OPTIONAL] Skip client secret generation (for managed identity or federated credentials)')

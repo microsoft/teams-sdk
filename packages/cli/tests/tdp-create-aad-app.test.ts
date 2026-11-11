@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 interface RecordedCall {
   url: string;
@@ -24,30 +24,16 @@ vi.mock('../src/utils/http.js', () => ({
   }),
 }));
 
-async function loadWithTdpV2(enabled: boolean) {
-  vi.doMock('../src/utils/tdp-host.js', async (importOriginal) => ({
-    ...(await importOriginal<typeof import('../src/utils/tdp-host.js')>()),
-    TDP_BASE_URL: 'https://tdp.test/api',
-    TDP_V2_BASE_URL: 'https://tdp-v2.test',
-    isTdpV2Enabled: () => enabled,
-  }));
-  return import('../src/apps/tdp.js');
-}
+import { createAadAppViaTdp } from '../src/apps/tdp.js';
+import { apiFetch } from '../src/utils/http.js';
 
 describe('createAadAppViaTdp', () => {
   beforeEach(() => {
     calls.length = 0;
-    vi.resetModules();
+    vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.doUnmock('../src/utils/tdp-host.js');
-    vi.resetModules();
-  });
-
-  it('uses TDP v2 API v1.0/aadapplications when available', async () => {
-    const { createAadAppViaTdp } = await loadWithTdpV2(true);
-
+  it('uses production TDP v2 app creation to make the caller an owner', async () => {
     const app = await createAadAppViaTdp('t', 'My Bot', {
       serviceManagementReference: undefined,
       signInAudience: 'AzureADMultipleOrgs',
@@ -56,7 +42,7 @@ describe('createAadAppViaTdp', () => {
     expect(app).toEqual({ id: 'obj-id', appId: 'client-id', displayName: 'My Bot' });
     expect(calls).toEqual([
       {
-        url: 'https://tdp-v2.test/v1.0/aadapplications',
+        url: 'https://dev.teams.microsoft.com/cosmicprodamer/v1.0/aadapplications',
         method: 'POST',
         body: { displayName: 'My Bot', signInAudience: 'AzureADMultipleOrgs' },
       },
@@ -64,8 +50,6 @@ describe('createAadAppViaTdp', () => {
   });
 
   it('falls back to legacy aadapp/v2 when a serviceManagementReference is set', async () => {
-    const { createAadAppViaTdp } = await loadWithTdpV2(true);
-
     await createAadAppViaTdp('t', 'My Bot', {
       serviceManagementReference: 'smr-id',
       signInAudience: 'AzureADMultipleOrgs',
@@ -73,7 +57,7 @@ describe('createAadAppViaTdp', () => {
 
     expect(calls).toEqual([
       {
-        url: 'https://tdp.test/api/aadapp/v2',
+        url: 'https://dev.teams.microsoft.com/api/aadapp/v2',
         method: 'POST',
         body: {
           displayName: 'My Bot',
@@ -84,14 +68,26 @@ describe('createAadAppViaTdp', () => {
     ]);
   });
 
-  it('uses legacy aadapp/v2 when TDP v2 API is disabled', async () => {
-    const { createAadAppViaTdp } = await loadWithTdpV2(false);
-
+  it('preserves the requested sign-in audience on v2', async () => {
     await createAadAppViaTdp('t', 'My Bot', {
       serviceManagementReference: undefined,
-      signInAudience: 'AzureADMultipleOrgs',
+      signInAudience: 'AzureADMyOrg',
     });
 
-    expect(calls.map((c) => c.url)).toEqual(['https://tdp.test/api/aadapp/v2']);
+    expect(calls[0]!.body).toEqual({ displayName: 'My Bot', signInAudience: 'AzureADMyOrg' });
+  });
+
+  it('surfaces a v2 failure without retrying app creation on the legacy API', async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(new Response('Forbidden', { status: 403 }));
+
+    await expect(createAadAppViaTdp('t', 'My Bot', {
+      serviceManagementReference: undefined,
+      signInAudience: 'AzureADMultipleOrgs',
+    })).rejects.toThrow('Failed to create AAD app: 403 Forbidden');
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    expect(apiFetch).toHaveBeenCalledWith(
+      'https://dev.teams.microsoft.com/cosmicprodamer/v1.0/aadapplications',
+      expect.objectContaining({ method: 'POST' })
+    );
   });
 });

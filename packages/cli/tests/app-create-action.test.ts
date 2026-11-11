@@ -134,23 +134,28 @@ describe('createApp action', () => {
     expect(progress.error).toHaveBeenCalledWith('Failed to enable socket mode');
   });
 
-  it('rejects socket mode for Azure bots before remote side effects', async () => {
+  it('enables socket mode for Azure bots after registering the bot', async () => {
+    mockSetSocketMode.mockResolvedValue({ configuration: {}, changed: true });
     const { createApp } = await import('../src/commands/app/create-action.js');
 
-    await expect(
-      createApp({
-        ...baseInput,
-        socketMode: true,
-        botLocation: 'azure',
-        azureContext: {
-          subscription: 'sub',
-          resourceGroup: 'rg',
-          region: 'global',
-          tenantId: 'tenant-id',
-        },
-      })
-    ).rejects.toMatchObject({ code: 'VALIDATION_CONFLICT' });
-    expect(mockCreateAadAppViaTdp).not.toHaveBeenCalled();
+    const result = await createApp({
+      ...baseInput,
+      socketMode: true,
+      botLocation: 'azure',
+      azureContext: {
+        subscription: 'sub',
+        resourceGroup: 'rg',
+        region: 'global',
+        tenantId: 'tenant-id',
+      },
+    });
+
+    expect(mockSetSocketMode).toHaveBeenCalledWith('token', 'client-id', true);
+    expect(mockCreateBot.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSetSocketMode.mock.invocationCallOrder[0]!
+    );
+    expect(result.botLocation).toBe('azure');
+    expect(result.socketMode).toBe(true);
   });
 
   it('rejects Azure bot creation without Azure context before remote side effects', async () => {

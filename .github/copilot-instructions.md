@@ -10,6 +10,9 @@ Be extremely concise — sacrifice grammar for brevity. Every comment MUST inclu
 - **[HIGH]** — Correctness, perf, or maintainability problems. Should fix.
 - **[NIT]** — Style, naming, minor cleanup. Optional.
 
+- When features are being removed, look through commit history and PR descriptions and try to infer why they were added. Ensure that the creator has a valid reason for removing that code in the PR description.
+- When features are being added, ensure that all features have valid reasons documented in the PR description.
+
 ## Code Style
 
 ### TypeScript

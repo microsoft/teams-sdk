@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { program, Command } from 'commander';
 import { loginCommand, logoutCommand } from './commands/auth/index.js';
 import { statusCommand } from './commands/status.js';
+import { feedbackCommand } from './commands/feedback.js';
 import { appCommand } from './commands/app/index.js';
 import { agentCommand } from './commands/agent/index.js';
 import { selfUpdateCommand } from './commands/self-update.js';
@@ -13,7 +14,6 @@ import { handleJsonHelp } from './utils/json-help.js';
 import { logger, setVerbose } from './utils/logger.js';
 import { isInteractive, setAutoConfirm } from './utils/interactive.js';
 import { checkForUpdates } from './utils/update-check.js';
-import { DEV_API_ENV_VAR, TDP_HOST, isDevApiEnabled } from './utils/tdp-host.js';
 import pc from 'picocolors';
 
 // Safety net: catch CliError thrown from shared utilities in non-wrapped commands
@@ -57,10 +57,13 @@ program
     if (opts.yes) {
       setAutoConfirm(true);
     }
-    if (isDevApiEnabled()) {
-      logger.warn(pc.yellow(`${DEV_API_ENV_VAR}=1: using ${TDP_HOST}`));
-    }
-    if (!opts.disableAutoUpdate && actionCommand.name() !== 'self-update') {
+    if (
+      !opts.disableAutoUpdate &&
+      !actionCommand.optsWithGlobals().json &&
+      actionCommand.name() !== 'self-update' &&
+      // status reports the version itself
+      actionCommand.name() !== 'status'
+    ) {
       await checkForUpdates();
     }
   });
@@ -68,6 +71,7 @@ program
 program.addCommand(loginCommand);
 program.addCommand(logoutCommand);
 program.addCommand(statusCommand);
+program.addCommand(feedbackCommand);
 program.addCommand(appCommand);
 program.addCommand(agentCommand);
 program.addCommand(selfUpdateCommand);

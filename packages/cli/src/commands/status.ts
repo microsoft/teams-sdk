@@ -8,12 +8,15 @@ import {
   checkAndDisplayEnvironment,
   type EnvironmentCheckResult,
 } from '../utils/environment.js';
+import { getCliVersionStatus, type CliVersionStatus } from '../utils/update-info.js';
 
 interface StatusOptions {
   json?: boolean;
 }
 
 interface StatusOutput {
+  cliVersion: { current: string; latest: string | null };
+  updateAvailable?: true;
   loggedIn: boolean;
   username: string | null;
   tenantId: string | null;
@@ -28,9 +31,13 @@ export const statusCommand = new Command('status')
   .action(
     wrapAction(async (options: StatusOptions) => {
       const silent = !!options.json;
-      const account = await getAccount();
+      const [account, version] = await Promise.all([getAccount(), getCliVersionStatus()]);
+
+      if (!silent) showVersionStatus(version);
 
       const output: StatusOutput = {
+        cliVersion: { current: version.current, latest: version.latest },
+        ...(version.updateAvailable ? { updateAvailable: true as const } : {}),
         loggedIn: false,
         username: null,
         tenantId: null,
@@ -70,3 +77,14 @@ export const statusCommand = new Command('status')
       if (options.json) outputJson(output);
     })
   );
+
+function showVersionStatus(version: CliVersionStatus): void {
+  if (version.updateAvailable && version.latest) {
+    logger.info(
+      `${pc.yellow('⚠')} CLI ${pc.dim(version.current)} is not the latest version (${pc.bold(version.latest)})`
+    );
+    logger.info(`  Run ${pc.cyan('teams self-update')} to update.`);
+  } else if (isVerbose()) {
+    logger.info(`${pc.dim('CLI version:')} ${version.current}`);
+  }
+}
