@@ -151,7 +151,7 @@ export function writeLaunchSettingsCredentials(filePath: string, values: EnvValu
   delete envVarsObj['Teams__ClientSecret'];
   delete envVarsObj['Teams__TenantId'];
 
-  envVarsObj['DOTNET_ENVIRONMENT'] ??= 'Development';
+  envVarsObj['DOTNET_ENVIRONMENT'] ??= envVarsObj['ASPNETCORE_ENVIRONMENT'] ?? 'Development';
   envVarsObj['AzureAd__Instance'] ??= 'https://login.microsoftonline.com/';
   envVarsObj['AzureAd__ClientId'] = values.CLIENT_ID;
   envVarsObj['AzureAd__TenantId'] = values.TENANT_ID;

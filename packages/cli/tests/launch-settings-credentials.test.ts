@@ -68,7 +68,7 @@ describe('writeLaunchSettingsCredentials', () => {
           http: {
             commandName: 'Project',
             applicationUrl: 'http://localhost:3978',
-            environmentVariables: { ASPNETCORE_ENVIRONMENT: 'Development' },
+            environmentVariables: { ASPNETCORE_ENVIRONMENT: 'Staging' },
           },
         },
       })
@@ -78,12 +78,12 @@ describe('writeLaunchSettingsCredentials', () => {
 
     const json = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     const env = json.profiles.http.environmentVariables;
-    expect(env.ASPNETCORE_ENVIRONMENT).toBe('Development');
+    expect(env.ASPNETCORE_ENVIRONMENT).toBe('Staging');
     expect(env.AzureAd__ClientId).toBe('test-client-id');
     expect(env.AzureAd__ClientCredentials__0__SourceType).toBe('ClientSecret');
     expect(env.AzureAd__ClientCredentials__0__ClientSecret).toBe('test-client-secret');
     expect(env.AzureAd__TenantId).toBe('test-tenant-id');
-    expect(env.DOTNET_ENVIRONMENT).toBe('Development');
+    expect(env.DOTNET_ENVIRONMENT).toBe('Staging');
     expect(env.AzureAd__Instance).toBe('https://login.microsoftonline.com/');
     // profile shape preserved
     expect(json.profiles.http.commandName).toBe('Project');

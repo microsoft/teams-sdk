@@ -110,7 +110,8 @@ This writes `AzureAd__TenantId`, `AzureAd__ClientId`, and
 into the first profile's `environmentVariables`, replacing legacy `Teams__*` credential keys.
 Existing profiles and unrelated settings are preserved. If no profile exists, a
 `Development` profile with `commandName: "Project"` is created. Missing
-`DOTNET_ENVIRONMENT` and `AzureAd__Instance` settings default to `Development` and
+`DOTNET_ENVIRONMENT` defaults to the existing `ASPNETCORE_ENVIRONMENT`, or `Development`
+if neither is set. Missing `AzureAd__Instance` defaults to
 `https://login.microsoftonline.com/`. With `--no-secret`, stale client secret values
 and their `ClientSecret` source type are removed.
 
