@@ -56,6 +56,21 @@ $ npm run typecheck
 
 Runs TypeScript type checking on the codebase.
 
+### Import DevBlogs entries
+
+Run these commands from the repository root:
+
+```bash
+npm -w teams-md run sync:blog:dry
+npm -w teams-md run sync:blog
+npm -w teams-md run test:blog
+```
+
+Import is manual, not scheduled in GitHub Actions. Review generated blog entries
+and URL-map changes before submitting a pull request. Existing posts are not
+rewritten; dry-run writes nothing. Invalid metadata, external URLs or duplicate
+routes stop regeneration without replacing the prior URL map.
+
 ### Prebuild
 
 ```
