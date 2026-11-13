@@ -64,9 +64,35 @@ teams app update <appId> --messaging-mode socket
 teams app update <appId> --messaging-mode http --endpoint https://mybot.azurewebsites.net/api/messages
 ```
 
-Both Teams-managed and Azure bots use the production TDP bot communication API. Mode changes preserve the existing callback URL and message-notification settings. When switching to HTTP with `--endpoint`, the endpoint is updated before socket mode is disabled. `--endpoint` alone does not change the messaging mode.
+Both Teams-managed and Azure bots support messaging-mode changes. Mode changes preserve the existing callback URL and message-notification settings. When switching to HTTP with `--endpoint`, the endpoint is updated before socket mode is disabled. `--endpoint` alone does not change the messaging mode.
 
-Restart your Teams SDK application after changing the mode. Socket mode is currently available only for new bots; support for existing bots is coming soon.
+`--messaging-mode socket` cannot be combined with `--endpoint`. To switch to HTTP while keeping an existing endpoint:
+
+```bash
+teams app update <appId> --messaging-mode http
+```
+
+If no endpoint is configured, the CLI warns that one is needed. HTTP delivery cannot work until a public HTTPS endpoint is set. For Azure bots, setting an endpoint requires Azure CLI to be installed and logged in; changing only the messaging mode does not.
+
+Restart your Teams SDK application after changing the mode. Socket mode is currently available only for new bots.
+
+#### JSON Output
+
+For scripted updates:
+
+```bash
+teams app update <appId> --messaging-mode socket --json
+```
+
+`updated.socketMode` reports the requested mode (`true` for sockets, `false` for HTTP). Follow-up fields are included only when `true`:
+
+| Field | Follow-up |
+|-------|-----------|
+| `needsRestart` | Restart the running Teams SDK application because the mode changed. |
+| `needsEndpoint` | Set a messaging endpoint before using HTTP delivery. |
+| `needsReinstall` | Reinstall the app in Teams after the manifest version changed, for example when adding an endpoint domain. |
+
+Repeating a request for the already-configured mode does not include `needsRestart`. For Azure bots, `needsEndpoint` is only reported when the CLI can read the endpoint through Azure CLI; its absence is not proof that an endpoint is configured. Verify with [app get](./get) and [app doctor](./doctor).
 
 ### Examples
 

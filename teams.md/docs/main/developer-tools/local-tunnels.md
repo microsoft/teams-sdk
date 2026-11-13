@@ -5,7 +5,9 @@ summary: Use Dev Tunnels to expose your local server over public HTTPS so Teams,
 
 # Exposing Your Local App with a Tunnel
 
-Teams, Agent 365, and other webhook callers deliver requests from their own servers, not a browser — so your endpoint must be reachable on the public internet over HTTPS, even while developing on `localhost`. A **tunnel** gives your local server a public URL for exactly this: bots, message extensions, Agent 365 callbacks, and any other inbound webhook your app registers. Once you deploy to a real host, you don't need a tunnel.
+In HTTP mode, Teams, Agent 365, and other webhook callers deliver requests from their own servers, not a browser — so your endpoint must be reachable on the public internet over HTTPS, even while developing on `localhost`. A **tunnel** gives your local server a public URL for exactly this: bots, message extensions, Agent 365 callbacks, and any other inbound webhook your app registers. Once you deploy to a real host, you don't need a tunnel.
+
+For local bot messaging, [socket mode](/cli/commands/app/create#messaging-mode) provides an alternative without a public messaging endpoint or tunnel, subject to current availability requirements. Other web content and inbound webhooks may still need public HTTPS. The tunnel instructions below apply to HTTP delivery.
 
 ## Dev Tunnels (recommended)
 

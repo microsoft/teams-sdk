@@ -72,3 +72,17 @@ Most commands work in two modes:
 - **Scripted** — pass `[appId]` and all required flags directly for CI/CD or automation. Use `--json` where available for structured output.
 
 Set `TEAMS_NO_INTERACTIVE=1` to disable interactive prompts entirely.
+
+## Messaging Mode Commands
+
+Socket mode receives bot messages without a public HTTP endpoint or tunnel. HTTP mode uses a public HTTPS endpoint and is recommended for production. Both modes are supported for Teams-managed and Azure bot registrations, subject to the [current socket-mode limitations](app/create#messaging-mode).
+
+| Task | Command |
+|------|---------|
+| Create a socket-mode bot | `teams app create --name "My Bot" --messaging-mode socket --env .env` |
+| Enable socket mode | `teams app update <appId> --messaging-mode socket` |
+| Switch to HTTP and set an endpoint | `teams app update <appId> --messaging-mode http --endpoint https://mybot.azurewebsites.net/api/messages` |
+| Inspect the configured mode | `teams app get <appId> --json` |
+| Check bot configuration | `teams app doctor <appId>` |
+
+Restart your Teams SDK application after changing modes; changing `--endpoint` alone does not switch modes.

@@ -18,12 +18,20 @@ Follow the device code flow — open the URL, enter the code, sign in with your 
 teams app create
 ```
 
-The CLI will prompt you for a name and handle everything else: AAD app registration, manifest generation, Teams app import, and bot registration.
+The CLI will prompt you for a name and messaging mode, then handle AAD app registration, manifest generation, Teams app import, and bot registration. Choose **Sockets** for local bot development without a public endpoint or tunnel, or **HTTP endpoint** for a deployed endpoint or tunnel.
 
-**Scripted mode** — pass all values as flags:
+**Scripted mode** — create a socket-mode bot and save credentials:
 
 ```bash
-teams app create --name "My Bot" --endpoint https://mybot.azurewebsites.net/api/messages
+teams app create --name "My Bot" --messaging-mode socket --env .env
+```
+
+Socket mode works with Teams-managed and Azure bots, subject to the [current availability and ownership requirements](../commands/app/create#messaging-mode).
+
+For HTTP delivery, pass a public HTTPS endpoint:
+
+```bash
+teams app create --name "My Bot" --messaging-mode http --endpoint https://mybot.azurewebsites.net/api/messages
 ```
 
 This creates a Teams-managed bot (no Azure subscription needed). To use Azure instead:
@@ -74,7 +82,7 @@ teams app
 
 ## Next Steps
 
-- [Update your app's properties](../commands/app/update) — name, endpoint, version
+- [Update your app's properties](../commands/app/update) — name, endpoint, messaging mode
 - [Download the manifest](../commands/app/manifest-download) to customize it locally
 - [Set up SSO](../guides/user-authentication-setup) using the teams-dev skill or manual guide
 - [Understand bot locations](../concepts/bot-locations) — Teams-managed vs Azure
