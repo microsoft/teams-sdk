@@ -61,11 +61,40 @@ Use `--messaging-mode socket` to receive messages without a public HTTP endpoint
 teams app create --name "My Bot" --messaging-mode socket
 ```
 
-The CLI uses the production Teams Developer Portal to configure socket mode for both Teams-managed and Azure bots. Interactive creation offers a messaging-mode choice; scripted creation keeps HTTP mode unless socket mode is requested. `--messaging-mode socket` cannot be combined with `--endpoint`.
+The CLI configures socket mode for both Teams-managed and Azure bots. Interactive creation offers a messaging-mode choice; scripted creation keeps HTTP mode unless socket mode is requested. `--messaging-mode socket` cannot be combined with `--endpoint`.
 
-New Entra apps are created through the TDP v2 API so the caller is an owner, as required by the bot communication API. Service-attributed apps still use the legacy creation endpoint; socket mode may fail if the caller is not an owner.
+Create a Teams-managed socket-mode bot and save its credentials:
 
-If the app is created but enabling socket mode fails, the CLI prints a retry hint. JSON output includes `socketMode: false` and `socketModeError` in that case.
+```bash
+teams app create --name "My Bot" --teams-managed --messaging-mode socket --env .env
+```
+
+For an Azure bot, use the same mode flag with your Azure resource options. Azure CLI must be installed and logged in:
+
+```bash
+teams app create --name "My Azure Bot" --azure --subscription <id> --resource-group my-rg --messaging-mode socket --env .env
+```
+
+Socket mode changes message delivery, not where the bot is registered. It does not start your bot application; run your Teams SDK application with the generated credentials.
+
+Socket mode is currently available only for new bots.
+
+Socket-mode configuration requires the caller to be an owner of the bot's Entra app. For service-attributed apps, verify ownership if enabling socket mode fails.
+
+If enabling socket mode fails, creation still succeeds and the bot falls back to HTTP mode. The app and bot still exist; do not create them again. No messaging endpoint is configured when creating with `--messaging-mode socket`, so HTTP delivery requires setting a public HTTPS endpoint:
+
+```bash
+teams app update <teamsAppId> --messaging-mode http --endpoint https://mybot.azurewebsites.net/api/messages
+```
+
+The CLI prints a retry hint. JSON output includes `socketMode: false` and `socketModeError` in that case. To retry socket mode instead, use the returned `teamsAppId`, then verify the mode:
+
+```bash
+teams app update <teamsAppId> --messaging-mode socket
+teams app get <teamsAppId> --json
+```
+
+Successful socket-mode creation reports `socketMode: true` in JSON. See [app update](./update#messaging-mode) to switch back to HTTP.
 
 ### Scopes
 
