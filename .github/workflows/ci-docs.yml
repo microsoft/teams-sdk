@@ -28,6 +28,7 @@ jobs:
               - 'packages/cli/src/commands/**'
               - 'packages/cli/scripts/generate-command-docs.ts'
               - 'package-lock.json'
+              - '.github/workflows/ci-docs.yml'
 
       - name: Setup Node.js
         if: steps.changes.outputs.docs == 'true'
@@ -43,6 +44,10 @@ jobs:
       - name: Build CLI (for docs generation)
         if: steps.changes.outputs.docs == 'true'
         run: npx turbo build --filter=@microsoft/teams.cli
+
+      - name: Test DevBlogs serialization
+        if: steps.changes.outputs.docs == 'true'
+        run: npm -w teams-md run test:blog
 
       - name: Generate CLI command docs
         if: steps.changes.outputs.docs == 'true'
