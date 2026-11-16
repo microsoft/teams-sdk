@@ -376,16 +376,43 @@ async function assertExternalArtifacts(blogDir: string, mapSource: string): Prom
         const file = path.join(blogDir, folder, 'index.mdx');
         if (!fs.existsSync(file)) continue;
         const source = fs.readFileSync(file, 'utf8');
-        const external = generator.readExternalEntry(source, file);
-        if (!external) continue;
-        assert.ok(!expected.has(external.slug), `Duplicate checked-in slug: ${external.slug}`);
-        expected.set(external.slug, external.url);
         const parsed = await parseProductionMdx(source);
-        assert.equal(readRedirectDestination(parsed.content), external.url);
+        const metadata = parsed.frontMatter;
+        assert.ok(metadata && typeof metadata === 'object' && !Array.isArray(metadata));
+        if (!('external_url' in metadata)) continue;
+        assert.ok('slug' in metadata && typeof metadata.slug === 'string' && metadata.slug.trim());
+        assert.ok(typeof metadata.external_url === 'string' && metadata.external_url.trim());
+        const destination = new URL(metadata.external_url);
+        assert.equal(destination.protocol, 'https:');
+        assert.equal(destination.origin, 'https://devblogs.microsoft.com');
+        assert.ok(!expected.has(metadata.slug), `Duplicate checked-in slug: ${metadata.slug}`);
+        expected.set(metadata.slug, metadata.external_url);
+        assert.equal(readRedirectDestination(parsed.content), metadata.external_url);
     }
     assert.ok(expected.size > 0);
     assert.deepEqual(readExternalUrls(mapSource), expected);
 }
+
+test('artifact audit independently includes production JSON frontmatter', async (t: TestContext): Promise<void> => {
+    const options = tempSync(t);
+    writePost(options, ordinaryPost.dateDir, generator.buildMdx(ordinaryPost));
+    writePost(options, '2026-01-01-independent',
+        '---json\n' +
+        '{"slug":"independent","external_url":"https://devblogs.microsoft.com/microsoft365dev/independent/"}\n' +
+        '---\n\n' +
+        "import ExternalRedirect from '@site/src/components/ExternalRedirect';\n\n" +
+        '<ExternalRedirect to="https://devblogs.microsoft.com/microsoft365dev/independent/" />\n');
+    const incompleteMap = 'export const externalBlogUrls = {' +
+        '"getting-started": "https://devblogs.microsoft.com/microsoft365dev/getting-started/"};';
+    await assert.rejects(() => assertExternalArtifacts(options.blogDir, incompleteMap), {
+        code: 'ERR_ASSERTION',
+        operator: 'deepStrictEqual',
+    });
+    const completeMap = 'export const externalBlogUrls = {' +
+        '"getting-started": "https://devblogs.microsoft.com/microsoft365dev/getting-started/",' +
+        '"independent": "https://devblogs.microsoft.com/microsoft365dev/independent/"};';
+    await assertExternalArtifacts(options.blogDir, completeMap);
+});
 
 test('artifact audit accepts a refreshed map without rewriting legacy posts', async (t: TestContext): Promise<void> => {
     const options = tempSync(t);
