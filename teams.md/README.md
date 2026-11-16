@@ -70,6 +70,8 @@ Import is manual, not scheduled in GitHub Actions. Review generated blog entries
 and URL-map changes before submitting a pull request. Existing posts are not
 rewritten; dry-run writes nothing. Invalid metadata, external URLs or duplicate
 routes stop regeneration without replacing the prior URL map.
+The importer supports YAML frontmatter only. Explicit JSON frontmatter is
+rejected rather than silently omitted; JSON support is deferred to a separate issue.
 
 ### Prebuild
 

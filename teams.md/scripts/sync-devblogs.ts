@@ -174,6 +174,10 @@ export function validateExternalUrl(value: string, sourcePath: string): URL {
 }
 
 export function readExternalEntry(source: string, sourcePath: string): ExternalEntry | undefined {
+    const language = /^\uFEFF?---([^\r\n]*)/.exec(source)?.[1].trim();
+    if (language === 'json') {
+        throw new Error(`${sourcePath}: JSON frontmatter is not supported; use YAML`);
+    }
     const opening = /^\uFEFF?---[ \t]*(?:yaml|yml)?[ \t]*\r?\n/.exec(source);
     if (!opening) return undefined;
     const remaining = source.slice(opening[0].length);

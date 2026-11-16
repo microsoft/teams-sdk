@@ -96,6 +96,15 @@ test('ordinary internal posts are excluded without requiring optional fields', (
     ), { slug: 'legacy', url: ordinaryPost.url, sourcePath: 'bom.mdx' });
 });
 
+for (const source of [
+    '--- json\n', '---\tjson\n', '\uFEFF---json \t\r\n', '---\u00a0json\n', '---json',
+]) {
+    test(`explicit JSON frontmatter rejects ${JSON.stringify(source)}`, (): void => {
+        assert.throws(() => generator.readExternalEntry(source, 'json/index.mdx'),
+            /json\/index\.mdx: JSON frontmatter is not supported/);
+    });
+}
+
 for (const yaml of [
     'slug: missing-close',
     'title: "unterminated\n---',
@@ -393,7 +402,7 @@ async function assertExternalArtifacts(blogDir: string, mapSource: string): Prom
     assert.deepEqual(readExternalUrls(mapSource), expected);
 }
 
-test('artifact audit independently includes production JSON frontmatter', async (t: TestContext): Promise<void> => {
+test('production JSON frontmatter is audited but rejected by sync without replacing the map', async (t: TestContext): Promise<void> => {
     const options = tempSync(t);
     writePost(options, ordinaryPost.dateDir, generator.buildMdx(ordinaryPost));
     writePost(options, '2026-01-01-independent',
@@ -412,6 +421,11 @@ test('artifact audit independently includes production JSON frontmatter', async 
         '"getting-started": "https://devblogs.microsoft.com/microsoft365dev/getting-started/",' +
         '"independent": "https://devblogs.microsoft.com/microsoft365dev/independent/"};';
     await assertExternalArtifacts(options.blogDir, completeMap);
+    fs.writeFileSync(options.externalUrlsFile, completeMap);
+    mockListing(t, [ordinaryPost.url]);
+    await assert.rejects(() => generator.syncDevBlogs(options),
+        /2026-01-01-independent\/index\.mdx: JSON frontmatter is not supported/);
+    assert.equal(fs.readFileSync(options.externalUrlsFile, 'utf8'), completeMap);
 });
 
 test('artifact audit accepts a refreshed map without rewriting legacy posts', async (t: TestContext): Promise<void> => {
