@@ -167,14 +167,14 @@ export function validateExternalUrl(value: string, sourcePath: string): URL {
     } catch (cause: unknown) {
         throw new Error(`${sourcePath}: invalid external URL`, { cause });
     }
-    if (url.origin !== 'https://devblogs.microsoft.com') {
+    if (url.protocol !== 'https:' || url.origin !== 'https://devblogs.microsoft.com') {
         throw new Error(`${sourcePath}: external URL must use https://devblogs.microsoft.com`);
     }
     return url;
 }
 
 export function readExternalEntry(source: string, sourcePath: string): ExternalEntry | undefined {
-    const opening = /^\uFEFF?---(?:yaml|yml)?[ \t]*\r?\n/.exec(source);
+    const opening = /^\uFEFF?---[ \t]*(?:yaml|yml)?[ \t]*\r?\n/.exec(source);
     if (!opening) return undefined;
     const remaining = source.slice(opening[0].length);
     const closing = /^---[ \t]*\r?$/m.exec(remaining);

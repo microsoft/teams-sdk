@@ -119,6 +119,7 @@ for (const url of [
     'http://devblogs.microsoft.com/post/', '/relative',
     'https://devblogs.microsoft.com.example.com/post/',
     'https://devblogs.microsoft.com@other.example/post/',
+    'blob:https://devblogs.microsoft.com/00000000-0000-4000-8000-000000000000',
 ]) {
     test(`invalid URL rejects ${url}`, (): void => {
         assert.throws(() => generator.validateExternalUrl(url, 'invalid/index.mdx'), /invalid\/index\.mdx/);
@@ -286,7 +287,7 @@ test('no-new-post run refreshes the map without rewriting existing posts', async
     assert.deepEqual(requests, [listingUrl]);
 });
 
-for (const opening of ['---yaml', '---yml']) {
+for (const opening of ['---yaml', '---yml', '--- yaml', '--- yml', '---\tyaml', '---\tyml']) {
     test(`map regeneration preserves external posts with ${opening} frontmatter`, async (t: TestContext): Promise<void> => {
         const options = tempSync(t);
         const source = `${opening}\nslug: getting-started\nexternal_url: ${ordinaryPost.url}\n---\nBody\n`;
@@ -326,7 +327,8 @@ for (const broken of [
     '---\ntitle: "broken\n---\n',
     `---\nslug: getting-started\nexternal_url: ${ordinaryPost.url}\n---\n`,
     '---\nslug: other\nexternal_url: https://other.example/post/\n---\n',
-    ...['---yaml', '---yml'].flatMap(opening => [
+    '---\nslug: other\nexternal_url: blob:https://devblogs.microsoft.com/00000000-0000-4000-8000-000000000000\n---\n',
+    ...['---yaml', '---yml', '--- yaml', '--- yml', '---\tyaml', '---\tyml'].flatMap(opening => [
         `${opening}\ntitle: "broken\n---\n`,
         `${opening}\nslug: other\nexternal_url: ${ordinaryPost.url}\n`,
         `${opening}\nslug: other\nexternal_url: https://other.example/post/\n---\n`,
