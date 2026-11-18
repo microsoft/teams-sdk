@@ -1,7 +1,7 @@
 ---
 slug: documentation-move
 title: "Teams SDK documentation moving to Microsoft Learn"
-date: 2026-11-16
+date: 2026-11-18
 authors:
   - name: Nick Walker
     title: Microsoft
