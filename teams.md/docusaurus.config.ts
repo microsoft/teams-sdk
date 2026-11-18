@@ -265,7 +265,7 @@ const config: Config = {
         },
         announcementBar: {
             id: 'documentation-move',
-            content: `Teams SDK documentation is moving in the coming weeks. <a href="${baseUrl}blog/documentation-update">Read about the upcoming change</a>.`,
+            content: `Teams SDK documentation is moving to Microsoft Learn soon. <a href="${baseUrl}blog/documentation-move">Read about the upcoming change</a>.`,
             isCloseable: true,
             backgroundColor: '#515cc6',
             textColor: '#fff'
