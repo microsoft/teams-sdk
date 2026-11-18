@@ -2,9 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchOrbitApp, toAppDetails } from '../src/apps/orbit-api.js';
 import type { OrbitAppResponse } from '../src/apps/orbit-types.js';
 import { CliError } from '../src/utils/errors.js';
+import type { OrbitRegionResolution } from '../src/utils/orbit-region.js';
 
-vi.mock('../src/utils/tdp-host.js', () => ({
-  TDP_V2_BASE_URL: 'https://dev-int.teams.microsoft.com/cosmictestamer',
+const routing = vi.hoisted(() => ({ resolveOrbitBaseUrl: vi.fn<() => Promise<OrbitRegionResolution>>() }));
+vi.mock('../src/utils/orbit-region.js', () => ({
+  resolveOrbitBaseUrl: routing.resolveOrbitBaseUrl,
 }));
 
 function makeApp(): OrbitAppResponse {
@@ -64,6 +66,8 @@ describe('Orbit profile foundation', () => {
 
   beforeEach(() => {
     fetchMock.mockReset();
+    routing.resolveOrbitBaseUrl.mockReset();
+    routing.resolveOrbitBaseUrl.mockResolvedValue({ baseUrl: 'https://dev.teams.microsoft.com/synthetic-orbit-route' });
     vi.stubGlobal('fetch', fetchMock);
   });
 
@@ -75,6 +79,39 @@ describe('Orbit profile foundation', () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify(body), { status, headers }));
   }
 
+  it('sends the app token only to the resolved regional API', async () => {
+    routing.resolveOrbitBaseUrl.mockResolvedValue({ baseUrl: 'https://dev.teams.microsoft.com/another-synthetic-route' });
+    respond(makeApp());
+    await fetchOrbitApp('app-token', 'resource-id');
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://dev.teams.microsoft.com/another-synthetic-route/v1.0/apps/resource-id'
+    );
+    expect(new Headers(fetchMock.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer app-token');
+  });
+
+  it('does not fetch an app when account resolution fails', async () => {
+    const error = new CliError('AUTH_REQUIRED', 'Not logged in');
+    routing.resolveOrbitBaseUrl.mockRejectedValue(error);
+    await expect(fetchOrbitApp('test-token', 'resource-id')).rejects.toBe(error);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('retains explicit routing fallback metadata without logging from the API helper', async () => {
+    routing.resolveOrbitBaseUrl.mockResolvedValue({
+      baseUrl: 'https://dev.teams.microsoft.com/cosmicprodamer',
+      usedFallback: true,
+      warning: 'Discovery unavailable; using Americas.',
+    });
+    respond(makeApp());
+    const result = await fetchOrbitApp('test-token', 'resource-id');
+    expect(result).toMatchObject({
+      regionFallback: true, regionWarning: 'Discovery unavailable; using Americas.',
+    });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://dev.teams.microsoft.com/cosmicprodamer/v1.0/apps/resource-id'
+    );
+  });
+
   it('uses the resource ID and existing Orbit base, retaining the complete response and exact header ETag', async () => {
     const app = makeApp();
     app.etag = 'not-the-header-etag';
@@ -84,7 +121,7 @@ describe('Orbit profile foundation', () => {
 
     expect(fetchMock).toHaveBeenCalledOnce();
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('https://dev-int.teams.microsoft.com/cosmictestamer/v1.0/apps/resource-id');
+    expect(url).toBe('https://dev.teams.microsoft.com/synthetic-orbit-route/v1.0/apps/resource-id');
     expect(init?.method).toBe('GET');
     const headers = new Headers(init?.headers);
     expect(headers.get('Authorization')).toBe('Bearer test-token');
@@ -99,7 +136,7 @@ describe('Orbit profile foundation', () => {
     await fetchOrbitApp('test-token', 'resource/id?query#fragment');
 
     expect(fetchMock.mock.calls[0][0]).toBe(
-      'https://dev-int.teams.microsoft.com/cosmictestamer/v1.0/apps/resource%2Fid%3Fquery%23fragment'
+      'https://dev.teams.microsoft.com/synthetic-orbit-route/v1.0/apps/resource%2Fid%3Fquery%23fragment'
     );
   });
 

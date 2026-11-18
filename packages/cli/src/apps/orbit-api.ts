@@ -1,6 +1,6 @@
 import { CliError } from '../utils/errors.js';
 import { apiFetch } from '../utils/http.js';
-import { TDP_V2_BASE_URL } from '../utils/tdp-host.js';
+import { resolveOrbitBaseUrl } from '../utils/orbit-region.js';
 import type {
   OrbitAppResponse, OrbitAppSnapshot, OrbitAuthorization, OrbitBot, OrbitJsonObject, OrbitJsonValue,
 } from './orbit-types.js';
@@ -102,7 +102,9 @@ export async function fetchOrbitApp(token: string, resourceId: string): Promise<
     throw new CliError('VALIDATION_MISSING', 'An Orbit app resource ID is required.');
   }
 
-  const response = await apiFetch(`${TDP_V2_BASE_URL}/v1.0/apps/${encodeURIComponent(resourceId)}`, {
+  const region = await resolveOrbitBaseUrl();
+  const baseUrl = region.baseUrl;
+  const response = await apiFetch(`${baseUrl}/v1.0/apps/${encodeURIComponent(resourceId)}`, {
     method: 'GET',
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
     redirect: 'manual',
@@ -122,7 +124,12 @@ export async function fetchOrbitApp(token: string, resourceId: string): Promise<
   if (!isAppResponse(body)) {
     throw new CliError('API_ERROR', 'Invalid Orbit app profile JSON response.', undefined, response.status);
   }
-  return { app: body, etag: response.headers.get('ETag') ?? undefined };
+  return {
+    app: body,
+    etag: response.headers.get('ETag') ?? undefined,
+    ...(region.usedFallback ? { regionFallback: true } : {}),
+    ...(region.warning ? { regionWarning: region.warning } : {}),
+  };
 }
 
 function projectBot(bot: OrbitBot): AppBot {

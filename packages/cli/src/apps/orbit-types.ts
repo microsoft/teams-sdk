@@ -83,4 +83,6 @@ export interface OrbitAppSnapshot {
   app: OrbitAppResponse;
   /** Missing headers remain explicit; future writes must require a fresh ETag. */
   etag: string | undefined;
+  regionFallback?: true;
+  regionWarning?: string;
 }

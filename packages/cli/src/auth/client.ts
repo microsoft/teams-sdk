@@ -10,6 +10,7 @@ import { createCachePlugin } from './cache.js';
 import { logger } from '../utils/logger.js';
 import { openInBrowser } from '../utils/browser.js';
 import { isInteractive, isLocalSession } from '../utils/interactive.js';
+import { clearOrbitRegion } from '../utils/config.js';
 
 let msalClient: PublicClientApplication | null = null;
 
@@ -95,6 +96,7 @@ export async function logout(): Promise<void> {
   for (const account of accounts) {
     await cache.removeAccount(account);
   }
+  await clearOrbitRegion();
 }
 
 export async function getTokenSilent(scopes: string[]): Promise<string | null> {

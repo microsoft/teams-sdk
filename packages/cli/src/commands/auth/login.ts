@@ -5,9 +5,17 @@ import { logger } from '../../utils/logger.js';
 import { isInteractive, isLocalSession } from '../../utils/interactive.js';
 import { wrapAction } from '../../utils/errors.js';
 import { checkAndDisplayEnvironment } from '../../utils/environment.js';
+import pc from 'picocolors';
+import type { AccountInfo } from '@azure/msal-node';
+import { resolveOrbitBaseUrl } from '../../utils/orbit-region.js';
 
 interface LoginCommandOptions {
   deviceCode?: boolean;
+}
+
+async function synchronizeRegion(account: AccountInfo): Promise<void> {
+  const result = await resolveOrbitBaseUrl(account);
+  if (result.warning) logger.warn(pc.yellow(result.warning));
 }
 
 export const loginCommand = new Command('login')
@@ -20,6 +28,7 @@ export const loginCommand = new Command('login')
       if (existingAccount) {
         logger.info(`Already logged in as ${existingAccount.username}`);
         logger.info('Run "teams logout" first to switch accounts.');
+        await synchronizeRegion(existingAccount);
         return;
       }
 
@@ -42,6 +51,7 @@ export const loginCommand = new Command('login')
         logger.info(`Logged in as ${account.username}`);
       }
 
+      await synchronizeRegion(account);
       await checkAndDisplayEnvironment(account);
     })
   );

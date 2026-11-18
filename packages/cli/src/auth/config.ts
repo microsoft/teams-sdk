@@ -33,3 +33,4 @@ export const loginScopes: string[] = [];
 // On-demand scopes
 export const graphScopes = ['https://graph.microsoft.com/Application.ReadWrite.All'];
 export const teamsDevPortalScopes = [`${TDP_HOST}/AppDefinitions.ReadWrite`];
+export const teamsRegionScopes = ['https://api.spaces.skype.com/Region.ReadWrite'];
