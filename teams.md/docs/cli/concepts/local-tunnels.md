@@ -1,12 +1,14 @@
 # Local Tunnels for Development
 
-Teams must reach your bot's `/api/messages` endpoint over **public HTTPS**. When developing locally, your server is only reachable on `localhost`, so you need a tunnel — a tool that forwards a public URL to your local port.
+In **HTTP mode**, Teams must reach your bot's `/api/messages` endpoint over **public HTTPS**. When developing locally, your server is only reachable on `localhost`, so HTTP delivery needs a tunnel — a tool that forwards a public URL to your local port. We recommend [Microsoft Dev Tunnels](/developer-tools/local-tunnels#dev-tunnels-recommended) for local HTTP development.
+
+For local bot messaging without a tunnel, see [Socket Mode](./socket-mode).
 
 For setting up Dev Tunnels or ngrok, the plain-HTTP protocol gotcha, verifying the tunnel actually reaches your app, persistent vs. ephemeral URLs, and security notes on `--allow-anonymous`, see [Local Tunnels](/developer-tools/local-tunnels). This page covers only how a tunnel interacts with the `teams app create`/`update` CLI flow.
 
 ## Registering your tunnel URL
 
-Once your tunnel is running, pass its hostname to `--endpoint` when you register the bot:
+Once your tunnel is running, pass its full messaging URL to `--endpoint` when you register an HTTP bot:
 
 ```bash
 teams app create \
@@ -25,3 +27,4 @@ teams app update <teamsAppId> --endpoint https://<new-host>/api/messages
 
 Only re-run `teams app create` (or `teams app update --endpoint`) when your tunnel URL actually changes — the bot registration just stores the hostname, it doesn't care how many times you've restarted the tunnel or server in between.
 
+To switch a socket-mode bot to HTTP delivery through a tunnel, see [Switching to HTTP](./socket-mode#switching-to-http).

@@ -11,6 +11,7 @@ Teams Developer CLI for managing Microsoft Teams apps. Create, manage, and confi
 
 - **App Lifecycle** — Create, get, update, and manage Teams apps including manifest and package operations.
 - **Bot Registration** — Register bots with Teams or Azure, migrate between them, and configure messaging endpoints.
+- **Messaging Modes** — Use sockets for local bot development without a public endpoint or tunnel, or HTTP for deployed endpoints. See [messaging-mode commands](commands/index.md#messaging-mode-commands) for setup and current availability requirements.
 - **Authentication** — Generate client secrets for your AAD apps and manage bot credentials.
 - **AI Agent Friendly** — Structured JSON help output for AI consumption.
 

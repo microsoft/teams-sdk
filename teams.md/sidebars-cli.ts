@@ -87,6 +87,7 @@ export default {
       items: [
         'concepts/bot-locations',
         'concepts/local-tunnels',
+        'concepts/socket-mode',
         'concepts/aad-apps',
         'concepts/tdp-portal',
         'concepts/sso-architecture',

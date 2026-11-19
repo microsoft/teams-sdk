@@ -19,7 +19,7 @@ A **Teams-managed** bot is registered in a Microsoft-managed environment via the
 
 ## Azure Bot
 
-An **Azure bot** is a bot registration in your own Azure subscription (via Azure Bot Service). You get full control over the registration and access to features that require Azure.
+An **Azure-managed bot** is a bot registration in your own Azure subscription (via Azure Bot Service). You get full control over the registration and access to features that require Azure.
 
 **Pros:**
 - Full OAuth connection support (see [authentication guide](../guides/user-authentication-setup))
@@ -33,6 +33,8 @@ An **Azure bot** is a bot registration in your own Azure subscription (via Azure
 - Requires a resource group
 
 ## Choosing a Location
+
+Messaging mode is independent of where the bot is registered: both Teams-managed and Azure-managed bots support `--messaging-mode socket` for local bot development without a public endpoint, or `--messaging-mode http` for HTTP delivery. Socket mode does not require migrating the bot registration from Teams-managed to Azure Bot Service, or changing where your application is hosted. See [app create](../commands/app/create#messaging-mode) for availability and ownership requirements.
 
 Use Azure only when your bot needs **OAuth or SSO** — that's the one thing Teams-managed can't do. For everything else, Teams-managed is the simpler choice. The decision isn't permanent: you can always migrate later with `teams app bot migrate`.
 

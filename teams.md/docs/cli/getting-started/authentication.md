@@ -40,6 +40,6 @@ teams status -v
 
 ## Azure CLI Auth
 
-Some operations (Azure bots, OAuth connections, SSO setup) require the Azure CLI. These use your separate Azure CLI login — run `az login` before using these features.
+Some operations (Azure-managed bots, OAuth connections, SSO setup) require the Azure CLI. These use your separate Azure CLI login — run `az login` before using these features.
 
 The `teams status` command shows both your M365 login state and your Azure CLI connection status.

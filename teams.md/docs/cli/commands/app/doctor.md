@@ -36,7 +36,8 @@ Runs a comprehensive diagnostic check across your app's bot registration, AAD ap
 **Bot Registration**
 - Bot location detected (Teams-managed or Azure)
 - Teams channel is enabled
-- Messaging endpoint is reachable (HTTP probe)
+- Messaging mode reported for both Teams-managed and Azure-managed bots
+- Messaging endpoint is reachable when configured (HTTP probe)
 
 **AAD App**
 - AAD app exists and is accessible via Graph
@@ -61,9 +62,20 @@ Runs a comprehensive diagnostic check across your app's bot registration, AAD ap
 teams app doctor <appId>
 ```
 
+### Socket Mode Diagnostics
+
+Socket-mode bots do not need a messaging endpoint. When socket mode is enabled, the doctor does not warn that an unset endpoint is missing. If an endpoint is still configured, the doctor continues to probe it, even in socket mode.
+
+```bash
+teams app get <appId> --json
+teams app doctor <appId> --json
+```
+
+These commands inspect configuration, not the health of a live socket connection. If messages stop arriving after a mode change, restart your Teams SDK application. A failed mode read is reported as an informational check; use `app get --json` to distinguish an unknown mode (`socketMode: null`) from HTTP (`socketMode: false`).
+
 ### When to Use
 
 - After `app create` to verify everything was set up correctly
 - After setting up SSO to confirm SSO wiring
-- After `app bot migrate` to check the new Azure bot
+- After `app bot migrate` to check the new Azure-managed bot
 - When debugging authentication or token issues
