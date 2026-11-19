@@ -86,3 +86,23 @@ export interface OrbitAppSnapshot {
   regionFallback?: true;
   regionWarning?: string;
 }
+
+export interface OrbitAppSummary extends OrbitJsonObject {
+  /** Orbit resource ID, used for profile and package routes. */
+  appId: string;
+  appExternalId: string;
+  appName?: string | null;
+  appVersion?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface OrbitAppListPage extends OrbitJsonObject {
+  items: OrbitAppSummary[];
+  continuationToken?: string | null;
+}
+
+export interface OrbitAppListSnapshot {
+  apps: OrbitAppSummary[];
+  regionFallback?: true;
+  regionWarning?: string;
+}

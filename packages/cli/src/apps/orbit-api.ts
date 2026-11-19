@@ -2,9 +2,10 @@ import { CliError } from '../utils/errors.js';
 import { apiFetch } from '../utils/http.js';
 import { resolveOrbitBaseUrl } from '../utils/orbit-region.js';
 import type {
-  OrbitAppResponse, OrbitAppSnapshot, OrbitAuthorization, OrbitBot, OrbitJsonObject, OrbitJsonValue,
+  OrbitAppListPage, OrbitAppListSnapshot, OrbitAppResponse, OrbitAppSnapshot, OrbitAppSummary,
+  OrbitAuthorization, OrbitBot, OrbitJsonObject, OrbitJsonValue,
 } from './orbit-types.js';
-import type { AppAuthorization, AppBot, AppDetails } from './types.js';
+import type { AppAuthorization, AppBot, AppDetails, AppSummary } from './types.js';
 
 type JsonValidator = (value: OrbitJsonValue) => boolean;
 
@@ -73,6 +74,18 @@ function isAppResponse(value: unknown): value is OrbitAppResponse {
     && hasNullableFields(manifest, ['authorization'], isAuthorization);
 }
 
+function isAppSummary(value: OrbitJsonValue): boolean {
+  return isObject(value)
+    && typeof value.appId === 'string' && value.appId.trim().length > 0
+    && typeof value.appExternalId === 'string' && value.appExternalId.trim().length > 0
+    && hasNullableFields(value, ['appName', 'appVersion', 'updatedAt'], isString);
+}
+
+function isAppListPage(value: unknown): value is OrbitAppListPage {
+  return isObject(value) && Array.isArray(value.items) && value.items.every(isAppSummary)
+    && hasNullableFields(value, ['continuationToken'], isString);
+}
+
 function decodeBody(text: string): unknown {
   try {
     return JSON.parse(text);
@@ -97,18 +110,7 @@ function errorDetail(body: unknown, text: string): string {
   return text.trim();
 }
 
-export async function fetchOrbitApp(token: string, resourceId: string): Promise<OrbitAppSnapshot> {
-  if (!resourceId.trim()) {
-    throw new CliError('VALIDATION_MISSING', 'An Orbit app resource ID is required.');
-  }
-
-  const region = await resolveOrbitBaseUrl();
-  const baseUrl = region.baseUrl;
-  const response = await apiFetch(`${baseUrl}/v1.0/apps/${encodeURIComponent(resourceId)}`, {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-    redirect: 'manual',
-  });
+async function readOrbitBody(response: Response, resource: 'app' | 'apps'): Promise<unknown> {
   const text = await response.text();
   const body = decodeBody(text);
   if (!response.ok) {
@@ -116,11 +118,26 @@ export async function fetchOrbitApp(token: string, resourceId: string): Promise<
     const status = `${response.status}${response.statusText ? ` ${response.statusText}` : ''}`;
     throw new CliError(
       'API_ERROR',
-      `Failed to fetch Orbit app: ${status}${detail ? `: ${detail}` : ''}`,
+      `Failed to fetch Orbit ${resource}: ${status}${detail ? `: ${detail}` : ''}`,
       undefined,
       response.status
     );
   }
+  return body;
+}
+
+export async function fetchOrbitApp(token: string, resourceId: string): Promise<OrbitAppSnapshot> {
+  if (!resourceId.trim()) {
+    throw new CliError('VALIDATION_MISSING', 'An Orbit app resource ID is required.');
+  }
+
+  const region = await resolveOrbitBaseUrl();
+  const response = await apiFetch(`${region.baseUrl}/v1.0/apps/${encodeURIComponent(resourceId)}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    redirect: 'manual',
+  });
+  const body = await readOrbitBody(response, 'app');
   if (!isAppResponse(body)) {
     throw new CliError('API_ERROR', 'Invalid Orbit app profile JSON response.', undefined, response.status);
   }
@@ -129,6 +146,53 @@ export async function fetchOrbitApp(token: string, resourceId: string): Promise<
     etag: response.headers.get('ETag') ?? undefined,
     ...(region.usedFallback ? { regionFallback: true } : {}),
     ...(region.warning ? { regionWarning: region.warning } : {}),
+  };
+}
+
+export async function fetchOrbitApps(token: string): Promise<OrbitAppListSnapshot> {
+  const region = await resolveOrbitBaseUrl();
+  const apps: OrbitAppSummary[] = [];
+  const seenTokens = new Set<string>();
+  let continuationToken: string | undefined;
+
+  do {
+    const response = await apiFetch(`${region.baseUrl}/v1.0/apps?pageSize=50`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        ...(continuationToken ? { 'x-ms-continuation': continuationToken } : {}),
+      },
+      redirect: 'manual',
+    });
+    const body = await readOrbitBody(response, 'apps');
+    if (!isAppListPage(body)) {
+      throw new CliError('API_ERROR', 'Invalid Orbit app list JSON response.', undefined, response.status);
+    }
+    apps.push(...body.items);
+    continuationToken = body.continuationToken || undefined;
+    if (continuationToken) {
+      if (seenTokens.has(continuationToken)) {
+        throw new CliError('API_ERROR', 'Orbit returned a repeated continuation token.', undefined, response.status);
+      }
+      seenTokens.add(continuationToken);
+    }
+  } while (continuationToken);
+
+  return {
+    apps,
+    ...(region.usedFallback ? { regionFallback: true } : {}),
+    ...(region.warning ? { regionWarning: region.warning } : {}),
+  };
+}
+
+export function toAppSummary(app: OrbitAppSummary): AppSummary {
+  return {
+    teamsAppId: app.appId,
+    appId: app.appExternalId,
+    appName: app.appName ?? null,
+    version: app.appVersion ?? null,
+    updatedAt: app.updatedAt ?? null,
   };
 }
 

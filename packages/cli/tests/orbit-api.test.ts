@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchOrbitApp, toAppDetails } from '../src/apps/orbit-api.js';
-import type { OrbitAppResponse } from '../src/apps/orbit-types.js';
+import { fetchOrbitApp, fetchOrbitApps, toAppDetails, toAppSummary } from '../src/apps/orbit-api.js';
+import type { OrbitAppResponse, OrbitAppSummary } from '../src/apps/orbit-types.js';
 import { CliError } from '../src/utils/errors.js';
 import type { OrbitRegionResolution } from '../src/utils/orbit-region.js';
 
@@ -61,7 +61,7 @@ function makeApp(): OrbitAppResponse {
   };
 }
 
-describe('Orbit profile foundation', () => {
+describe('Orbit API foundation', () => {
   const fetchMock = vi.fn<typeof fetch>();
 
   beforeEach(() => {
@@ -69,6 +69,163 @@ describe('Orbit profile foundation', () => {
     routing.resolveOrbitBaseUrl.mockReset();
     routing.resolveOrbitBaseUrl.mockResolvedValue({ baseUrl: 'https://dev.teams.microsoft.com/synthetic-orbit-route' });
     vi.stubGlobal('fetch', fetchMock);
+  });
+
+  describe('Orbit app listing', () => {
+    const baseUrl = 'https://dev.teams.microsoft.com/synthetic-orbit-route';
+
+    function summary(resourceId: string = 'resource-id', manifestId: string = 'manifest-id'): OrbitAppSummary {
+      return {
+        appId: resourceId,
+        appExternalId: manifestId,
+        appName: 'Example bot',
+        appVersion: '1.2.3',
+        updatedAt: '2026-11-18T12:00:00Z',
+      };
+    }
+
+    it('lists summaries without profile lookups or invented bot IDs', async () => {
+      const item = summary();
+      fetchMock.mockResolvedValue(Response.json({ items: [item] }));
+
+      const result = await fetchOrbitApps('app-token');
+
+      expect(result).toEqual({ apps: [item] });
+      expect(toAppSummary(result.apps[0])).toEqual({
+        teamsAppId: 'resource-id',
+        appId: 'manifest-id',
+        appName: 'Example bot',
+        version: '1.2.3',
+        updatedAt: '2026-11-18T12:00:00Z',
+      });
+      expect(toAppSummary(result.apps[0])).not.toHaveProperty('bots');
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe(`${baseUrl}/v1.0/apps?pageSize=50`);
+      expect(init?.method).toBe('GET');
+      expect(init?.redirect).toBe('manual');
+      const headers = new Headers(init?.headers);
+      expect(headers.get('Authorization')).toBe('Bearer app-token');
+      expect(headers.get('x-ms-continuation')).toBeNull();
+      expect(headers.get('Client-Source')).toMatch(/^teams-cli\//);
+    });
+
+    it('follows opaque body tokens unchanged through short and empty pages', async () => {
+      const first = summary('resource-1', 'manifest-1');
+      const last = summary('resource-2', 'manifest-2');
+      const token = 'a+/opaque==';
+      fetchMock
+        .mockResolvedValueOnce(Response.json({ items: [first], continuationToken: token }))
+        .mockResolvedValueOnce(Response.json({ items: [], continuationToken: 'next-token' }))
+        .mockResolvedValueOnce(Response.json({ items: [last], continuationToken: '' }));
+
+      expect(await fetchOrbitApps('app-token')).toEqual({ apps: [first, last] });
+
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(routing.resolveOrbitBaseUrl).toHaveBeenCalledOnce();
+      expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+        `${baseUrl}/v1.0/apps?pageSize=50`,
+        `${baseUrl}/v1.0/apps?pageSize=50`,
+        `${baseUrl}/v1.0/apps?pageSize=50`,
+      ]);
+      expect(new Headers(fetchMock.mock.calls[1][1]?.headers).get('x-ms-continuation')).toBe(token);
+      expect(new Headers(fetchMock.mock.calls[2][1]?.headers).get('x-ms-continuation')).toBe('next-token');
+    });
+
+    it.each([undefined, null, ''])('stops only when the continuation token is absent or empty: %j', async token => {
+      fetchMock.mockResolvedValue(Response.json({
+        items: [], ...(token !== undefined ? { continuationToken: token } : {}),
+      }));
+      expect(await fetchOrbitApps('app-token')).toEqual({ apps: [] });
+      expect(fetchMock).toHaveBeenCalledOnce();
+    });
+
+    it('retains the raw summary while projecting nullable or absent display metadata', async () => {
+      const item: OrbitAppSummary = {
+        appId: 'resource-id', appExternalId: 'manifest-id', appName: null,
+        appVersion: null, futureListField: { preserve: true },
+      };
+      fetchMock.mockResolvedValue(Response.json({ items: [item] }));
+      const result = await fetchOrbitApps('app-token');
+      expect(result.apps[0]).toEqual(item);
+      expect(toAppSummary(result.apps[0])).toEqual({
+        teamsAppId: 'resource-id', appId: 'manifest-id',
+        appName: null, version: null, updatedAt: null,
+      });
+    });
+
+    it('fetches bot IDs only when the caller requests the selected profile', async () => {
+      fetchMock
+        .mockResolvedValueOnce(Response.json({ items: [summary(), summary('other-resource', 'other-manifest')] }))
+        .mockResolvedValueOnce(Response.json(makeApp(), { headers: { ETag: '"profile-etag"' } }));
+
+      const list = await fetchOrbitApps('app-token');
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const selected = toAppSummary(list.apps[0]);
+      const profile = await fetchOrbitApp('app-token', selected.teamsAppId);
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls[1][0]).toBe(`${baseUrl}/v1.0/apps/resource-id`);
+      expect(toAppDetails(profile.app).bots?.[0].botId).toBe('bot-client-id');
+    });
+
+    it('rejects repeated continuation tokens instead of returning partial results or looping', async () => {
+      fetchMock.mockImplementation(async () => Response.json({ items: [], continuationToken: 'repeated' }));
+
+      await expect(fetchOrbitApps('app-token')).rejects.toMatchObject({
+        code: 'API_ERROR', message: expect.stringContaining('continuation'),
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not return a partial list when a later page fails', async () => {
+      fetchMock
+        .mockResolvedValueOnce(Response.json({ items: [summary()], continuationToken: 'next' }))
+        .mockResolvedValueOnce(Response.json({ errorCode: 'Throttled', errorMessage: 'Try later' }, { status: 429 }));
+
+      await expect(fetchOrbitApps('app-token')).rejects.toMatchObject({
+        code: 'API_ERROR', statusCode: 429, message: expect.stringContaining('Try later'),
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it.each([
+      null,
+      [],
+      {},
+      { items: null },
+      { items: [], continuationToken: 123 },
+      { items: [{}] },
+      { items: [{ appId: 'resource-id' }] },
+      { items: [{ appId: '', appExternalId: 'manifest-id' }] },
+      { items: [{ appId: 'resource-id', appExternalId: ' ' }] },
+      { items: [{ appId: 'resource-id', appExternalId: 'manifest-id', appName: 123 }] },
+    ])('rejects malformed list responses rather than skipping entries: %j', async body => {
+      fetchMock.mockResolvedValue(Response.json(body));
+
+      await expect(fetchOrbitApps('app-token')).rejects.toMatchObject({
+        code: 'API_ERROR', statusCode: 200,
+      });
+      expect(fetchMock).toHaveBeenCalledOnce();
+    });
+
+    it('reports a non-JSON successful list response', async () => {
+      fetchMock.mockResolvedValue(new Response('<html>Unexpected gateway page</html>'));
+      await expect(fetchOrbitApps('app-token')).rejects.toMatchObject({
+        code: 'API_ERROR', statusCode: 200, message: expect.stringContaining('JSON'),
+      });
+    });
+
+    it('carries routing fallback metadata without changing the app summaries', async () => {
+      routing.resolveOrbitBaseUrl.mockResolvedValue({
+        baseUrl, usedFallback: true, warning: 'Using Americas.',
+      });
+      fetchMock.mockResolvedValue(Response.json({ items: [summary()] }));
+
+      expect(await fetchOrbitApps('app-token')).toEqual({
+        apps: [summary()], regionFallback: true, regionWarning: 'Using Americas.',
+      });
+    });
   });
 
   afterEach(() => {
