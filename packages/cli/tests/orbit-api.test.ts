@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchOrbitApp, fetchOrbitApps, toAppDetails, toAppSummary } from '../src/apps/orbit-api.js';
-import type { OrbitAppResponse, OrbitAppSummary } from '../src/apps/orbit-types.js';
+import { fetchOrbitApp, fetchOrbitApps, fetchOrbitUserSettings, toAppDetails, toAppSummary } from '../src/apps/orbit-api.js';
+import type { OrbitAppResponse, OrbitAppSummary, OrbitUserSettings } from '../src/apps/orbit-types.js';
 import { CliError } from '../src/utils/errors.js';
 import type { OrbitRegionResolution } from '../src/utils/orbit-region.js';
 
@@ -533,5 +533,103 @@ describe('Orbit API foundation', () => {
 
     await expect(fetchOrbitApp('test-token', 'resource-id')).rejects.toBe(failure);
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe('Orbit aggregate user settings', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+  const baseUrl = 'https://dev.teams.microsoft.com/synthetic-orbit-route';
+
+  function settings(): OrbitUserSettings {
+    return {
+      tenantSettings: {
+        isSideLoadingInteractionEnabled: true,
+      },
+      appPolicyForUser: { value: { isSideloadingAllowed: false, isUserPinningAllowed: true } },
+    };
+  }
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    routing.resolveOrbitBaseUrl.mockReset();
+    routing.resolveOrbitBaseUrl.mockResolvedValue({ baseUrl });
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('reads tenant settings and user policy from the aggregate endpoint', async () => {
+    routing.resolveOrbitBaseUrl.mockResolvedValueOnce({ baseUrl, usedFallback: true, warning: 'Using Americas.' });
+    fetchMock.mockResolvedValueOnce(Response.json({
+      ...settings(),
+      tenantSettings: {
+        ...settings().tenantSettings,
+        developerToolsForShowingAppUsageMetrics: ['DeveloperPortal'],
+      },
+      appPolicyForUser: {
+        value: { ...settings().appPolicyForUser?.value, futurePolicyField: true },
+      },
+      isTeamsAdministrator: false,
+      locale: { preferredLanguage: 'en-US' },
+    }));
+    expect(await fetchOrbitUserSettings('app-token')).toEqual({
+      settings: settings(), regionFallback: true, regionWarning: 'Using Americas.',
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`${baseUrl}/v1.0/users/me`);
+    expect(init?.method).toBe('GET');
+    expect(init?.redirect).toBe('manual');
+    const headers = new Headers(init?.headers);
+    expect(headers.get('Authorization')).toBe('Bearer app-token');
+    expect(headers.get('Client-Source')).toMatch(/^teams-cli\//);
+  });
+
+  it('keeps unavailable policy null rather than converting it to denied or allowed', async () => {
+    fetchMock.mockResolvedValue(Response.json({
+      tenantSettings: { isSideLoadingInteractionEnabled: false },
+      appPolicyForUser: null,
+    }));
+    expect(await fetchOrbitUserSettings('app-token')).toEqual({
+      settings: {
+        tenantSettings: { isSideLoadingInteractionEnabled: false },
+        appPolicyForUser: null,
+      },
+    });
+  });
+
+  it('preserves the status and detail of a settings error', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json(
+      { errorCode: 'Unavailable', errorMessage: 'Settings unavailable' }, { status: 503 }
+    ));
+    await expect(fetchOrbitUserSettings('app-token')).rejects.toMatchObject({
+      code: 'API_ERROR', statusCode: 503, message: expect.stringContaining('Settings unavailable'),
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    null,
+    [],
+    {},
+    { ...settings(), tenantSettings: null },
+    { ...settings(), tenantSettings: {} },
+    { ...settings(), tenantSettings: { isSideLoadingInteractionEnabled: 'true' } },
+    { ...settings(), appPolicyForUser: undefined },
+    { ...settings(), appPolicyForUser: {} },
+    { ...settings(), appPolicyForUser: { value: null } },
+    { ...settings(), appPolicyForUser: { value: { isSideloadingAllowed: 'false', isUserPinningAllowed: true } } },
+  ])('rejects malformed or incomplete settings rather than inventing permissions: %j', async body => {
+    fetchMock.mockResolvedValueOnce(Response.json(body));
+    await expect(fetchOrbitUserSettings('app-token')).rejects.toMatchObject({
+      code: 'API_ERROR', statusCode: 200,
+    });
+  });
+
+  it('rejects a successful non-JSON response', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('<html>Unexpected gateway page</html>'));
+    await expect(fetchOrbitUserSettings('app-token')).rejects.toMatchObject({
+      code: 'API_ERROR', statusCode: 200, message: expect.stringContaining('JSON'),
+    });
   });
 });

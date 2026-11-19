@@ -106,3 +106,27 @@ export interface OrbitAppListSnapshot {
   regionFallback?: true;
   regionWarning?: string;
 }
+
+export interface OrbitTenantSettings {
+  isSideLoadingInteractionEnabled: boolean;
+}
+
+export interface OrbitUserAppPolicyValue {
+  isSideloadingAllowed: boolean;
+  isUserPinningAllowed: boolean;
+}
+
+export interface OrbitUserAppPolicy {
+  value: OrbitUserAppPolicyValue;
+}
+
+export interface OrbitUserSettings {
+  tenantSettings: OrbitTenantSettings;
+  appPolicyForUser: OrbitUserAppPolicy | null;
+}
+
+export interface OrbitUserSettingsSnapshot {
+  settings: OrbitUserSettings;
+  regionFallback?: true;
+  regionWarning?: string;
+}

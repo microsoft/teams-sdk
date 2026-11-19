@@ -3,7 +3,7 @@ import { apiFetch } from '../utils/http.js';
 import { resolveOrbitBaseUrl } from '../utils/orbit-region.js';
 import type {
   OrbitAppListPage, OrbitAppListSnapshot, OrbitAppResponse, OrbitAppSnapshot, OrbitAppSummary,
-  OrbitAuthorization, OrbitBot, OrbitJsonObject, OrbitJsonValue,
+  OrbitAuthorization, OrbitBot, OrbitJsonObject, OrbitJsonValue, OrbitUserSettings, OrbitUserSettingsSnapshot,
 } from './orbit-types.js';
 import type { AppAuthorization, AppBot, AppDetails, AppSummary } from './types.js';
 
@@ -86,6 +86,15 @@ function isAppListPage(value: unknown): value is OrbitAppListPage {
     && hasNullableFields(value, ['continuationToken'], isString);
 }
 
+function isUserSettings(value: unknown): value is OrbitUserSettings {
+  if (!isObject(value) || !isObject(value.tenantSettings)
+    || typeof value.tenantSettings.isSideLoadingInteractionEnabled !== 'boolean') return false;
+  const policy = value.appPolicyForUser;
+  return (policy === null || (isObject(policy) && isObject(policy.value)
+    && typeof policy.value.isSideloadingAllowed === 'boolean'
+    && typeof policy.value.isUserPinningAllowed === 'boolean'));
+}
+
 function decodeBody(text: string): unknown {
   try {
     return JSON.parse(text);
@@ -110,7 +119,7 @@ function errorDetail(body: unknown, text: string): string {
   return text.trim();
 }
 
-async function readOrbitBody(response: Response, resource: 'app' | 'apps'): Promise<unknown> {
+async function readOrbitBody(response: Response, resource: 'app' | 'apps' | 'user settings'): Promise<unknown> {
   const text = await response.text();
   const body = decodeBody(text);
   if (!response.ok) {
@@ -193,6 +202,34 @@ export function toAppSummary(app: OrbitAppSummary): AppSummary {
     appName: app.appName ?? null,
     version: app.appVersion ?? null,
     updatedAt: app.updatedAt ?? null,
+  };
+}
+
+export async function fetchOrbitUserSettings(token: string): Promise<OrbitUserSettingsSnapshot> {
+  const region = await resolveOrbitBaseUrl();
+  const response = await apiFetch(`${region.baseUrl}/v1.0/users/me`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    redirect: 'manual',
+  });
+  const body = await readOrbitBody(response, 'user settings');
+  if (!isUserSettings(body)) {
+    throw new CliError('API_ERROR', 'Invalid Orbit user settings JSON response.', undefined, response.status);
+  }
+  return {
+    settings: {
+      tenantSettings: {
+        isSideLoadingInteractionEnabled: body.tenantSettings.isSideLoadingInteractionEnabled,
+      },
+      appPolicyForUser: body.appPolicyForUser === null ? null : {
+        value: {
+          isSideloadingAllowed: body.appPolicyForUser.value.isSideloadingAllowed,
+          isUserPinningAllowed: body.appPolicyForUser.value.isUserPinningAllowed,
+        },
+      },
+    },
+    ...(region.usedFallback ? { regionFallback: true } : {}),
+    ...(region.warning ? { regionWarning: region.warning } : {}),
   };
 }
 

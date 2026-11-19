@@ -5,7 +5,7 @@ import { getTokenSilent, teamsDevPortalScopes } from '../auth/index.js';
 import { isAzInstalled, isAzLoggedIn, runAz } from './az.js';
 import { isInteractive } from './interactive.js';
 import { logger } from './logger.js';
-import { fetchTenantSettings, fetchUserAppPolicy } from '../apps/api.js';
+import { fetchOrbitUserSettings } from '../apps/orbit-api.js';
 
 export interface EnvironmentCheckResult {
   tdp: {
@@ -52,18 +52,19 @@ export async function checkAndDisplayEnvironment(
     result.tdp = { connected: true, sideloading: { tenant: null, user: null } };
 
     try {
-      const [tenantSettings, userPolicy] = await Promise.all([
-        fetchTenantSettings(tdpToken),
-        fetchUserAppPolicy(tdpToken),
-      ]);
-
-      const tenantEnabled = tenantSettings.isSideLoadingInteractionEnabled ?? false;
-      const userAllowed = userPolicy.value?.isSideloadingAllowed ?? false;
+      const { settings, regionWarning } = await fetchOrbitUserSettings(tdpToken);
+      if (regionWarning && !silent) logger.debug(regionWarning);
+      const tenantEnabled = settings.tenantSettings.isSideLoadingInteractionEnabled;
+      const userAllowed = settings.appPolicyForUser?.value.isSideloadingAllowed ?? null;
 
       result.tdp.sideloading.tenant = tenantEnabled;
       result.tdp.sideloading.user = userAllowed;
 
-      if (tenantEnabled && userAllowed) {
+      if (userAllowed === null) {
+        const text = `Sideloading: ${pc.yellow('could not determine')}`;
+        tdpSpinner.warn({ text });
+        if (!silent && muteSpinners) logger.info(`${pc.yellow('⚠')} ${text}`);
+      } else if (tenantEnabled && userAllowed) {
         const text = `Sideloading: ${pc.green('enabled')}`;
         tdpSpinner.success({ text });
         if (!silent && muteSpinners) logger.info(`${pc.green('✔')} ${text}`);
@@ -107,7 +108,10 @@ export async function checkAndDisplayEnvironment(
           );
         }
       }
-    } catch {
+    } catch (error) {
+      if (!silent) {
+        logger.debug(`Could not read sideloading settings: ${error instanceof Error ? error.message : String(error)}`);
+      }
       const text = `Sideloading: ${pc.yellow('could not determine')}`;
       tdpSpinner.warn({ text });
       if (!silent && muteSpinners) logger.info(`${pc.yellow('⚠')} ${text}`);
