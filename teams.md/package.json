@@ -19,6 +19,7 @@
     "generate:llms": "tsx scripts/generate-llms-txt.ts",
     "sync:blog": "tsx scripts/sync-devblogs.ts",
     "sync:blog:dry": "tsx scripts/sync-devblogs.ts --dry-run",
+    "test:blog": "tsx --test scripts/sync-devblogs.test.ts",
     "scaffold": "node src/scripts/scaffold.js"
   },
   "dependencies": {
