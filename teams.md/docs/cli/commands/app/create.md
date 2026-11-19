@@ -61,7 +61,7 @@ Use `--messaging-mode socket` to receive messages without a public HTTP endpoint
 teams app create --name "My Bot" --messaging-mode socket
 ```
 
-The CLI configures socket mode for both Teams-managed and Azure bots. Interactive creation offers a messaging-mode choice; scripted creation keeps HTTP mode unless socket mode is requested. `--messaging-mode socket` cannot be combined with `--endpoint`.
+The CLI configures socket mode for both Teams-managed and Azure-managed bots. Interactive creation offers a messaging-mode choice; scripted creation keeps HTTP mode unless socket mode is requested. `--messaging-mode socket` cannot be combined with `--endpoint`.
 
 Create a Teams-managed socket-mode bot and save its credentials:
 
@@ -69,7 +69,7 @@ Create a Teams-managed socket-mode bot and save its credentials:
 teams app create --name "My Bot" --teams-managed --messaging-mode socket --env .env
 ```
 
-For an Azure bot, use the same mode flag with your Azure resource options. Azure CLI must be installed and logged in:
+For an Azure-managed bot, use the same mode flag with your Azure resource options. Azure CLI must be installed and logged in:
 
 ```bash
 teams app create --name "My Azure Bot" --azure --subscription <id> --resource-group my-rg --messaging-mode socket --env .env
@@ -129,7 +129,7 @@ Create with defaults (Teams-managed, generated manifest):
 teams app create --name "My Bot"
 ```
 
-Create with Azure bot and write credentials to `.env`:
+Create with Azure-managed bot and write credentials to `.env`:
 
 ```bash
 teams app create --name "My Bot" --azure --subscription <id> --resource-group my-rg --env .env

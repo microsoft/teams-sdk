@@ -35,7 +35,7 @@ Displays detailed information about a Teams app.
 
 ### Messaging Mode
 
-For both Teams-managed and Azure bots, the human-readable output shows the configured messaging mode. Use the `socketMode` field in JSON to inspect it programmatically. This reads the bot registration; it does not verify that your running application has connected.
+For both Teams-managed and Azure-managed bots, the human-readable output shows the configured messaging mode. Use the `socketMode` field in JSON to inspect it programmatically. This reads the bot registration; it does not verify that your running application has connected.
 
 ```bash
 teams app get <appId> --json

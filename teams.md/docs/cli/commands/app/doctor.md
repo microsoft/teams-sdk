@@ -36,7 +36,7 @@ Runs a comprehensive diagnostic check across your app's bot registration, AAD ap
 **Bot Registration**
 - Bot location detected (Teams-managed or Azure)
 - Teams channel is enabled
-- Messaging mode reported for both Teams-managed and Azure bots
+- Messaging mode reported for both Teams-managed and Azure-managed bots
 - Messaging endpoint is reachable when configured (HTTP probe)
 
 **AAD App**
@@ -77,5 +77,5 @@ These commands inspect configuration, not the health of a live socket connection
 
 - After `app create` to verify everything was set up correctly
 - After setting up SSO to confirm SSO wiring
-- After `app bot migrate` to check the new Azure bot
+- After `app bot migrate` to check the new Azure-managed bot
 - When debugging authentication or token issues

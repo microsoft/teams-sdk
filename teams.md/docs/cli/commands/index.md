@@ -75,7 +75,7 @@ Set `TEAMS_NO_INTERACTIVE=1` to disable interactive prompts entirely.
 
 ## Messaging Mode Commands
 
-Socket mode receives bot messages without a public HTTP endpoint or tunnel. HTTP mode uses a public HTTPS endpoint and is recommended for production. Both modes are supported for Teams-managed and Azure bot registrations, subject to the [current socket-mode limitations](app/create#messaging-mode).
+Socket mode receives bot messages without a public HTTP endpoint or tunnel. HTTP mode uses a public HTTPS endpoint and is recommended for production. Both modes are supported for Teams-managed and Azure-managed bot registrations, subject to the [current socket-mode limitations](app/create#messaging-mode).
 
 | Task | Command |
 |------|---------|

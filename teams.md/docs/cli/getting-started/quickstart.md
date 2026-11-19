@@ -26,7 +26,7 @@ The CLI will prompt you for a name and messaging mode, then handle AAD app regis
 teams app create --name "My Bot" --messaging-mode socket --env .env
 ```
 
-Socket mode works with Teams-managed and Azure bots, subject to the [current availability and ownership requirements](../commands/app/create#messaging-mode).
+Socket mode works with Teams-managed and Azure-managed bots, subject to the [current availability and ownership requirements](../commands/app/create#messaging-mode).
 
 For HTTP delivery, pass a public HTTPS endpoint:
 

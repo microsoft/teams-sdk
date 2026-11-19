@@ -1,14 +1,8 @@
 # Local Tunnels for Development
 
-In **HTTP mode**, Teams must reach your bot's `/api/messages` endpoint over **public HTTPS**. When developing locally, your server is only reachable on `localhost`, so HTTP delivery needs a tunnel — a tool that forwards a public URL to your local port.
+In **HTTP mode**, Teams must reach your bot's `/api/messages` endpoint over **public HTTPS**. When developing locally, your server is only reachable on `localhost`, so HTTP delivery needs a tunnel — a tool that forwards a public URL to your local port. We recommend [Microsoft Dev Tunnels](/developer-tools/local-tunnels#dev-tunnels-recommended) for local HTTP development.
 
-For bot messaging without a tunnel, use socket mode instead:
-
-```bash
-teams app create --name my-bot --messaging-mode socket --env .env
-```
-
-Socket mode works with Teams-managed and Azure bots, subject to the [current availability requirements](../commands/app/create#messaging-mode). It removes the public endpoint requirement for bot messages, not for other web content or inbound webhooks your app exposes.
+For local bot messaging without a tunnel, see [Socket Mode](./socket-mode).
 
 For setting up Dev Tunnels or ngrok, the plain-HTTP protocol gotcha, verifying the tunnel actually reaches your app, persistent vs. ephemeral URLs, and security notes on `--allow-anonymous`, see [Local Tunnels](/developer-tools/local-tunnels). This page covers only how a tunnel interacts with the `teams app create`/`update` CLI flow.
 
@@ -33,13 +27,4 @@ teams app update <teamsAppId> --endpoint https://<new-host>/api/messages
 
 Only re-run `teams app create` (or `teams app update --endpoint`) when your tunnel URL actually changes — the bot registration just stores the hostname, it doesn't care how many times you've restarted the tunnel or server in between.
 
-## Switching from socket mode to a tunnel
-
-Setting `--endpoint` alone does not disable socket mode. Select HTTP explicitly when switching delivery modes:
-
-```bash
-teams app update <teamsAppId> --messaging-mode http --endpoint https://<tunnel-host>/api/messages
-```
-
-The CLI saves the endpoint before switching to HTTP. Restart your Teams SDK application after the mode changes. Once HTTP mode is configured, subsequent tunnel URL changes only need `--endpoint`.
-
+To switch a socket-mode bot to HTTP delivery through a tunnel, see [Switching to HTTP](./socket-mode#switching-to-http).

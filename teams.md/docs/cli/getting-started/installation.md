@@ -4,7 +4,7 @@
 
 - **Node.js** 22.12 or later
 - **npm** (comes with Node.js)
-- **Azure CLI** (`az`) — only needed for Azure bot operations (optional)
+- **Azure CLI** (`az`) — only needed for Azure-managed bot operations (optional)
 
 ## Install
 
@@ -30,7 +30,7 @@ teams self-update
 
 ## Azure CLI (Optional)
 
-If you plan to create Azure bots or configure OAuth/SSO, install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli):
+If you plan to create Azure-managed bots or configure OAuth/SSO, install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli):
 
 ```bash
 # macOS
