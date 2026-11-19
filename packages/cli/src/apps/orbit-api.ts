@@ -1,9 +1,11 @@
 import { CliError } from '../utils/errors.js';
 import { apiFetch } from '../utils/http.js';
 import { resolveOrbitBaseUrl } from '../utils/orbit-region.js';
+import { bumpPatchVersion, stableStringify } from '../utils/version.js';
 import type {
   OrbitAppListPage, OrbitAppListSnapshot, OrbitAppResponse, OrbitAppSnapshot, OrbitAppSummary,
-  OrbitAuthorization, OrbitBot, OrbitJsonObject, OrbitJsonValue, OrbitUserSettings, OrbitUserSettingsSnapshot,
+  OrbitAppUpdateOptions, OrbitAppUpdateResult, OrbitApplicationManifest, OrbitAuthorization, OrbitBot,
+  OrbitJsonObject, OrbitJsonValue, OrbitManifestUpdates, OrbitPatchOperation, OrbitUserSettings, OrbitUserSettingsSnapshot,
 } from './orbit-types.js';
 import type { AppAuthorization, AppBot, AppDetails, AppSummary } from './types.js';
 
@@ -34,6 +36,20 @@ function isBot(value: OrbitJsonValue): boolean {
     && typeof value.botId === 'string' && value.botId.trim().length > 0
     && hasNullableFields(value, ['scopes'], isStringArray)
     && hasNullableFields(value, ['messagingEndpoint'], isString);
+}
+
+function isStaticTab(value: OrbitJsonValue): boolean {
+  return isObject(value) && typeof value.entityId === 'string'
+    && hasNullableFields(value, ['scopes', 'context'], isStringArray)
+    && hasNullableFields(value, ['name', 'contentUrl', 'websiteUrl', 'objectId'], isString);
+}
+
+function isCopilotAgents(value: OrbitJsonValue): boolean {
+  return isObject(value) && hasNullableFields(value, ['customEngineAgents'], agents =>
+    Array.isArray(agents) && agents.every(agent =>
+      isObject(agent) && typeof agent.type === 'string' && typeof agent.id === 'string'
+    )
+  );
 }
 
 function isAuthorization(value: OrbitJsonValue): boolean {
@@ -71,6 +87,8 @@ function isAppResponse(value: unknown): value is OrbitAppResponse {
     )
     && hasNullableFields(manifest, ['validDomains'], isStringArray)
     && hasNullableFields(manifest, ['bots'], bots => Array.isArray(bots) && bots.every(isBot))
+    && hasNullableFields(manifest, ['staticTabs'], tabs => Array.isArray(tabs) && tabs.every(isStaticTab))
+    && hasNullableFields(manifest, ['copilotAgents'], isCopilotAgents)
     && hasNullableFields(manifest, ['authorization'], isAuthorization);
 }
 
@@ -119,7 +137,11 @@ function errorDetail(body: unknown, text: string): string {
   return text.trim();
 }
 
-async function readOrbitBody(response: Response, resource: 'app' | 'apps' | 'user settings'): Promise<unknown> {
+async function readOrbitBody(
+  response: Response,
+  resource: 'app' | 'apps' | 'user settings',
+  action: 'fetch' | 'update' = 'fetch'
+): Promise<unknown> {
   const text = await response.text();
   const body = decodeBody(text);
   if (!response.ok) {
@@ -127,21 +149,22 @@ async function readOrbitBody(response: Response, resource: 'app' | 'apps' | 'use
     const status = `${response.status}${response.statusText ? ` ${response.statusText}` : ''}`;
     throw new CliError(
       'API_ERROR',
-      `Failed to fetch Orbit ${resource}: ${status}${detail ? `: ${detail}` : ''}`,
-      undefined,
+      `Failed to ${action} Orbit ${resource}: ${status}${detail ? `: ${detail}` : ''}`,
+      action === 'update' && response.status === 412 ? 'Read the latest app definition and try again.' : undefined,
       response.status
     );
   }
   return body;
 }
 
-export async function fetchOrbitApp(token: string, resourceId: string): Promise<OrbitAppSnapshot> {
+function validateResourceId(resourceId: string): void {
   if (!resourceId.trim()) {
     throw new CliError('VALIDATION_MISSING', 'An Orbit app resource ID is required.');
   }
+}
 
-  const region = await resolveOrbitBaseUrl();
-  const response = await apiFetch(`${region.baseUrl}/v1.0/apps/${encodeURIComponent(resourceId)}`, {
+async function readOrbitApp(token: string, resourceId: string, baseUrl: string): Promise<OrbitAppSnapshot> {
+  const response = await apiFetch(`${baseUrl}/v1.0/apps/${encodeURIComponent(resourceId)}`, {
     method: 'GET',
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
     redirect: 'manual',
@@ -150,11 +173,98 @@ export async function fetchOrbitApp(token: string, resourceId: string): Promise<
   if (!isAppResponse(body)) {
     throw new CliError('API_ERROR', 'Invalid Orbit app profile JSON response.', undefined, response.status);
   }
+  return { app: body, etag: response.headers.get('ETag') ?? undefined };
+}
+
+export async function fetchOrbitApp(token: string, resourceId: string): Promise<OrbitAppSnapshot> {
+  validateResourceId(resourceId);
+  const region = await resolveOrbitBaseUrl();
+  return {
+    ...await readOrbitApp(token, resourceId, region.baseUrl),
+    ...(region.usedFallback ? { regionFallback: true } : {}),
+    ...(region.warning ? { regionWarning: region.warning } : {}),
+  };
+}
+
+function appendPatchChanges(
+  current: OrbitJsonObject,
+  changes: OrbitJsonObject,
+  path: string,
+  operations: OrbitPatchOperation[]
+): void {
+  for (const [key, value] of Object.entries(changes)) {
+    const exists = Object.hasOwn(current, key) && current[key] !== undefined;
+    const previous = exists ? current[key] : undefined;
+    if (stableStringify(previous) === stableStringify(value)) continue;
+    const fieldPath = `${path}/${key.replaceAll('~', '~0').replaceAll('/', '~1')}`;
+    if (value === undefined) {
+      if (exists) operations.push({ op: 'remove', path: fieldPath });
+    } else if (isObject(previous) && isObject(value)) {
+      appendPatchChanges(previous, value, fieldPath, operations);
+    } else {
+      operations.push({ op: exists ? 'replace' : 'add', path: fieldPath, value });
+    }
+  }
+}
+
+export async function updateOrbitApp(
+  token: string,
+  resourceId: string,
+  buildUpdates: (manifest: OrbitApplicationManifest) => OrbitManifestUpdates,
+  options?: OrbitAppUpdateOptions
+): Promise<OrbitAppUpdateResult> {
+  validateResourceId(resourceId);
+  const region = await resolveOrbitBaseUrl();
+  const snapshot = await readOrbitApp(token, resourceId, region.baseUrl);
+  const manifest = snapshot.app.appProfile.appDetails.applicationManifest;
+  const changes = buildUpdates(structuredClone(manifest));
+  if (!isObject(changes)) {
+    throw new CliError('VALIDATION_FORMAT', 'App definition updates must be an object.');
+  }
+  if (Object.hasOwn(changes, 'id')) {
+    throw new CliError('VALIDATION_CONFLICT', 'An app definition update cannot change the manifest ID.');
+  }
+
+  const operations: OrbitPatchOperation[] = [];
+  appendPatchChanges(manifest, changes, '/applicationManifest', operations);
+  const routing = {
+    ...(region.usedFallback ? { regionFallback: true as const } : {}),
+    ...(region.warning ? { regionWarning: region.warning } : {}),
+  };
+  if (!operations.length) return { ...snapshot, ...routing, changed: false, versionBumped: false };
+  if (!snapshot.etag || !/^"[^"]+"$/.test(snapshot.etag)) {
+    throw new CliError('API_ERROR', 'The app response did not contain a usable ETag. Read the app again before updating.');
+  }
+
+  let previousVersion: string | undefined;
+  if ((options?.autoBumpVersion ?? true) && !Object.hasOwn(changes, 'version') && manifest.version) {
+    const bumped = bumpPatchVersion(manifest.version);
+    if (bumped) {
+      previousVersion = manifest.version;
+      operations.push({ op: 'replace', path: '/applicationManifest/version', value: bumped });
+    }
+  }
+  const response = await apiFetch(`${region.baseUrl}/v1.0/apps/${encodeURIComponent(resourceId)}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json-patch+json',
+      'If-Match': snapshot.etag,
+    },
+    body: JSON.stringify(operations),
+    redirect: 'manual',
+  });
+  const body = await readOrbitBody(response, 'app', 'update');
+  if (!isAppResponse(body)) {
+    throw new CliError('API_ERROR', 'Invalid Orbit app profile JSON response after update.', undefined, response.status);
+  }
   return {
     app: body,
     etag: response.headers.get('ETag') ?? undefined,
-    ...(region.usedFallback ? { regionFallback: true } : {}),
-    ...(region.warning ? { regionWarning: region.warning } : {}),
+    ...routing,
+    changed: true,
+    versionBumped: previousVersion !== undefined,
+    ...(previousVersion !== undefined ? { previousVersion } : {}),
   };
 }
 

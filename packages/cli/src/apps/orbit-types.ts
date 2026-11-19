@@ -34,6 +34,25 @@ export interface OrbitBot extends OrbitJsonObject {
   messagingEndpoint?: string | null;
 }
 
+export interface OrbitStaticTab extends OrbitJsonObject {
+  entityId: string;
+  scopes?: string[] | null;
+  name?: string | null;
+  contentUrl?: string | null;
+  websiteUrl?: string | null;
+  context?: string[] | null;
+  objectId?: string | null;
+}
+
+export interface OrbitCustomEngineAgent extends OrbitJsonObject {
+  type: string;
+  id: string;
+}
+
+export interface OrbitCopilotAgents extends OrbitJsonObject {
+  customEngineAgents?: OrbitCustomEngineAgent[] | null;
+}
+
 export interface OrbitRscPermission extends OrbitJsonObject {
   name: string;
   type: 'Application' | 'Delegated';
@@ -59,6 +78,8 @@ export interface OrbitApplicationManifest extends OrbitJsonObject {
   webApplicationInfo?: OrbitWebApplicationInfo | null;
   validDomains?: string[] | null;
   bots?: OrbitBot[] | null;
+  staticTabs?: OrbitStaticTab[] | null;
+  copilotAgents?: OrbitCopilotAgents | null;
   authorization?: OrbitAuthorization | null;
 }
 
@@ -129,4 +150,37 @@ export interface OrbitUserSettingsSnapshot {
   settings: OrbitUserSettings;
   regionFallback?: true;
   regionWarning?: string;
+}
+
+export type OrbitManifestUpdates = {
+  name?: Partial<Pick<OrbitTextPair, 'short' | 'full'>> | null;
+  description?: Partial<Pick<OrbitTextPair, 'short' | 'full'>> | null;
+  developer?: Partial<Pick<OrbitDeveloper, 'name' | 'websiteUrl' | 'privacyUrl' | 'termsOfUseUrl' | 'mpnId'>> | null;
+  version?: string;
+  manifestVersion?: string;
+  accentColor?: string;
+  webApplicationInfo?: Partial<Pick<OrbitWebApplicationInfo, 'id' | 'resource'>> | null;
+  validDomains?: string[] | null;
+  bots?: OrbitBot[] | null;
+  staticTabs?: OrbitStaticTab[] | null;
+  copilotAgents?: OrbitCopilotAgents | null;
+  authorization?: {
+    permissions?: {
+      resourceSpecific?: OrbitRscPermission[] | null;
+    } | null;
+  } | null;
+};
+
+export type OrbitPatchOperation =
+  | { op: 'add' | 'replace'; path: string; value: OrbitJsonValue }
+  | { op: 'remove'; path: string };
+
+export interface OrbitAppUpdateOptions {
+  autoBumpVersion?: boolean;
+}
+
+export interface OrbitAppUpdateResult extends OrbitAppSnapshot {
+  changed: boolean;
+  versionBumped: boolean;
+  previousVersion?: string;
 }
