@@ -11,6 +11,7 @@ const CLI = 'node dist/index.js';
 const TEST_TIMEOUT = 30000;
 
 function loadTestEnv(): { TEST_APP_ID: string } | null {
+  if (process.env.TEAMS_CLI_TEST_OFFLINE === '1') return null;
   const envPath = resolve(__dirname, '../.testenv');
   if (!existsSync(envPath)) return null;
 

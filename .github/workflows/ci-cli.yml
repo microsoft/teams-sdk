@@ -20,6 +20,10 @@ jobs:
   build-cli:
     name: CLI build & test
     runs-on: ubuntu-latest
+    env:
+      TEAMS_CLI_TELEMETRY_OPTOUT: '1'
+      TEAMS_CLI_TEST_OFFLINE: '1'
+      RUN_INTEGRATION: '0'
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

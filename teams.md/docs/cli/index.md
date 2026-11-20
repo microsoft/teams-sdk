@@ -14,6 +14,9 @@ Teams Developer CLI for managing Microsoft Teams apps. Create, manage, and confi
 - **Messaging Modes** — Use sockets for local bot development without a public endpoint or tunnel, or HTTP for deployed endpoints. See [messaging-mode commands](commands/index.md#messaging-mode-commands) for setup and current availability requirements.
 - **Authentication** — Generate client secrets for your AAD apps and manage bot credentials.
 - **AI Agent Friendly** — Structured JSON help output for AI consumption.
+- **Optional Installation Telemetry (MVP)** — Explicit opt-in/out for best-effort npm
+  postinstall observations only. Off by default; production collection remains
+  disabled pending release approval. See [config set](commands/config/set.md).
 
 ## Get Started
 

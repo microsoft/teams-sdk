@@ -24,6 +24,10 @@ const ALIASES: Record<string, Record<string, string>> = {
 
 /** Interactive choice labels for each key */
 const CHOICES: Record<string, { name: string; value: string }[]> = {
+  telemetry: [
+    { name: 'Off (default)', value: 'off' },
+    { name: 'On (collection remains disabled pending release approval)', value: 'on' },
+  ],
   'default-bot-location': [
     { name: 'Teams managed (no Azure subscription needed)', value: 'tm' },
     { name: 'Azure (requires az CLI + subscription)', value: 'azure' },

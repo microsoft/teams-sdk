@@ -1,5 +1,5 @@
 import { Configuration, LogLevel } from '@azure/msal-node';
-import envPaths from 'env-paths';
+import { paths } from '../utils/paths.js';
 import { logger } from '../utils/logger.js';
 import { TDP_HOST } from '../utils/tdp-host.js';
 
@@ -8,7 +8,7 @@ const CLIENT_ID = '7ea7c24c-b1f6-4a20-9d11-9ae12e9e7ac0';
 
 const AUTHORITY = 'https://login.microsoftonline.com/common';
 
-export const paths = envPaths('teams-cli', { suffix: '' });
+export { paths };
 
 export const msalConfig: Configuration = {
   auth: {

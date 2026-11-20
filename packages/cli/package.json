@@ -8,16 +8,20 @@
     "teams": "./dist/index.js"
   },
   "scripts": {
+    "postinstall": "node scripts/postinstall.cjs",
     "dev": "tsx src/index.ts",
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
+    "test:offline": "vitest run --mode offline",
+    "test:telemetry:install": "npm run build && tsx scripts/telemetry-install.ts",
     "test:watch": "vitest",
     "check-types": "tsc --noEmit",
     "docs:generate": "tsx scripts/generate-command-docs.ts"
   },
   "files": [
     "dist",
+    "scripts/postinstall.cjs",
     "templates",
     "statics"
   ],
@@ -44,6 +48,8 @@
     "@azure/msal-node": "^5.4.0",
     "@azure/msal-node-extensions": "^5.0.4",
     "@inquirer/prompts": "^7.2.1",
+    "@opentelemetry/api-logs": "0.208.0",
+    "@opentelemetry/sdk-logs": "0.208.0",
     "adm-zip": "^0.6.1",
     "ajv": "^8.20.0",
     "ajv-draft-04": "^1.0.0",

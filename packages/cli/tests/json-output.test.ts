@@ -15,6 +15,7 @@ interface TestEnv {
 }
 
 function loadTestEnv(): TestEnv | null {
+  if (process.env.TEAMS_CLI_TEST_OFFLINE === '1') return null;
   const envPath = resolve(__dirname, '../.testenv');
   if (!existsSync(envPath)) return null;
 
