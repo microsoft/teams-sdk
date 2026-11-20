@@ -6,6 +6,7 @@ import { registerBot, fetchBot, updateBot } from './tdp.js';
 import { runAz } from '../utils/az.js';
 import { CliError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
+import { telemetry } from '../telemetry/client.js';
 
 export interface CreateBotOpts {
   botId: string;
@@ -59,8 +60,18 @@ class TdpBotHandler implements BotHandler {
   }
 
   async updateEndpoint(botId: string, endpoint: string): Promise<void> {
-    const bot = await fetchBot(this.token, botId);
-    await updateBot(this.token, { ...bot, messagingEndpoint: endpoint });
+    await telemetry().run(
+      'app.configure',
+      {
+        botId,
+        transport: 'http',
+        endpointConfigured: !!endpoint,
+      },
+      async () => {
+        const bot = await fetchBot(this.token, botId);
+        await updateBot(this.token, { ...bot, messagingEndpoint: endpoint });
+      }
+    );
   }
 }
 
@@ -181,22 +192,32 @@ class AzureBotHandler implements BotHandler {
   }
 
   async updateEndpoint(botId: string, endpoint: string): Promise<void> {
-    // Use the discovered Azure resource name when available; falls back to
-    // botId for fresh deployments where the convention still holds.
-    const resourceName = this.azure.name ?? botId;
-    logger.debug(`Updating Azure bot endpoint: ${resourceName} → ${endpoint}`);
-    await runAz([
-      'bot',
-      'update',
-      '--name',
-      resourceName,
-      '--resource-group',
-      this.azure.resourceGroup,
-      '--endpoint',
-      endpoint,
-      '--subscription',
-      this.azure.subscription,
-    ]);
+    await telemetry().run(
+      'app.configure',
+      {
+        botId,
+        transport: 'http',
+        endpointConfigured: !!endpoint,
+      },
+      async () => {
+        // Use the discovered Azure resource name when available; falls back to
+        // botId for fresh deployments where the convention still holds.
+        const resourceName = this.azure.name ?? botId;
+        logger.debug(`Updating Azure bot endpoint: ${resourceName} → ${endpoint}`);
+        await runAz([
+          'bot',
+          'update',
+          '--name',
+          resourceName,
+          '--resource-group',
+          this.azure.resourceGroup,
+          '--endpoint',
+          endpoint,
+          '--subscription',
+          this.azure.subscription,
+        ]);
+      }
+    );
   }
 }
 
@@ -222,7 +243,7 @@ export async function discoverAzureBot(
 ): Promise<AzureContext | null> {
   const spinner = createSilentSpinner('Discovering Azure bot...', silent).start();
   try {
-    const bot = await findBotByName(botId) ?? await findBotByMsaAppId(botId);
+    const bot = (await findBotByName(botId)) ?? (await findBotByMsaAppId(botId));
     if (!bot) {
       spinner.stop();
       return null;

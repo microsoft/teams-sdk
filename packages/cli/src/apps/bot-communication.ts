@@ -1,8 +1,12 @@
 import { apiFetch } from '../utils/http.js';
 import { CliError } from '../utils/errors.js';
 import { TDP_V2_BASE_URL } from '../utils/tdp-host.js';
+import { telemetry } from '../telemetry/client.js';
 
-export type MessageNotificationMode = 'atMentionedMessagesOnly' | 'allMessages' | 'unknownFutureValue';
+export type MessageNotificationMode =
+  | 'atMentionedMessagesOnly'
+  | 'allMessages'
+  | 'unknownFutureValue';
 
 export interface BotMessageNotificationConfiguration {
   messageNotificationMode: MessageNotificationMode;
@@ -167,6 +171,22 @@ export async function putBotCommunicationConfiguration(
  * GET → modify → PUT; a missing configuration starts from server defaults.
  */
 export async function setSocketMode(
+  token: string,
+  clientId: string,
+  enabled: boolean
+): Promise<SetSocketModeResult> {
+  return telemetry().run(
+    'app.configure',
+    { botId: clientId, transport: enabled ? 'socket' : 'http' },
+    async (operation) => {
+      const result = await updateSocketMode(token, clientId, enabled);
+      operation.update({ changed: result.changed });
+      return result;
+    }
+  );
+}
+
+async function updateSocketMode(
   token: string,
   clientId: string,
   enabled: boolean

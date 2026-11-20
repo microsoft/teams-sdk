@@ -12,6 +12,8 @@ import {
   type ScaffoldOptions,
 } from '../../project/scaffold.js';
 import { runAppCreate, type AppCreateOutput } from '../app/create.js';
+import { telemetry, type TelemetryOperation } from '../../telemetry/client.js';
+import { throwIfCancelled } from '../../utils/cancellation.js';
 
 export interface ProjectNewOutput {
   name: string;
@@ -125,6 +127,20 @@ export async function createProjectFromTemplate(
   options: ProjectNewCommandOptions,
   strategy: ProjectLanguageStrategy
 ): Promise<ProjectNewOutput | undefined> {
+  return telemetry().run(
+    'project.create',
+    { language: strategy.language, template: options.template },
+    async (operation) => createProject(rawName, options, strategy, operation),
+    { target: process.cwd(), origin: 'project.create', defer: true }
+  );
+}
+
+async function createProject(
+  rawName: string,
+  options: ProjectNewCommandOptions,
+  strategy: ProjectLanguageStrategy,
+  operation: TelemetryOperation
+): Promise<ProjectNewOutput | undefined> {
   const name = strategy.normalizeProjectName(rawName);
 
   if (!strategy.templates.includes(options.template)) {
@@ -138,6 +154,7 @@ export async function createProjectFromTemplate(
   strategy.validateProjectName(name);
 
   const targetDir = path.join(process.cwd(), name);
+  await operation.bindTarget({ target: targetDir, origin: 'project.create' });
   if (fs.existsSync(targetDir)) {
     throw new CliError('VALIDATION_CONFLICT', `"${name}" already exists.`);
   }
@@ -146,7 +163,10 @@ export async function createProjectFromTemplate(
     `Create ${strategy.displayName} app "${name}" using ${options.template} template?`,
     options.json
   );
-  if (!confirmed) return undefined;
+  if (!confirmed) {
+    await operation.cancel();
+    return undefined;
+  }
 
   const credentialPath = credentialFilePath(strategy.language, targetDir, name);
   const credentialDisplay = credentialDisplayPath(strategy.language, name);
@@ -161,6 +181,7 @@ export async function createProjectFromTemplate(
     targetDir,
     envVars: Object.keys(envVars).length > 0 ? envVars : undefined,
   });
+  await operation.complete();
 
   const output: ProjectNewOutput = {
     name,
@@ -203,6 +224,8 @@ export async function createProjectFromTemplate(
   }
 
   if (options.start && strategy.startProject) {
+    await telemetry().flush();
+    throwIfCancelled();
     strategy.startProject(targetDir, name);
   } else {
     strategy.renderNextSteps(name);

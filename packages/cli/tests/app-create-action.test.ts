@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppCreateInput } from '../src/commands/app/create-action.js';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { InMemoryLogRecordExporter } from '@opentelemetry/sdk-logs';
+import { setTelemetry, startTelemetry } from '../src/telemetry/client.js';
+import { TelemetryState } from '../src/telemetry/state.js';
+import { setCancellationSignal } from '../src/utils/cancellation.js';
 
 const mockCreateAadAppViaTdp = vi.fn();
 const mockCreateClientSecret = vi.fn();
@@ -107,6 +114,35 @@ describe('createApp action', () => {
     expect(mockSetSocketMode).not.toHaveBeenCalled();
   });
 
+  it.each(['identity', 'secret', 'app', 'bot'] as const)(
+    'does not create subsequent resources after cancellation during %s creation',
+    async (stage) => {
+      const controller = new AbortController();
+      const restore = setCancellationSignal(controller.signal);
+      const steps = [
+        { stage: 'identity', call: mockCreateAadAppViaTdp, result: { appId: 'client-id' } },
+        { stage: 'secret', call: mockCreateClientSecret, result: { secretText: 'secret-text' } },
+        { stage: 'app', call: mockImportAppPackage, result: { teamsAppId: 'teams-app-id' } },
+        { stage: 'bot', call: mockCreateBot, result: undefined },
+      ];
+      const index = steps.findIndex((step) => step.stage === stage);
+      steps[index].call.mockImplementationOnce(async () => {
+        controller.abort();
+        return steps[index].result;
+      });
+      try {
+        const { createApp } = await import('../src/commands/app/create-action.js');
+        await expect(createApp({ ...baseInput, socketMode: true })).rejects.toMatchObject({
+          name: 'AbortError',
+        });
+        for (const step of steps.slice(index + 1)) expect(step.call).not.toHaveBeenCalled();
+        expect(mockSetSocketMode).not.toHaveBeenCalled();
+      } finally {
+        restore();
+      }
+    }
+  );
+
   it('enables socket mode after registering the bot', async () => {
     mockSetSocketMode.mockResolvedValue({ configuration: {}, changed: true });
     const { createApp } = await import('../src/commands/app/create-action.js');
@@ -176,5 +212,66 @@ describe('createApp action', () => {
     expect(mockCreateAadAppViaTdp).not.toHaveBeenCalled();
     expect(mockImportAppPackage).not.toHaveBeenCalled();
     expect(mockCreateBot).not.toHaveBeenCalled();
+  });
+
+  it('retains a confirmed app link on bot failure without claiming successful registration', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'teams-registration-telemetry-'));
+    const state = new TelemetryState(join(directory, 'state.json'));
+    await state.setEnrollment('on');
+    const exporter = new InMemoryLogRecordExporter();
+    const client = await startTelemetry({
+      state,
+      version: 'test',
+      enabled: true,
+      env: {},
+      exporter: () => exporter,
+    });
+    setTelemetry(client);
+    const teamsAppId = '22222222-2222-4222-8222-222222222222';
+    const botId = '11111111-1111-4111-8111-111111111111';
+    mockImportAppPackage.mockResolvedValue({ teamsAppId });
+    mockCreateAadAppViaTdp.mockResolvedValue({ appId: botId });
+    mockCreateBot.mockRejectedValueOnce(new Error('private service error'));
+    try {
+      const { createApp } = await import('../src/commands/app/create-action.js');
+      await expect(createApp({ ...baseInput, generateSecret: false })).rejects.toThrow(
+        'private service error'
+      );
+      await client.flush();
+      const failed = exporter.getFinishedLogRecords();
+      const links = failed.filter((record) => record.body === 'teams.cli.identity_link');
+      expect(links).toHaveLength(2);
+      expect(
+        links.find((record) => record.attributes.registrationStage === 'identity_created')
+          ?.attributes.clientId
+      ).toBe(botId);
+      expect(
+        links.find((record) => record.attributes.registrationStage === 'app_imported')?.attributes
+          .teamsAppId
+      ).toBe(teamsAppId);
+      expect(links.every((record) => record.attributes.botId === undefined)).toBe(true);
+      expect(
+        failed.find((record) => record.attributes.phase === 'completed')?.attributes.outcome
+      ).toBe('failed');
+      expect(JSON.stringify(failed)).not.toContain('private service error');
+      exporter.reset();
+      await createApp({ ...baseInput, generateSecret: false });
+      await client.flush();
+      expect(
+        exporter
+          .getFinishedLogRecords()
+          .some(
+            (record) =>
+              record.body === 'teams.cli.identity_link' &&
+              record.attributes.botId === botId &&
+              record.attributes.teamsAppId === teamsAppId &&
+              record.attributes.registrationStage === 'bot_registered'
+          )
+      ).toBe(true);
+    } finally {
+      await client.close();
+      setTelemetry(await startTelemetry({ version: 'test', enabled: false }));
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 });

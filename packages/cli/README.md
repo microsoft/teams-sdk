@@ -37,10 +37,11 @@ Use these options for CI and agent workflows:
 
 Set `TEAMS_NO_INTERACTIVE=1` to disable interactive prompts entirely.
 
-## Optional installation telemetry (MVP)
+## Optional usage telemetry
 
 Telemetry is off by default. Production collection is source-gated off pending
-privacy/enrollment approval and sender onboarding, even after opting in.
+privacy/enrollment approval and sender onboarding, even after opting in. An
+environment connection string cannot bypass the release gate or enrollment.
 
 ```bash
 teams config set telemetry on
@@ -48,26 +49,52 @@ teams config set telemetry off
 teams config get telemetry --json
 ```
 
-The MVP observes only best-effort npm `postinstall` executions for previously
-enrolled installations. It does not collect CLI command usage, authentication,
-project/attempt correlation, identity joins, or confirmed install/message/reply
-milestones. A fresh install has no prior consent and sends nothing. After opting
-in, a subsequent install/upgrade or `npm rebuild @microsoft/teams.cli` runs the hook.
-Lifecycle scripts must be enabled.
+When enabled, manual observations cover first CLI use, project scaffolding,
+cached/new login, registration, HTTP/socket configuration, and opening an install
+link. They add the following events to the installation-only MVP:
 
-The only event is `teams.cli.postinstall`: schema/CLI version, OS, random
-installation/invocation IDs, and timestamp. Names, arguments, paths, URLs,
-credentials, raw errors, and machine identity are not included. Consent and the
-installation ID live separately from auth/config in `telemetry-v1.json` in the
-CLI's platform data directory. Opt-out removes that ID; re-enrollment starts a
-new identity. No event queue is persisted. An abandoned `telemetry-v1.json.lock`
-directory can be removed only when no CLI/npm processes are using it.
+- `teams.cli.first_use`: start/completion of the first CLI invocation in an enrollment period.
+- `teams.cli.operation`: paired start/completion, outcome, duration, and bounded failure category.
+- `teams.cli.identity_link`: confirmed identity/app/bot registration stages and known GUIDs.
+
+The existing `teams.cli.postinstall` event remains installation-only and does not
+consume first CLI use. A fresh install has no prior consent and sends nothing.
+After opting in, a subsequent install/upgrade or `npm rebuild @microsoft/teams.cli`
+runs the hook when lifecycle scripts are enabled. Opening an install link does
+not confirm Teams installation. Message/reply and runtime installation milestones
+require service-side data; the CLI does not collect messages or modify SDKs or templates.
+
+All records contain schema/CLI version, OS, random installation/invocation IDs,
+and timestamp. Workflow records add allowlisted language/template, operation
+facts, project-attempt correlation, and confirmed client/bot/app/tenant GUIDs when
+known. They exclude command arguments, names, account names, paths, URLs,
+credentials, raw errors, and machine identity. These IDs are correlation keys,
+not unique-person counts.
+
+Consent, the installation ID, first-use tracking, and project-attempt lookup
+state live separately from auth/config in `telemetry-v1.json` in the CLI's
+platform data directory. MVP enrollment and installation IDs are preserved on
+upgrade. Project paths remain local lookup keys and are never exported. Retries
+and later commands resume the same attempt for the same project, not the most
+recent unrelated project. Opt-out clears correlation state and drops unsent
+records; re-enrollment starts a new identity and first-use period. No event queue
+is persisted. Malformed state fails closed and is never silently replaced. An
+abandoned `telemetry-v1.json.lock` directory can be removed only when no CLI/npm
+processes are using it.
 
 `DO_NOT_TRACK=1` or `TEAMS_CLI_TELEMETRY_OPTOUT=1` veto collection. Hook failures
-are silent and cannot fail installation. Export has a 500 ms budget, with an
-850 ms bootstrap ceiling; slow or interrupted hooks may lose events. The private
-candidate sender has no retries, automatic instrumentation, or background uploader.
+are silent and cannot fail installation. CLI exit flushing is bounded to 500 ms,
+including cancellation/error paths. Postinstall retains its 500 ms budget and
+850 ms bootstrap ceiling; slow or interrupted processes may lose events. The
+shared private candidate sender has no retries, automatic instrumentation, or
+background uploader. Approval of service joins, retention, access, the sender,
+and the Teams-owned destination is still required before production activation.
 Privacy: https://privacy.microsoft.com/privacystatement
+
+Run `npm run test:offline --workspace=@microsoft/teams.cli` from the monorepo root
+for offline regression coverage, including workflow correlation and packaged CLI
+error/signal behavior. Tests use in-memory exporters or loopback fixtures, never
+a live destination; passing tests do not demonstrate Application Insights ingestion.
 
 ### Test npm installation locally
 

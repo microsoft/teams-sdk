@@ -1,19 +1,58 @@
-import { mkdir, readFile, writeFile, rename, unlink, rmdir } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import {
+  mkdir,
+  readFile,
+  writeFile,
+  rename,
+  unlink,
+  rmdir,
+  readdir,
+  realpath,
+} from 'node:fs/promises';
+import { basename, dirname, join, resolve, parse } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { paths } from '../utils/paths.js';
-import { isGuid } from './contract.js';
+import { isGuid, type AttemptOrigin } from './contract.js';
+
+export interface Attempt {
+  target: string;
+  id: string;
+  startedAt: string;
+  origin: AttemptOrigin;
+}
 
 interface StateData {
   version: 1;
   enrollment: 'on' | 'off';
   generation: number;
   installationId?: string;
+  firstUse?: boolean;
+  attempts?: Attempt[];
 }
 
 export interface EnrollmentSession {
   installationId: string;
   generation: number;
+}
+
+export interface CliEnrollmentSession extends EnrollmentSession {
+  firstUse: boolean;
+}
+
+function isAttempt(value: unknown): value is Attempt {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'target' in value &&
+    typeof value.target === 'string' &&
+    'id' in value &&
+    isGuid(value.id) &&
+    'startedAt' in value &&
+    typeof value.startedAt === 'string' &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value.startedAt) &&
+    Number.isFinite(Date.parse(value.startedAt)) &&
+    'origin' in value &&
+    (value.origin === 'project.create' || value.origin === 'registration')
+  );
 }
 
 function isState(value: unknown): value is StateData {
@@ -28,8 +67,22 @@ function isState(value: unknown): value is StateData {
     typeof value.generation === 'number' &&
     Number.isSafeInteger(value.generation) &&
     value.generation >= 0 &&
-    (!('installationId' in value) || isGuid(value.installationId))
+    (!('installationId' in value) || isGuid(value.installationId)) &&
+    (!('firstUse' in value) || typeof value.firstUse === 'boolean') &&
+    (!('attempts' in value) || (Array.isArray(value.attempts) && value.attempts.every(isAttempt)))
   );
+}
+
+async function localTarget(target: string): Promise<string> {
+  const absolute = resolve(target);
+  try {
+    const canonical = await realpath(absolute);
+    return process.platform === 'win32' ? canonical.toLowerCase() : canonical;
+  } catch {
+    if (dirname(absolute) === absolute) return absolute;
+    const canonical = join(await localTarget(dirname(absolute)), basename(absolute));
+    return process.platform === 'win32' ? canonical.toLowerCase() : canonical;
+  }
 }
 
 export class TelemetryState {
@@ -44,6 +97,17 @@ export class TelemetryState {
         enrollment: value.enrollment,
         generation: value.generation,
         ...(value.installationId ? { installationId: value.installationId } : {}),
+        ...(value.firstUse !== undefined ? { firstUse: value.firstUse } : {}),
+        ...(value.attempts
+          ? {
+              attempts: value.attempts.map(({ target, id, startedAt, origin }) => ({
+                target,
+                id,
+                startedAt,
+                origin,
+              })),
+            }
+          : {}),
       };
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
@@ -111,6 +175,8 @@ export class TelemetryState {
       state.enrollment = enrollment;
       state.generation++;
       delete state.installationId;
+      delete state.firstUse;
+      delete state.attempts;
     });
   }
 
@@ -118,8 +184,107 @@ export class TelemetryState {
     if (!allowed() || (await this.enrollment()) !== 'on') return undefined;
     return this.update((state) => {
       if (state.enrollment !== 'on') return undefined;
-      state.installationId ??= randomUUID();
-      return { installationId: state.installationId, generation: state.generation };
+      return this.session(state);
     }, allowed);
+  }
+
+  private session(state: StateData): EnrollmentSession {
+    state.installationId ??= randomUUID();
+    return { installationId: state.installationId, generation: state.generation };
+  }
+
+  async beginCli(allowed: () => boolean = () => true): Promise<CliEnrollmentSession | undefined> {
+    if (!allowed() || (await this.enrollment()) !== 'on') return undefined;
+    return this.update((state) => {
+      if (state.enrollment !== 'on') return undefined;
+      const session = this.session(state);
+      const firstUse = !state.firstUse;
+      state.firstUse = true;
+      return { ...session, firstUse };
+    }, allowed);
+  }
+
+  async attempt(
+    target: string,
+    origin: AttemptOrigin,
+    session?: EnrollmentSession
+  ): Promise<Attempt | undefined> {
+    const canonical = await localTarget(target);
+    return this.update((state) => {
+      if (state.enrollment !== 'on') return undefined;
+      if (
+        session &&
+        (state.installationId !== session.installationId || state.generation !== session.generation)
+      )
+        return undefined;
+      const attempts = (state.attempts ??= []);
+      let attempt = attempts.find((item) => item.target === canonical);
+      if (!attempt) {
+        if (attempts.length >= 1000) return undefined;
+        attempt = {
+          target: canonical,
+          id: randomUUID(),
+          startedAt: new Date().toISOString(),
+          origin,
+        };
+        attempts.push(attempt);
+      }
+      return attempt;
+    });
+  }
+
+  async resolveAttempt(start: string = process.cwd()): Promise<Attempt | undefined> {
+    const state = await this.read();
+    if (state?.enrollment !== 'on') return undefined;
+    let directory = await localTarget(start);
+    while (true) {
+      const known = state.attempts?.find((item) => item.target === directory);
+      if (known) return known;
+      try {
+        const files = await readdir(directory);
+        if (files.some((file) => file.endsWith('.csproj'))) {
+          const parent = state.attempts?.find((item) => item.target === dirname(directory));
+          if (parent && (await readdir(parent.target)).some((file) => file.endsWith('.sln')))
+            return parent;
+        }
+        if (
+          files.some(
+            (file) =>
+              file === 'package.json' ||
+              file === 'pyproject.toml' ||
+              file.endsWith('.csproj') ||
+              file.endsWith('.sln')
+          )
+        )
+          return undefined;
+      } catch {
+        /* The target may not exist yet. */
+      }
+      if (directory === parse(directory).root) return undefined;
+      directory = dirname(directory);
+    }
+  }
+
+  async projectTarget(start: string = process.cwd()): Promise<string | undefined> {
+    let directory = await localTarget(start);
+    while (true) {
+      try {
+        const files = await readdir(directory);
+        if (
+          files.some(
+            (file) =>
+              file === 'package.json' ||
+              file === 'pyproject.toml' ||
+              file.endsWith('.csproj') ||
+              file.endsWith('.sln')
+          )
+        )
+          return directory;
+      } catch {
+        /* Keep looking for the containing project. */
+      }
+      if (directory === parse(directory).root) return undefined;
+      directory = dirname(directory);
+    }
   }
 }

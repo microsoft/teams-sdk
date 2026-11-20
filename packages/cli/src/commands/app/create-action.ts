@@ -17,6 +17,8 @@ import {
 import { getAccount, getTokenSilent, graphScopes, teamsDevPortalScopes } from '../../auth/index.js';
 import type { EnvValues } from '../../utils/env.js';
 import { CliError } from '../../utils/errors.js';
+import { telemetry, type TelemetryOperation } from '../../telemetry/client.js';
+import { throwIfCancelled } from '../../utils/cancellation.js';
 
 export type AppCreateSignInAudience = 'AzureADMyOrg' | 'AzureADMultipleOrgs';
 
@@ -69,6 +71,19 @@ export async function createApp(
   input: AppCreateInput,
   progress?: AppCreateProgress
 ): Promise<AppCreateResult> {
+  return telemetry().run(
+    'app.register',
+    {},
+    async (operation) => createAppResources(input, operation, progress),
+    { target: process.cwd(), origin: 'registration' }
+  );
+}
+
+async function createAppResources(
+  input: AppCreateInput,
+  operation: TelemetryOperation,
+  progress?: AppCreateProgress
+): Promise<AppCreateResult> {
   if (input.botLocation === 'azure' && !input.azureContext) {
     throw new CliError(
       'VALIDATION_MISSING',
@@ -82,6 +97,7 @@ export async function createApp(
   if (!account) {
     throw new CliError('AUTH_REQUIRED', 'Not logged in.', 'Run `teams login` first.');
   }
+  operation.update({ tenantId: account.tenantId });
 
   let graphToken: string | null | undefined;
   if (input.generateSecret) {
@@ -99,20 +115,18 @@ export async function createApp(
   const tdpToken = await getTokenSilent(teamsDevPortalScopes);
   if (!tdpToken) {
     progress?.error('Failed to get TDP token');
-    throw new CliError(
-      'AUTH_TOKEN_FAILED',
-      'Failed to get TDP token.',
-      'Try `teams login` again.'
-    );
+    throw new CliError('AUTH_TOKEN_FAILED', 'Failed to get TDP token.', 'Try `teams login` again.');
   }
   progress?.success('Tokens acquired');
 
+  throwIfCancelled();
   progress?.start('Creating Azure AD app...');
   const aadApp = await createAadAppViaTdp(tdpToken, input.name, {
     serviceManagementReference: input.serviceManagementReference,
     signInAudience: input.signInAudience,
   });
   const clientId = aadApp.appId;
+  operation.link({ clientId, tenantId: account.tenantId, registrationStage: 'identity_created' });
   progress?.success(`Created Azure AD app (${clientId})`);
 
   const manifestOpts: ManifestOptions = {
@@ -153,22 +167,56 @@ export async function createApp(
         'Try again shortly.'
       );
     }
+    throwIfCancelled();
     const secret = await createClientSecret(graphToken!, graphApp.id);
     secretText = secret.secretText;
     progress?.success('Generated client secret');
   }
 
+  throwIfCancelled();
   progress?.start('Creating Teams app...');
   const importedApp = await importAppPackage(tdpToken, zipBuffer);
   const teamsAppId = importedApp.teamsAppId;
+  operation.link({
+    clientId,
+    teamsAppId,
+    tenantId: account.tenantId,
+    registrationStage: 'app_imported',
+  });
   progress?.success(`Created Teams app (${teamsAppId})`);
 
+  throwIfCancelled();
   progress?.start('Registering bot...');
   const handler =
     input.botLocation === 'tm'
       ? createTdpBotHandler(tdpToken)
       : createAzureBotHandler(input.azureContext!);
-  await handler.createBot({ botId: clientId, name: input.name, endpoint: input.endpoint });
+  const createBot = async (): Promise<void> => {
+    await handler.createBot({ botId: clientId, name: input.name, endpoint: input.endpoint });
+  };
+  if (input.endpoint) {
+    await telemetry().run(
+      'app.configure',
+      {
+        botId: clientId,
+        teamsAppId,
+        transport: 'http',
+        endpointConfigured: true,
+      },
+      createBot
+    );
+  } else {
+    await createBot();
+  }
+  operation.link({
+    clientId,
+    botId: clientId,
+    teamsAppId,
+    tenantId: account.tenantId,
+    registrationStage: 'bot_registered',
+  });
+  await operation.complete();
+  throwIfCancelled();
   progress?.success('Bot registered');
 
   let socketMode = false;

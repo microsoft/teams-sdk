@@ -1,6 +1,9 @@
 import pc from 'picocolors';
 import { outputJson } from './json-output.js';
 import { logger } from './logger.js';
+import { telemetry } from '../telemetry/client.js';
+import { stopSpinners } from './spinner.js';
+import { getCancellationSignal } from './cancellation.js';
 
 export type ErrorCode =
   // Auth
@@ -52,7 +55,7 @@ export class CliError extends Error {
  * JSON mode: structured JSON to stdout.
  * Human mode: colored text (preserves existing behavior).
  */
-export function handleError(error: unknown, json: boolean): never {
+export async function handleError(error: unknown, json: boolean): Promise<never> {
   if (error instanceof CliError) {
     if (json) {
       outputJson({
@@ -80,6 +83,7 @@ export function handleError(error: unknown, json: boolean): never {
       logger.error(pc.red(message));
     }
   }
+  await telemetry().close('failed');
   process.exit(1);
 }
 
@@ -95,7 +99,10 @@ export function wrapAction<T extends ActionFn>(fn: T): T {
     try {
       await fn(...args);
     } catch (error) {
+      stopSpinners();
+      if (getCancellationSignal()?.aborted) return;
       if (error instanceof Error && error.name === 'ExitPromptError') {
+        await telemetry().close('cancelled');
         process.exit(0);
       }
 
@@ -108,7 +115,7 @@ export function wrapAction<T extends ActionFn>(fn: T): T {
         }
       }
 
-      handleError(error, json);
+      await handleError(error, json);
     }
   };
   return wrapped as unknown as T;

@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { platform } from 'node:os';
 import { logger } from './logger.js';
 import { CliError } from './errors.js';
+import { getCancellationSignal } from './cancellation.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -19,9 +20,14 @@ const AZ_ARGS_PREFIX = IS_WINDOWS ? ['/c', 'az.cmd'] : [];
  * On Unix: az <args>
  */
 async function execAz(args: string[]): Promise<{ stdout: string }> {
-  return execFileAsync(AZ_COMMAND, [...AZ_ARGS_PREFIX, ...args], {
+  const signal = getCancellationSignal();
+  signal?.throwIfAborted();
+  const result = await execFileAsync(AZ_COMMAND, [...AZ_ARGS_PREFIX, ...args], {
     encoding: 'utf-8',
+    ...(signal ? { signal } : {}),
   });
+  signal?.throwIfAborted();
+  return result;
 }
 
 export async function isAzInstalled(): Promise<boolean> {

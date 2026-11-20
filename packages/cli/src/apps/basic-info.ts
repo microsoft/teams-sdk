@@ -1,6 +1,6 @@
 import { select, input } from '@inquirer/prompts';
 import pc from 'picocolors';
-import { createSpinner } from 'nanospinner';
+import { createSilentSpinner } from '../utils/spinner.js';
 import type { AppDetails } from './types.js';
 import { updateAppDetails } from './api.js';
 import { logVersionBumpReinstallHint } from './reinstall-hint.js';
@@ -105,7 +105,7 @@ async function editField(
     return null;
   }
 
-  const spinner = createSpinner('Updating...').start();
+  const spinner = createSilentSpinner('Updating...').start();
   try {
     const updated = await updateAppDetails(token, appDetails.teamsAppId, {
       [fieldKey]: newValue.trim(),

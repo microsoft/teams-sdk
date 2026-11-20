@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { createSpinner } from 'nanospinner';
+import { createSilentSpinner } from '../../utils/spinner.js';
 import { logout, getAccount } from '../../auth/index.js';
 import { logger } from '../../utils/logger.js';
 
@@ -13,7 +13,7 @@ export const logoutCommand = new Command('logout')
       return;
     }
 
-    const spinner = createSpinner('Logging out...').start();
+    const spinner = createSilentSpinner('Logging out...').start();
     await logout();
     spinner.success({ text: `Logged out of ${account.username}` });
   });

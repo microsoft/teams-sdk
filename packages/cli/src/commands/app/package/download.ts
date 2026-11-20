@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
 import { writeFile } from 'node:fs/promises';
-import { createSpinner } from 'nanospinner';
+import { createSilentSpinner } from '../../../utils/spinner.js';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../../../auth/index.js';
 import { fetchApp, downloadAppPackage } from '../../../apps/index.js';
 import { pickApp } from '../../../utils/app-picker.js';
@@ -41,7 +41,7 @@ export const packageDownloadCommand = new Command('download')
       const app = await fetchApp(token, appId);
       const outputPath = options.output || `${(app.appName || app.appId).replace(/\s+/g, '-')}.zip`;
 
-      const spinner = createSpinner('Downloading package...').start();
+      const spinner = createSilentSpinner('Downloading package...').start();
       const packageBuffer = await downloadAppPackage(token, app.appId);
       spinner.stop();
 

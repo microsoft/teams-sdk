@@ -275,7 +275,8 @@ export const botMigrateCommand = new Command('migrate')
             logger.error(pc.cyan(`  teams app create --name "${botName}" --teams-managed`));
           }
         }
-        process.exit(1);
+        process.exitCode = 1;
+        return;
       }
 
       if (options.json) {

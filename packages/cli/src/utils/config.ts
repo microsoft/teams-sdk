@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { paths } from './paths.js';
 import { TelemetryState } from '../telemetry/state.js';
+import { telemetry } from '../telemetry/client.js';
 import { CliError } from './errors.js';
 
 const CONFIG_FILE = join(paths.config, 'config.json');
@@ -11,8 +12,7 @@ type Config = Record<string, string>;
 const KNOWN_KEYS: Record<string, { values: string[]; description: string }> = {
   telemetry: {
     values: ['on', 'off'],
-    description:
-      'Optional npm postinstall telemetry (collection disabled pending release approval)',
+    description: 'Optional CLI usage telemetry (collection disabled pending release approval)',
   },
   'default-bot-location': {
     values: ['tm', 'azure'],
@@ -44,6 +44,7 @@ export async function setConfig(key: string, value: string): Promise<void> {
   if (key === 'telemetry') {
     if (value !== 'on' && value !== 'off')
       throw new CliError('VALIDATION_FORMAT', 'Telemetry must be on or off');
+    if (value === 'off') telemetry().abort();
     await new TelemetryState().setEnrollment(value);
     return;
   }

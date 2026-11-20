@@ -77,6 +77,6 @@ export const selfUpdateCommand = new Command('self-update')
   .option('--force', '[OPTIONAL] Run update even when the current version is already up to date')
   .action(async (options: SelfUpdateOptions) => {
     if (!(await runSelfUpdate(options))) {
-      process.exit(1);
+      process.exitCode = 1;
     }
   });

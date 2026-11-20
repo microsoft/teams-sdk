@@ -62,6 +62,7 @@ vi.mock('../src/auth/index.js', () => ({
 }));
 
 vi.mock('../src/utils/spinner.js', () => ({
+  stopSpinners: vi.fn(),
   createSilentSpinner: () => ({
     start: vi.fn().mockReturnThis(),
     stop: vi.fn(),

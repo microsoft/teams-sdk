@@ -10,6 +10,7 @@ import { createCachePlugin } from './cache.js';
 import { logger } from '../utils/logger.js';
 import { openInBrowser } from '../utils/browser.js';
 import { isInteractive, isLocalSession } from '../utils/interactive.js';
+import { telemetry } from '../telemetry/client.js';
 
 let msalClient: PublicClientApplication | null = null;
 
@@ -45,18 +46,20 @@ export interface LoginOptions {
 }
 
 export async function login(options?: LoginOptions): Promise<AccountInfo> {
-  const client = await getMsalClient();
-
   const useBrowser = !options?.forceDeviceCode && isInteractive() && isLocalSession();
-  const result = useBrowser
-    ? await loginInteractive(client)
-    : await loginDeviceCode(client);
-
-  if (!result?.account) {
-    throw new Error('Login failed: no account returned');
-  }
-
-  return result.account;
+  return telemetry().run(
+    'auth.login',
+    { authMode: useBrowser ? 'browser' : 'device_code' },
+    async (operation) => {
+      operation.update({ authMode: useBrowser ? 'browser' : 'device_code' });
+      const client = await getMsalClient();
+      const result = useBrowser ? await loginInteractive(client) : await loginDeviceCode(client);
+      if (!result?.account) throw new Error('Login failed: no account returned');
+      operation.update({ tenantId: result.account.tenantId });
+      await operation.complete();
+      return result.account;
+    }
+  );
 }
 
 async function loginInteractive(client: PublicClientApplication): Promise<AuthenticationResult> {

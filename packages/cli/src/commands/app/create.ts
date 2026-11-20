@@ -1,5 +1,7 @@
 import { input, select } from '@inquirer/prompts';
 import { Command } from 'commander';
+import { dirname } from 'node:path';
+import { telemetry, type TelemetryOperation } from '../../telemetry/client.js';
 import pc from 'picocolors';
 import {
   type BotScope,
@@ -103,7 +105,31 @@ export async function runAppCreate(
   options: CreateOptions,
   runOptions: AppCreateRunOptions = {}
 ): Promise<AppCreateOutput | undefined> {
+  const credentialsPath = options.envFile ?? options.env;
+  return telemetry().run(
+    'app.register',
+    {},
+    async (operation) => runAppCreateOperation(options, runOptions, operation),
+    {
+      target: credentialsPath ? dirname(credentialsPath) : process.cwd(),
+      origin: 'registration',
+      explicit: !!credentialsPath,
+      defer: !credentialsPath,
+    }
+  );
+}
+
+async function runAppCreateOperation(
+  options: CreateOptions,
+  runOptions: AppCreateRunOptions,
+  operation: TelemetryOperation
+): Promise<AppCreateOutput | undefined> {
   const prepared = await prepareAppCreate(options, runOptions);
+  await operation.bindTarget({
+    target: prepared.envPath ? dirname(prepared.envPath) : process.cwd(),
+    origin: 'registration',
+    explicit: !!prepared.envPath,
+  });
 
   if (isInteractive() && !prepared.silent) {
     logger.info('');
@@ -114,6 +140,7 @@ export async function runAppCreate(
   }
 
   if (!(await confirmAction('Confirm creation?', prepared.silent))) {
+    await operation.cancel();
     return undefined;
   }
 

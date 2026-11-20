@@ -1,12 +1,13 @@
 import { search } from '@inquirer/prompts';
 import pc from 'picocolors';
-import { createSpinner } from 'nanospinner';
+import { createSilentSpinner } from './spinner.js';
 import { getAccount, getTokenSilent, teamsDevPortalScopes } from '../auth/index.js';
 import { fetchApps } from '../apps/index.js';
 import type { AppSummary } from '../apps/types.js';
 import { isInteractive } from './interactive.js';
 import { CliError } from './errors.js';
 import { logger } from './logger.js';
+import { telemetry } from '../telemetry/client.js';
 
 export interface PickAppResult {
   app: AppSummary;
@@ -37,7 +38,7 @@ export async function pickApp(): Promise<PickAppResult> {
     throw new CliError('AUTH_TOKEN_FAILED', 'Failed to get token.', 'Try `teams login` again.');
   }
 
-  const spinner = createSpinner('Fetching apps...').start();
+  const spinner = createSilentSpinner('Fetching apps...').start();
   let apps: AppSummary[];
   try {
     apps = await fetchApps(token);
@@ -52,6 +53,7 @@ export async function pickApp(): Promise<PickAppResult> {
 
   if (apps.length === 0) {
     logger.info(pc.dim('No apps found.'));
+    await telemetry().close();
     process.exit(0);
   }
 
@@ -74,6 +76,7 @@ export async function pickApp(): Promise<PickAppResult> {
     return { app, token };
   } catch (error) {
     if (error instanceof Error && error.name === 'ExitPromptError') {
+      await telemetry().close('cancelled');
       process.exit(0);
     }
     throw error;

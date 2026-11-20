@@ -4,6 +4,7 @@ import { pascalCase } from 'change-case';
 import { templatesDir } from './paths.js';
 import { copyDir, type CopyContext } from './copy.js';
 import { setJsonValue, setEnvVar } from './file-ops.js';
+import { telemetry } from '../telemetry/client.js';
 
 export type ProjectLanguage = 'typescript' | 'csharp' | 'python';
 
@@ -28,6 +29,15 @@ export function listTemplates(language: ProjectLanguage): string[] {
  * Create a new project from a template.
  */
 export async function scaffoldProject(opts: ScaffoldOptions): Promise<void> {
+  return telemetry().run(
+    'project.create',
+    { language: opts.language, template: opts.template },
+    async () => scaffoldProjectFiles(opts),
+    { target: opts.targetDir, origin: 'project.create' }
+  );
+}
+
+async function scaffoldProjectFiles(opts: ScaffoldOptions): Promise<void> {
   const { name, language, template, targetDir, envVars } = opts;
   const templateDir = path.join(templatesDir, language, template);
 

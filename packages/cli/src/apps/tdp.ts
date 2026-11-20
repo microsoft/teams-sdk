@@ -4,6 +4,7 @@ import { invalidateAppDetails } from './app-details-cache.js';
 import { getCachedBot, setCachedBot, invalidateBot, type BotResource } from './bot-cache.js';
 import { logger } from '../utils/logger.js';
 import { TDP_BASE_URL, TDP_V2_BASE_URL } from '../utils/tdp-host.js';
+import { telemetry } from '../telemetry/client.js';
 
 export type SignInAudience = 'AzureADMyOrg' | 'AzureADMultipleOrgs';
 
@@ -262,6 +263,18 @@ export async function setMeetingSubscription(
 }
 
 export async function updateBot(token: string, bot: BotDetails): Promise<void> {
+  return telemetry().run(
+    'app.configure',
+    {
+      botId: bot.botId,
+      transport: 'http',
+      endpointConfigured: !!bot.messagingEndpoint,
+    },
+    async () => updateBotConfiguration(token, bot)
+  );
+}
+
+async function updateBotConfiguration(token: string, bot: BotDetails): Promise<void> {
   const response = await apiFetch(`${TDP_BASE_URL}/botframework/${bot.botId}`, {
     method: 'POST',
     headers: {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
-import { program, Command } from 'commander';
+import { program, Command, CommanderError } from 'commander';
 import { loginCommand, logoutCommand } from './commands/auth/index.js';
 import { statusCommand } from './commands/status.js';
 import { feedbackCommand } from './commands/feedback.js';
@@ -14,20 +14,31 @@ import { logger, setVerbose } from './utils/logger.js';
 import { isInteractive, setAutoConfirm } from './utils/interactive.js';
 import { checkForUpdates } from './utils/update-check.js';
 import pc from 'picocolors';
+import { startTelemetry, setTelemetry, telemetry } from './telemetry/client.js';
+import type { Outcome } from './telemetry/contract.js';
+import { installTelemetrySignalHandlers } from './telemetry/signals.js';
+import { stopSpinners } from './utils/spinner.js';
+import { getCancellationSignal } from './utils/cancellation.js';
 
 // Safety net: catch CliError thrown from shared utilities in non-wrapped commands
-process.on('unhandledRejection', (error) => {
+process.on('unhandledRejection', async (error) => {
+  stopSpinners();
+  if (getCancellationSignal()?.aborted) {
+    await telemetry().close('cancelled');
+    return;
+  }
   if (error instanceof CliError) {
     logger.error(pc.red(error.message));
     if (error.suggestion) logger.error(error.suggestion);
   } else {
     logger.error(pc.red(error instanceof Error ? error.message : 'Unknown error'));
   }
+  await telemetry().close('failed');
   process.exit(1);
 });
 
 const require = createRequire(import.meta.url);
-const { version } = require('../package.json');
+const { version }: { version: string } = require('../package.json');
 
 // Teams brand purple (#7B83EB) via truecolor escape
 function teamsColor(text: string): string {
@@ -46,7 +57,7 @@ program
   .helpOption('-h, --help', 'Display help (use with --json for structured output)')
   .addHelpText('after', () => {
     const status = isInteractive() ? pc.green('on') : pc.yellow('off');
-    return `\nInteractive mode: ${status}\n  Set ${pc.cyan('TEAMS_NO_INTERACTIVE=1')} to disable, unset to enable.`;
+    return `\nInteractive mode: ${status}\n  Set ${pc.cyan('TEAMS_NO_INTERACTIVE=1')} to disable, unset to enable.\n\nOptional usage telemetry: off by default; collection disabled pending release approval.\n  Manage your choice with ${pc.cyan('teams config set telemetry on|off')}.\n  Privacy: https://privacy.microsoft.com/privacystatement`;
   })
   .hook('preAction', async (thisCommand, actionCommand) => {
     const opts = thisCommand.optsWithGlobals();
@@ -87,6 +98,34 @@ const newRedirect = new Command('new')
   });
 program.addCommand(newRedirect);
 
-if (!handleJsonHelp(program, version)) {
-  program.parse();
+function overrideExits(command: Command): void {
+  command.exitOverride();
+  for (const child of command.commands) overrideExits(child);
+}
+
+setTelemetry(await startTelemetry({ version }));
+overrideExits(program);
+let outcome: Outcome = 'succeeded';
+const disposeSignals = installTelemetrySignalHandlers(telemetry(), () => {
+  outcome = 'cancelled';
+});
+try {
+  if (!handleJsonHelp(program, version)) await program.parseAsync();
+  if (process.exitCode) outcome = 'failed';
+} catch (error) {
+  stopSpinners();
+  if (getCancellationSignal()?.aborted) {
+    outcome = 'cancelled';
+  } else if (error instanceof CommanderError) {
+    process.exitCode = error.exitCode;
+    if (error.exitCode !== 0) outcome = 'failed';
+  } else {
+    outcome = 'failed';
+    logger.error(pc.red(error instanceof Error ? error.message : 'Unknown error'));
+    if (error instanceof CliError && error.suggestion) logger.error(error.suggestion);
+    process.exitCode = 1;
+  }
+} finally {
+  await telemetry().close(outcome);
+  disposeSignals();
 }
