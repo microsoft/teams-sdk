@@ -356,7 +356,7 @@ app.OnMessage(async (context, cancellationToken) =>
 ```
 
   </TabItem>
-  <TabItem value="core" label="SDK 2.2" default>
+  <TabItem value="core" label="SDK 2.3" default>
 
 ```csharp
 teams.OnMessage(async (context, cancellationToken) =>
