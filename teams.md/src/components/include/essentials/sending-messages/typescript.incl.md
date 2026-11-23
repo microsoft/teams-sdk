@@ -99,7 +99,7 @@ An error from the first chunk is logged, and `stream.emit()` does not throw it.
 
 `stream` in a handler is created with this placement already applied.
 The `StreamOptions` type, with `replyChain: { chatOrChannelId, replyChainId }`, is what `IActivitySender.createStream(ref, options)` accepts when you implement a custom sender, and it is experimental.
-The stream falls back to the inbound conversation on a 404 only when `ref.conversation.conversationType` is `channel`.
+The stream falls back to the legacy channel threading endpoint on a 404 only when `ref.conversation.conversationType` is `channel`.
 
 <!-- mention-method-name -->
 
@@ -172,21 +172,41 @@ await app.send(conversationId, publicMessage);
 app.on('message', async ({ send, reply }) => {
   // Send reactively without quoting.
   // In a channel, sends in the same thread.
-  // In a 1:1 chat, matches the level of the inbound message.
+  // In a chat, matches the level of the inbound message.
   await send('Acknowledged');
 
-  // Send a reactive, quoted reply.
+  // Reply, quoting the inbound message.
   // In a channel, sends in the same thread.
-  // In a 1:1 chat, matches the level of the inbound message.
+  // In a chat, starts a thread under a top-level message, or stays in the thread.
   await reply('Got it!');
 });
 ```
+
+<!-- reply-modes-example -->
+
+```typescript
+// App-wide reply mode, used by every reply that does not pass its own.
+const app = new App({ activity: { replyMode: 'thread' } });
+
+app.on('message', async ({ reply }) => {
+  // Overrides the app setting for this reply only.
+  await reply('Got it!', { replyMode: 'quote' });
+});
+```
+
+| Mode | In a chat | Quote |
+|---|---|---|
+| `combined` (default) | A reply to a top-level message starts a thread under it; a reply inside a thread stays in that thread | Yes |
+| `thread` | Same as `combined` | No |
+| `quote` | The reply stays at the level of the inbound message | Yes |
+
+To match replies to the level of the inbound message, set the mode to `quote`.
 
 <!-- threading-experimental-note -->
 
 The reply chain types and operations are marked `@experimental` (diagnostic `ExperimentalTeamsThreading`) in the API reference.
 The marker is documentation only, with no compiler or runtime warning.
-It covers `channelData.chat`, `channelData.replyChain` and `channelData.source`, `api.conversations.createReplyChainActivity` and `createTargetedReplyChainActivity` (and `createReplyChain` and `createTargetedReplyChain` on `ConversationActivityClient`), `ActivitySenderOptions.replyChainId` and `StreamOptions`.
+It covers `channelData.chat`, `channelData.replyChain` and `channelData.source`, `api.conversations.createReplyChainActivity` and `createTargetedReplyChainActivity` (and `createReplyChain` and `createTargetedReplyChain` on `ConversationActivityClient`), `ActivitySenderOptions.replyChainId`, `StreamOptions`, and the reply mode types `ReplyMode`, `ReplyOptions` and `AppActivityOptions.replyMode`.
 `send`, `reply` and `app.reply` are not marked.
 
 <!-- quoted-replies-receive-example -->

@@ -31,26 +31,28 @@ When sending targeted messages proactively, you must explicitly specify the reci
 
 ## Proactive Threading
 
-The SDK sends messages into reply chains (threads) in channels and 1:1 chats.
+The SDK sends messages into reply chains (threads) in channels and chats.
 Whether a thread is shown depends on the service and the Teams client.
-The SDK sends a response from a handler through the reply chain route only when `channelData.replyChain.id` is present on the inbound activity.
-With no `replyChain`, the SDK skips that route and sends to the inbound conversation.
-In a channel, the suffix of that conversation id can still keep the response in the thread.
+Threading needs `channelData.replyChain.id` on the inbound activity, plus `channelData.chat.id` in a chat or `channelData.channel.id` in a channel.
+Without them (e.g. in a meeting), the SDK sends to the same conversation the inbound activity came from.
+In a channel, that conversation can still be the thread of the inbound message.
 
 In this guide, top-level means a message in the main chat or channel conversation, and in-thread means a message in a reply chain (thread).
 
 The `app` methods take explicit ids, so they work outside a handler.
-Given the id of the chat or channel (`channelData.chat.id` or `channelData.channel.id`), in 1:1 chats and channels they place the message as follows:
+Given the id of the chat or channel (`channelData.chat.id` or `channelData.channel.id`), in chats and channels they place the message as follows:
 
-| Method | 1:1 chat | Channel |
+| Method | Chat | Channel |
 |---|---|---|
 | <LanguageInclude content={{"typescript": "`app.send()`", "python": "`app.send()`", "csharp": "`app.SendAsync()`"}} /> | Top-level | Top-level |
 | <LanguageInclude content={{"typescript": "`app.reply()`", "python": "`app.reply()`", "csharp": "`app.ReplyAsync()`"}} /> | In-thread | In-thread |
 
 To proactively send a message as a reply in a thread, use <LanguageInclude section="app-reply-method-name" /> with the id of the chat or channel and the id of the top-level message of the thread.
+It needs no inbound activity, so it suits replies sent later (e.g. when a long task finishes), and it never quotes.
+Inside a handler, <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} /> also starts a thread under a top-level message by default; see [Reply modes](../sending-messages#reply-modes).
 Take the ids from `channelData` on the inbound activity:
 
-- **Chat id:** `channelData.chat.id`, in a 1:1 chat.
+- **Chat id:** `channelData.chat.id`, in a chat.
 - **Channel id:** `channelData.channel.id`, in a channel.
 - **Reply chain id:** `channelData.replyChain.id`, the id of the top-level message of the thread.
   - A `replyChain.id` that matches the message's own <LanguageInclude content={{"typescript": "`activity.id`", "python": "`activity.id`", "csharp": "`activity.Id`"}} /> indicates a top-level post.

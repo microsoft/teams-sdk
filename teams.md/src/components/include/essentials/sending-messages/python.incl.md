@@ -175,21 +175,41 @@ await app.send(conversation_id, public_message)
 async def handle_message(ctx: ActivityContext[MessageActivity]):
     # Send reactively without quoting.
     # In a channel, sends in the same thread.
-    # In a 1:1 chat, matches the level of the inbound message.
+    # In a chat, matches the level of the inbound message.
     await ctx.send("Acknowledged")
 
-    # Send a reactive, quoted reply.
+    # Reply, quoting the inbound message.
     # In a channel, sends in the same thread.
-    # In a 1:1 chat, matches the level of the inbound message.
+    # In a chat, starts a thread under a top-level message, or stays in the thread.
     await ctx.reply("Got it!")
 ```
+
+<!-- reply-modes-example -->
+
+```python
+# App-wide reply mode, used by every reply that does not pass its own.
+app = App(reply_mode="thread")
+
+@app.on_message
+async def handle_message(ctx: ActivityContext[MessageActivity]):
+    # Overrides the app setting for this reply only.
+    await ctx.reply("Got it!", reply_mode="quote")
+```
+
+| Mode | In a chat | Quote |
+|---|---|---|
+| `combined` (default) | A reply to a top-level message starts a thread under it; a reply inside a thread stays in that thread | Yes |
+| `thread` | Same as `combined` | No |
+| `quote` | The reply stays at the level of the inbound message | Yes |
+
+To match replies to the level of the inbound message, set the mode to `quote`.
 
 <!-- threading-experimental-note -->
 
 The reply chain types and operations are marked with `Diagnostic: ExperimentalTeamsThreading` in their docstrings.
 The marker is documentation only for the types, with no runtime warning.
 The two client methods `create_reply_chain_activity` and `create_targeted_reply_chain_activity` are also decorated with `@experimental`, so calling them directly emits an `ExperimentalWarning`.
-The marker covers `channel_data.chat`, `channel_data.reply_chain` and `channel_data.source`, those two methods, `StreamOptions` and `StreamReplyChain`.
+The marker covers `channel_data.chat`, `channel_data.reply_chain` and `channel_data.source`, those two methods, `StreamOptions`, `StreamReplyChain`, and the reply mode type `ReplyMode` and `AppOptions.reply_mode`.
 `send`, `reply` and `app.reply` are not marked and do not warn.
 
 <!-- reactions-preview-note -->

@@ -363,12 +363,12 @@ teams.OnMessage(async (context, cancellationToken) =>
 {
     // Send reactively without quoting.
     // In a channel, sends in the same thread.
-    // In a 1:1 chat, matches the level of the inbound message.
+    // In a chat, matches the level of the inbound message.
     await context.SendAsync("Acknowledged", cancellationToken);
 
-    // Send a reactive, quoted reply.
+    // Reply, quoting the inbound message.
     // In a channel, sends in the same thread.
-    // In a 1:1 chat, matches the level of the inbound message.
+    // In a chat, starts a thread under a top-level message, or stays in the thread.
     await context.ReplyAsync("Got it!", cancellationToken);
 });
 ```
@@ -376,11 +376,32 @@ teams.OnMessage(async (context, cancellationToken) =>
   </TabItem>
 </Tabs>
 
+<!-- reply-modes-example -->
+
+```csharp
+// App-wide reply mode, used by every reply that does not pass its own.
+webAppBuilder.Services.AddTeamsBotApplication(options => options.ReplyMode = ReplyMode.Thread);
+
+teams.OnMessage(async (context, cancellationToken) =>
+{
+    // Overrides the app setting for this reply only.
+    await context.ReplyAsync("Got it!", new ReplyOptions { Mode = ReplyMode.Quote }, cancellationToken);
+});
+```
+
+| Mode | In a chat | Quote |
+|---|---|---|
+| `ReplyMode.Combined` (default) | A reply to a top-level message starts a thread under it; a reply inside a thread stays in that thread | Yes |
+| `ReplyMode.Thread` | Same as `ReplyMode.Combined` | No |
+| `ReplyMode.Quote` | The reply stays at the level of the inbound message | Yes |
+
+To match replies to the level of the inbound message, set the mode to `ReplyMode.Quote`.
+
 <!-- threading-experimental-note -->
 
 The reply chain operations on the clients, `ConversationApiClient.CreateReplyChainActivityAsync` and `CreateTargetedReplyChainActivityAsync`, and the core client's `SendReplyChainActivityAsync`, carry `[Experimental("ExperimentalTeamsThreading")]`.
 Calling them directly raises the compiler diagnostic `ExperimentalTeamsThreading` until you suppress it, for example with `#pragma warning disable ExperimentalTeamsThreading`.
-`TeamsChannelData.Chat` and `TeamsChannelData.ReplyChain` (`ChatInfo`, `ReplyChainInfo`) are marked in the XML documentation only.
+`TeamsChannelData.Chat` and `TeamsChannelData.ReplyChain` (`ChatInfo`, `ReplyChainInfo`), and the reply mode types `ReplyMode`, `ReplyOptions` and `TeamsBotApplicationOptions.ReplyMode`, are marked in the XML documentation only.
 `SendAsync`, `ReplyAsync` and `app.ReplyAsync` are not marked.
 
 <!-- quoted-replies-receive-example -->
