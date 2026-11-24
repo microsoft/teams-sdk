@@ -1,6 +1,7 @@
 import type { AccountInfo } from '@azure/msal-node';
 import {
   addInheritableResourcePermissions,
+  findDelegatedPermissionGrant,
   getServicePrincipalById,
   grantDelegatedPermissions,
   listDelegatedPermissionGrants,
@@ -65,7 +66,6 @@ export interface BlueprintPermissionEntry {
   resourceAppId: string;
   resourceAppName: string;
   kind: string;
-  scopes: string[];
   /** Requested scopes that were already absent (no-op), only set when non-empty. */
   alreadyAbsent?: string[];
 }
@@ -195,9 +195,6 @@ export async function addBlueprintPermissions(
     if (inheritable) {
       assertMutableInheritableEntry(existing, resourceAppId);
     }
-    const inheritableScopes = inheritable
-      ? [...new Set([...currentEnumeratedScopes(existing, resourceAppId), ...scopes])]
-      : currentEnumeratedScopes(existing, resourceAppId);
 
     await withAgentSpinner(
       {
@@ -221,7 +218,7 @@ export async function addBlueprintPermissions(
       );
     }
 
-    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes: inheritableScopes };
+    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated' };
   } catch (error) {
     if (error instanceof CliError) throw error;
     throw new CliError('AGENT_BLUEPRINT_PERMISSIONS_FAILED', error instanceof Error ? error.message : String(error));
@@ -248,8 +245,14 @@ export async function removeBlueprintPermissions(
 
     const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
     assertMutableInheritableEntry(existing, resourceAppId);
-    const currentScopes = currentEnumeratedScopes(existing, resourceAppId);
-    const remaining = currentScopes.filter((s) => !scopes.includes(s));
+    const inheritableScopes = currentEnumeratedScopes(existing, resourceAppId);
+    // A scope directly granted with --no-inheritable has no entry here, so
+    // "already absent" must also check the direct grant (what's actually
+    // revoked below) -- otherwise a real revocation gets reported as a no-op.
+    const directGrant = await findDelegatedPermissionGrant(adminToken, target.agentBlueprintServicePrincipalObjectId, resourceAppId);
+    const directScopes = directGrant ? directGrant.scope.split(' ').filter((s) => s.length > 0) : [];
+    const currentScopes = [...new Set([...directScopes, ...inheritableScopes])];
+    const remaining = inheritableScopes.filter((s) => !scopes.includes(s));
     const alreadyAbsent = scopes.filter((s) => !currentScopes.includes(s));
 
     await withAgentSpinner(
@@ -276,7 +279,6 @@ export async function removeBlueprintPermissions(
       resourceAppId,
       resourceAppName: resourceAppDisplayName(resourceAppId),
       kind: 'enumerated',
-      scopes: remaining,
       ...(alreadyAbsent.length > 0 ? { alreadyAbsent } : {}),
     };
   } catch (error) {
@@ -319,7 +321,7 @@ export async function setBlueprintPermissions(
       () => setInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, inheritableScopes)
     );
 
-    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes: inheritableScopes };
+    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated' };
   } catch (error) {
     if (error instanceof CliError) throw error;
     throw new CliError('AGENT_BLUEPRINT_PERMISSIONS_FAILED', error instanceof Error ? error.message : String(error));

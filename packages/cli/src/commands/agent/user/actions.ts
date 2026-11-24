@@ -273,7 +273,7 @@ export interface AgenticUserResult {
 
 const USAGE_LOCATION_PATTERN = /^[A-Za-z]{2}$/;
 
-function validateUsageLocationFormat(code: string): string {
+export function validateUsageLocationFormat(code: string): string {
   const trimmed = code.trim();
   if (!USAGE_LOCATION_PATTERN.test(trimmed)) {
     throw new CliError(

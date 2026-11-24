@@ -1,11 +1,12 @@
 import { input, select } from '@inquirer/prompts';
 import { Command } from 'commander';
 import { existsSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { join, resolve } from 'node:path';
 import pc from 'picocolors';
 import {
   AGENT_GITIGNORE_ENTRIES,
   appendAgentUser,
+  ensureCredentialFileIgnored,
   ensureGitignoreEntries,
   getGeneratedConfigPath,
   readGeneratedConfig,
@@ -29,7 +30,14 @@ import {
   resolveLicenseDefault,
   resolveUsageLocationDefault,
 } from '../shared.js';
-import { resolveExistingBlueprint, rollbackAgentIdentity, runCreateAgentIdentity, runCreateAgenticUser, type AgenticUserResult } from './actions.js';
+import {
+  resolveExistingBlueprint,
+  rollbackAgentIdentity,
+  runCreateAgentIdentity,
+  runCreateAgenticUser,
+  validateUsageLocationFormat,
+  type AgenticUserResult,
+} from './actions.js';
 
 export interface AgentUserCreateOptions {
   json?: boolean;
@@ -221,6 +229,13 @@ export async function runAgentUserCreate(
     assertHttpsEndpoint(options.endpoint.trim());
   }
 
+  // Resolve license/usage-location defaults (and format-validate usage-location) up front, before any
+  // Graph write, so a bad `--usage-location` or a stale config default fails before a blueprint/identity
+  // is created instead of after.
+  const licenseOption = await resolveLicenseDefault(options.license, silent);
+  const usageLocationDefault = await resolveUsageLocationDefault(options.usageLocation, silent);
+  const usageLocationOption = usageLocationDefault ? validateUsageLocationFormat(usageLocationDefault) : undefined;
+
   const credentialPath = await resolveCredentialDestination({
     explicit: options.env,
     interactive: !silent && isInteractive(),
@@ -282,7 +297,9 @@ export async function runAgentUserCreate(
 
   // Persist now so a retry after endpoint-registration failure reuses this blueprint instead of minting another.
   // Preserve an existing config's agentUsers/graphPermissions/messagingEndpoint if it's for the same blueprint.
-  const existingConfig = existsSync(getGeneratedConfigPath(cwd)) ? readGeneratedConfig(cwd) : undefined;
+  // Safe variant: a corrupt config here just means "nothing to preserve", not a crash that strands the
+  // already-created blueprint/secret.
+  const existingConfig = existsSync(getGeneratedConfigPath(cwd)) ? tryReadGeneratedConfig(cwd) : undefined;
   const preservedConfig = existingConfig?.agentBlueprintId === agentBlueprintId ? existingConfig : undefined;
 
   const config: AgentGeneratedConfig = {
@@ -316,11 +333,10 @@ export async function runAgentUserCreate(
       writeCredentials(extraCredentialPath, credentials);
     }
   }
-  ensureGitignoreEntries(cwd, [
-    '.env',
-    ...AGENT_GITIGNORE_ENTRIES,
-    ...(extraCredentialPath ? [relative(cwd, extraCredentialPath).split(sep).join('/')] : []),
-  ]);
+  ensureGitignoreEntries(cwd, ['.env', ...AGENT_GITIGNORE_ENTRIES]);
+  if (extraCredentialPath) {
+    ensureCredentialFileIgnored(cwd, extraCredentialPath);
+  }
 
   if (!resolvedBlueprintId) {
     messagingEndpoint = await resolveOptionalEndpoint(options.endpoint, silent);
@@ -334,8 +350,6 @@ export async function runAgentUserCreate(
 
   const agenticUserName = await resolveAgenticUserName(agentName, options.userName, silent);
   const identity = await runCreateAgentIdentity(agenticUserName, agentBlueprintId, clientSecret, account, silent);
-  const licenseOption = await resolveLicenseDefault(options.license, silent);
-  const usageLocationOption = await resolveUsageLocationDefault(options.usageLocation, silent);
 
   // Tracks whether the Entra agentic user itself came into existence, so a later failure (e.g.
   // a bad --license) doesn't roll back an identity that's now legitimately paired with a user.

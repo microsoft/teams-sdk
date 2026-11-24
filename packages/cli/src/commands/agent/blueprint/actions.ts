@@ -53,6 +53,10 @@ export async function runCreateAgentBlueprint(
   silent: boolean,
   graphScopes?: string[]
 ): Promise<AgentBlueprintResult> {
+  // Tracked outside the try block so the catch handler can attempt a
+  // rollback and surface the orphaned blueprint's ID if a later Graph
+  // call fails after the blueprint app itself was already created.
+  let rollbackInfo: { adminToken: string; blueprintObjectId: string; blueprintAppId: string } | undefined;
   try {
     const adminToken = await withAgentSpinner(
       {
@@ -77,6 +81,7 @@ export async function runCreateAgentBlueprint(
           sponsorObjectId: account.localAccountId,
         })
     );
+    rollbackInfo = { adminToken, blueprintObjectId: blueprint.id, blueprintAppId: blueprint.appId };
 
     const secret = await withAgentSpinner(
       {
@@ -164,11 +169,36 @@ export async function runCreateAgentBlueprint(
     };
   } catch (error) {
     if (error instanceof CliError) throw error;
-    throw new CliError(
-      'AGENT_BLUEPRINT_FAILED',
-      error instanceof Error ? error.message : String(error),
-      'Verify your account has the AgentIdentityBlueprint.Create/AddRemoveCreds.All/AgentIdentityBlueprintPrincipal.Create/AppRoleAssignment.ReadWrite.All/DelegatedPermissionGrant.ReadWrite.All permissions (or an Agent ID Developer/Administrator role), then retry.'
-    );
+
+    const reason = error instanceof Error ? error.message : String(error);
+    const suggestion =
+      'Verify your account has the AgentIdentityBlueprint.Create/AddRemoveCreds.All/AgentIdentityBlueprintPrincipal.Create/AppRoleAssignment.ReadWrite.All/DelegatedPermissionGrant.ReadWrite.All permissions (or an Agent ID Developer/Administrator role), then retry.';
+
+    // The blueprint app (and its one-time secret) is only orphaned if it was
+    // created but a later step failed -- try to clean it up so a retry
+    // doesn't pile up duplicate blueprints.
+    if (rollbackInfo) {
+      const { adminToken, blueprintObjectId, blueprintAppId } = rollbackInfo;
+      try {
+        await deleteApplication(adminToken, blueprintObjectId);
+        throw new CliError(
+          'AGENT_BLUEPRINT_FAILED',
+          `${reason} (blueprint ${blueprintAppId} was created and has been rolled back)`,
+          suggestion
+        );
+      } catch (rollbackError) {
+        if (rollbackError instanceof CliError) throw rollbackError;
+        throw new CliError(
+          'AGENT_BLUEPRINT_FAILED',
+          `${reason} (blueprint ${blueprintAppId} was created but could not be rolled back: ${
+            rollbackError instanceof Error ? rollbackError.message : String(rollbackError)
+          })`,
+          `Delete the orphaned blueprint yourself with \`teams agent blueprint delete ${blueprintAppId}\`, then retry.`
+        );
+      }
+    }
+
+    throw new CliError('AGENT_BLUEPRINT_FAILED', reason, suggestion);
   }
 }
 

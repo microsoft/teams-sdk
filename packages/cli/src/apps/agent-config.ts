@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { CliError } from '../utils/errors.js';
 
 const GENERATED_CONFIG_FILENAME = 'agent.generated.config.json';
@@ -112,4 +112,25 @@ export function ensureGitignoreEntries(cwd: string, entries: string[]): void {
 
   const prefix = existing.length > 0 && !existing.endsWith('\n') ? '\n' : '';
   writeFileSync(gitignorePath, `${existing}${prefix}${missing.join('\n')}\n`);
+}
+
+/**
+ * Ignore a credential file wherever a `.gitignore` can actually reach it. A
+ * `.gitignore` pattern can't ignore a path outside the directory tree it
+ * lives in -- `cwd`'s `.gitignore` has no effect on `--env ../creds.env`,
+ * so that file would stay a plain untracked-but-uncovered file one
+ * `git add -A` away from being committed to whatever repo contains it.
+ * When `filePath` is outside `cwd`, this writes to a `.gitignore` next to
+ * the file itself instead.
+ */
+export function ensureCredentialFileIgnored(cwd: string, filePath: string): void {
+  const resolvedPath = resolve(filePath);
+  const relativeToCwd = relative(cwd, resolvedPath);
+  const isInsideCwd = !relativeToCwd.startsWith('..') && !isAbsolute(relativeToCwd);
+
+  if (isInsideCwd) {
+    ensureGitignoreEntries(cwd, [relativeToCwd.split(sep).join('/')]);
+  } else {
+    ensureGitignoreEntries(dirname(resolvedPath), [basename(resolvedPath)]);
+  }
 }

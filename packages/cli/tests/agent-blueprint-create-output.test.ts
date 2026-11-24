@@ -52,6 +52,19 @@ describe('toAgentBlueprintCreateOutput', () => {
     expect(output.messagingEndpoint).toBeUndefined();
     expect('messagingEndpoint' in output).toBe(false);
   });
+
+  it('includes credentialsFile when an extra credential path was written', () => {
+    const output = toAgentBlueprintCreateOutput(baseConfig(), CONFIG_PATH, ENV_PATH, '/work/appsettings.json');
+
+    expect(output.credentialsFile).toBe('/work/appsettings.json');
+  });
+
+  it('omits credentialsFile when no extra credential path was written', () => {
+    const output = toAgentBlueprintCreateOutput(baseConfig(), CONFIG_PATH, ENV_PATH);
+
+    expect(output.credentialsFile).toBeUndefined();
+    expect('credentialsFile' in output).toBe(false);
+  });
 });
 
 describe('blueprint creation permissions', () => {
