@@ -113,7 +113,13 @@ const permissionsRemoveCommand = new Command('remove')
         return;
       }
 
-      logger.info(pc.green(`Revoked: ${scopes.join(', ')} (${result.resourceAppName}).`));
+      const actuallyRemoved = scopes.filter((s) => !result.alreadyAbsent?.includes(s));
+      if (actuallyRemoved.length > 0) {
+        logger.info(pc.green(`Revoked: ${actuallyRemoved.join(', ')} (${result.resourceAppName}).`));
+      }
+      if (result.alreadyAbsent && result.alreadyAbsent.length > 0) {
+        logger.info(pc.dim(`Already absent (no-op): ${result.alreadyAbsent.join(', ')} (${result.resourceAppName}).`));
+      }
     })
   );
 

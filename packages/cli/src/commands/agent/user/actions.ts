@@ -40,6 +40,24 @@ export interface ResolvedBlueprint {
   secretMinted: boolean;
 }
 
+/** Error signatures from Graph that mean transient Entra replication lag, not a real permissions problem. */
+const REPLICATION_LAG_ERROR_SIGNATURES = ['Authorization_IdentityNotFound', 'IdentityParent does not exist', 'Request_ResourceNotFound'];
+
+/**
+ * These commands already retry the known replication-lag signatures a few
+ * times before giving up (see `retryOnReplicationLag` in `apps/graph.ts`).
+ * If one of those signatures still surfaces here, retries were exhausted --
+ * suggesting an admin re-login is wrong and misleading, since the failure
+ * has nothing to do with permissions. Only point at the admin-login fix for
+ * everything else (e.g. genuine 403s).
+ */
+function suggestionForUserCommandFailure(message: string): string {
+  if (REPLICATION_LAG_ERROR_SIGNATURES.some((signature) => message.includes(signature))) {
+    return 'This looks like temporary Entra ID replication lag rather than a permissions problem -- the CLI already retried automatically; wait a bit longer and run the command again.';
+  }
+  return 'This call requires Global Administrator (or equivalent) permissions in Azure CLI -- run `az login` as an admin and retry.';
+}
+
 /**
  * Fast path: reuse the client secret already on disk from a prior `teams
  * agent blueprint create` run in this folder, if it's for the same
@@ -407,11 +425,8 @@ export async function runCreateAgenticUser(
     return { agenticUserId: user.id, userPrincipalName, ...license };
   } catch (error) {
     if (error instanceof CliError) throw error;
-    throw new CliError(
-      'AGENT_IDENTITY_USER_FAILED',
-      error instanceof Error ? error.message : String(error),
-      'This call requires Global Administrator (or equivalent) permissions in Azure CLI -- run `az login` as an admin and retry.'
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    throw new CliError('AGENT_IDENTITY_USER_FAILED', message, suggestionForUserCommandFailure(message));
   }
 }
 
@@ -683,11 +698,8 @@ export async function runUpdateAgenticUser(
     return result;
   } catch (error) {
     if (error instanceof CliError) throw error;
-    throw new CliError(
-      'AGENT_IDENTITY_USER_FAILED',
-      error instanceof Error ? error.message : String(error),
-      'This call requires Global Administrator (or equivalent) permissions in Azure CLI -- run `az login` as an admin and retry.'
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    throw new CliError('AGENT_IDENTITY_USER_FAILED', message, suggestionForUserCommandFailure(message));
   }
 }
 

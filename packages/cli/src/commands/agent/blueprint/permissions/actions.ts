@@ -66,6 +66,8 @@ export interface BlueprintPermissionEntry {
   resourceAppName: string;
   kind: string;
   scopes: string[];
+  /** Requested scopes that were already absent (no-op), only set when non-empty. */
+  alreadyAbsent?: string[];
 }
 
 /** A scope directly granted to the blueprint's service principal, and whether it's also declared inheritable. */
@@ -246,7 +248,9 @@ export async function removeBlueprintPermissions(
 
     const existing = await listInheritablePermissions(adminToken, target.agentBlueprintObjectId);
     assertMutableInheritableEntry(existing, resourceAppId);
-    const remaining = currentEnumeratedScopes(existing, resourceAppId).filter((s) => !scopes.includes(s));
+    const currentScopes = currentEnumeratedScopes(existing, resourceAppId);
+    const remaining = currentScopes.filter((s) => !scopes.includes(s));
+    const alreadyAbsent = scopes.filter((s) => !currentScopes.includes(s));
 
     await withAgentSpinner(
       {
@@ -268,7 +272,13 @@ export async function removeBlueprintPermissions(
       () => removeInheritableResourcePermissions(adminToken, target.agentBlueprintObjectId, resourceAppId, scopes)
     );
 
-    return { resourceAppId, resourceAppName: resourceAppDisplayName(resourceAppId), kind: 'enumerated', scopes: remaining };
+    return {
+      resourceAppId,
+      resourceAppName: resourceAppDisplayName(resourceAppId),
+      kind: 'enumerated',
+      scopes: remaining,
+      ...(alreadyAbsent.length > 0 ? { alreadyAbsent } : {}),
+    };
   } catch (error) {
     if (error instanceof CliError) throw error;
     throw new CliError('AGENT_BLUEPRINT_PERMISSIONS_FAILED', error instanceof Error ? error.message : String(error));

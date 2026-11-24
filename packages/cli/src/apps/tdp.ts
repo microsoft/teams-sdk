@@ -307,7 +307,7 @@ export async function setAgentBlueprintBackendConfiguration(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to set agent blueprint backend configuration: ${response.status} ${error}`);
+    throw new Error(`Failed to set agent blueprint backend configuration: ${response.status}${error ? ` ${error}` : ''}`);
   }
 }
 

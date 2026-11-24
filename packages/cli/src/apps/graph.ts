@@ -180,14 +180,38 @@ export async function createClientSecret(
 }
 
 /**
- * A freshly minted client secret (or a freshly assigned app role) can take
- * a few seconds to replicate across Entra ID before it's usable for a
- * token request -- until it does, `AADSTS7000215: Invalid client secret
- * provided` is returned even though the secret value is correct. Retrying
- * with backoff a few times works around this, rather than failing the
- * whole `teams agent user create` run on what's usually a transient race.
+ * A freshly created/role-assigned Graph object (client secret, service
+ * principal, agent identity, blueprint application, etc.) can take a few
+ * seconds to replicate across Entra ID before it's visible to downstream
+ * calls -- until it is, those calls fail with an error that looks
+ * identical to a genuine, permanent failure. Retrying a few times with
+ * backoff works around this, rather than failing the whole
+ * `teams agent ...` command on what's usually a one-time race.
  */
-const BLUEPRINT_TOKEN_RETRY_DELAYS_MS = [2000, 4000, 8000];
+const REPLICATION_LAG_RETRY_DELAYS_MS = [2000, 4000, 8000];
+
+/**
+ * Retry `fn` with backoff while `isReplicationLag` matches the message of
+ * the error it throws. Any error that doesn't match is re-thrown
+ * immediately on the first attempt -- this only works around transient
+ * replication lag, not genuine/permanent failures.
+ */
+async function retryOnReplicationLag<T>(fn: () => Promise<T>, isReplicationLag: (message: string) => boolean): Promise<T> {
+  for (let attempt = 0; attempt <= REPLICATION_LAG_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const delay = REPLICATION_LAG_RETRY_DELAYS_MS[attempt];
+      if (!isReplicationLag(message) || delay === undefined) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  // Unreachable: the loop above always either returns or throws.
+  throw new Error('retryOnReplicationLag: exhausted retries without a result');
+}
 
 /**
  * Exchange an agent blueprint's own client ID/secret for an app-only Graph
@@ -196,43 +220,33 @@ const BLUEPRINT_TOKEN_RETRY_DELAYS_MS = [2000, 4000, 8000];
  * agent identity itself -- but it is not authorized to create the agentic
  * user (that call needs a human/admin-delegated token instead).
  */
-export async function getBlueprintToken(
-  tenantId: string,
-  clientId: string,
-  clientSecret: string
-): Promise<string> {
-  let lastError = '';
+export async function getBlueprintToken(tenantId: string, clientId: string, clientSecret: string): Promise<string> {
+  return retryOnReplicationLag(
+    async () => {
+      const response = await apiFetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: clientId,
+          client_secret: clientSecret,
+          scope: 'https://graph.microsoft.com/.default',
+        }),
+      });
 
-  for (let attempt = 0; attempt <= BLUEPRINT_TOKEN_RETRY_DELAYS_MS.length; attempt++) {
-    const response = await apiFetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: clientId,
-        client_secret: clientSecret,
-        scope: 'https://graph.microsoft.com/.default',
-      }),
-    });
+      if (response.ok) {
+        const data = (await response.json()) as { access_token: string };
+        return data.access_token;
+      }
 
-    if (response.ok) {
-      const data = (await response.json()) as { access_token: string };
-      return data.access_token;
-    }
-
-    lastError = await response.text();
+      const error = await response.text();
+      throw new Error(`Failed to authenticate as the agent blueprint: ${response.status} ${error}`);
+    },
     // AADSTS7000215 right after minting a secret is almost always
     // replication lag, not a genuinely wrong secret -- retry. Any other
     // error (wrong client ID, tenant mismatch, etc.) fails immediately.
-    const isReplicationLag = lastError.includes('AADSTS7000215');
-    const delay = BLUEPRINT_TOKEN_RETRY_DELAYS_MS[attempt];
-    if (!isReplicationLag || delay === undefined) {
-      throw new Error(`Failed to authenticate as the agent blueprint: ${response.status} ${lastError}`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-
-  throw new Error(`Failed to authenticate as the agent blueprint: ${lastError}`);
+    (message) => message.includes('AADSTS7000215')
+  );
 }
 
 export interface CreateAgentIdentityParams {
@@ -251,29 +265,31 @@ export interface AgentIdentity {
  * blueprint's own client-credentials token. Unlike the agentic user below,
  * this call is authorized for the blueprint's app-only token.
  */
-export async function createAgentIdentity(
-  blueprintToken: string,
-  params: CreateAgentIdentityParams
-): Promise<AgentIdentity> {
-  const response = await apiFetch(`${GRAPH_BASE_URL}/servicePrincipals/microsoft.graph.agentIdentity`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${blueprintToken}`,
-      'Content-Type': 'application/json',
+export async function createAgentIdentity(blueprintToken: string, params: CreateAgentIdentityParams): Promise<AgentIdentity> {
+  return retryOnReplicationLag(
+    async () => {
+      const response = await apiFetch(`${GRAPH_BASE_URL}/servicePrincipals/microsoft.graph.agentIdentity`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${blueprintToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          displayName: params.displayName,
+          agentIdentityBlueprintId: params.agentIdentityBlueprintId,
+          'sponsors@odata.bind': [`${GRAPH_BASE_URL}/users/${params.sponsorObjectId}`],
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to create agent identity: ${response.status} ${error}`);
+      }
+
+      return response.json();
     },
-    body: JSON.stringify({
-      displayName: params.displayName,
-      agentIdentityBlueprintId: params.agentIdentityBlueprintId,
-      'sponsors@odata.bind': [`${GRAPH_BASE_URL}/users/${params.sponsorObjectId}`],
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to create agent identity: ${response.status} ${error}`);
-  }
-
-  return response.json();
+    (message) => message.includes('Authorization_IdentityNotFound')
+  );
 }
 
 export interface CreateAgenticUserParams {
@@ -295,36 +311,38 @@ export interface AgenticUser {
  * the blueprint's own client-credentials token is not authorized for this
  * call and returns 403.
  */
-export async function createAgenticUser(
-  adminToken: string,
-  params: CreateAgenticUserParams
-): Promise<AgenticUser> {
-  // The real `a365` CLI creates this via the derived-type URL segment
-  // (`/users/microsoft.graph.agentUser`) rather than a plain
-  // `/users` POST with an `@odata.type` body field -- matching that
-  // exact route here for parity, even though both are valid Graph forms.
-  const response = await apiFetch(`${GRAPH_BASE_URL}/users/microsoft.graph.agentUser`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${adminToken}`,
-      'Content-Type': 'application/json',
+export async function createAgenticUser(adminToken: string, params: CreateAgenticUserParams): Promise<AgenticUser> {
+  return retryOnReplicationLag(
+    async () => {
+      // The real `a365` CLI creates this via the derived-type URL segment
+      // (`/users/microsoft.graph.agentUser`) rather than a plain
+      // `/users` POST with an `@odata.type` body field -- matching that
+      // exact route here for parity, even though both are valid Graph forms.
+      const response = await apiFetch(`${GRAPH_BASE_URL}/users/microsoft.graph.agentUser`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accountEnabled: true,
+          displayName: params.displayName,
+          mailNickname: params.mailNickname,
+          userPrincipalName: params.userPrincipalName,
+          identityParentId: params.identityParentId,
+          usageLocation: params.usageLocation,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to create agentic user: ${response.status} ${error}`);
+      }
+
+      return response.json();
     },
-    body: JSON.stringify({
-      accountEnabled: true,
-      displayName: params.displayName,
-      mailNickname: params.mailNickname,
-      userPrincipalName: params.userPrincipalName,
-      identityParentId: params.identityParentId,
-      usageLocation: params.usageLocation,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to create agentic user: ${response.status} ${error}`);
-  }
-
-  return response.json();
+    (message) => message.includes('IdentityParent does not exist')
+  );
 }
 
 export interface AgentBlueprint {
@@ -783,22 +801,33 @@ export interface InheritablePermissionEntry {
   };
 }
 
-/** List every resource app currently configured as inheritable on a blueprint. */
+/**
+ * List every resource app currently configured as inheritable on a
+ * blueprint. Called right after the blueprint application is created in
+ * some flows, where a transient `Request_ResourceNotFound` can occur if
+ * Graph hasn't yet replicated the new application object -- retry that
+ * specific case rather than failing immediately.
+ */
 export async function listInheritablePermissions(token: string, blueprintObjectId: string): Promise<InheritablePermissionEntry[]> {
-  const response = await apiFetch(
-    `${GRAPH_BASE_URL}/applications/${blueprintObjectId}/microsoft.graph.agentIdentityBlueprint/inheritablePermissions`,
-    {
-      headers: { Authorization: authHeader(token) },
-    }
+  return retryOnReplicationLag(
+    async () => {
+      const response = await apiFetch(
+        `${GRAPH_BASE_URL}/applications/${blueprintObjectId}/microsoft.graph.agentIdentityBlueprint/inheritablePermissions`,
+        {
+          headers: { Authorization: authHeader(token) },
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to list inheritable permissions: ${response.status} ${error}`);
+      }
+
+      const data = (await response.json()) as { value: InheritablePermissionEntry[] };
+      return data.value;
+    },
+    (message) => message.includes('Request_ResourceNotFound')
   );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to list inheritable permissions: ${response.status} ${error}`);
-  }
-
-  const data = (await response.json()) as { value: InheritablePermissionEntry[] };
-  return data.value;
 }
 
 /**
