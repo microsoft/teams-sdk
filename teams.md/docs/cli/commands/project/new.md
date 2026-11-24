@@ -17,8 +17,22 @@ teams project new
 
 ## App credentials
 
-Interactive project creation scaffolds the project first, then can route you through `teams app create` with the app name and credentials file pre-filled. In non-interactive usage, create the project first, then run:
+Interactive project creation scaffolds the project first, then asks "Provision a Teams app or an Agent 365 agentic user now?" If you accept, you're asked what to create:
+
+- **Teams app** — routes you through `teams app create` with the app name and credentials file pre-filled.
+- **Agentic user (Agent 365 blueprint + identity + user)** — routes you through [`teams agent user create`](../agent/user-create), which creates the blueprint, its agent identity, and the agentic user in one step.
+
+In non-interactive usage, create the project first, then run either:
 
 ```bash
 teams app create --name "<app name>" --env <project credentials file>
 ```
+
+or, for an Agent 365 agentic user:
+
+```bash
+teams agent user create --blueprint-name "<blueprint name>"
+```
+
+To create just the blueprint (its Entra app + credentials) without an identity/user, run [`teams agent blueprint create`](../agent/blueprint-create) instead.
+

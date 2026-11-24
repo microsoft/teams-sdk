@@ -74,3 +74,21 @@ export async function runAz<T = unknown>(args: string[]): Promise<T> {
   if (!trimmed) return undefined as T;
   return JSON.parse(trimmed) as T;
 }
+
+/**
+ * Get a delegated access token for `resource` from the Azure CLI's signed-in
+ * session (`az account get-access-token`), scoped to `tenantId` when given.
+ * Used where a call needs a human/admin-delegated token instead of an
+ * app-only one -- e.g. creating an agentic user, which the agent
+ * blueprint's own client-credentials token isn't authorized for.
+ */
+export async function getAzAccessToken(resource: string, tenantId?: string): Promise<string> {
+  const result = await runAz<{ accessToken: string }>([
+    'account',
+    'get-access-token',
+    '--resource',
+    resource,
+    ...(tenantId ? ['--tenant', tenantId] : []),
+  ]);
+  return result.accessToken;
+}
