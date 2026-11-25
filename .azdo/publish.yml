@@ -59,10 +59,10 @@ extends:
           target:
             container: host
 
-        - task: NodeTool@0
+        - task: UseNode@1
           displayName: 'Use Node 24.x'
           inputs:
-            versionSpec: '24.x'
+            version: '24.x'
             checkLatest: true
           target:
             container: host
@@ -215,10 +215,10 @@ extends:
             artifactName: npm-packages
             targetPath: $(Pipeline.Workspace)/npm-packages
         steps:
-        - task: NodeTool@0
+        - task: UseNode@1
           displayName: 'Use Node 24.x'
           inputs:
-            versionSpec: '24.x'
+            version: '24.x'
             checkLatest: true
           target:
             container: host
