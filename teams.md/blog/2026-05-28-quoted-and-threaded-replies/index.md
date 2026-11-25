@@ -63,6 +63,10 @@ If you build something in one language and port it later, you shouldn't need to 
 
 A user asked a question in a busy conversation. By the time your agent has the answer, ten more messages have arrived. A plain reply at the bottom is correct but useless. With `context.reply()`, the SDK does two things at once: it threads the response under the inbound message so it lands in the right place, and it auto-quotes the inbound message so the answer carries the question with it. Notifications also show the question in the toast.
 
+:::info Update (November 23, 2026)
+Starting in version 2.3, in chats `reply` starts a thread under a top-level message by default. The reply mode lets you keep the thread and the quote (`combined`, the default), thread without the quote (`thread`), or keep the reply at the level of the inbound message (`quote`). See Reply modes for [TypeScript](https://microsoft.github.io/teams-sdk/typescript/essentials/sending-messages/#reply-modes), [Python](https://microsoft.github.io/teams-sdk/python/essentials/sending-messages/#reply-modes) and [C#](https://microsoft.github.io/teams-sdk/csharp/essentials/sending-messages/#reply-modes).
+:::
+
 <div style={{textAlign: 'center'}}>
 <img src={require('./quoted-reply-bot-response.png').default} alt="A user-to-agent Q&A in Teams. The user asks 'What's our PR review SLA?' and the agent (cg-test-bot) replies with the question in a grey quote bubble above the answer text, so the response stays anchored to what was asked." style={{maxHeight: '500px'}} />
 </div>

@@ -11,10 +11,6 @@ import TabItem from '@theme/TabItem';
 
 Sending messages is a core part of an agent's functionality. With all activity handlers, a `send` method is provided which allows your handlers to send a message back to the user to the relevant conversation.
 
-:::info[SDK 2.1]
-In SDK 2.1, the per-turn `context.Send`, `context.Reply`, and `context.Quote` helpers work the same way. The main difference is **streaming** — see the tabbed examples below.
-:::
-
 <LanguageInclude section="basic-message-example" />
 
 In the above example, the handler gets a `message` activity, and uses the `send` method to send a reply to the user.
@@ -89,7 +85,7 @@ Teams itself supports streaming only in 1:1 chats, as noted above.
 Only the first chunk of each streamed message uses the reply chain route.
 The later chunks are sent to the inbound conversation with the stream id of the first message.
 In a 1:1 chat inside a thread, the streamed message appears in the thread pane (checked live with TypeScript and Python).
-In a channel, if the service answers 404 to the reply chain route, the first chunk falls back to the inbound conversation, as with <LanguageInclude section="context-send-method-name" />, and stays in the thread.
+In a channel, if the service answers 404 to the reply chain route, the first chunk is posted to the same thread through the legacy channel threading endpoint, as with <LanguageInclude section="context-send-method-name" />.
 In a 1:1 chat, a failed reply chain route does not fall back.
 <LanguageInclude section="streaming-threading-errors" />
 
@@ -141,33 +137,65 @@ Reactions allow your agent to add or remove emoji reactions on messages in a con
 
 ## Threading
 
-In Teams channels and 1:1 agent chats, the SDK can send messages into reply chains (threads).
+In Teams channels and chats, the SDK can send messages into reply chains (threads).
 The SDK provides helpers to simplify working with threads.
 
 In this guide, top-level means a message in the main chat or channel conversation, and in-thread means a message in a reply chain (thread).
 
+### Reply modes
+
+:::info[Version 2.3]
+Reply modes are available starting in version 2.3.0. Before 2.3.0, a reply always matched the level of the inbound message, which is the <LanguageInclude content={{"typescript": "`quote`", "python": "`quote`", "csharp": "`ReplyMode.Quote`"}} /> mode.
+:::
+
+The reply mode decides where <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} /> places its response in a chat, and whether it quotes the inbound message.
+Set it for the whole app, or pass it on a single call, which overrides the app setting.
+
+<LanguageInclude section="reply-modes-example" />
+
+In a channel every reply goes in the thread of the inbound message, so the mode only decides the quote.
+The mode affects only <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} />. It does not change <LanguageInclude content={{"typescript": "`context.send()`", "python": "`ctx.send()`", "csharp": "`context.SendAsync()`"}} />, quoting a specific message, streams, plans or proactive messages.
+
+:::note[Replies that don't land in a thread]
+A reply that doesn't land in a thread keeps the quote in every mode, including <LanguageInclude content={{"typescript": "`thread`", "python": "`thread`", "csharp": "`ReplyMode.Thread`"}} />.
+Without a thread, the quote is what shows which message the reply answers.
+That happens when the inbound activity lacks the ids threading needs (see [Where messages land](#where-messages-land)), e.g. in a meeting, or in a chat when the message it is about cannot start a thread (see [How the SDK chooses the destination](#how-the-sdk-chooses-the-destination)).
+:::
+
+### Where messages land
+
 Where a message lands depends on the method and the scope:
 
-| Method | 1:1 chat | Channel |
+| Method | Chat | Channel |
 |---|---|---|
 | <LanguageInclude content={{"typescript": "`context.send()`", "python": "`ctx.send()`", "csharp": "`context.SendAsync()`"}} /> | Matches level of user's message | In-thread |
-| <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} /> | Matches level of user's message | In-thread |
+| <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} /> | Starts a thread under a top-level message, or stays in the existing thread (default [reply mode](#reply-modes)) | In-thread |
 
-The SDK places a response in a reply chain only when `channelData.replyChain.id` is present on the inbound activity.
-With no `replyChain`, these methods send to the inbound conversation.
+Threading needs `channelData.replyChain.id` on the inbound activity, plus `channelData.chat.id` in a chat or `channelData.channel.id` in a channel.
+Without them (e.g. in a meeting), the SDK sends to the same conversation the inbound activity came from.
+In a channel, that conversation can still be the thread of the inbound message.
 
-The reply method, <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} />, also quotes the user's message.
-To reply in-thread to a top-level message in a 1:1 chat, or to send a top-level message from inside a thread, see [Proactive Messaging](./proactive-messaging#proactive-threading).
+To send a top-level message while handling a message in a thread, or to reply in a thread without an inbound activity (e.g. when a long task finishes), see [Proactive Messaging](./proactive-messaging#proactive-threading).
 
-### Reactive Threading (Within a Handler)
+### Reactive Threading Within a Handler
 
-When your agent receives a message in a reply chain (thread), the context sends into that same reply chain.
-In a channel, replying to a top-level post also sends into that post's thread.
-In a 1:1 chat, a response to a top-level message is also top-level, and a thread is started explicitly with a proactive reply (see below).
-Use <LanguageInclude section="context-send-method-name" /> to send reactively without quoting, or <LanguageInclude section="context-reply-method-name" /> to send a reactive, quoted reply.
-In a channel the answer is in the same thread, and in a 1:1 chat it matches the level of the inbound message.
+Use <LanguageInclude section="context-send-method-name" /> to send reactively without quoting, or <LanguageInclude section="context-reply-method-name" /> to send a reactive reply that quotes the inbound message by default.
+The table in [Where messages land](#where-messages-land) shows where each one goes.
 
 <LanguageInclude section="threading-reactive-example" />
+
+A thread starts under the message the inbound activity is about: the user's message, or the message the user reacted to, edited, deleted or clicked a card on.
+A reply to a deleted message still starts a thread under it, which Teams shows as "This message has been deleted."
+If that message cannot be a thread root (e.g. a card button message whose id is not a message id), the reply stays at the top level.
+When the service rejects a thread reply in a chat, the error is thrown to your handler and the reply is not sent at the top level instead.
+
+Because the reply starts a thread and <LanguageInclude content={{"typescript": "`context.send()`", "python": "`ctx.send()`", "csharp": "`context.SendAsync()`"}} /> does not, a handler that replies and then sends at the top level splits its answer between the thread and the main conversation.
+To keep follow-ups in the thread, send them with <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} /> as well, using the <LanguageInclude content={{"typescript": "`thread`", "python": "`thread`", "csharp": "`ReplyMode.Thread`"}} /> mode if they should not quote again.
+
+A typing indicator is placed like a message: when the inbound activity is inside a thread, the indicator shows in that thread.
+A typing indicator never starts a new thread, so for a top-level message the indicator shows in the main conversation while a reply that starts a thread appears in the thread.
+
+### How the SDK chooses the destination
 
 #### Where the SDK takes the destination from
 
@@ -175,21 +203,15 @@ The SDK reads `channelData` on the inbound activity to find the destination and 
 To tell a channel from a chat, it also uses `conversation.conversationType`: `channel` selects the channel rules below, and anything else selects the chat rules.
 
 - **Channel:** a response to a `message` is sent through the reply chain `channelData.replyChain.id` of the channel `channelData.channel.id`.
-  If the reply chain route answers HTTP `404`, the SDK sends to the inbound conversation instead.
-  For a channel message, the inbound conversation id already identifies the same thread, so the response stays in it.
+  If the reply chain route answers HTTP `404`, the SDK posts to the same thread through the legacy channel threading endpoint instead.
   The SDK checks only the status code.
-- **1:1 chat:** when the inbound activity is inside a thread (see the table below), the response is sent through the reply chain `channelData.replyChain.id` of the chat `channelData.chat.id`.
-  Otherwise it is sent to the inbound conversation, at the top level.
+- **Chat:** when the inbound activity is inside a thread (see the table below), the response is sent through the reply chain `channelData.replyChain.id` of the chat `channelData.chat.id`.
+  Otherwise <LanguageInclude content={{"typescript": "`context.send()`", "python": "`ctx.send()`", "csharp": "`context.SendAsync()`"}} /> sends to the inbound conversation, at the top level, and <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} /> starts a thread through the reply chain of the message the activity is about, unless the reply mode keeps it at the top level or that message cannot be a thread root.
   An error from the reply chain route is thrown to your handler, and the response is not sent anywhere else.
-- **Missing ids:** when `channelData.replyChain`, or the id of the scope (`channelData.chat.id` in a 1:1 chat, `channelData.channel.id` in a channel), is missing, the SDK does not use the reply chain route and sends to the inbound conversation.
-  In a channel, the inbound conversation id can still keep the response in the thread.
-
-Typing indicators sent with <LanguageInclude content={{"typescript": "`send()`", "python": "`ctx.send()`", "csharp": "`context.TypingAsync()`"}} /> are not placed.
-Only message responses are.
 
 #### Responding to edits, reactions and card actions
 
-In a 1:1 chat the SDK also places a response to an inbound activity that is not a typed message.
+In a chat the SDK also places a response to an inbound activity that is not a typed message.
 It compares `channelData.replyChain.id` with the id of the message the activity acts on, and the activity is inside a thread when they differ.
 
 | Inbound activity | Message it acts on | Inside a thread when |
@@ -203,7 +225,9 @@ It compares `channelData.replyChain.id` with the id of the message the activity 
 | `invoke` with neither, such as a compose box action or sign-in | None | `replyChain.id` is present |
 | Any other activity, such as `installationUpdate` or `conversationUpdate` | None | Never |
 
-So a response to a card button clicked on a top-level message is top-level, and a response to a card button clicked on a card inside a thread is sent into that thread.
+So a response to a card button clicked on a card inside a thread is sent into that thread.
+For a card on a top-level message, <LanguageInclude content={{"typescript": "`context.send()`", "python": "`ctx.send()`", "csharp": "`context.SendAsync()`"}} /> answers at the top level, and <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} /> starts a thread under the card unless the reply mode is <LanguageInclude content={{"typescript": "`quote`", "python": "`quote`", "csharp": "`ReplyMode.Quote`"}} />.
+A reply to a reaction quotes the message the user reacted to, unless the reply mode leaves the quote out.
 A `replyToId` that is not a plain number, such as an encrypted id, is never inside a thread.
 
 The SDK uses `conversation.conversationType` only to tell a channel from a chat.
@@ -216,7 +240,7 @@ The SDK sends a response to any other activity in a channel to the inbound conve
 
 For proactive threading (sending to a thread outside of a handler), see [Proactive Messaging](./proactive-messaging#proactive-threading).
 
-#### Experimental status
+### Experimental status
 
 <LanguageInclude section="threading-experimental-note" />
 
@@ -234,10 +258,11 @@ Each quoted reply entity contains the quoted message's ID, sender information, a
 
 ### Sending a Quoted Reply
 
-When your agent calls <LanguageInclude content={{"csharp": "`ReplyAsync()`", "typescript": "`reply()`", "python": "`reply()`"}} />, the SDK automatically stamps a quoted reply entity referencing the inbound message when its id is a plain message id. The reply will appear as a quoted reply in Teams.
+When your agent calls <LanguageInclude content={{"csharp": "`ReplyAsync()`", "typescript": "`reply()`", "python": "`reply()`"}} />, the SDK automatically stamps a quoted reply entity referencing the inbound activity. The reply will appear as a quoted reply in Teams.
 
-This applies when `activity.id` is a plain numeric message id, as it is for messages, edits and deletes.
-Otherwise, for example a card button click or another invoke with an id like `f:<guid>`, the SDK does not quote, and the response is sent like <LanguageInclude content={{"csharp": "`SendAsync()`", "typescript": "`send()`", "python": "`send()`"}} />, without a quote.
+The reply quotes the inbound activity only when that activity can be quoted, so a reply to a card action or another invoke is sent without a quote.
+A reply to a reaction quotes the message the user reacted to.
+The [reply mode](#reply-modes) decides whether the quote is added: <LanguageInclude content={{"typescript": "`thread`", "python": "`thread`", "csharp": "`ReplyMode.Thread`"}} /> mode leaves it out when the reply lands in a thread (see [Reply modes](#reply-modes)).
 To quote in a card or invoke handler, quote the message that holds the card with <LanguageInclude content={{"csharp": "`QuoteAsync()`", "typescript": "`quote()`", "python": "`quote()`"}} /> and its `replyToId`.
 
 <LanguageInclude section="quoted-replies-reply-example" />
