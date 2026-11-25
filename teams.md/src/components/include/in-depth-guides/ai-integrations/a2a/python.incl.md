@@ -1,6 +1,6 @@
 <!-- intro -->
 
-Both bots run the **same code**, differentiated entirely by environment variables (name, description, self/peer URLs). They use the [`a2a-sdk`](https://github.com/a2aproject/a2a-python) for the protocol and `agent_framework` for the LLM agent.
+Both bots run the **same code**, differentiated entirely by environment variables (name, description, self/peer URLs). They use the [`a2a-sdk`](https://github.com/a2aproject/a2a-python) for the protocol and `agent_framework` for the LLM agent. The checked-in sample configures Agent Framework's Azure OpenAI connector, but the A2A and Teams handoff flow is independent of that backend.
 
 Full source: [examples/a2a](https://github.com/microsoft/teams.py/tree/main/examples/a2a).
 

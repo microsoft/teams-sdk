@@ -1,6 +1,6 @@
 <!-- intro -->
 
-Both bots run the **same code**, differentiated entirely by environment variables (name, description, self/peer URLs). They use [`@a2a-js/sdk`](https://www.npmjs.com/package/@a2a-js/sdk) for the protocol and the OpenAI SDK for the LLM agent.
+Both bots run the **same code**, differentiated entirely by environment variables (name, description, self/peer URLs). They use [`@a2a-js/sdk`](https://www.npmjs.com/package/@a2a-js/sdk) for the protocol. The checked-in sample uses the OpenAI SDK for its model loop, but A2A and the Teams handoff flow are independent of that provider.
 
 Full source: [examples/a2a](https://github.com/microsoft/teams.ts/tree/main/examples/a2a).
 
@@ -20,12 +20,14 @@ function buildAgentCard(config: Config): AgentCard {
     capabilities: {},
     defaultInputModes: ['application/json'],
     defaultOutputModes: ['text/plain'],
-    skills: [{
-      id: 'handoff',
-      name: 'Handoff',
-      description: `Accepts handoffs of users from peer bots. Specialty: ${config.description}`,
-      tags: ['a2a', 'teams', 'handoff'],
-    }],
+    skills: [
+      {
+        id: 'handoff',
+        name: 'Handoff',
+        description: `Accepts handoffs of users from peer bots. Specialty: ${config.description}`,
+        tags: ['a2a', 'teams', 'handoff'],
+      },
+    ],
   };
 }
 ```
@@ -48,9 +50,12 @@ export function isHandoffMessage(value: unknown): value is HandoffMessage {
   const v = value as Record<string, unknown>;
   return (
     v.kind === 'handoff' &&
-    typeof v.aadObjectId === 'string' && v.aadObjectId.length > 0 &&
-    typeof v.tenantId === 'string' && v.tenantId.length > 0 &&
-    typeof v.serviceUrl === 'string' && v.serviceUrl.length > 0 &&
+    typeof v.aadObjectId === 'string' &&
+    v.aadObjectId.length > 0 &&
+    typeof v.tenantId === 'string' &&
+    v.tenantId.length > 0 &&
+    typeof v.serviceUrl === 'string' &&
+    v.serviceUrl.length > 0 &&
     typeof v.summary === 'string'
   );
 }
@@ -83,7 +88,12 @@ function buildHandoffTool(): RunnableToolFunction<{ summary: string }> {
           // Called from a handoff greeting (no identity) — guard against ping-pong.
           return 'handoff_to_peer is unavailable in this context.';
         }
-        const payload: HandoffMessage = { kind: 'handoff', from: config.name, ...identity, summary: args.summary };
+        const payload: HandoffMessage = {
+          kind: 'handoff',
+          from: config.name,
+          ...identity,
+          summary: args.summary,
+        };
         await a2aClient.sendHandoff(payload);
         return 'Handoff confirmed. The peer will message the user directly.';
       },
@@ -188,7 +198,10 @@ const a2aHandler = new DefaultRequestHandler(
   new HandoffAgentExecutor(app, agent, config, log)
 );
 expressApp.use('/.well-known/agent-card.json', agentCardHandler({ agentCardProvider: a2aHandler }));
-expressApp.use('/a2a', jsonRpcHandler({ requestHandler: a2aHandler, userBuilder: UserBuilder.noAuthentication }));
+expressApp.use(
+  '/a2a',
+  jsonRpcHandler({ requestHandler: a2aHandler, userBuilder: UserBuilder.noAuthentication })
+);
 
 // Register /api/messages without starting an internal server — we own the http.Server.
 await app.initialize();
