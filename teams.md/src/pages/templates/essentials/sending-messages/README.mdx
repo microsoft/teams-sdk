@@ -156,9 +156,10 @@ Set it for the whole app, or pass it on a single call, which overrides the app s
 In a channel every reply goes in the thread of the inbound message, so the mode only decides the quote.
 The mode affects only <LanguageInclude content={{"typescript": "`context.reply()`", "python": "`ctx.reply()`", "csharp": "`context.ReplyAsync()`"}} />. It does not change <LanguageInclude content={{"typescript": "`context.send()`", "python": "`ctx.send()`", "csharp": "`context.SendAsync()`"}} />, quoting a specific message, streams, plans or proactive messages.
 
-:::note[Replies that cannot be threaded]
-When the inbound activity lacks the ids threading needs (see [Where messages land](#where-messages-land)), e.g. in a meeting, a reply is never threaded, so it keeps the quote in every mode, including <LanguageInclude content={{"typescript": "`thread`", "python": "`thread`", "csharp": "`ReplyMode.Thread`"}} />.
+:::note[Replies that don't land in a thread]
+A reply that doesn't land in a thread keeps the quote in every mode, including <LanguageInclude content={{"typescript": "`thread`", "python": "`thread`", "csharp": "`ReplyMode.Thread`"}} />.
 Without a thread, the quote is what shows which message the reply answers.
+That happens when the inbound activity lacks the ids threading needs (see [Where messages land](#where-messages-land)), e.g. in a meeting, or in a chat when the message it is about cannot start a thread (see [How the SDK chooses the destination](#how-the-sdk-chooses-the-destination)).
 :::
 
 ### Where messages land
@@ -261,7 +262,7 @@ When your agent calls <LanguageInclude content={{"csharp": "`ReplyAsync()`", "ty
 
 The reply quotes the inbound activity only when that activity can be quoted, so a reply to a card action or another invoke is sent without a quote.
 A reply to a reaction quotes the message the user reacted to.
-The [reply mode](#reply-modes) decides whether the quote is added: <LanguageInclude content={{"typescript": "`thread`", "python": "`thread`", "csharp": "`ReplyMode.Thread`"}} /> mode leaves it out, except on a reply that cannot be threaded (see [Reply modes](#reply-modes)).
+The [reply mode](#reply-modes) decides whether the quote is added: <LanguageInclude content={{"typescript": "`thread`", "python": "`thread`", "csharp": "`ReplyMode.Thread`"}} /> mode leaves it out when the reply lands in a thread (see [Reply modes](#reply-modes)).
 To quote in a card or invoke handler, quote the message that holds the card with <LanguageInclude content={{"csharp": "`QuoteAsync()`", "typescript": "`quote()`", "python": "`quote()`"}} /> and its `replyToId`.
 
 <LanguageInclude section="quoted-replies-reply-example" />

@@ -392,7 +392,7 @@ teams.OnMessage(async (context, cancellationToken) =>
 | Mode | In a chat | Quote |
 |---|---|---|
 | `ReplyMode.Combined` (default) | A reply to a top-level message starts a thread under it; a reply inside a thread stays in that thread | Yes |
-| `ReplyMode.Thread` | Same as `ReplyMode.Combined` | No |
+| `ReplyMode.Thread` | Same as `ReplyMode.Combined` | No, when the reply lands in a thread |
 | `ReplyMode.Quote` | The reply stays at the level of the inbound message | Yes |
 
 To match replies to the level of the inbound message, set the mode to `ReplyMode.Quote`.

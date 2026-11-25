@@ -197,7 +197,7 @@ app.on('message', async ({ reply }) => {
 | Mode | In a chat | Quote |
 |---|---|---|
 | `combined` (default) | A reply to a top-level message starts a thread under it; a reply inside a thread stays in that thread | Yes |
-| `thread` | Same as `combined` | No |
+| `thread` | Same as `combined` | No, when the reply lands in a thread |
 | `quote` | The reply stays at the level of the inbound message | Yes |
 
 To match replies to the level of the inbound message, set the mode to `quote`.
